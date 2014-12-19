@@ -1,0 +1,427 @@
+<!doctype html>
+<html>
+<head>
+    <title>DiscZump - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+    <div id="search-results">
+        <div class="result-section" id="results-name">
+            <div class="result-section-title">Name</div>
+            <div class="result-section-output">
+                <div class="result-item result-item-empty">No Results.</div>
+            </div>
+        </div>
+        <div class="result-section" id="results-brand">
+            <div class="result-section-title">Brand</div>
+            <div class="result-section-output">
+                <div class="result-item result-item-empty">No Results.</div>
+            </div>
+        </div>
+        <div class="result-section" id="results-type">
+            <div class="result-section-title">Type</div>
+            <div class="result-section-output">
+                <div class="result-item result-item-empty">No Results.</div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid" id="filter-container">
+        <div class="row">
+            <div class="col-md-3 col-sm-3 col-lg-2">
+                <div id="filter-main" class="well">
+                    <div class="filter-title text-center">Zump Filter</div>
+                    <div id="filter-content">
+                        <div class="panel panel-default filter-item filter-item-parent" id="filter-brand">
+                            <div class="panel-heading panel-open">
+                                Brand
+                                <span class="glyphicon glyphicon-minus pull-right" aria-hidden="true"></span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="filter-option filter-option-static">
+                                    No Items
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default filter-item filter-item-parent" id="filter-type">
+                            <div class="panel-heading panel-open">
+                                Type
+                                <span class="glyphicon glyphicon-minus pull-right" aria-hidden="true"></span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="filter-option filter-option-static">
+                                    No Items
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default filter-item filter-item-parent" id="filter-material">
+                            <div class="panel-heading panel-open">
+                                Material
+                                <span class="glyphicon glyphicon-minus pull-right" aria-hidden="true"></span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="filter-option filter-option-static">
+                                    No Items
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default filter-item filter-item-parent" id="filter-weight">
+                            <div class="panel-heading panel-open">
+                                Weight
+                                <span class="glyphicon glyphicon-minus pull-right" aria-hidden="true"></span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="filter-option filter-option-static">
+                                    No Items
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default filter-item filter-item-parent" id="filter-color">
+                            <div class="panel-heading panel-open">
+                                Color
+                                <span class="glyphicon glyphicon-minus pull-right" aria-hidden="true"></span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="filter-option filter-option-static">
+                                    No Items
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default filter-item filter-item-parent" id="filter-flightNumbers">
+                            <div class="panel-heading panel-open">
+                                Flight Numbers
+                                <span class="glyphicon glyphicon-minus pull-right" aria-hidden="true"></span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="filter-option-multi filter-option-multi-closed filter-item-parent" id="filter-speed">
+                                    Speed
+                                    <span class="glyphicon glyphicon-screenshot pull-right" aria-hidden="true"></span>
+                                    <div class="filter-option-group">
+                                        <div class="filter-option filter-option-static">
+                                            No Items
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="filter-option-multi filter-option-multi-closed filter-item-parent" id="filter-glide">
+                                    Glide
+                                    <span class="glyphicon glyphicon-screenshot pull-right" aria-hidden="true"></span>
+                                    <div class="filter-option-group">
+                                        <div class="filter-option filter-option-static">
+                                            No Items
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="filter-option-multi filter-option-multi-closed filter-item-parent" id="filter-turn">
+                                    Turn
+                                    <span class="glyphicon glyphicon-screenshot pull-right" aria-hidden="true"></span>
+                                    <div class="filter-option-group">
+                                        <div class="filter-option filter-option-static">
+                                            No Items
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="filter-option-multi filter-option-multi-closed filter-item-parent" id="filter-fade">
+                                    Fade
+                                    <span class="glyphicon glyphicon-screenshot pull-right" aria-hidden="true"></span>
+                                    <div class="filter-option-group">
+                                        <div class="filter-option filter-option-static">
+                                            No Items
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="col-md-9 col-sm-9 col-lg-10">
+                <div class="row">
+                    <div class="table-responsive results-container">
+                        <table class="table table-striped table-results">
+                            <thead>
+                                <tr>
+                                    <th class="row-fluid heading-text" id="sort-brand">
+                                        Brand
+                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                    </th>
+                                    <th class="row-fluid heading-text" id="sort-name">
+                                        Name
+                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                    </th>
+                                    <th class="row-fluid heading-text" id="sort-material">
+                                        Material
+                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                    </th>
+                                    <th class="row-fluid heading-text" id="sort-type">
+                                        Type
+                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                    </th>
+                                    <th class="row-fluid heading-text" id="sort-speed">
+                                        Speed
+                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                    </th>
+                                    <th class="row-fluid heading-text" id="sort-glide">
+                                        Glide
+                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                    </th>
+                                    <th class="row-fluid heading-text" id="sort-turn">
+                                        Turn
+                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                    </th>
+                                    <th class="row-fluid heading-text" id="sort-fade">
+                                        Fade
+                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="filter-results">
+                                
+                            </tbody>
+                        </table>
+                        <div class="results-footer container-fluid">
+                            <div class="row-fluid">
+                                <div class="col-md-9 col-sm-9 footer-text container-fluid" id="results-footer-paginate">
+                                    <form class="form-inline" role="form">
+                                        <div class="form-group">
+                                            <p class="form-control-static">Display:</p>
+                                            <select class="form-control input-sm" id="paginate-display-count">
+                                                <option value="20">20</option>
+                                                <option value="40">40</option>
+                                                <option value="60">60</option>
+                                                <option value="80">80</option>
+                                                <option value="100">100</option>
+                                                <option value="All">All</option>
+                                            </select>
+                                            <ul class="list-inline form-control-static" id="paginate-nav">
+                                                <li class="page-static" id="page-back"><span class="glyphicon glyphicon-chevron-left"></span></li>
+                                                <li class="page-static" id="page-forward"><span class="glyphicon glyphicon-chevron-right"></span></li>
+                                            </ul>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="col-md-1 col-sm-2 footer-static footer-text" id="results-footer-sort">Sort: Off</div>
+                                <div class="col-md-2 col-sm-2 footer-static footer-text" id="results-footer-count">Results: 0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="createDiscModal" tabindex="-1" role="dialog" aria-labelledby="createDiscLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <h4 class="modal-title" id="createDiscLabel">New Disc Details</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" role="form" id="createDiscForm">
+                        <div class="form-group">
+                            <label for="md-add-brand" class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="create-disc-brand" param="brand" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="md-add-name" class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="create-disc-name" param="name" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="md-add-material" class="col-sm-2 control-label">Material</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="create-disc-material" param="material">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="md-add-type" class="col-sm-2 control-label">Type</label>
+                            <div class="col-sm-10">
+                                <select class="form-control" id="create-disc-type"  param="type">
+                                    <option value="Putt/Approach">Putt/Approach</option>
+                                    <option value="Mid-range">Mid-range</option>
+                                    <option value="Fairway Driver">Fairway Driver</option>
+                                    <option value="Distance Driver">Distance Driver</option>
+                                    <option value="Mini">Mini</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="md-add-weight" class="col-sm-2 control-label">Weight</label>
+                            <div class="col-sm-10">
+                                <input type="number" class="form-control" id="create-disc-weight" param="weight">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="md-add-color" class="col-sm-2 control-label">Color</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="create-disc-color" param="color">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="md-add-speed" class="col-sm-2 control-label">Speed</label>
+                            <div class="col-sm-4">
+                                <input type="number" class="form-control" id="create-disc-speed" param="speed">
+                            </div>
+                            <label for="md-add-glide" class="col-sm-2 control-label">Glide</label>
+                            <div class="col-sm-4">
+                                <input type="number" class="form-control" id="create-disc-glide" param="glide">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="md-add-turn" class="col-sm-2 control-label">Turn</label>
+                            <div class="col-sm-4">
+                                <input type="number" class="form-control" id="create-disc-turn" param="turn">
+                            </div>
+                            <label for="md-add-fade" class="col-sm-2 control-label">Fade</label>
+                            <div class="col-sm-4">
+                                <input type="number" class="form-control" id="create-disc-fade" param="fade">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="md-add-notes" class="col-sm-2 control-label">Notes</label>
+                            <div class="col-sm-10">
+                                <textarea class="form-control" id="create-discnotes" rows="3" param="notes"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Select Images</label>
+                            <div class="col-sm-5">
+                                <a href="#" class="thumbnail">
+                                    <img id="img-front" data-src="holder.js/100%x180" alt="Front">
+                                </a>
+                            </div>
+                            <div class="col-sm-5">
+                                <a href="#" class="thumbnail">
+                                    <img id="img-back" data-src="holder.js/100%x180" alt="Back">
+                                </a>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" id="btn-add-disc" class="btn btn-primary"><span><i class="fa fa-plus-circle fa-tools"></i></span>Add Disc</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="viewDiscModal" tabindex="-1" role="dialog" aria-labelledby="viewDiscLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header view-disc-modal-header">
+                    <div class="row">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="viewDiscLabel">DISC NAME</h4>
+                    </div>
+                    <div class="row">
+                        <p style="color:#C0C0C0">Putter</p>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div id="disc-img-front" style="width:200px;height:200px;"></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <a href="#" class="thumbnail">
+                                <img id="img-back" data-src="holder.js/100%x180" alt="Back">
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-2">
+                            <p style="font-weight:bold; text-align:right">Material:</p>
+                        </div>
+                        <div class="col-sm-7">
+                            <p>Champion</p>
+                        </div>
+                        <div class="col-sm-2">
+                            <p style="font-weight:bold; text-align:right">Speed:</p>
+                        </div>
+                        <div class="col-sm-1">
+                            <p>3</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-2">
+                            <p style="font-weight:bold">Color:</p>
+                        </div>
+                        <div class="col-sm-7">
+                            <p>Red</p>
+                        </div>
+                        <div class="col-sm-2">
+                            <p style="font-weight:bold; text-align:right">Glide:</p>
+                        </div>
+                        <div class="col-sm-1">
+                            <p>3</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-2">
+                            <p style="font-weight:bold">Weight:</p>
+                        </div>
+                        <div class="col-sm-7">
+                            <p>175</p>
+                        </div>
+                        <div class="col-sm-2">
+                            <p style="font-weight:bold; text-align:right">Turn:</p>
+                        </div>
+                        <div class="col-sm-1">
+                            <p>3</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-2">
+                            <p style="font-weight:bold">Notes:</p>
+                        </div>
+                        <div class="col-sm-7">
+                            <p>These are my notes.</p>
+                        </div>
+                        <div class="col-sm-2">
+                            <p style="font-weight:bold; text-align:right">Fade:</p>
+                        </div>
+                        <div class="col-sm-1">
+                            <p>3</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-sm-2">
+                            <button type="button" id="btn-delete-disc" class="btn btn-danger" data-dismiss="modal" data-toggle="modal" data-target="#confirmDeleteDiscModal"><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete</button>
+                        </div>
+                        <div class="col-sm-2">
+                            <button type="button" id="btn-edit-disc" class="btn btn-warning" data-dismiss="modal" data-toggle="modal" data-target="#createDiscModal"><span><i class="fa fa-pencil fa-tools"></i></span>Edit</button>
+                        </div>
+                        <div class="col-sm-2 col-sm-offset-6">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="confirmDeleteDiscModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteDiscLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="row">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="confirmDeleteDiscLabel">WARNING!</h4>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this disc and all of its data?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btn-confirm-delete-disc" class="btn btn-danger" data-dismiss="modal" data-toggle="modal" data-target="#confirmDeleteDiscModal"><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete Disc</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://rawgit.com/enyo/dropzone/master/downloads/dropzone.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/upload.js"></script>
+</body>
+</html>

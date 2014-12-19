@@ -1,0 +1,212 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/home/ubuntu/.nvm/v0.10.33/bin/node',
+1 verbose cli   '/home/ubuntu/.nvm/v0.10.33/bin/npm',
+1 verbose cli   'install' ]
+2 info using npm@1.4.28
+3 info using node@v0.10.33
+4 warn package.json disc-zump@ No description
+5 warn package.json disc-zump@ No repository field.
+6 warn package.json disc-zump@ No README data
+7 verbose readDependencies using package.json deps
+8 verbose install where, deps [ '/home/ubuntu/workspace',
+8 verbose install   [ 'express',
+8 verbose install     'express-handlebars',
+8 verbose install     'ejs',
+8 verbose install     'mongoose',
+8 verbose install     'passport',
+8 verbose install     'passport-local',
+8 verbose install     'passport-http',
+8 verbose install     'passport-facebook',
+8 verbose install     'passport-twitter',
+8 verbose install     'passport-google-oauth',
+8 verbose install     'connect-flash',
+8 verbose install     'bcrypt-nodejs',
+8 verbose install     'morgan',
+8 verbose install     'body-parser',
+8 verbose install     'cookie-parser',
+8 verbose install     'connect-mongo',
+8 verbose install     'method-override',
+8 verbose install     'express-session',
+8 verbose install     'underscore' ] ]
+9 info preinstall disc-zump@
+10 warn package.json passport-local@0.1.6 No README data
+11 verbose readDependencies using package.json deps
+12 verbose already installed skipping passport-local@~0.1.6 /home/ubuntu/workspace
+13 verbose already installed skipping passport-http@~0.2.2 /home/ubuntu/workspace
+14 verbose already installed skipping passport-facebook@~1.0.2 /home/ubuntu/workspace
+15 verbose already installed skipping passport-twitter@~1.0.2 /home/ubuntu/workspace
+16 verbose already installed skipping passport-google-oauth@~0.1.5 /home/ubuntu/workspace
+17 verbose already installed skipping connect-flash@~0.1.1 /home/ubuntu/workspace
+18 verbose cache add [ 'bcrypt-nodejs@latest', null ]
+19 verbose cache add name=undefined spec="bcrypt-nodejs@latest" args=["bcrypt-nodejs@latest",null]
+20 verbose parsed url { protocol: null,
+20 verbose parsed url   slashes: null,
+20 verbose parsed url   auth: null,
+20 verbose parsed url   host: null,
+20 verbose parsed url   port: null,
+20 verbose parsed url   hostname: null,
+20 verbose parsed url   hash: null,
+20 verbose parsed url   search: null,
+20 verbose parsed url   query: null,
+20 verbose parsed url   pathname: 'bcrypt-nodejs@latest',
+20 verbose parsed url   path: 'bcrypt-nodejs@latest',
+20 verbose parsed url   href: 'bcrypt-nodejs@latest' }
+21 verbose already installed skipping morgan@~1.0.0 /home/ubuntu/workspace
+22 verbose already installed skipping body-parser@~1.0.0 /home/ubuntu/workspace
+23 verbose cache add name="bcrypt-nodejs" spec="latest" args=["bcrypt-nodejs","latest"]
+24 verbose parsed url { protocol: null,
+24 verbose parsed url   slashes: null,
+24 verbose parsed url   auth: null,
+24 verbose parsed url   host: null,
+24 verbose parsed url   port: null,
+24 verbose parsed url   hostname: null,
+24 verbose parsed url   hash: null,
+24 verbose parsed url   search: null,
+24 verbose parsed url   query: null,
+24 verbose parsed url   pathname: 'latest',
+24 verbose parsed url   path: 'latest',
+24 verbose parsed url   href: 'latest' }
+25 verbose addNamed [ 'bcrypt-nodejs', 'latest' ]
+26 verbose addNamed [ null, null ]
+27 verbose already installed skipping cookie-parser@~1.0.0 /home/ubuntu/workspace
+28 silly lockFile 8a2c73f6-bcrypt-nodejs-latest bcrypt-nodejs@latest
+29 verbose lock bcrypt-nodejs@latest /home/ubuntu/.npm/8a2c73f6-bcrypt-nodejs-latest.lock
+30 verbose cache add [ 'connect-mongo@>= 1.0.3', null ]
+31 verbose cache add name=undefined spec="connect-mongo@>= 1.0.3" args=["connect-mongo@>= 1.0.3",null]
+32 verbose parsed url { protocol: null,
+32 verbose parsed url   slashes: null,
+32 verbose parsed url   auth: null,
+32 verbose parsed url   host: null,
+32 verbose parsed url   port: null,
+32 verbose parsed url   hostname: null,
+32 verbose parsed url   hash: null,
+32 verbose parsed url   search: null,
+32 verbose parsed url   query: null,
+32 verbose parsed url   pathname: 'connect-mongo@%3E=%201.0.3',
+32 verbose parsed url   path: 'connect-mongo@%3E=%201.0.3',
+32 verbose parsed url   href: 'connect-mongo@%3E=%201.0.3' }
+33 verbose cache add name="connect-mongo" spec=">= 1.0.3" args=["connect-mongo",">= 1.0.3"]
+34 verbose parsed url { protocol: null,
+34 verbose parsed url   slashes: null,
+34 verbose parsed url   auth: null,
+34 verbose parsed url   host: null,
+34 verbose parsed url   port: null,
+34 verbose parsed url   hostname: null,
+34 verbose parsed url   hash: null,
+34 verbose parsed url   search: null,
+34 verbose parsed url   query: null,
+34 verbose parsed url   pathname: '%3E=%201.0.3',
+34 verbose parsed url   path: '%3E=%201.0.3',
+34 verbose parsed url   href: '%3E=%201.0.3' }
+35 verbose addNamed [ 'connect-mongo', '>= 1.0.3' ]
+36 verbose addNamed [ null, '>=1.0.3' ]
+37 silly lockFile a6b44fac-connect-mongo-1-0-3 connect-mongo@>= 1.0.3
+38 verbose lock connect-mongo@>= 1.0.3 /home/ubuntu/.npm/a6b44fac-connect-mongo-1-0-3.lock
+39 info addNameTag [ 'bcrypt-nodejs', 'latest' ]
+40 verbose already installed skipping method-override@~1.0.0 /home/ubuntu/workspace
+41 verbose already installed skipping express-session@~1.0.0 /home/ubuntu/workspace
+42 verbose already installed skipping underscore@~1.7.0 /home/ubuntu/workspace
+43 silly addNameRange { name: 'connect-mongo', range: '>=1.0.3', hasData: false }
+44 verbose already installed skipping express@~4.0.0 /home/ubuntu/workspace
+45 verbose request where is /connect-mongo
+46 verbose request registry https://registry.npmjs.org/
+47 verbose request id 12cb3d434cf6e28a
+48 verbose url raw /connect-mongo
+49 verbose url resolving [ 'https://registry.npmjs.org/', './connect-mongo' ]
+50 verbose url resolved https://registry.npmjs.org/connect-mongo
+51 verbose request where is https://registry.npmjs.org/connect-mongo
+52 info trying registry request attempt 1 at 03:32:20
+53 http GET https://registry.npmjs.org/connect-mongo
+54 verbose already installed skipping express-handlebars@^1.1.0 /home/ubuntu/workspace
+55 verbose already installed skipping ejs@~0.8.5 /home/ubuntu/workspace
+56 verbose already installed skipping mongoose@~3.8.1 /home/ubuntu/workspace
+57 verbose already installed skipping passport@~0.1.17 /home/ubuntu/workspace
+58 verbose request where is /bcrypt-nodejs
+59 verbose request registry https://registry.npmjs.org/
+60 verbose url raw /bcrypt-nodejs
+61 verbose url resolving [ 'https://registry.npmjs.org/', './bcrypt-nodejs' ]
+62 verbose url resolved https://registry.npmjs.org/bcrypt-nodejs
+63 verbose request where is https://registry.npmjs.org/bcrypt-nodejs
+64 info trying registry request attempt 1 at 03:32:20
+65 verbose etag "6D35RPP59AAZDN9VCZNZAZTSW"
+66 http GET https://registry.npmjs.org/bcrypt-nodejs
+67 http 200 https://registry.npmjs.org/connect-mongo
+68 silly registry.get cb [ 200,
+68 silly registry.get   { date: 'Wed, 17 Dec 2014 03:32:20 GMT',
+68 silly registry.get     server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+68 silly registry.get     etag: '"9UIKU8AMP2X1FYWTHITLBGQO8"',
+68 silly registry.get     'content-type': 'application/json',
+68 silly registry.get     'cache-control': 'max-age=60',
+68 silly registry.get     'content-length': '19331',
+68 silly registry.get     'accept-ranges': 'bytes',
+68 silly registry.get     via: '1.1 varnish',
+68 silly registry.get     age: '34',
+68 silly registry.get     'x-served-by': 'cache-dfw1824-DFW',
+68 silly registry.get     'x-cache': 'HIT',
+68 silly registry.get     'x-cache-hits': '1',
+68 silly registry.get     'x-timer': 'S1418787140.967117,VS0,VE0',
+68 silly registry.get     vary: 'Accept',
+68 silly registry.get     'keep-alive': 'timeout=10, max=50',
+68 silly registry.get     connection: 'Keep-Alive' } ]
+69 silly addNameRange number 2 { name: 'connect-mongo', range: '>=1.0.3', hasData: true }
+70 silly addNameRange versions [ 'connect-mongo',
+70 silly addNameRange   [ '0.1.0',
+70 silly addNameRange     '0.1.1',
+70 silly addNameRange     '0.1.2',
+70 silly addNameRange     '0.1.3',
+70 silly addNameRange     '0.1.4',
+70 silly addNameRange     '0.1.5',
+70 silly addNameRange     '0.1.6',
+70 silly addNameRange     '0.1.7',
+70 silly addNameRange     '0.1.8',
+70 silly addNameRange     '0.1.9',
+70 silly addNameRange     '0.2.0',
+70 silly addNameRange     '0.3.0',
+70 silly addNameRange     '0.3.1',
+70 silly addNameRange     '0.3.2',
+70 silly addNameRange     '0.3.3',
+70 silly addNameRange     '0.4.0',
+70 silly addNameRange     '0.4.1' ] ]
+71 silly lockFile a6b44fac-connect-mongo-1-0-3 connect-mongo@>= 1.0.3
+72 silly lockFile a6b44fac-connect-mongo-1-0-3 connect-mongo@>= 1.0.3
+73 http 304 https://registry.npmjs.org/bcrypt-nodejs
+74 silly registry.get cb [ 304,
+74 silly registry.get   { date: 'Wed, 17 Dec 2014 03:32:21 GMT',
+74 silly registry.get     server: 'Apache',
+74 silly registry.get     via: '1.1 varnish',
+74 silly registry.get     'last-modified': 'Wed, 17 Dec 2014 03:32:21 GMT',
+74 silly registry.get     'cache-control': 'max-age=60',
+74 silly registry.get     etag: '"6D35RPP59AAZDN9VCZNZAZTSW"',
+74 silly registry.get     age: '0',
+74 silly registry.get     'x-served-by': 'cache-dfw1824-DFW',
+74 silly registry.get     'x-cache': 'HIT',
+74 silly registry.get     'x-cache-hits': '1',
+74 silly registry.get     'x-timer': 'S1418787141.035892,VS0,VE184',
+74 silly registry.get     vary: 'Accept',
+74 silly registry.get     'content-length': '0',
+74 silly registry.get     'keep-alive': 'timeout=10, max=50',
+74 silly registry.get     connection: 'Keep-Alive' } ]
+75 verbose etag https://registry.npmjs.org/bcrypt-nodejs from cache
+76 verbose addNamed [ 'bcrypt-nodejs', '0.0.3' ]
+77 verbose addNamed [ '0.0.3', '0.0.3' ]
+78 silly lockFile 30db234c-bcrypt-nodejs-0-0-3 bcrypt-nodejs@0.0.3
+79 verbose lock bcrypt-nodejs@0.0.3 /home/ubuntu/.npm/30db234c-bcrypt-nodejs-0-0-3.lock
+80 silly lockFile 30db234c-bcrypt-nodejs-0-0-3 bcrypt-nodejs@0.0.3
+81 silly lockFile 30db234c-bcrypt-nodejs-0-0-3 bcrypt-nodejs@0.0.3
+82 silly lockFile 8a2c73f6-bcrypt-nodejs-latest bcrypt-nodejs@latest
+83 silly lockFile 8a2c73f6-bcrypt-nodejs-latest bcrypt-nodejs@latest
+84 info already installed bcrypt-nodejs@0.0.3
+85 error notarget No compatible version found: connect-mongo@'>=1.0.3'
+85 error notarget Valid install targets:
+85 error notarget ["0.1.0","0.1.1","0.1.2","0.1.3","0.1.4","0.1.5","0.1.6","0.1.7","0.1.8","0.1.9","0.2.0","0.3.0","0.3.1","0.3.2","0.3.3","0.4.0","0.4.1"]
+85 error notarget
+85 error notarget This is most likely not a problem with npm itself.
+85 error notarget In most cases you or one of your dependencies are requesting
+85 error notarget a package version that doesn't exist.
+86 error System Linux 3.14.13-c9
+87 error command "/home/ubuntu/.nvm/v0.10.33/bin/node" "/home/ubuntu/.nvm/v0.10.33/bin/npm" "install"
+88 error cwd /home/ubuntu/workspace
+89 error node -v v0.10.33
+90 error npm -v 1.4.28
+91 error code ETARGET
+92 verbose exit [ 1, true ]

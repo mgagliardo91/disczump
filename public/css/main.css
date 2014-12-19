@@ -1,0 +1,26 @@
+.navbar-text {
+    margin-right: 0px;
+}
+
+.fa-tools {
+    padding-right: 10px;
+}
+
+.navbar-header {
+     padding-right: 20px;
+}
+
+.nav-search {
+     margin-top: 8px;
+     margin-bottom: 8px;
+     border-top: 1px solid transparent;
+     border-bottom: 1px solid transparent;
+}
+
+ul.nav {
+     padding: 0px 20px;
+}
+
+.modal-dialog {
+    z-index: 2000;
+}

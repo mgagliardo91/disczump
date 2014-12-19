@@ -1,0 +1,281 @@
+.row {
+	margin-right: 0px;
+	margin-left: 0px;
+}
+
+#search-results {
+     padding: 10px 20px;
+     z-index: 10000;
+     background-color: rgba(230, 230, 234, 0.95);
+     border-radius: 10px;
+     position: absolute;
+     border: 1px solid #949494;
+}
+
+.result-section {
+     margin-bottom: 10px;
+}
+
+.result-section-title {
+     font-weight: bold;
+     font-size: 14px;
+     padding-bottom: 5px;
+}
+
+.result-section-output {
+     padding: 2px 20px;
+     background-color: #CDCDCD;
+     margin-bottom: 5px;
+}
+
+.result-item {
+     font-size: 14px;
+     font-style: italic;
+     padding: 2px 2px 2px 2px;
+     cursor: pointer;
+     line-height: 19px;
+}
+
+.result-item .glyphicon {
+     margin-right: 10px;
+}
+
+.result-item:hover {
+     font-weight: bold;
+}
+
+.result-item-empty {
+     cursor: default;
+}
+
+.result-item-empty:hover {
+     font-weight: normal;
+}
+
+#filter-main {
+     padding-top: 0px;
+     margin: 0px 5px;
+     padding-bottom: 5px;
+}
+
+#filter-content{
+     padding: 0px;
+}
+
+#filter-content .filter-item:first-child {
+     margin-top: 10px;
+}
+
+#filter-main .filter-title {
+     font-size: 18px;
+     margin-top: 5px;
+}
+
+div.filter-item {
+     border-color: #A7A0C5;
+     margin-bottom: 15px;
+}
+
+.filter-item .panel-heading {
+     padding: 2px 15px;
+     color: #fff;
+     background-color: #5E60FD;
+     border-color: #644AD8;
+     font-weight: bold;
+     cursor: pointer;
+}
+
+.filter-item .panel-body {
+     padding: 0px 0px;
+     font-size: 12px;
+}
+
+.filter-item div.filter-option {
+     padding: 2px 20px;
+     border-bottom: 1px solid #aaa;
+     cursor: pointer;
+}
+
+.filter-item div.filter-option:last-child {
+     border-bottom: 0px;
+}
+
+.filter-item div.filter-option:hover {
+     background-color: #EFEFEF;
+}
+
+.filter-item div.filter-option-static:hover {
+     background-color: #fff;
+     cursor: default;
+}
+
+.filter-item div.filter-option-multi {
+     padding: 2px 20px;
+     border-bottom: 1px solid #aaa;
+     cursor: pointer;
+     font-weight: bold;
+}
+
+.filter-item div.filter-option-multi-closed:hover {
+     background-color: #EFEFEF;
+}
+
+.filter-item div.filter-option-group {
+     font-weight: normal;
+     display: none;
+}
+
+.no-padding {
+	padding: 0px;
+}
+
+.glyphicon-pad {
+     width: 14px;
+     height: 14px;
+}
+
+.static-heading {
+     padding: 10px;
+}
+
+.disc-item {
+    padding: 10px;
+    margin: 0px 0px 5px 0px;
+    cursor: pointer;
+}
+
+.heading-text {
+     font-weight: bold;
+     -moz-user-select: none;
+     -khtml-user-select: none;
+     -webkit-user-select: none;
+     user-select: none;
+}
+
+.heading-text:hover {
+     color: #5E60FD;
+     cursor: pointer;
+}
+
+.results-container {
+     box-shadow: 1px 1px 10px 1px #C0C0C0 inset;
+     border-radius: 5px;
+     padding: 10px 20px;
+}
+
+.table-results {
+     background-color: #fff;
+     margin-bottom: 0px;
+}
+
+.parent {
+   display:table;
+}
+
+.child {
+   display:table-cell;
+   vertical-align:middle;
+}
+
+#paginate-display-count {
+     width: auto;
+}
+
+.results-footer {
+     padding-top: 5px;
+     border-top: 2px solid #ddd;
+     padding-right: 0px;
+     padding-left: 0px;
+}
+
+.footer-static {
+     text-align: center;
+}
+
+.footer-text {
+     font-size: 12px;
+     font-weight: bold;
+     padding: 0px;
+}
+
+#results-footer-sort {
+     cursor: pointer;
+}
+
+.sort-text {
+     padding-left: 1em;
+     margin-bottom: 0px;
+}
+
+.sort-text li {
+     text-transform: capitalize;
+     font-size: 10px;
+}
+
+.results-footer .form-inline {
+     text-align: center;
+}
+
+.results-footer .form-group {
+display: inline-block;
+margin-bottom: 0;
+vertical-align: middle;
+}
+
+.results-footer .form-control {
+     display: inline-block;
+     width: auto;
+     vertical-align: middle;
+}
+
+.results-footer .form-control-static {
+     display: inline-block;
+}
+
+#paginate-display-count {
+     margin-right: 20px;
+}
+
+#paginate-nav li {
+     -moz-user-select: none;
+     -khtml-user-select: none;
+     -webkit-user-select: none;
+     user-select: none;
+     cursor: pointer;
+     padding: 0px 10px;
+}
+
+#paginate-nav li.active {
+     font-weight: normal !important;
+     cursor: default;
+}
+
+select, option {
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+     .footer-static {
+          text-align: right !important;
+     }
+     
+     .results-footer .form-inline {
+          text-align: left !important;
+     }
+}
+
+.required-field {
+     color: #FF0000;
+}
+
+.caption {
+     text-align: cen;
+}
+
+.modal-footer {
+     margin-top: 0px;
+}
+
+.view-disc-modal-header {
+     padding-bottom: 0px;
+}

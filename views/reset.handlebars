@@ -1,0 +1,37 @@
+<!-- views/signup.ejs -->
+<!doctype html>
+<html>
+<head>
+    <title>DiscZump - Reset Password</title>
+    <link rel="stylesheet" href="/static/css/signup.css">
+</head>
+<body>
+    <div class="signup-form-container">
+        <div class="signup-form-cell">
+            <div class="signup-form-center">
+                <form action="/recover/{{recover.authorizationId}}" method="post" autocomplete="off">
+                    <h1 class="signup-title">Reset your damn password</h1>
+                    {{#if message.error}}
+                    <div class="alert alert-danger" role="alert">
+                        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <strong>Error: </strong>{{message.error}}
+                    </div>
+                    {{/if}}
+                    <div class="signup-form-stacked">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                            <input class="form-control" id="password" type="password" name="password" placeholder="Password">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                            <input class="form-control" id="verify-password" type="password" placeholder="Verify Password" disabled>
+                        </div>
+                        <button id="submit" class="btn btn-submit btn-block" type="submit" disabled>Reset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="/static/js/user_validation.js"></script>
+</body>
+</html>
