@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+    <title>DiscZump - Sign In</title>
+    <link rel="stylesheet" href="/static/css/test.css">
+</head>
+<body>
+    <div class="login-form-container">
+        <div class="login-form-cell">
+            <div class="login-form-center">
+                <form action="/login" method="post">
+                    <h1 class="login-title">Test</h1>
+                    <div class="login-form-stacked">
+                        <input id="fileguy" type="file" />
+                    </div>
+                    <div class="form-header"><a href="/recover">Forgot Password?</a></div>
+                </form>
+                <p id="output">Output</p>
+                <div class="upload-img" id="disc-img-front" style="width:100px;height:300px">
+                </div>
+                <button id="submit" class="btn btn-submit btn-block">Sign in</button>
+            </div>
+        </div>
+    </div>
+    
+    
+    
+    <div class="row-fluid">
+        <div class="col-md-6 col-md-offset-3">
+            <div class="dropzone-area">
+                <div class="image-list-container">
+                    <div class="image-list-table">
+                        <div class="image-item-container image-add">
+                            <div class="image-item">
+                                <div class="image-entity">
+                                    <span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+          <ol class="carousel-indicators">
+          </ol>
+        
+          <div class="carousel-inner" role="listbox">
+            
+          </div>
+        
+          <a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a>
+        </div>
+    </div>
+    <script src="https://rawgit.com/enyo/dropzone/master/downloads/dropzone.js"></script>
+    <script src="/static/js/test.js"></script>
+</body>
+</html>

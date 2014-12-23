@@ -15,8 +15,7 @@ var discSchema = mongoose.Schema({
     glide           : Number,
     turn            : Number,
     fade            : Number,
-    notes: String,
-    image: {data: Buffer, contentType: String}
+    notes           : String
     
 });
 

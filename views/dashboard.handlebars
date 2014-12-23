@@ -141,36 +141,54 @@
                             <thead>
                                 <tr>
                                     <th class="row-fluid heading-text" id="sort-brand">
+                                        <span class="sort-icon"></span>
                                         Brand
-                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-name">
+                                        <span class="sort-icon"></span>
                                         Name
-                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-material">
+                                        <span class="sort-icon"></span>
                                         Material
-                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
+                                    </th>
+                                    <th class="row-fluid heading-text" id="sort-weight">
+                                        <span class="sort-icon"></span>
+                                        Weight
+                                       <!-- <span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
+                                    </th>
+                                    <th class="row-fluid heading-text" id="sort-color">
+                                        <span class="sort-icon"></span>
+                                        Color
+                                       <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-type">
+                                        <span class="sort-icon"></span>
                                         Type
-                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-speed">
+                                        <span class="sort-icon"></span>
                                         Speed
-                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-glide">
+                                        <span class="sort-icon"></span>
                                         Glide
-                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-turn">
+                                        <span class="sort-icon"></span>
                                         Turn
-                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-fade">
+                                        <span class="sort-icon"></span>
                                         Fade
-                                        <span class="glyphicon glyphicon-pad pull-right" aria-hidden="true"></span>
+                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                 </tr>
                             </thead>
@@ -208,220 +226,7 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="createDiscModal" tabindex="-1" role="dialog" aria-labelledby="createDiscLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                    <h4 class="modal-title" id="createDiscLabel">New Disc Details</h4>
-                </div>
-                <div class="modal-body">
-                    <form class="form-horizontal" role="form" id="createDiscForm">
-                        <div class="form-group">
-                            <label for="md-add-brand" class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>
-                            <div class="col-sm-10">
-                                <input type="text" class="form-control" id="create-disc-brand" param="brand" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="md-add-name" class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>
-                            <div class="col-sm-10">
-                                <input type="text" class="form-control" id="create-disc-name" param="name" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="md-add-material" class="col-sm-2 control-label">Material</label>
-                            <div class="col-sm-10">
-                                <input type="text" class="form-control" id="create-disc-material" param="material">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="md-add-type" class="col-sm-2 control-label">Type</label>
-                            <div class="col-sm-10">
-                                <select class="form-control" id="create-disc-type"  param="type">
-                                    <option value="Putt/Approach">Putt/Approach</option>
-                                    <option value="Mid-range">Mid-range</option>
-                                    <option value="Fairway Driver">Fairway Driver</option>
-                                    <option value="Distance Driver">Distance Driver</option>
-                                    <option value="Mini">Mini</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="md-add-weight" class="col-sm-2 control-label">Weight</label>
-                            <div class="col-sm-10">
-                                <input type="number" class="form-control" id="create-disc-weight" param="weight">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="md-add-color" class="col-sm-2 control-label">Color</label>
-                            <div class="col-sm-10">
-                                <input type="text" class="form-control" id="create-disc-color" param="color">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="md-add-speed" class="col-sm-2 control-label">Speed</label>
-                            <div class="col-sm-4">
-                                <input type="number" class="form-control" id="create-disc-speed" param="speed">
-                            </div>
-                            <label for="md-add-glide" class="col-sm-2 control-label">Glide</label>
-                            <div class="col-sm-4">
-                                <input type="number" class="form-control" id="create-disc-glide" param="glide">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="md-add-turn" class="col-sm-2 control-label">Turn</label>
-                            <div class="col-sm-4">
-                                <input type="number" class="form-control" id="create-disc-turn" param="turn">
-                            </div>
-                            <label for="md-add-fade" class="col-sm-2 control-label">Fade</label>
-                            <div class="col-sm-4">
-                                <input type="number" class="form-control" id="create-disc-fade" param="fade">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="md-add-notes" class="col-sm-2 control-label">Notes</label>
-                            <div class="col-sm-10">
-                                <textarea class="form-control" id="create-discnotes" rows="3" param="notes"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Select Images</label>
-                            <div class="col-sm-5">
-                                <a href="#" class="thumbnail">
-                                    <img id="img-front" data-src="holder.js/100%x180" alt="Front">
-                                </a>
-                            </div>
-                            <div class="col-sm-5">
-                                <a href="#" class="thumbnail">
-                                    <img id="img-back" data-src="holder.js/100%x180" alt="Back">
-                                </a>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="submit" id="btn-add-disc" class="btn btn-primary"><span><i class="fa fa-plus-circle fa-tools"></i></span>Add Disc</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="viewDiscModal" tabindex="-1" role="dialog" aria-labelledby="viewDiscLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header view-disc-modal-header">
-                    <div class="row">
-                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                        <h4 class="modal-title" id="viewDiscLabel">DISC NAME</h4>
-                    </div>
-                    <div class="row">
-                        <p style="color:#C0C0C0">Putter</p>
-                    </div>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <div id="disc-img-front" style="width:200px;height:200px;"></div>
-                        </div>
-                        <div class="col-sm-6">
-                            <a href="#" class="thumbnail">
-                                <img id="img-back" data-src="holder.js/100%x180" alt="Back">
-                            </a>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-2">
-                            <p style="font-weight:bold; text-align:right">Material:</p>
-                        </div>
-                        <div class="col-sm-7">
-                            <p>Champion</p>
-                        </div>
-                        <div class="col-sm-2">
-                            <p style="font-weight:bold; text-align:right">Speed:</p>
-                        </div>
-                        <div class="col-sm-1">
-                            <p>3</p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-2">
-                            <p style="font-weight:bold">Color:</p>
-                        </div>
-                        <div class="col-sm-7">
-                            <p>Red</p>
-                        </div>
-                        <div class="col-sm-2">
-                            <p style="font-weight:bold; text-align:right">Glide:</p>
-                        </div>
-                        <div class="col-sm-1">
-                            <p>3</p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-2">
-                            <p style="font-weight:bold">Weight:</p>
-                        </div>
-                        <div class="col-sm-7">
-                            <p>175</p>
-                        </div>
-                        <div class="col-sm-2">
-                            <p style="font-weight:bold; text-align:right">Turn:</p>
-                        </div>
-                        <div class="col-sm-1">
-                            <p>3</p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-2">
-                            <p style="font-weight:bold">Notes:</p>
-                        </div>
-                        <div class="col-sm-7">
-                            <p>These are my notes.</p>
-                        </div>
-                        <div class="col-sm-2">
-                            <p style="font-weight:bold; text-align:right">Fade:</p>
-                        </div>
-                        <div class="col-sm-1">
-                            <p>3</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <div class="row">
-                        <div class="col-sm-2">
-                            <button type="button" id="btn-delete-disc" class="btn btn-danger" data-dismiss="modal" data-toggle="modal" data-target="#confirmDeleteDiscModal"><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete</button>
-                        </div>
-                        <div class="col-sm-2">
-                            <button type="button" id="btn-edit-disc" class="btn btn-warning" data-dismiss="modal" data-toggle="modal" data-target="#createDiscModal"><span><i class="fa fa-pencil fa-tools"></i></span>Edit</button>
-                        </div>
-                        <div class="col-sm-2 col-sm-offset-6">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="confirmDeleteDiscModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteDiscLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div class="row">
-                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                        <h4 class="modal-title" id="confirmDeleteDiscLabel">WARNING!</h4>
-                    </div>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete this disc and all of its data?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" id="btn-confirm-delete-disc" class="btn btn-danger" data-dismiss="modal" data-toggle="modal" data-target="#confirmDeleteDiscModal"><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete Disc</button>
-                </div>
-            </div>
-        </div>
-    </div>
     <script src="https://rawgit.com/enyo/dropzone/master/downloads/dropzone.js"></script>
     <script src="/static/js/dashboard.js"></script>
-    <script src="/static/js/upload.js"></script>
 </body>
 </html>

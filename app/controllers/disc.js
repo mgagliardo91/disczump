@@ -41,26 +41,25 @@ function postDisc(userId, data, callback) {
    	disc.type = data.type;
    	disc.color = data.color;
    	disc.notes = data.notes;
-   	disc.image = data.image;
    	
    	var param;
-   	if (_.isNumber(param = parseInt(data.weight))) {
+   	if (data.weight && _.isNumber(param = parseInt(data.weight))) {
    		disc.weight = param;
    	}
    	
-   	if (_.isNumber(param = parseInt(data.speed))) {
+   	if (data.speed && _.isNumber(param = parseInt(data.speed))) {
    		disc.speed = data.speed;
    	}
    	
-   	if (_.isNumber(param = parseInt(data.glide))) {
+   	if (data.glide && _.isNumber(param = parseInt(data.glide))) {
    		disc.glide = data.glide;
    	}
    	
-   	if (_.isNumber(param = parseInt(data.turn))) {
+   	if (data.turn && _.isNumber(param = parseInt(data.turn))) {
    		disc.turn = data.turn;
    	}
    	
-   	if (_.isNumber(param = parseInt(data.fade))) {
+   	if (data.fade && _.isNumber(param = parseInt(data.fade))) {
    		disc.fade = data.fade;
    	}
 

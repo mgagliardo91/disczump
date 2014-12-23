@@ -14,6 +14,7 @@ var exphbs = require('express-handlebars');
 var config = require('./config/config.js');
 var oauth2 = require('./config/oauth2.js');
 var logger = require('./config/logger.js').logger;
+var Grid = require('gridfs-stream');
 
 // configuration ===============================================================
 require('./app/utils/mailer.js');
@@ -26,12 +27,12 @@ require('./config/passport')(passport);
 // set up our express application
 app.use(morgan('dev'));
 app.use(cookieParser());
-app.use(bodyParser());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded());
 app.use('/static', express.static(__dirname + '/public'));
 
 // required for passport
-app.use(session({ secret: config.secret, cookie: { maxAge: 60000 } }));
+app.use(session({ secret: config.secret}));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
@@ -43,16 +44,25 @@ var hbs = exphbs.create({
 app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
 
+var gridFs = new Grid(mongoose.connection.db, mongoose.mongo);
+
 // routes ======================================================================
-require('./app/routes.js')(app, passport);
+var mainRouter = express.Router();
+require('./app/routes.js')(mainRouter, passport);
+app.use('/', mainRouter);
 
 var apiRouter = express.Router();
-require('./app/api.js')(apiRouter, passport);
+require('./app/api.js')(apiRouter, passport, gridFs);
 app.use('/api', apiRouter);
 
 var oauthRouter = express.Router();
 require('./app/oauthRoutes.js')(oauthRouter, oauth2);
 app.use('/oauth', oauthRouter);
+
+var testRouter = express.Router();
+require('./app/files.js')(testRouter, gridFs);
+app.use('/files', testRouter);
+
 
 // launch ======================================================================
 app.listen(port);

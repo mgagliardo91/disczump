@@ -19,6 +19,22 @@ module.exports = function(app, passport) {
         });
     });
     
+    app.get('/test', function(req, res) {
+       res.render('test'); 
+    });
+    
+    app.post('/test', function(req, res){
+        if (req.body.image.match(/^data:image\/png;base64,/)) {
+            var image = new Buffer(req.body.image.replace(/^data:image\/png;base64,/,""), "base64");
+            res.sendFile(image);
+        }
+        
+        else if (req.body.image.match(/^data:image\/jpeg;base64,/)) {
+            var image = new Buffer(req.body.image.replace(/^data:image\/jpeg;base64,/,""), "base64");
+            res.sendFile(image);
+        }
+    });
+    
     app.get('/' + configRoutes.confirmAccount + '/:authorizationId', function(req, res){
             Confirm.confirmAccount(req.params.authorizationId, function(err, confirm){
                 if (err)
