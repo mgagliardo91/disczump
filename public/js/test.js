@@ -84,6 +84,11 @@ $(document).ready(function(){
        $('.current-sort-container').append(createSortField()); 
     });
     
+    $(document).on('mousedown', '.sort-field-arrange', function(){
+        $(this).addClass('mdown');
+    }).on('mouseup', '.sort-field-arrange', function(){
+        $(this).removeClass('mdown');
+    });
     
     $('.current-sort-container').append(createSortField()); 
 });
@@ -91,7 +96,6 @@ $(document).ready(function(){
 function resizeHeader() {
 	$inventoryHeader.css({
 		'width': $inventoryContainer.outerWidth()
-		
 	});
 }
 

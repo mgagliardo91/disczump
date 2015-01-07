@@ -3,35 +3,68 @@ var url = "https://disczumpserver-mgagliardo.c9.io/api/";
 var $searchResults;
 var $searchBar;
 var $filterResults;
-var $footerSort;
+var $headerSort;
+var $inventoryHeader;
+var $inventoryContainer;
+var $dynamicHeader;
+var $sortContainer;
 
 var searchRequest;
 
 var discList = [];
 var discs = [];
 var filters = {name: [], brand: [], type: [], tagList: [], material: [], weight: [], color: [], speed: [], glide: [], turn: [], fade: []};
-var sort = [{sortProp: 'name', sortType: 'text', sortOn: true, sortAsc: true, sortOrder: 1},
-		  {sortProp: 'brand', sortType: 'text', sortOn: true, sortAsc: true, sortOrder: 0},
-		  {sortProp: 'type', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortProp: 'material', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortProp: 'weight', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortProp: 'color', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortProp: 'speed', sortType: 'number', sortOn: false, sortAsc: false, sortOrder: -1},
-		  {sortProp: 'glide', sortType: 'number', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortProp: 'turn', sortType: 'number', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortProp: 'fade', sortType: 'number', sortOn: false, sortAsc: true, sortOrder: -1}];
+var sort = [{sortText: 'Name', sortProp: 'name', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
+		  {sortText: 'Brand',sortProp: 'brand', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
+		  {sortText: 'Type',sortProp: 'type', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
+		  {sortText: 'Material',sortProp: 'material', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
+		  {sortText: 'Weight',sortProp: 'weight', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
+		  {sortText: 'Color',sortProp: 'color', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
+		  {sortText: 'Speed',sortProp: 'speed', sortType: 'number', sortOn: false, sortAsc: false, sortOrder: -1},
+		  {sortText: 'Glide',sortProp: 'glide', sortType: 'number', sortOn: false, sortAsc: true, sortOrder: -1},
+		  {sortText: 'Turn',sortProp: 'turn', sortType: 'number', sortOn: false, sortAsc: true, sortOrder: -1},
+		  {sortText: 'Fade',sortProp: 'fade', sortType: 'number', sortOn: false, sortAsc: true, sortOrder: -1}];
 var paginateOptions = {displayCount: 20, currentPage: 1, lastPage: 1};
 var dropzones = [];
+
+var refPageTop;
+var refContBottom;
+var isFixed = false, isHidden = false;
 
 $(document).ready(function(){
     $searchResults = $('#search-results');
     $searchBar = $('#search-all');
 	$filterResults = $('#filter-results');
-	$footerSort = $('#results-footer-sort');
+	$headerSort = $('#results-header-sort');
+	$inventoryHeader = $('#inventory-header');
+    $inventoryContainer = $('.disc-inventory-container');
+    $dynamicHeader = $('#disc-inventory-header-dynamic');
+	$sortContainer = $('.current-sort-container');
+    
+    refPageTop = $('body').outerHeight() - $('body').height() - $('nav').outerHeight();
+    refContBottom = refPageTop + $inventoryContainer.outerHeight() - $inventoryHeader.outerHeight();
      
      $(window).on('resize', function(){
-        resizeSearch($searchResults, $searchBar, true);  
+        resizeSearch($searchResults, $searchBar, true); 
+        resizeResultHeader();
      });
+     
+      $(window).scroll(function(){
+    	var curTop = $(window).scrollTop();
+    	if (!isFixed && curTop >= refPageTop) {
+    		var headerTop = $inventoryHeader.offset().top;
+    		$inventoryHeader.addClass('header-fixed');
+    		$inventoryHeader.css({
+				top: $('nav').outerHeight()
+			});
+			isFixed = true;
+    	}
+    	
+    	if (isFixed &&  curTop < refPageTop) {
+    		$inventoryHeader.removeClass('header-fixed');
+			isFixed = false;
+    	}
+    });
      
      $(window).click(function(e) {
      	$.each($('.hide-on-close'), function(index) {
@@ -41,6 +74,14 @@ $(document).ready(function(){
      	});
      });
      
+     $headerSort.click(function(){
+       if ($dynamicHeader.is(':visible')) { 
+            $dynamicHeader.slideUp(300);   
+       } else {
+           $dynamicHeader.slideDown(300); 
+       }
+    });
+    
      $searchBar.focusin(function(){
      	$(this).trigger('keyup');
      }).on('keyup', function(){
@@ -229,10 +270,52 @@ $(document).ready(function(){
      $('#search-request').click(function() {
      	$searchBar.focus();
      });
+     
+     // SORT-REMOVE
+     $('.current-sort-container').sortable({
+        placeholder: 'sort-field-placeholder',
+        handle: '.sort-field-arrange'
+    });
+    
+    // SORT REMOVE
+    $(document).on('click', '.sort-field-remove', function() {
+        if ($('.sort-field-container').length > 1) {
+            $(this).parents('.sort-field-container').remove();
+            updateSortFields();
+        }
+    });
+    
+    // SORT REMOVE
+    $('.add-sort-container').mousedown(function(){
+        $(this).addClass('mdown');
+    }).mouseup(function(){
+        $(this).removeClass('mdown');
+    }).click(function(){
+       addSortField();
+    });
+    
+    // SORT REMOVE
+    $(document).on('mousedown', '.sort-field-arrange', function(){
+        $(this).addClass('mdown');
+    }).on('mouseup', '.sort-field-arrange', function(){
+        $(this).removeClass('mdown');
+    });
+    
+    // SORT REMOVE
+    $(document).on('change', '.sort-option-select', function(){
+    	updateSortFields();
+    });
+    
+    // SORT REMOVE
+    $(document).on('change', '.sort-option-direction', function(){
+    	updateSortFields();
+    });
+    
 	
      // Start on-load commands
      //loading();
      resizeSearch($searchResults, $searchBar, true, true);
+     resizeResultHeader();
      $searchResults.hide();
      getAllDiscs(function(success){
 		if (success) {
@@ -241,6 +324,8 @@ $(document).ready(function(){
 			alert('Unable to intialize');
 		}
 	 });
+	 
+	 addSortField();
 });
 
 /*var loading = function() {
@@ -323,6 +408,7 @@ function updateFilter(generateFilters) {
 	if (generateFilters) generateAllFilters();
 	discList = filterList(filters);
 	showDiscs();
+	resizeResultHeader();
 }
 
 function resizeSearch($element, $relative, relScreen, forceShow) {
@@ -338,6 +424,12 @@ function resizeSearch($element, $relative, relScreen, forceShow) {
 		$element.css({left: leftOff, 
 		top: topOff + $relative.outerHeight()});
 	}
+}
+
+function resizeResultHeader() {
+	$inventoryHeader.css({
+		'width': $inventoryContainer.outerWidth()
+	});
 }
 
 function initialize() {
@@ -361,12 +453,17 @@ function generateAllFilters() {
 
 function generateFilters($option, query, property) {
 	var items = getProperties(property);
-	console.log(items);
 	items = _.sortBy(items, function(i) {
 		if (_.isNumber(i)) {
 			return parseInt(i);
 		}
-		
+		if (_.isString(i)) {
+			if (i == '') {
+				return undefined;
+			} else {
+			    return i.toLowerCase();
+			}
+		}
 		return i;
 	});
 	
@@ -381,9 +478,18 @@ function generateFilters($option, query, property) {
 		$option.find('div.filter-option-static').show();
 	}
 	
+	var toRemove = [];
 	_.each(filters[property], function(item) {
 		var $filter = filterBody.find('div.filter-option[filterOn="' + item + '"]');
-		$filter.append('<span class="glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>');
+		if ($filter.length > 0) {
+			$filter.append('<span class="glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>');
+		} else {
+			toRemove.push(item);
+		}
+	});
+	
+	filters[property] = _.reject(filters[property], function(item) {
+			return _.contains(toRemove, item);
 	});
 	
 }
@@ -392,9 +498,8 @@ function generateFilterOption(option) {
 	var optionText = option;
 	
 	if(option == '' || typeof option == 'undefined') {
-		optionText = 'None';
+		optionText = '- None -';
 	}
-	
 	
 	return '<div class="filter-option" filterOn="' + option + '">' + optionText + '</div>';
 }
@@ -410,12 +515,12 @@ function showDiscs(maintainPage) {
 	_.each(paged, function(disc) {
 		$filterResults.append(generateDiscTemplate(disc));
 	});
-	updateFooter(sorted.length);
+	updateHeader(sorted.length);
+	resizeResultHeader();
 }
 
-function updateFooter(count) {
-	$('#results-footer-count').text('Results: ' + count);
-	$footerSort.text('Sort: ' + (_.where(sort, {sortOn: true}).length > 0 ? 'On' : 'Off'));
+function updateHeader(count) {
+	$('#results-header-count').text('Results: ' + count);
 	
 	var $paginate = $('#paginate-nav');
 	var $pageInsert = $('#page-back');
@@ -440,18 +545,76 @@ function updateFooter(count) {
 }
 
 function generateDiscTemplate(disc) {
-	return '<tr class="disc-item" discId="' + disc._id + '">' +
-		  	'<td class="disc-brand">' + (disc.brand ? disc.brand : '') + '</td>' +
-		  	'<td class="disc-name">' + (disc.name ? disc.name : '') + '</td>' +
-		  	'<td class="disc-material">' + (disc.material ? disc.material : '') + '</td>' +
-		  	'<td class="disc-weight">' + ((typeof disc.weight != 'undefined') ? disc.weight : '') + '</td>' +
-		  	'<td class="disc-color">' + (disc.color ? disc.color : '') + '</td>' +
-		  	'<td class="disc-type">' + (disc.type ? disc.type : '') + '</td>' +
-		  	'<td class="disc-speed">' + ((typeof disc.speed != 'undefined') ? disc.speed : '') + '</td>' +
-		  	'<td class="disc-glide">' + ((typeof disc.glide != 'undefined') ? disc.glide : '') + '</td>' +
-		  	'<td class="disc-turn">' + ((typeof disc.turn != 'undefined') ? disc.turn : '') + '</td>' +
-		  	'<td class="disc-fade">' + ((typeof disc.fade != 'undefined') ? disc.fade : '') + '</td>' +
-		  '</tr>';
+	var tagHTML = '';
+	
+	_.each(disc.tagList, function(tag) {
+		tagHTML = tagHTML + '<span class="disc-info-tag">' + tag + '</span>';
+	});
+	
+	 return '<div class="disc-item-container">' +
+                                '<div class="disc-item" discId="' + disc._id + '">' +
+                                    '<div class="disc-content-image-container">' +
+                                        '<div class="disc-content-image">' +
+                                            '<img src="https://placehold.it/150x150" />' +
+                                        '</div>' +
+                                    '</div>' +
+                                    '<div class="disc-content-info-container">' +
+                                        '<div class="disc-info-main-pane">' +
+                                            '<div class="disc-info-left-pane div-inline float-left">' +
+                                                '<div class="disc-info-brand">' + (disc.brand ? disc.brand : '') + '</div>' +
+                                                '<div class="disc-info-name">' + (disc.name ? disc.name : '') + '</div>' +
+                                            '</div>' +
+                                            '<div class="disc-info-right-pane div-inline float-left">' +
+                                                '<div class="div-inline float-left div-split-horiz">' +
+                                                    '<table>' +
+                                                        '<tr>' +
+                                                            '<td class="disc-info-label">Type:</td>' +
+                                                            '<td class="disc-info-value">' +(disc.type ? disc.type : '') + '</td>' +
+                                                        '</tr>' +
+                                                        '<tr>' +
+                                                            '<td class="disc-info-label">Material:</td>' +
+                                                            '<td class="disc-info-value">' +(disc.material ? disc.material : '') + '</td>' +
+                                                        '</tr>' +
+                                                    '</table>' +
+                                                '</div>' +
+                                                '<div class="div-inline float-left div-split-horiz">' +
+                                                    '<table>' +
+                                                        '<tr>' +
+                                                            '<td class="disc-info-label">Color:</td>' +
+                                                            '<td class="disc-info-value">' +(disc.color ? disc.color : '') + '</td>' +
+                                                        '</tr>' +
+                                                        '<tr>' +
+                                                            '<td class="disc-info-label">Weight:</td>' +
+                                                            '<td class="disc-info-value">' + ((typeof disc.weight != 'undefined') ? disc.weight : '') + '</td>' +
+                                                        '</tr>' +
+                                                    '</table>' +
+                                                '</div>' +
+                                            '</div>' +
+                                        '</div>' +
+                                        '<div>' +
+                                            '<div class="disc-info-left-pane div-inline float-left">' +
+                                                '<div class="disc-info-bottom">' +
+                                                    '<div class="disc-info-numbers">' +
+                                                    ((typeof disc.speed != 'undefined') ? disc.speed : '??') + ' | ' +
+                                                    ((typeof disc.glide != 'undefined') ? disc.glide : '??') +' | ' +
+                                                    ((typeof disc.turn != 'undefined') ? disc.turn : '??') + ' | ' +
+                                                    ((typeof disc.fade != 'undefined') ? disc.fade : '??') + '</div>' +
+                                                '</div>' +
+                                            '</div>' +
+                                            '<div class="disc-info-right-pane div-inline float-left">' +
+                                                '<div class="disc-info-bottom">' +
+                                                    '<div class="disc-info-tags div-inline float-left">' +
+                                                        '<span class="disc-info-tag-label">Tags:</span>' +
+                                                        tagHTML +
+                                                    '</div>' +
+                                                '</div>' +
+                                            '</div>' +
+                                        '</div>' +
+                                    '</div>' +
+                                    '<div class="clearfix"></div>' +
+                                '</div>' +
+                            '</div>';
+	
 }
 
 function generateModalTemplate(disc) {
@@ -465,8 +628,94 @@ function generateModalTemplate(disc) {
 			'<p>' + disc.fade + '</p>'
 }
 
-function trySort($sortHeader, callback) {
-	var sorter = _.first(_.where(sort, {'sortProp': $sortHeader.text().toLowerCase().trim()}));
+// SORT REMOVE
+
+function addSortField() {
+    $sortContainer.append(createSortField());
+    
+    $sortContainer.find('.sort-field-container:last-child .sort-option-select').trigger('change');
+}
+
+function createSortField() {
+	var optionHTML = '';
+	
+	_.each(sort, function(sortOption) {
+		optionHTML = optionHTML + '<option value="' + sortOption.sortProp + '">' + sortOption.sortText + '</option>';
+	});
+	
+    return '<div class="sort-field-container">' +
+                '<div class="sort-field-arrange div-inline float-left text-center no-select"> <!-- Arrange Icon -->' +
+                    '<span><i class="fa fa-bars"></i></span>' +
+                '</div>' +
+                '<div class="sort-field-remove div-inline float-right text-center no-select"> <!-- Remove Icon -->' +
+                    '<span><i class="fa fa-times"></i></span>' +
+                '</div>' +
+                '<div class="sort-field-form"> <!-- Form -->' +
+                    '<div class="row">' +
+                        '<div>' +
+                            '<form class="form-inline" role="form">' +
+                                '<div class="form-group" style="margin-right: 30px">' +
+                                    '<p class="form-control-static header-text">Field:</p>' +
+                                    '<select class="form-control input-sm sort-option-select">' +
+                                        optionHTML +
+                                    '</select>' +
+                                '</div>' +
+                                '<div class="form-group">' +
+                                    '<p class="form-control-static header-text">Direction:</p>' +
+                                    '<select class="form-control input-sm sort-option-direction">' +
+                                        '<option value="Ascending">Ascending</option>' +
+                                        '<option value="Descending">Descending</option>' +
+                                    '</select>' +
+                                '</div>' +
+                            '</form>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+}
+
+function updateSortFields() {
+	_.each(sort, function(sortOption) {
+		sortOption.sortOn = false;
+		sortOption.sortOrder = -1;
+	})
+	
+	$('.sort-field-container').each(function(i) {
+		console.log(i);
+		sortFieldChange($(this), i);
+		console.log('hit');
+	});
+	
+	console.log('done');
+	console.log(JSON.stringify(sort));
+	showDiscs();
+}
+
+function sortFieldChange($sortField, i) {
+	console.log($sortField);
+	var option = $sortField.find('select.sort-option-select').val();
+	var order = $sortField.find('select.sort-option-direction').val() == 'Ascending';
+	
+	updateSort(option, true, order, i);
+}
+
+function updateSort(option, enable, isAsc, index) {
+	var sorter = _.first(_.where(sort, {'sortProp': option}));
+	if (sorter !== undefined) {
+		if (typeof enable !== 'undefined') sorter.sortOn = enable;
+		if (typeof isAsc !== 'undefined') sorter.sortAsc = isAsc;
+		if (typeof index !== 'undefined') {
+			sorter.sortOrder = index;
+		} else {
+			sorter.sortOrder = -1;
+		}
+	}
+	
+}
+
+function trySort(option) {
+	var sorter = _.first(_.where(sort, {'sortProp': option}));
 	if (sorter !== undefined) {
 		var isOn = sorter.sortOn;
 		sorter.sortAsc = !(isOn && sorter.sortAsc);
@@ -475,11 +724,9 @@ function trySort($sortHeader, callback) {
 		var order = _.max(_.pluck(sort, 'sortOrder')) + 1;
 		sorter.sortOrder = sorter.sortOn ? (isOn ? sorter.sortOrder : order) : -1;
 		showDiscs();
-		
-		if (callback) {
-			callback(sorter);
-		}
 	}
+	
+	console.log(JSON.stringify(sort));
 }
 
 function genericSort(sorter, array) {
@@ -516,26 +763,6 @@ function sortDiscs() {
 		lastSort = sorter;
 	});
 	 
-	 if (toSort.length) {
-	 	$footerSort.popover({
-		 	animation: true,
-		 	html: true,
-		 	content: function(){
-		 			var sortMethod = _.pluck(_.where(sort, {sortOn : true}), 'sortProp');
-					var sortText = '<ol class="sort-text">'
-					_.each(sortMethod, function(method) {
-						sortText += '<li>' + method + '</li>';	
-					});
-					sortText += '</ol>';
-					return sortText;
-		 	},
-		 	placement: 'bottom',
-		 	trigger: 'hover'
-		 });
-	 } else {
-	 	$footerSort.popover('destroy');
-	 }
-	 
 	 _.each(sort, function(sorter) {
 		var glyph = $('#sort-' + sorter.sortProp).find('.sort-icon');
 		if (!sorter.sortOn) {
@@ -555,6 +782,8 @@ function sortDiscs() {
 	return sorted;
 }
 
+// END SORT REMOVE
+
 function paginate(toPaginate) {
 	var lastPage = 1;
 	
@@ -570,7 +799,7 @@ function paginate(toPaginate) {
 	if (paginateOptions.currentPage < 1) paginateOptions.currentPage = 1;
 	
 	var start = (paginateOptions.currentPage - 1) * paginateOptions.displayCount;
-	var end = Math.min(toPaginate.length, start + paginateOptions.displayCount);
+	var end = paginateOptions.displayCount > -1 ? Math.min(toPaginate.length, start + paginateOptions.displayCount) : toPaginate.length;
 	return toPaginate.slice(start, end);
 }
 
@@ -1183,7 +1412,7 @@ function generateCreateDiscForm() {
 								if (dropzone && dropzone.getAcceptedFiles().length > 0) {
 									dropzone.options.url = '/api/discs/' + retData._id + '/images';
 									dropzone.on('queuecomplete', function() {
-										$inner.prepend(generateSuccess(retData.Brand + ' ' + retData.name + ' was successfully added.', 'SUCCESS'));
+										$inner.prepend(generateSuccess(retData.Brand + ' ' + retData.name + ' was successfully added.'));
 										updateFilter(true);
 										$('#createDiscForm').trigger("reset");
 										dropzone.disable();
@@ -1192,7 +1421,7 @@ function generateCreateDiscForm() {
 									
 									dropzone.processQueue();
 								} else {
-									$inner.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'SUCCESS'));
+									$inner.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.'));
 									updateFilter(true);
 									$('#createDiscForm').trigger("reset");
 								}
@@ -1464,7 +1693,6 @@ function getAllDiscs(callback) {
 		url: url + 'discs/',
 		contentType: "application/json",
 		success: function (data) {
-			console.log(data);
 		   	discs = data;
 			success = true;
 		},
@@ -1491,7 +1719,6 @@ function postDisc(disc, callback) {
 		contentType: "application/json",
 		data: JSON.stringify(disc),
 		success: function (data) {
-			console.log(JSON.stringify(data));
 			retData = {'error' : {message : 'Unable to process request.', type : 'Unknown Error'}};
 			
 			if (!data) {
@@ -1537,7 +1764,6 @@ function putDisc(disc, callback) {
 		contentType: "application/json",
 		data: JSON.stringify(disc),
 		success: function (data) {
-			console.log(data);
 			if(data && typeof data._id != 'undefined') {
 				discs = _.filter(discs, function(disc){
 					return disc._id != data._id;
@@ -1568,7 +1794,6 @@ function deleteDisc(discId, callback) {
 		url: url + '/discs/' + discId,
 		contentType: "application/json",
 		success: function (data) {
-			console.log(data);
 			if(data && typeof data._id != 'undefined') {
 				discs = _.filter(discs, function(disc){
 					return disc._id != data._id;

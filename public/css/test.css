@@ -482,7 +482,6 @@ select, option {
 
 .add-sort-container {
     padding: 3px 0px;
-    /*background-color: #fff;*/
     cursor: pointer;
     background: rgba(222,222,222,1);
     border-top: 1px solid rgb(134, 134, 134);
@@ -548,6 +547,12 @@ select, option {
     width: 40px;
     border-right: 1px solid #ccc;
     cursor: move;
+    cursor: -webkit-grab;
+}
+
+.sort-field-arrange.mdown {
+    cursor: move;
+    cursor: -webkit-grabbing;
 }
 
 .sort-field-arrange:hover {
