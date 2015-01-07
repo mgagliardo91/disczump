@@ -9,13 +9,15 @@ var discSchema = mongoose.Schema({
     name            : String,
     type            : String,
     weight          : Number,
-    material         : String,
+    material        : String,
     color           : String,
     speed           : Number,
     glide           : Number,
     turn            : Number,
     fade            : Number,
-    notes           : String
+    notes           : String,
+    tagList         : [String],
+    visible         : {type:Boolean, default: false}
     
 });
 

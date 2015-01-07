@@ -95,6 +95,10 @@ div.filter-item {
      padding: 2px 20px;
      border-bottom: 1px solid #aaa;
      cursor: pointer;
+     -moz-user-select: none;
+     -khtml-user-select: none;
+     -webkit-user-select: none;
+     user-select: none;
 }
 
 .filter-item div.filter-option:last-child {
@@ -341,22 +345,37 @@ select, option {
 
 /*===================================================================*/
 /*                                                                   */
-/*                            Image Upload                           */
+/*                      Image List/Blocks                            */
 /*                                                                   */
 /*===================================================================*/
-
-.dropzone-area {
-    position: relative;
-    padding: 0px;
+.image-block-display {
+    padding: 10px;
 }
 
-.image-list-overlay {
-    position: absolute;
-    top: 0px;
-    width: 100%;
-    height: 100%;
-    z-index: 110;
-    display: none;
+.image-block {
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+.image-block-frame {
+    display: table-cell;
+    vertical-align: middle;
+    width: 250px;
+    height: 250px;
+    border: 2px solid rgb(132, 132, 132);
+    padding: 10px;
+    -webkit-box-shadow: inset 0px 0px 5px 1px rgba(92,92,92,1);
+    -moz-box-shadow: inset 0px 0px 5px 1px rgba(92,92,92,1);
+    box-shadow: inset 0px 0px 5px 1px rgba(92,92,92,1);
+}
+
+.image-block-frame > img {
+    cursor: pointer;
+}
+
+.image-list {
+    position: relative;
+    padding: 0px;
 }
 
 .dz-drag-hover {
@@ -371,6 +390,14 @@ select, option {
     -webkit-box-shadow: inset 2px 2px 10px 1px rgba(92,92,92,1);
     -moz-box-shadow: inset 2px 2px 10px 1px rgba(92,92,92,1);
     box-shadow: inset 2px 2px 10px 1px rgba(92,92,92,1);
+}
+
+.image-list-container-simple {
+    border: 0px;
+     -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    padding: 0px;
 }
 
 .image-list-container::-webkit-scrollbar {
@@ -397,6 +424,13 @@ select, option {
     display: table-cell;
     vertical-align: middle;
     padding-right: 10px;
+    padding-bottom: 5px;
+}
+
+.image-item-container.dz-error img {
+    content:url("https://placehold.it/250x250");
+    max-width: 150px;
+    max-height: 150px;
 }
 
 .image-item {
@@ -404,14 +438,41 @@ select, option {
     -webkit-box-shadow: 3px 3px 10px 1px rgba(0,0,0,0.67);
     -moz-box-shadow: 3px 3px 10px 1px rgba(0,0,0,0.67);
     box-shadow: 3px 3px 10px 1px rgba(0,0,0,0.67);
-    min-width: 150px;
-    min-height: 150px;
     position: relative;
+    padding-left: 2px;
 }
 
 .image-entity {
+    min-width: 150px;
+    min-height: 150px;
     width: 150px;
     height: 150px;
+}
+
+.image-preview { 
+    display: table-cell;
+    vertical-align: middle;
+    width: 50px;
+    height: 50px;
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+    cursor: pointer;
+}
+
+.image-preview.active {
+    opacity: 1;
+    filter: alpha(opacity=100); /* For IE8 and earlier */
+}
+
+.image-preview:hover {
+    opacity: 1;
+    filter: alpha(opacity=100); /* For IE8 and earlier */
+}
+
+img.fit-parent {
+    max-width:100%;
+    max-height:100%;
+    
 }
 
 .image-overlay {
@@ -466,4 +527,84 @@ select, option {
     display: table-cell;
     vertical-align: middle;
     cursor: pointer;
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*                            Tag List                               */
+/*                                                                   */
+/*===================================================================*/
+
+.tag-list-container {
+    border: 1px solid #ccc;
+    height: 57px;
+    border-width: thin;
+    border-radius: 4px;
+    margin-top: 5px;
+    overflow: auto;
+    max-height: 70px;
+}
+
+.tag-item {
+    margin: 3px;
+    border: 1px dashed #266264;
+    border-radius: 2px;
+    border-width: thin;
+    display: inline-block;
+    background-color: #ccc;
+    padding-left: 5px;
+    padding-right: 5px;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.tag-item-text {
+    margin: 2px;
+    cursor: default;
+    font-size: .8em;
+    font-weight: bold;
+    letter-spacing: .1em;
+    font-family: "Lucida Console", "Lucida Sans Typewriter", Monaco, "Bitstream Vera Sans Mono", monospace;
+}
+
+.tag-item-text i {
+    cursor: pointer;
+}
+
+.tag-list-display {
+    max-height: 100px;
+    z-index: 1000;
+    background-color: #ffffff;
+    border-radius: 0px 0px 5px 5px;
+    position: absolute;
+    border: 1px solid #949494;
+    -webkit-box-shadow: 4px 3px 5px 0px rgba(31, 31, 31, 0.29);
+    -moz-box-shadow: 4px 3px 5px 0px rgba(31, 31, 31, 0.29);
+    box-shadow: 4px 3px 5px 0px rgba(31, 31, 31, 0.29);
+    overflow: auto;
+    display: none;
+}
+
+.tag-search-list {
+    margin-bottom: 0px;
+}
+
+.tag-list-item {
+    padding: 3px 5px;
+    cursor: pointer;
+    font-size: .8em;
+}
+
+.tag-list-item span {
+    margin-right: 5px;
+}
+
+.tag-list-item:hover {
+    background-color: #ccc;
+}
+
+.tag-list-item:focus {
+    background-color: #ccc;
 }

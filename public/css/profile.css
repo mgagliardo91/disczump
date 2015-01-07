@@ -1,0 +1,34 @@
+.user-info-container {
+    height: 200px;
+}
+
+.user-image-container {
+    width: 200px;
+    display: table;
+    border: 1px solid black;
+    height: 100%;
+}
+
+.user-details-container {
+    width: auto;
+    height: 100%;
+    margin-left: 220px;
+    border: 1px solid black;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.user-details-container > div {
+    height: 100%;
+    display: table;
+    padding: 5px;
+}
+
+.user-info {
+    background-color: blue;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    height: 100%;
+}

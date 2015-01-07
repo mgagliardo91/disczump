@@ -24,3 +24,22 @@ ul.nav {
 .modal-dialog {
     z-index: 2000;
 }
+
+.div-inline {
+    display: inline-block;
+}
+
+.float-left {
+    float: left;
+}
+
+.float-right{
+    float: right;
+}
+
+.no-select {
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}

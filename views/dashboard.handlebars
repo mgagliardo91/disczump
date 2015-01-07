@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="/static/css/dashboard.css">
 </head>
 <body>
-    <div id="search-results">
+    <div id="search-results" class="hide-on-close">
         <div class="result-section" id="results-name">
             <div class="result-section-title">Name</div>
             <div class="result-section-output">
@@ -24,10 +24,16 @@
                 <div class="result-item result-item-empty">No Results.</div>
             </div>
         </div>
+        <div class="result-section" id="results-tagList">
+            <div class="result-section-title">Tags</div>
+            <div class="result-section-output">
+                <div class="result-item result-item-empty">No Results.</div>
+            </div>
+        </div>
     </div>
     <div class="container-fluid" id="filter-container">
         <div class="row">
-            <div class="col-md-3 col-sm-3 col-lg-2">
+            <div class="col-md-3 col-sm-3 col-lg-2 hidden-xs">
                 <div id="filter-main" class="well">
                     <div class="filter-title text-center">Zump Filter</div>
                     <div id="filter-content">
@@ -45,6 +51,17 @@
                         <div class="panel panel-default filter-item filter-item-parent" id="filter-type">
                             <div class="panel-heading panel-open">
                                 Type
+                                <span class="glyphicon glyphicon-minus pull-right" aria-hidden="true"></span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="filter-option filter-option-static">
+                                    No Items
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default filter-item filter-item-parent" id="filter-tagList">
+                            <div class="panel-heading panel-open">
+                                Tags
                                 <span class="glyphicon glyphicon-minus pull-right" aria-hidden="true"></span>
                             </div>
                             <div class="panel-body">
@@ -143,52 +160,42 @@
                                     <th class="row-fluid heading-text" id="sort-brand">
                                         <span class="sort-icon"></span>
                                         Brand
-                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-name">
                                         <span class="sort-icon"></span>
                                         Name
-                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-material">
                                         <span class="sort-icon"></span>
                                         Material
-                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-weight">
                                         <span class="sort-icon"></span>
                                         Weight
-                                       <!-- <span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-color">
                                         <span class="sort-icon"></span>
                                         Color
-                                       <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-type">
                                         <span class="sort-icon"></span>
                                         Type
-                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-speed">
                                         <span class="sort-icon"></span>
                                         Speed
-                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-glide">
                                         <span class="sort-icon"></span>
                                         Glide
-                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-turn">
                                         <span class="sort-icon"></span>
                                         Turn
-                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                     <th class="row-fluid heading-text" id="sort-fade">
                                         <span class="sort-icon"></span>
                                         Fade
-                                        <!--<span class="glyphicon glyphicon-pad" aria-hidden="true"></span>-->
                                     </th>
                                 </tr>
                             </thead>

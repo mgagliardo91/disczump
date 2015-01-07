@@ -17,6 +17,12 @@
                         <strong>Error: </strong>{{message.error}}
                     </div>
                     {{/if}}
+                    {{#if message.info}}
+                    <div class="alert alert-info" role="alert">
+                        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <strong>Note: </strong>{{message.info}}
+                    </div>
+                    {{/if}}
                     <div class="signup-form-stacked">
                         <div class="input-group">
                             <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>

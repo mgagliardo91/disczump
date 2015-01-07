@@ -1,7 +1,11 @@
+var Error = require('../utils/error');
 var Disc = require('../models/disc');
+var DiscImageController = require('./discImage');
 var _ = require('underscore');
 
 module.exports = {
+	getPublicDiscs: getPublicDiscs,
+	getPublicDisc: getPublicDisc,
     getDiscs: getDiscs,
     getDisc: getDisc,
     postDisc: postDisc,
@@ -9,21 +13,62 @@ module.exports = {
     deleteDisc: deleteDisc
 }
 
+/* Public Access
+ * ----------------------
+ */
+function getPublicDiscs(userId, callback) {
+	Disc.find({userId: userId, visible: true}, function (err, discs){
+		if (err)
+			return callback(Error.createError(err, Error.internalError));
+		
+		return callback(null, discs);
+	});
+}
+
+function getPublicDisc(discId, callback) {
+	Disc.findById(discId, function(err, disc) {
+	    if (err)
+	   		return callback(Error.createError(err, Error.internalError));
+	   	
+	   	if (!disc)
+	   		return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
+	   	
+	   	if (disc.visible)
+	   		return callback(null, disc);
+	   	else
+	   		return callback(Error.createError('Disc is not visible to the public.', Error.unauthorizedError));
+	});
+}
+
+
+
+/* Private Access
+ * ----------------------
+ */
+
 /// Get All Discs by User
 function getDiscs(userId, callback) {
-    return Disc.find({userId : userId}, callback);
+    Disc.find({userId: userId}, function (err, discs){
+		if (err)
+			return callback(Error.createError(err, Error.internalError));
+		
+		return callback(null, discs);
+	});
 }
 
 /// Get Disc by Id and User
 function getDisc(userId, discId, callback) {
 	Disc.findById(discId, function(err, disc) {
 		if (err) 
-			return callback(err);
-			
-		if (disc && disc.userId == userId) 
+			return callback(Error.createError(err, Error.internalError));
+		
+		if (!disc)
+	   		return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
+		
+		if (disc.userId == userId) 
 			return callback(null, disc);
 		else
-			return callback(null, {});
+	   		return callback(Error.createError('Not authorized to view disc.', Error.unauthorizedError));
 	});	
 }
 
@@ -31,8 +76,8 @@ function getDisc(userId, discId, callback) {
 function postDisc(userId, data, callback) {
     var disc = new Disc();
     disc.userId = userId;
-    if (!data.brand || !data.name) {
-    	return callback('Invalid disc data', null);
+    if (!data.brand || !data.name || data.brand == '' || data.name == '') {
+    	return callback(Error.createError('Invalid data received for disc creation.', Error.invalidDataError));
     }
     
     disc.brand = data.brand;
@@ -62,10 +107,20 @@ function postDisc(userId, data, callback) {
    	if (data.fade && _.isNumber(param = parseInt(data.fade))) {
    		disc.fade = data.fade;
    	}
+   	
+   	disc.tagList = [];
+   	console.log(data.tagList);
+   	if (data.tagList) {
+   		_.each(data.tagList, function(tag) {
+   			if (tag !== "" && !_.contains(disc.tagList, tag)) {
+   				disc.tagList.push(tag);
+   			}
+   		});
+   	}
 
 	disc.save(function(err){
 		if (err)
-			return callback(err, null);
+			return callback(Error.createError(err, Error.internalError));
 		else
 			return callback(null, disc);
 	});
@@ -75,10 +130,10 @@ function postDisc(userId, data, callback) {
 function putDisc(userId, discId, data, callback) {
 	getDisc(userId, discId, function(err, disc){
 		if (err)
-			return callback(err);
+			return callback(Error.createError(err, Error.internalError));
 			
-		if (_.isEmpty(disc))
-			return callback(null, disc);
+		if (!disc)
+			return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
 			
 		if (data.brand) {
 			disc.brand = data.brand;
@@ -108,29 +163,39 @@ function putDisc(userId, discId, data, callback) {
 			disc.image = data.image;
 		}
 		
-		if (data.weight && _.isNumber(data.weight)) {
-			disc.weight = data.weight;
-		}
-		
-		if (data.speed && _.isNumber(data.speed)) {
-			disc.speed = data.speed;
-		}
-		
-		if (data.glide && _.isNumber(data.glide)) {
-			disc.glide = data.glide;
-		}
-		
-		if (data.turn && _.isNumber(data.turn)) {
-			disc.turn = data.turn;
-		}
-		
-		if (data.fade && _.isNumber(data.fade)) {
-			disc.fade = data.fade;
-		}
+		var param;
+	   	if (data.weight && _.isNumber(param = parseInt(data.weight))) {
+	   		disc.weight = param;
+	   	}
+	   	
+	   	if (data.speed && _.isNumber(param = parseInt(data.speed))) {
+	   		disc.speed = data.speed;
+	   	}
+	   	
+	   	if (data.glide && _.isNumber(param = parseInt(data.glide))) {
+	   		disc.glide = data.glide;
+	   	}
+	   	
+	   	if (data.turn && _.isNumber(param = parseInt(data.turn))) {
+	   		disc.turn = data.turn;
+	   	}
+	   	
+	   	if (data.fade && _.isNumber(param = parseInt(data.fade))) {
+	   		disc.fade = data.fade;
+	   	}
+	   	
+	   	if (data.tagList) {
+	   		disc.tagList = [];
+	   		_.each(data.tagList, function(tag) {
+	   			if (tag !== "" && !_.contains(disc.tagList, tag)) {
+	   				disc.tagList.push(tag);
+	   			}
+	   		});
+	   	}
 		
 		disc.save(function(err){
 			if (err)
-				return callback(err, null);
+				return callback(Error.createError(err, Error.internalError));
 			else
 				return callback(null, disc);
 		});
@@ -138,20 +203,22 @@ function putDisc(userId, discId, data, callback) {
 }
 
 /// Delete Disc
-function deleteDisc(userId, discId, callback) {
+function deleteDisc(userId, discId, gfs, callback) {
 	getDisc(userId, discId, function(err, disc){
 		if (err)
 			return callback(err);
 			
-		if (_.isEmpty(disc))
-			return callback(null, disc);
+		if (!disc)
+			return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
 		
-		disc.remove(function (err, disc) {
-			if (err)
-				return callback(err);
-			else
-				console.log(disc);
-				return callback(null, disc);
+		DiscImageController.deleteDiscImages(userId, discId, gfs, function(err, discImages) {
+			disc.remove(function (err, disc) {
+				if (err)
+					return callback(Error.createError(err, Error.internalError));
+				else
+					console.log('Deleted disc: ' + disc._id);
+					return callback(null, disc);
+			});
 		});
 	});
 }

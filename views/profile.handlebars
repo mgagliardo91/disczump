@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+    <title>DiscZump - Profile</title>
+    <link rel="stylesheet" href="/static/css/profile.css">
+</head>
+<body>
+    <div class="container profile-container">
+        <div class="row user-info-container">
+            <div class="div-inline user-image-container">
+                
+            </div>
+            <div class="user-details-container">
+                <div>
+                    <dl class="dl-horizontal">
+                      <dt>Username:</dt>
+                      <dd>{{ user.local.email }}</dd>
+                      <dt>Date Joined:</dt>
+                      <dd>{{ user.local.date_joined }}</dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+    
+    <script src="https://rawgit.com/enyo/dropzone/master/downloads/dropzone.js"></script>
+    <script src="/static/js/profile.js"></script>
+</body>
+</html>

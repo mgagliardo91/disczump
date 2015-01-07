@@ -15,24 +15,20 @@ module.exports = function(app, passport) {
 
     app.get('/dashboard', isLoggedIn, function(req, res) {
         return res.render('dashboard', {
-            user : req.user
+            user : req.user,
+            isDashboard : true
         });
     });
     
+    app.get('/profile', isLoggedIn, function(req, res) {
+        return res.render('profile', {
+           user: req.user,
+           isProfile : true
+        });
+    })
+    
     app.get('/test', function(req, res) {
        res.render('test'); 
-    });
-    
-    app.post('/test', function(req, res){
-        if (req.body.image.match(/^data:image\/png;base64,/)) {
-            var image = new Buffer(req.body.image.replace(/^data:image\/png;base64,/,""), "base64");
-            res.sendFile(image);
-        }
-        
-        else if (req.body.image.match(/^data:image\/jpeg;base64,/)) {
-            var image = new Buffer(req.body.image.replace(/^data:image\/jpeg;base64,/,""), "base64");
-            res.sendFile(image);
-        }
     });
     
     app.get('/' + configRoutes.confirmAccount + '/:authorizationId', function(req, res){
@@ -70,7 +66,12 @@ module.exports = function(app, passport) {
         .get(function(req,res) {
             return res.render('recover', {
                     message: {
-                        error: req.flash('error')
+                        error: req.flash('error'),
+                        info: req.flash('info'),
+                        link: {
+                            url: req.flash('link.url'),
+                            text: req.flash('link.text')
+                        }
                     }
             });
         })
@@ -102,9 +103,11 @@ module.exports = function(app, passport) {
     app.route('/' + configRoutes.resetPassword + '/:authorizationId')
         .get(function(req, res) {
             Recover.validateRecovery(req.params.authorizationId, function(err, recover) {
-                if (err)
-                    return res.redirect('/');
-                
+                if (err) {
+                    req.flash('info', 'Unable to retrieve request. Please fill out a new request below.');
+                    return res.redirect('/' + configRoutes.resetPassword);
+                }
+                    
                 return res.render('reset', {
                     recover: recover,
                     message: {
