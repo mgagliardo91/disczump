@@ -1,29 +1,18 @@
-var url = "https://disczumpserver-mgagliardo.c9.io/api/";
+var url = "/api/";
 
 var $searchResults;
 var $searchBar;
 var $filterResults;
-var $headerSort;
 var $inventoryHeader;
 var $inventoryContainer;
 var $dynamicHeader;
-var $sortContainer;
 
+var mySort;
+var myFilter;
 var searchRequest;
 
 var discList = [];
 var discs = [];
-var filters = {name: [], brand: [], type: [], tagList: [], material: [], weight: [], color: [], speed: [], glide: [], turn: [], fade: []};
-var sort = [{sortText: 'Name', sortProp: 'name', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortText: 'Brand',sortProp: 'brand', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortText: 'Type',sortProp: 'type', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortText: 'Material',sortProp: 'material', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortText: 'Weight',sortProp: 'weight', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortText: 'Color',sortProp: 'color', sortType: 'text', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortText: 'Speed',sortProp: 'speed', sortType: 'number', sortOn: false, sortAsc: false, sortOrder: -1},
-		  {sortText: 'Glide',sortProp: 'glide', sortType: 'number', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortText: 'Turn',sortProp: 'turn', sortType: 'number', sortOn: false, sortAsc: true, sortOrder: -1},
-		  {sortText: 'Fade',sortProp: 'fade', sortType: 'number', sortOn: false, sortAsc: true, sortOrder: -1}];
 var paginateOptions = {displayCount: 20, currentPage: 1, lastPage: 1};
 var dropzones = [];
 
@@ -35,11 +24,9 @@ $(document).ready(function(){
     $searchResults = $('#search-results');
     $searchBar = $('#search-all');
 	$filterResults = $('#filter-results');
-	$headerSort = $('#results-header-sort');
 	$inventoryHeader = $('#inventory-header');
     $inventoryContainer = $('.disc-inventory-container');
     $dynamicHeader = $('#disc-inventory-header-dynamic');
-	$sortContainer = $('.current-sort-container');
     
     refPageTop = $('body').outerHeight() - $('body').height() - $('nav').outerHeight();
     refContBottom = refPageTop + $inventoryContainer.outerHeight() - $inventoryHeader.outerHeight();
@@ -74,14 +61,6 @@ $(document).ready(function(){
      	});
      });
      
-     $headerSort.click(function(){
-       if ($dynamicHeader.is(':visible')) { 
-            $dynamicHeader.slideUp(300);   
-       } else {
-           $dynamicHeader.slideDown(300); 
-       }
-    });
-    
      $searchBar.focusin(function(){
      	$(this).trigger('keyup');
      }).on('keyup', function(){
@@ -100,46 +79,6 @@ $(document).ready(function(){
      $('#search-request').click(function() {
      	$searchBar.focus();
      });
-     
-     $('.panel-heading').on('click', function(){
-          var $this = $(this);
-          var $panelBody = $this.siblings('.panel-body');
-          var $glyph = $this.children('.glyphicon');
-          
-          if ($this.hasClass('panel-open')) {
-               $panelBody.slideUp(300, function(){
-                    $glyph.removeClass('glyphicon-minus');
-                    $glyph.addClass('glyphicon-plus');
-                    $this.addClass('panel-closed');
-               });
-               $this.removeClass('panel-open');
-          } else if ($this.hasClass('panel-closed')) {
-               $panelBody.slideDown(300, function(){
-                     $glyph.removeClass('glyphicon-plus');
-                    $glyph.addClass('glyphicon-minus');
-                    $this.addClass('panel-open');
-               });
-               $this.removeClass('panel-closed');
-          }
-     });
-	 
-	 $(document).on('click', '.filter-option:not(.filter-option-static)', function(e){
-			e.stopPropagation();
-			
-			var $parent = $(this).parents('.filter-item-parent');
-			var option = $parent.attr('id').match(/-([a-zA-Z]+)/)[1];
-			var val = $(this).attr('filterOn');
-			
-			if (!_.contains(filters[option], val)) {
-				$(this).append('<span class="glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>');
-				filters[option].push(val);
-			} else {
-				$(this).children('.glyphicon').remove();
-				filters[option] = _.without(filters[option], val);
-			}
-			
-			updateFilter();
-	  });
 	  
 	  $(document).on('click', '.result-item:not(.result-item-empty)', function(e) {
 	  		e.stopPropagation();
@@ -147,60 +86,17 @@ $(document).ready(function(){
 			var option = $parent.attr('id').match(/-([a-zA-Z]+)/)[1];
 			var val = $(this).text();
 			
-	  		if (option == 'name') {
-	  			filters.name.push(val);
+			if (option == 'name') {
 	  			$searchBar.val(val).attr('readonly', true);
 	  			$searchBar.bind('click', searchLock);
-	  			updateFilter();
+	  			myFilter.filterOnly(option, val);
 	  		} else {
 	  			$searchBar.val('');
-	  			var $filterOption = $('#filter-' + option);
-	  			$filterOption.find('.filter-option').find('.glyphicon').remove();
-	  			filters[option] = [];
-	  			$filterOption.find('.filter-option:contains(' + val + ')').trigger('click');
+				myFilter.pushFilterItem(option, val, true);
 	  		}
-	  		
+			
 	  		$searchResults.hide();
 	  });
-     
-     $('.filter-option-multi').on('click', function(e){
-		  if ($(e.target).attr('class') == 'filter-option') {
-			return;
-		  }
-	 
-          var $this = $(this);
-          var $itemGroup = $this.children('.filter-option-group');
-               
-          if ($this.hasClass('filter-option-multi-closed')) {
-               $itemGroup.slideDown(300, function(){
-                    $this.addClass(('filter-option-multi-open'));
-               });
-               $this.removeClass('filter-option-multi-closed');
-          } else {
-               $itemGroup.slideUp(300, function(){
-                    $this.addClass('filter-option-multi-closed');
-               });
-               $this.removeClass('filter-option-multi-open');
-          }
-     });
-     
-     $('.heading-text').click(function(){
-     	var glyph = $(this).find('.sort-icon');
-     	trySort($(this), function(sorter) {
-     		if (!sorter.sortOn) {
-     			glyph.find('.fa').remove();
-     		} else {
-     			if (sorter.sortAsc) {
-     				glyph.find('.fa').remove();
-     				glyph.append("<i class=\"fa fa-sort-asc fa-tools\"></i>");
-     			} else {
-     				glyph.find('.fa').remove();
-     				glyph.append("<i class=\"fa fa-sort-desc fa-tools\"></i>");
-     			}
-     			glyph.show();
-     		}
-     	});
-     });
      
 	 $(document).on('click', '.disc-item', function() {
 	 	var disc = getDisc($(this).attr('discid'));
@@ -270,46 +166,51 @@ $(document).ready(function(){
      $('#search-request').click(function() {
      	$searchBar.focus();
      });
-     
-     // SORT-REMOVE
-     $('.current-sort-container').sortable({
-        placeholder: 'sort-field-placeholder',
-        handle: '.sort-field-arrange'
-    });
     
-    // SORT REMOVE
-    $(document).on('click', '.sort-field-remove', function() {
-        if ($('.sort-field-container').length > 1) {
-            $(this).parents('.sort-field-container').remove();
-            updateSortFields();
-        }
-    });
     
-    // SORT REMOVE
-    $('.add-sort-container').mousedown(function(){
-        $(this).addClass('mdown');
-    }).mouseup(function(){
-        $(this).removeClass('mdown');
-    }).click(function(){
-       addSortField();
-    });
-    
-    // SORT REMOVE
-    $(document).on('mousedown', '.sort-field-arrange', function(){
-        $(this).addClass('mdown');
-    }).on('mouseup', '.sort-field-arrange', function(){
-        $(this).removeClass('mdown');
-    });
-    
-    // SORT REMOVE
-    $(document).on('change', '.sort-option-select', function(){
-    	updateSortFields();
-    });
-    
-    // SORT REMOVE
-    $(document).on('change', '.sort-option-direction', function(){
-    	updateSortFields();
-    });
+    /// Library Objects
+    mySort = new ZumpSort({
+	    sortToggle: '#results-header-sort',
+	    sortContainer: '.current-sort-container',
+	    addSortTrigger: '.add-sort-container',
+	    sortFields: [
+	        {text: 'Brand', property: 'brand', type: 'text'},
+	        {text: 'Name', property: 'name', type: 'text'},
+	        {text: 'Type', property: 'type', type: 'text'},
+	        {text: 'Material', property: 'material', type: 'text'},
+	        {text: 'Weight', property: 'weight', type: 'number'},
+	        {text: 'Color', property: 'color', type: 'text'},
+	        {text: 'Speed', property: 'speed', type: 'number'},
+	        {text: 'Glide', property: 'glide', type: 'number'},
+	        {text: 'Turn', property: 'turn', type: 'number'},
+	        {text: 'Fade', property: 'fade', type: 'number'}
+	    ],
+	    triggerSort: showDiscs,
+	    init: [
+	    	{property: 'brand',sortAsc: true},
+	    	{property: 'name',sortAsc: true}
+    	]
+	});
+	
+	myFilter = new ZumpFilter({
+	    filterContainer: '#filter-content',
+	    items: [
+	        {property: 'name', hideContainer: true},
+	        {text: 'Brand', property: 'brand'},
+	        {text: 'Tags', property: 'tagList'},
+	        {text: 'Type', property: 'type'},
+	        {text: 'Material', property: 'material'},
+	        {text: 'Weight', property: 'weight'},
+	        {text: 'Color', property: 'color'},
+	        {text: 'Speed', property: 'speed', groupText: 'Flight Numbers', groupProp: 'flightNumbers'},
+	        {text: 'Glide', property: 'glide', groupText: 'Flight Numbers', groupProp: 'flightNumbers'},
+	        {text: 'Turn', property: 'turn', groupText: 'Flight Numbers', groupProp: 'flightNumbers'},
+	        {text: 'Fade', property: 'fade', groupText: 'Flight Numbers', groupProp: 'flightNumbers'}
+	    ],
+	    onFilterChange: function() {
+	        updateFilter();
+	    }
+	});
     
 	
      // Start on-load commands
@@ -324,8 +225,6 @@ $(document).ready(function(){
 			alert('Unable to intialize');
 		}
 	 });
-	 
-	 addSortField();
 });
 
 /*var loading = function() {
@@ -350,9 +249,8 @@ $(document).ready(function(){
 
 var searchLock = function(e) {
 	e.stopPropagation();
-	filters.name = [];
+	myFilter.clearFilter('name');
 	$(this).attr('readonly', false).unbind('click', searchLock);
-	updateFilter();
 	$searchBar.trigger('keyup');
 };
 
@@ -405,8 +303,7 @@ function generateTagItem(item) {
 }
 
 function updateFilter(generateFilters) {
-	if (generateFilters) generateAllFilters();
-	discList = filterList(filters);
+	discList = myFilter.filter(discs, generateFilters);
 	showDiscs();
 	resizeResultHeader();
 }
@@ -433,75 +330,7 @@ function resizeResultHeader() {
 }
 
 function initialize() {
-		discList = discs;
-		generateAllFilters();
-		showDiscs();
-}
-
-function generateAllFilters() {
-	generateFilters($('#filter-brand'), '.panel-body', 'brand');
-	generateFilters($('#filter-type'), '.panel-body', 'type');
-	generateFilters($('#filter-tagList'), '.panel-body', 'tagList');
-	generateFilters($('#filter-material'), '.panel-body', 'material');
-	generateFilters($('#filter-weight'), '.panel-body', 'weight');
-	generateFilters($('#filter-color'), '.panel-body', 'color');
-	generateFilters($('#filter-speed'), '.filter-option-group', 'speed');
-	generateFilters($('#filter-glide'), '.filter-option-group', 'glide');
-	generateFilters($('#filter-turn'), '.filter-option-group', 'turn');
-	generateFilters($('#filter-fade'), '.filter-option-group', 'fade');
-}
-
-function generateFilters($option, query, property) {
-	var items = getProperties(property);
-	items = _.sortBy(items, function(i) {
-		if (_.isNumber(i)) {
-			return parseInt(i);
-		}
-		if (_.isString(i)) {
-			if (i == '') {
-				return undefined;
-			} else {
-			    return i.toLowerCase();
-			}
-		}
-		return i;
-	});
-	
-	var filterBody = $option.find(query);
-	filterBody.find('div.filter-option:not(".filter-option-static")').remove();
-	if (items.length > 0) {
-		$option.find('div.filter-option-static').hide();
-		_.each(items, function(item) {
-			filterBody.append(generateFilterOption(item));
-		});
-	} else {
-		$option.find('div.filter-option-static').show();
-	}
-	
-	var toRemove = [];
-	_.each(filters[property], function(item) {
-		var $filter = filterBody.find('div.filter-option[filterOn="' + item + '"]');
-		if ($filter.length > 0) {
-			$filter.append('<span class="glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>');
-		} else {
-			toRemove.push(item);
-		}
-	});
-	
-	filters[property] = _.reject(filters[property], function(item) {
-			return _.contains(toRemove, item);
-	});
-	
-}
-
-function generateFilterOption(option) {
-	var optionText = option;
-	
-	if(option == '' || typeof option == 'undefined') {
-		optionText = '- None -';
-	}
-	
-	return '<div class="filter-option" filterOn="' + option + '">' + optionText + '</div>';
+	updateFilter(true);
 }
 
 function showDiscs(maintainPage) {
@@ -510,13 +339,24 @@ function showDiscs(maintainPage) {
 	}
 	
 	$filterResults.empty();
-	var sorted = sortDiscs(discList);
+	var sorted = mySort.doSort(discList);
 	var paged = paginate(sorted);
 	_.each(paged, function(disc) {
+		getAllDiscImages(disc._id, updateDiscImage);
 		$filterResults.append(generateDiscTemplate(disc));
 	});
 	updateHeader(sorted.length);
 	resizeResultHeader();
+}
+
+function updateDiscImage(success, discImages) {
+	if (success) {
+		if (discImages.length > 0) {
+			var discImage = discImages[0];
+			var $discItem = $('div.disc-item[discId="' + discImage.discId + '"]');
+			$discItem.find('.disc-content-image img').attr('src', '/files/' + discImage.fileId);
+		}
+	}
 }
 
 function updateHeader(count) {
@@ -627,162 +467,6 @@ function generateModalTemplate(disc) {
 			'<p>' + disc.turn + '</p>' +
 			'<p>' + disc.fade + '</p>'
 }
-
-// SORT REMOVE
-
-function addSortField() {
-    $sortContainer.append(createSortField());
-    
-    $sortContainer.find('.sort-field-container:last-child .sort-option-select').trigger('change');
-}
-
-function createSortField() {
-	var optionHTML = '';
-	
-	_.each(sort, function(sortOption) {
-		optionHTML = optionHTML + '<option value="' + sortOption.sortProp + '">' + sortOption.sortText + '</option>';
-	});
-	
-    return '<div class="sort-field-container">' +
-                '<div class="sort-field-arrange div-inline float-left text-center no-select"> <!-- Arrange Icon -->' +
-                    '<span><i class="fa fa-bars"></i></span>' +
-                '</div>' +
-                '<div class="sort-field-remove div-inline float-right text-center no-select"> <!-- Remove Icon -->' +
-                    '<span><i class="fa fa-times"></i></span>' +
-                '</div>' +
-                '<div class="sort-field-form"> <!-- Form -->' +
-                    '<div class="row">' +
-                        '<div>' +
-                            '<form class="form-inline" role="form">' +
-                                '<div class="form-group" style="margin-right: 30px">' +
-                                    '<p class="form-control-static header-text">Field:</p>' +
-                                    '<select class="form-control input-sm sort-option-select">' +
-                                        optionHTML +
-                                    '</select>' +
-                                '</div>' +
-                                '<div class="form-group">' +
-                                    '<p class="form-control-static header-text">Direction:</p>' +
-                                    '<select class="form-control input-sm sort-option-direction">' +
-                                        '<option value="Ascending">Ascending</option>' +
-                                        '<option value="Descending">Descending</option>' +
-                                    '</select>' +
-                                '</div>' +
-                            '</form>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>' +
-            '</div>' +
-        '</div>';
-}
-
-function updateSortFields() {
-	_.each(sort, function(sortOption) {
-		sortOption.sortOn = false;
-		sortOption.sortOrder = -1;
-	})
-	
-	$('.sort-field-container').each(function(i) {
-		console.log(i);
-		sortFieldChange($(this), i);
-		console.log('hit');
-	});
-	
-	console.log('done');
-	console.log(JSON.stringify(sort));
-	showDiscs();
-}
-
-function sortFieldChange($sortField, i) {
-	console.log($sortField);
-	var option = $sortField.find('select.sort-option-select').val();
-	var order = $sortField.find('select.sort-option-direction').val() == 'Ascending';
-	
-	updateSort(option, true, order, i);
-}
-
-function updateSort(option, enable, isAsc, index) {
-	var sorter = _.first(_.where(sort, {'sortProp': option}));
-	if (sorter !== undefined) {
-		if (typeof enable !== 'undefined') sorter.sortOn = enable;
-		if (typeof isAsc !== 'undefined') sorter.sortAsc = isAsc;
-		if (typeof index !== 'undefined') {
-			sorter.sortOrder = index;
-		} else {
-			sorter.sortOrder = -1;
-		}
-	}
-	
-}
-
-function trySort(option) {
-	var sorter = _.first(_.where(sort, {'sortProp': option}));
-	if (sorter !== undefined) {
-		var isOn = sorter.sortOn;
-		sorter.sortAsc = !(isOn && sorter.sortAsc);
-		sorter.sortOn = !(isOn && sorter.sortAsc);
-		
-		var order = _.max(_.pluck(sort, 'sortOrder')) + 1;
-		sorter.sortOrder = sorter.sortOn ? (isOn ? sorter.sortOrder : order) : -1;
-		showDiscs();
-	}
-	
-	console.log(JSON.stringify(sort));
-}
-
-function genericSort(sorter, array) {
-	if (sorter.sortType == 'number') {
-		array = _.sortBy(array, function(disc) { return parseInt(disc[sorter.sortProp])});
-	} else {
-		array = _.sortBy(array, sorter.sortProp);
-	}
-	
-	if (!sorter.sortAsc) {
-		array = array.reverse();
-	}
-	
-	return array;
-}
-
-function sortDiscs() {
-	var toSort = _.sortBy(_.where(sort, {sortOn : true}), 'sortOrder');
-	var sorted = discList;
-	
-	var lastSort;
-	_.each(toSort, function(sorter) {
-		if (typeof lastSort === 'undefined') {
-			sorted = genericSort(sorter, sorted);
-		} else {
-			var parentVals = _.groupBy(sorted, function(disc) { return disc[lastSort.sortProp]; });
-			var newArray = [];
-			_.each(parentVals, function(valArray) {
-				valArray = genericSort(sorter, valArray);
-				newArray = newArray.concat(valArray);
-			});
-			sorted = newArray;
-		}
-		lastSort = sorter;
-	});
-	 
-	 _.each(sort, function(sorter) {
-		var glyph = $('#sort-' + sorter.sortProp).find('.sort-icon');
-		if (!sorter.sortOn) {
-			glyph.find('.fa').remove();
-		} else {
-			if (sorter.sortAsc) {
-				glyph.find('.fa').remove();
-				glyph.append("<i class=\"fa fa-sort-asc fa-tools\"></i>");
-			} else {
-				glyph.find('.fa').remove();
-				glyph.append("<i class=\"fa fa-sort-desc fa-tools\"></i>");
-			}
-			glyph.show();
-		}
-	 });
-	 
-	return sorted;
-}
-
-// END SORT REMOVE
 
 function paginate(toPaginate) {
 	var lastPage = 1;
@@ -1291,11 +975,11 @@ function generateCreateDiscForm() {
 	$form.html('<div class="form-group">' +
 	                  '<label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>' +
 	                  '<div class="col-sm-4">' +
-	                      '<input type="text" class="form-control" param="brand">' +
+	                      '<input type="text" class="form-control text-assist" param="brand">' +
 	                  '</div>' +
 	                  '<label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>' +
 	                  '<div class="col-sm-4">' +
-	                      '<input type="text" class="form-control" param="name">' +
+	                      '<input type="text" class="form-control text-assist" param="name">' +
 	                  '</div>' +
 	              '</div>' +
 	              '<div class="form-group">' +
@@ -1312,37 +996,37 @@ function generateCreateDiscForm() {
 	                  '</div>' +
 	                  '<label class="col-sm-2 control-label">Material</label>' +
 	                  '<div class="col-sm-4">' +
-	                      '<input type="text" class="form-control" param="material">' +
+	                      '<input type="text" class="form-control text-assist" param="material">' +
 	                  '</div>' +
 	              '</div>' +
 	              '<div class="form-group">' +
 	                  '<label class="col-sm-2 control-label">Weight</label>' +
 	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control" param="weight">' +
+	                      '<input type="number" class="form-control text-assist" param="weight">' +
 	                  '</div>' +
 	                  '<label class="col-sm-2 control-label">Color</label>' +
 	                  '<div class="col-sm-4">' +
-	                      '<input type="text" class="form-control" param="color">' +
+	                      '<input type="text" class="form-control text-assist" param="color">' +
 	                  '</div>' +
 	              '</div>' +
 	              '<div class="form-group">' +
 	                  '<label class="col-sm-2 control-label">Speed</label>' +
 	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control" param="speed">' +
+	                      '<input type="number" class="form-control text-assist" param="speed">' +
 	                  '</div>' +
 	                  '<label class="col-sm-2 control-label">Glide</label>' +
 	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control" param="glide">' +
+	                      '<input type="number" class="form-control text-assist" param="glide">' +
 	                  '</div>' +
 	              '</div>' +
 	              '<div class="form-group">' +
 	                  '<label class="col-sm-2 control-label">Turn</label>' +
 	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control" param="turn">' +
+	                      '<input type="number" class="form-control text-assist" param="turn">' +
 	                  '</div>' +
 	                  '<label class="col-sm-2 control-label">Fade</label>' +
 	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control" param="fade">' +
+	                      '<input type="number" class="form-control text-assist" param="fade">' +
 	                  '</div>' +
 	              '</div>' +
 	              '<div class="form-group tag-input-group">' +
@@ -1355,10 +1039,6 @@ function generateCreateDiscForm() {
 						        '<button class="btn btn-default add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>' +
 						    '</span>' +
 	                      '</div>' +
-	                      '<div class="tag-list-display hide-on-close">' +
-	                            '<ul class="list-unstyled tag-search-list">' +
-	                            '</ul>' +
-	                        '</div>' +
 	                     '</div>' +
 	                  '</div>' +
                       '<div class="col-sm-10 col-sm-offset-2">' +
@@ -1435,90 +1115,20 @@ function generateCreateDiscForm() {
 	
 	var onCreate = function($inner) {
 		createDropZone($inner.find('.dropzone-area'));
-		
+	}
+	
+	var onShow = function($inner) {
 		var $tagInput = $inner.find('.add-disc-tag');
-		var $tagResults = $inner.find('.tag-list-display');
-		var $tagSearchList = $inner.find('.tag-search-list');
 		var $addCustomTag = $inner.find('.add-custom-tag');
 		var $tagContainer = $inner.find('.tag-list-container');
+		var tagTextAssist;
 		
-		$tagInput.focusin(function(){
-    		$(this).trigger('keyup');
-	    }).on('keyup', function(){
-			if ($tagInput.val().length > 0) {
-				$tagSearchList.empty();
-				var tags = checkContains($tagInput.val(), 'tagList');
-				_.each(tags, function(tag) {
-					var tagHtml = generateTagResult(tag);
-					$tagSearchList.append(tagHtml);
-				});
-				
-				if (tags.length == 0) {
-					$tagResults.hide();
-				} else if (!$tagResults.is(':visible')) {
-					$tagResults.show();
-				}
-				
-			} else {
-				$tagResults.hide();
-			};
-	    }).click(function(e) { e.stopPropagation(); });
-	    
-	    $tagSearchList.on('focusin', '.tag-list-item', function(){
-	    	
-	    }).on('keydown', 'li', function(e){
-		    e.stopPropagation();
-	    	var $this = $(this);
-		    if (e.keyCode == 40) {        
-		        $this.next().focus();
-		        return false;
-		    } else if (e.keyCode == 38) {        
-		        if ($this.is(':first-child')) {
-		        	$tagInput.focus();
-		        } else {
-		        	$this.prev().focus();
-		        }
-		        return false;
-		    } else if (e.keyCode == 13) {
-		    	$tagContainer.append(generateTagItem($this.text()));
-		    	$tagInput.val('');
-		    	$tagInput.focus();
-		    	return false;
-		    }
-	    });
-	    
-	    $tagInput.on('keyup', function(e) {
-		    e.stopPropagation();
-	    	var code = e.keyCode || e.which;
-			 switch (code) {
-			 	case 40: {
-			 		$tagSearchList.find('li').first().focus();
-			 		return false;
-			 		break;
-			 	}
-			 	
-			 	case 13: {
-			 		if ($tagInput.val().length) {
-			 			$tagContainer.append(generateTagItem($tagInput.val()));
-		    			$tagInput.val('');
-			 		}
-		    		return false;
-		    		break;
-			 	}
-			 }
-			 
-			 e.preventDefault();
-	    });
-	    
 	    $addCustomTag.click(function(){
-			$tagContainer.append(generateTagItem($tagInput.val()));
-	    	$tagInput.val('');
+	    	if ($tagInput.val().length > 0) {
+				$tagContainer.append(generateTagItem($tagInput.val()));
+	    		$tagInput.val('');
+	    	}
 	    });
-	    
-		$inner.on('click', '.tag-list-item', function(){
-			$tagInput.val('');
-			$tagContainer.append(generateTagItem($(this).text()))
-		});
 		
 		$inner.on('click', '.tag-item-remove', function(){
 			var $parent = $(this).parents('.tag-item');
@@ -1528,13 +1138,33 @@ function generateCreateDiscForm() {
 				$tagContainer.empty();
 			}
 		});
-	}
-	
-	var onShow = function($inner) {
-		var $tagResults = $inner.find('.tag-list-display');
-		var $tagInput = $inner.find('.add-disc-tag');
-		resizeSearch($tagResults, $tagInput, false, true);
-		$tagResults.hide();
+		
+		/*
+		* Setup Autocomplete Handlers
+		*/
+		
+		$inner.find('.text-assist').each(function(index) {
+			new ZumpTextAssist({
+		        inputElement: $(this),
+		        searchProp: $(this).attr('param'),
+		        items: function() { return discs; }, 
+		        onSelection: function(item) {
+		        	console.log('Selected: ' + item);
+		        }
+		    });
+		});
+		
+		tagTextAssist = new ZumpTextAssist({
+			inputElement: $tagInput,
+			searchProp: 'tagList',
+			items: function() { return discs; }, 
+	        onSelection: function(item, reset) {
+	        	if (item.length > 0) {
+	        		$tagContainer.append(generateTagItem(item));
+	    			reset();
+	        	}
+	        }
+		});
 	}
 	
      generateModal($header, $form, $footer, {fns: fns, onCreate: onCreate, onShow: onShow});
@@ -1624,7 +1254,7 @@ function createDropZone($div) {
                             '<div class="image-overlay">' +
                                 '<span class="image-remove" data-dz-remove><i class="fa fa-times fa-lg"></i></span>' +
                                 '<div class="image-title"><span data-dz-name></span></div>' +
-                                '<div class="image-size" data-dz-size></div>' +
+                                '<div class="im age-size" data-dz-size></div>' +
                             '</div>' +
                         '</div>' +
                     '</div>';
@@ -1840,6 +1470,7 @@ function getAllDiscImages(discId, callback) {
      });
 }
 
+// POTENTIALLY REMOVE
 function getProperties(prop) {
 	var list = [];
 	if (discs.length && _.isArray(discs[0][prop])) {
@@ -1852,37 +1483,6 @@ function getProperties(prop) {
 	}
 	
 	return _.uniq(list);
-}
-
-function filterList(filters) {
-	return _.filter(discs, function(disc) {
-		for (var property in filters) {
-			if (filters[property].length > 0) {
-				if (_.has(disc, property)) {
-					if (_.isArray(disc[property])) {
-						var hasProp = false;
-						_.each(disc[property], function(propVal) {
-							if (_.contains(filters[property], String(propVal))) {
-								hasProp = true;
-							}	
-						});
-						if (!hasProp) {
-							return false;
-						}
-					} else {
-						if (!(_.contains(filters[property], String(disc[property])))) {
-							return false;
-						}
-					}
-				} else {
-					if (!_.contains(filters[property], 'undefined')) {
-						return false;
-					}
-				}
-			}
-		}
-		return true;
-	});
 }
 
 function containSearch(val, properties, callback) {
@@ -1924,4 +1524,1122 @@ function generateMessage(type, message, title) {
 
 function getDisc(id) {
 	return _.first(_.where(discs, {'_id' : id}));
+}
+
+
+
+
+/*
+* Name: ZumpSort
+* Date: 01/07/2015
+*/
+var ZumpSort = function(opt) {
+    
+    //----------------------\
+    // Javascript Objects
+    //----------------------/
+    var zumpSort = this;
+    var sort = [];
+    var triggerSort;
+    
+    //----------------------\
+    //JQuery Objects
+    //----------------------/
+    var $sortToggle;
+    var $sortContainer;
+    var $addSortTrigger;
+    
+    
+    //----------------------\
+    // Prototype Functions
+    //----------------------/
+    
+    /*
+    * Initialization based on options
+    */
+    this.init = function(opt) {
+        
+        /*
+        * Option configuration
+        */
+        
+        // No options passed
+        if (!isDef(opt)) return;
+        
+        // Set sort toggle
+        if (isDef(opt.sortToggle)) {
+            $sortToggle = $(opt.sortToggle);
+        }
+        
+        // Set sort container
+        if (isDef(opt.sortContainer)) {
+            $sortContainer = $(opt.sortContainer);
+            
+            $sortContainer.sortable({
+                placeholder: 'sort-field-placeholder',
+                handle: '.sort-field-arrange',
+                update: function(event, ui) {
+                	updateSortFields();
+                	triggerSort();
+                }
+            });
+        }
+        
+        // Set add sort trigger
+        if (isDef(opt.addSortTrigger)) {
+            $addSortTrigger = $(opt.addSortTrigger);
+        }
+        
+        // Set sort trigger
+        if (isDef(opt.triggerSort)) {
+            triggerSort = opt.triggerSort;
+        }
+        
+        // Set sort fields
+        if (isDef(opt.sortFields)) {
+            sort = [];
+            _.each(opt.sortFields, function(sortField) {
+                if (isDef(sortField.property)) {
+                    var field = {sortProp: sortField.property, sortOn: false, sortAsc: true, sortOrder: -1};
+                    field.sortText = getSafe(sortField.text, sortField.property);
+                    field.sortType = getSafe(sortField.type, 'text');
+                    sort.push(field);
+                }
+            });
+        }
+        
+        /*
+        * Listeners/Events
+        */
+        
+        // Toggle Sort Container
+        $sortToggle.click(function(){
+	       if ($dynamicHeader.is(':visible')) { 
+	            $dynamicHeader.slideUp(300);   
+	       } else {
+	           $dynamicHeader.slideDown(300); 
+	       }
+	    });
+        
+        // Add Sort Field
+        $addSortTrigger.mousedown(function(){
+            $(this).addClass('mdown');
+        }).mouseup(function(){
+            $(this).removeClass('mdown');
+        }).click(function(){
+           addSortField();
+           triggerSort();
+        });
+        
+        // Remove Sort Field
+        $(document).on('click', '.sort-field-remove', function() {
+            if ($('.sort-field-container').length > 1) {
+                $(this).parents('.sort-field-container').remove();
+        		updateSortFields();
+                triggerSort();
+            }
+        });
+        
+        // Arrange Sort Field Styling
+        $(document).on('mousedown', '.sort-field-arrange', function(){
+            $(this).addClass('mdown');
+        }).on('mouseup', '.sort-field-arrange', function(){
+            $(this).removeClass('mdown');
+        });
+        
+        // Change for Option Select
+        $(document).on('change', '.sort-option-select', function(){
+        	var val = $(this).val();
+        	var sorter = getSorter(val);
+        	if (sorter.sortOn) {
+        		sorter = getSorterByIndex($(this).parents('.sort-field-container').index());
+        		$(this).val(sorter.sortProp);
+        		return;
+        	}
+        	
+        	updateSortFields();
+        	triggerSort();
+        });
+        
+        // Change for Direction Select
+        $(document).on('change', '.sort-option-direction', function(){
+        	updateSortFields();
+        	triggerSort();
+        });
+        
+        if (opt.init) {
+        	_.each(opt.init, function(initField) {
+        		addSortField(true, initField.property, initField.sortAsc);
+        	})
+        }
+    }
+    
+    /*
+    * Sorts an array based on a sorter object
+    */
+    this.genericSort = function(sorter, array) {
+    	if (sorter.sortType == 'number') {
+    		array = _.sortBy(array, function(obj) { return parseInt(obj[sorter.sortProp])});
+    	} else {
+    		array = _.sortBy(array, function(obj) {
+    			return obj[sorter.sortProp].toLowerCase();
+    		});
+    	}
+    	
+    	if (!sorter.sortAsc) {
+    		array = array.reverse();
+    	}
+    	
+    	return array;
+    }
+    
+    /*
+    * Sorts a provided array using the current sort configuration
+    */
+    this.doSort = function(arr) {
+    	var toSort = _.sortBy(_.where(sort, {sortOn : true}), 'sortOrder');
+    	return groupAndSort(arr, toSort, 0);
+    }
+    
+    var simpleSort = function(sorter, arr) {
+    	return zumpSort.genericSort(sorter, arr);
+    }
+    
+    //----------------------\
+    // Private Functions
+    //----------------------/
+    
+    /*
+    * Recursive Sort Routine
+    */
+    var groupAndSort = function(sorted, toSort, i) {
+    	if (i == toSort.length) {
+    		sorted = zumpSort.genericSort(toSort[i-1], sorted);
+    		return sorted;
+    	}
+    	
+    	var sorter = toSort[i];
+    	
+    	if (i == 0) {
+    		sorted = zumpSort.genericSort(sorter, groupAndSort(sorted, toSort, i + 1));
+    		return sorted;
+    	} else {
+    		var grouper = toSort[i-1];
+    		var grouped = _.groupBy(sorted, function(obj) { return obj[grouper.sortProp]; });
+    		var newArray = [];
+    		_.each(grouped, function(valArray) {
+    			valArray = zumpSort.genericSort(sorter, groupAndSort(valArray, toSort, i + 1));
+    			newArray = newArray.concat(valArray);
+    		});
+    		sorted = newArray;
+    		return sorted;
+    	}
+    }
+    
+    /*
+    * Get Sorter By Sort Order
+    */
+    var getSorterByIndex = function(index) {
+    	return _.first(_.where(sort, {'sortOrder': index}));
+    }
+    
+    /*
+    * Get Sorter By Property
+    */
+    var getSorter = function(property) {
+    	return _.first(_.where(sort, {'sortProp': property}));
+    }
+    
+    
+    /*
+    * Get Sorts that are not turned on
+    */
+    var getAvailableSorts = function() {
+    	return _.filter(sort, function(sorter) {
+    		return !sorter.sortOn;
+    	})
+    }
+    
+    /*
+    * Generates the HTML to add a new sort field
+    */
+    var createSortField = function() {
+    	var optionHTML = '';
+    	
+    	_.each(sort, function(sortOption) {
+    		optionHTML = optionHTML + '<option value="' + sortOption.sortProp + '">' + sortOption.sortText + '</option>';
+    	});
+    	
+        return '<div class="sort-field-container">' +
+                    '<div class="sort-field-arrange div-inline float-left text-center no-select"> <!-- Arrange Icon -->' +
+                        '<span><i class="fa fa-bars"></i></span>' +
+                    '</div>' +
+                    '<div class="sort-field-remove div-inline float-right text-center no-select"> <!-- Remove Icon -->' +
+                        '<span><i class="fa fa-times"></i></span>' +
+                    '</div>' +
+                    '<div class="sort-field-form"> <!-- Form -->' +
+                        '<div class="row">' +
+                            '<div>' +
+                                '<form class="form-inline" role="form">' +
+                                    '<div class="form-group" style="margin-right: 30px">' +
+                                        '<p class="form-control-static header-text">Field:</p>' +
+                                        '<select class="form-control input-sm sort-option-select">' +
+                                            optionHTML +
+                                        '</select>' +
+                                    '</div>' +
+                                    '<div class="form-group">' +
+                                        '<p class="form-control-static header-text">Direction:</p>' +
+                                        '<select class="form-control input-sm sort-option-direction">' +
+                                            '<option value="Ascending">Ascending</option>' +
+                                            '<option value="Descending">Descending</option>' +
+                                        '</select>' +
+                                    '</div>' +
+                                '</form>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+    }
+    
+    /*
+    * Adds a new sort field to the sort container
+    */
+    var addSortField = function(quiet, property, isAsc) {
+        var availableSorts = getAvailableSorts();
+        
+        if (availableSorts.length == 0) {
+        	return;
+        }
+        
+        $sortContainer.append(createSortField());
+        var $sortField = $sortContainer.find('.sort-field-container:last-child');
+        
+        var sorter = availableSorts[0];
+        
+        if (isDef(property)) {
+        	reqSorter = getSorter(property);
+        	if (!reqSorter.sortOn) sorter = reqSorter;
+        }
+        
+        
+        $sortField.find('.sort-option-select').val(sorter.sortProp);
+        
+        if (isDef(isAsc)) {
+        	$sortField.find('.sort-option-direction').val(isAsc ? 'Ascending' : 'Descending');
+        }
+        
+        updateSortFields();
+        
+        if (!isDef(quiet) || !quiet) $sortField.find('.sort-option-select').trigger('change');
+    }
+    
+    /*
+    * Updates the sort array using the current sort fields
+    */
+    var updateSortFields = function() {
+        
+        // Reset sort
+        _.each(sort, function(sortOption) {
+    		sortOption.sortOn = false;
+    		sortOption.sortOrder = -1;
+    	})
+    	
+    	// Update Sort
+    	$('.sort-field-container').each(function(i) {
+    		sortFieldChange($(this), i);
+    	});
+    }
+    
+    /*
+    * Uses the sort field values to update the sort object
+    */
+    var sortFieldChange = function($sortField, i) {
+    	var option = $sortField.find('select.sort-option-select').val();
+    	var order = $sortField.find('select.sort-option-direction').val() == 'Ascending';
+    	
+    	updateSort(option, true, order, i);
+    }
+    
+    /*
+    * Updatse a sort object with provided params
+    */
+    var updateSort = function(option, enable, isAsc, index) {
+    	var sorter = getSorter(option);
+    	if (sorter !== undefined) {
+    		if (isDef(enable)) sorter.sortOn = enable;
+    		if (isDef(isAsc)) sorter.sortAsc = isAsc;
+    		if (isDef(index)) {
+    			sorter.sortOrder = index;
+    		} else {
+    			sorter.sortOrder = -1;
+    		}
+    	}
+    }
+    
+    //----------------------\
+    // Construction
+    //----------------------/
+    this.init(opt);
+}
+
+/*
+* Name: ZumpFilter
+* Date: 01/07/2015
+*/
+var ZumpFilter = function(opt) {
+    
+    //----------------------\
+    // Javascript Objects
+    //----------------------/
+    var filters = {};
+    var filterChangeEvent;
+    
+    
+    //----------------------\
+    //JQuery Objects
+    //----------------------/
+    var $filterContainer;
+    
+    
+    //----------------------\
+    // Prototype Functions
+    //----------------------/
+    
+    /*
+    * Initialization based on options
+    */
+    this.init = function(opt) {
+        
+        /*
+        * Option configuration
+        */
+        
+        // No options passed
+        if (!isDef(opt)) return;
+        
+        if (isDef(opt.filterContainer)) {
+            $filterContainer = $(opt.filterContainer);
+        }
+        
+        // Set filter array
+        if (isDef(opt.items)) {
+            _.each(opt.items, function(item) {
+                if (isDef(item.property)) {
+                    // Create your div to add to screen using data
+                    if (!item.hideContainer) createFilterItem(item);
+                    
+                    // Create your array based on data
+                    filters[item.property] = [];
+                }
+            });
+        }
+        
+        // Set filter change event
+        if (isDef(opt.onFilterChange)) {
+            filterChangeEvent = opt.onFilterChange;
+        }
+        
+        /*
+        * Listeners/Events
+        */
+        $(document).on('click', '.filter-option:not(.filter-option-static)', function(e){
+			e.stopPropagation();
+			
+			var $parent = $(this).parents('.filter-item-parent');
+			var option = $parent.attr('id').match(/-([a-zA-Z]+)/)[1];
+			var val = $(this).attr('filterOn');
+			
+			if (!_.contains(filters[option], val)) {
+				$(this).append('<span class="glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>');
+				filters[option].push(val);
+			} else {
+				$(this).children('.glyphicon').remove();
+				filters[option] = _.without(filters[option], val);
+			}
+			
+			if (isDef(filterChangeEvent)) filterChangeEvent();
+	    });
+	  
+	  	$(document).on('click', '.filter-option-multi', function(e){
+			if ($(e.target).attr('class') == 'filter-option') {
+			return;
+			}
+			
+			var $this = $(this);
+			var $itemGroup = $this.children('.filter-option-group');
+			   
+			if ($this.hasClass('filter-option-multi-closed')) {
+			   $itemGroup.slideDown(300, function(){
+			        $this.addClass(('filter-option-multi-open'));
+			   });
+			   $this.removeClass('filter-option-multi-closed');
+			} else {
+			   $itemGroup.slideUp(300, function(){
+			        $this.addClass('filter-option-multi-closed');
+			   });
+			   $this.removeClass('filter-option-multi-open');
+			}
+		});
+     
+    	 $(document).on('click', '.panel-heading', function(){
+			var $this = $(this);
+			var $panelBody = $this.siblings('.panel-body');
+			var $glyph = $this.children('.glyphicon');
+			
+			if ($this.hasClass('panel-open')) {
+			   $panelBody.slideUp(300, function(){
+			        $glyph.removeClass('glyphicon-minus');
+			        $glyph.addClass('glyphicon-plus');
+			        $this.addClass('panel-closed');
+			   });
+			   $this.removeClass('panel-open');
+			} else if ($this.hasClass('panel-closed')) {
+			   $panelBody.slideDown(300, function(){
+			         $glyph.removeClass('glyphicon-plus');
+			        $glyph.addClass('glyphicon-minus');
+			        $this.addClass('panel-open');
+			   });
+			   $this.removeClass('panel-closed');
+			}
+		});
+		
+		/*
+		* Start Events
+		*/
+		$('.filter-option-multi').trigger('click');
+		$('.panel-heading').trigger('click');
+        
+    }
+    
+    /*
+    * Trigger update of the filter
+    */
+    this.filter = function(arr, generateFilters) {
+    	if (generateFilters) generateAllFilters(arr);
+    	return filterList(arr);
+    }
+    
+    /*
+    * Add item to filter on
+    */
+    this.filterOnly = function(property, value) {
+    	if (isDef(filters[property])) {
+    		for (var filterProp in filters) {
+	    		clearFilterItems(filterProp);
+	    	}
+	    	
+	    	this.pushFilterItem(property, value);
+    	}
+    }
+    
+    
+    /*
+    * Add item to filter on
+    */
+    this.pushFilterItem = function(property, value, clearFirst) {
+    	if (isDef(filters[property])) {
+    		
+    		if (clearFirst) {
+    			clearFilterItems(property);
+    		}
+    		
+	    	var $filterItem = $('#filter-' + property);
+	    	
+	    	if ($filterItem.length) {
+	    		if (!_.contains(filters[property], value)) {
+	    			var $filterOption = $filterItem.find('div.filter-option[filteron="' + value + '"]');
+	    		
+		    		if ($filterOption.length) {
+		    			$filterOption.trigger('click');
+		    		}
+	    		}
+	    	} else {
+	    		if (!_.contains(filters[property], value)) {
+		    		filters[property].push(value);
+		    		if (isDef(filterChangeEvent)) filterChangeEvent();
+	    		}
+	    	}
+    	}
+    }
+    
+    /*
+    * Remove item from the filter
+    */
+    this.removeFilterItem = function(property, value) {
+    	if (isDef(filters[property]) && _.contains(filters[property], value)) {
+    		filters[property] = _.without(filters[property], value);
+	    	if (isDef(filterChangeEvent)) filterChangeEvent();
+    	}
+    }
+    
+    /*
+    * Clear filter
+    */
+    this.clearFilter = function(property) {
+    	if (isDef(filters[property])) {
+    		filters[property] = [];
+    		if (isDef(filterChangeEvent)) filterChangeEvent();
+    	}
+    }
+    
+    /*
+    * Clear all filters
+    */
+    this.clearFilters = function() {
+    	for (var filterProp in filters) {
+    		filters[filterProp] = [];
+    	}
+    	if (isDef(filterChangeEvent)) filterChangeEvent();
+    }
+    
+    
+    //----------------------\
+    // Private Functions
+    //----------------------/
+    var clearFilterItems = function(property) {
+    	var $filterItem = $('#filter-' + property);
+    	if ($filterItem.length) {
+    		$filterItem.find('div.filter-option .glyphicon').remove();
+    	}
+    	
+    	filters[property] = [];
+    }
+    
+    
+    /*
+    * Create Filter Panel
+    */
+    var createFilterPanel = function(property, text, isGroup) {
+        var emptyItem = '<div class="filter-option filter-option-static">' +
+                                'No Items' +
+                            '</div>';
+        var $filterPanel  = $('<div class="panel panel-default filter-item"></div>');
+        
+        $filterPanel.attr('id', 'filter-container-' + property);
+        $filterPanel.html('<div class="panel-heading panel-open">' + text + 
+                            '<span class="glyphicon glyphicon-minus pull-right" aria-hidden="true"></span>' +
+                        '</div>' +
+                        '<div class="panel-body' + (!isGroup ? ' filter-item-parent" id="filter-' + property + '"' : '"' ) + '>' +
+                            (!isGroup ? emptyItem : '') + 
+                        '</div>');
+                        
+        return $filterPanel;
+    }
+    
+    /*
+    * Generates and adds the HTML for a new filter item
+    */
+    var createFilterItem = function(item) {
+        var $filterPanel = undefined;
+        var exists = false;
+        var isGroup = isDef(item.groupProp);
+        
+        // Check if group already exists
+        if (isGroup) {
+            var $groupDiv = $('#filter-container-' + item.groupProp);
+            if ($groupDiv.length) {
+                $filterPanel = $groupDiv;
+                exists = true;
+            }
+        }
+        
+        if (!isDef($filterPanel)) {
+            $filterPanel = createFilterPanel(isGroup ? item.groupProp : item.property, 
+                isGroup ? getSafe(item.groupText, item.groupProp) : getSafe(item.text, item.property), 
+                isGroup);
+        }
+        
+        var $panelBody = $($filterPanel).find('.panel-body');
+        
+        if (isGroup) {
+            $panelBody.append('<div class="filter-option-multi filter-option-multi-open">' +
+                                    getSafe(item.text, item.property) +
+                                    '<span class="glyphicon glyphicon-screenshot pull-right" aria-hidden="true"></span>' +
+                                    '<div class="filter-option-group filter-item-parent" style="display: block;" id="filter-' + item.property + '">' +
+                                        '<div class="filter-option filter-option-static" style="display: none;">' +
+                                            'No Items' +
+                                        '</div>' +
+                                '</div>');
+        }
+        
+        if (!exists) $filterContainer.append($filterPanel);
+    }
+    
+    /*
+    * Generates the filter items within each filter
+    */
+    var generateAllFilters = function(arr) {
+        for (var filterProp in filters) {
+            generateFilters(filterProp, arr);
+        }
+    }
+    
+    /*
+    * Generates the filter items within a filter
+    */
+    var generateFilters = function(property, arr) {
+        var items = getProperties(property, arr);
+        var $filterBody = $('#filter-' + property);
+        
+        // Get unique filter items based on property
+    	items = _.sortBy(items, function(i) {
+    		if (_.isNumber(i)) {
+    			return parseInt(i);
+    		}
+    		if (_.isString(i)) {
+    			if (i == '') {
+    				return undefined;
+    			} else {
+    			    return i.toLowerCase();
+    			}
+    		}
+    		return i;
+    	});
+    	
+    	$filterBody.find('div.filter-option:not(".filter-option-static")').remove();
+    	if (items.length > 0) {
+    		$filterBody.find('div.filter-option-static').hide();
+    		_.each(items, function(item) {
+    			$filterBody.append(generateFilterOption(item));
+    		});
+    	} else {
+    		$filterBody.find('div.filter-option-static').show();
+    	}
+    	
+    	var toRemove = [];
+    	_.each(filters[property], function(item) {
+    		var $filter = $filterBody.find('div.filter-option[filterOn="' + item + '"]');
+    		if ($filter.length > 0) {
+    			$filter.append('<span class="glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>');
+    		} else {
+    			toRemove.push(item);
+    		}
+    	});
+    	
+    	filters[property] = _.reject(filters[property], function(item) {
+    			return _.contains(toRemove, item);
+    	});
+    	
+    }
+    
+    /*
+    * Returns a div containing the filter option item
+    */
+    var generateFilterOption = function(option) {
+    	var optionText = option;
+    	
+    	if(option === '' || typeof option === 'undefined') {
+    		optionText = '- None -';
+    	}
+    	
+    	return '<div class="filter-option" filterOn="' + option + '">' + optionText + '</div>';
+    }
+    
+    /*
+    * Filters the provided array based on the defined filters
+    */
+    var filterList = function(arr) {
+    	return _.filter(arr, function(obj) {
+    		for (var property in filters) {
+    			if (filters[property].length > 0) {
+    				if (_.has(obj, property)) {
+    					if (_.isArray(obj[property])) {
+    						var hasProp = false;
+    						_.each(obj[property], function(propVal) {
+    							if (_.contains(filters[property], String(propVal))) {
+    								hasProp = true;
+    							}	
+    						});
+    						if (!hasProp) {
+    							return false;
+    						}
+    					} else {
+    						if (!(_.contains(filters[property], String(obj[property])))) {
+    							return false;
+    						}
+    					}
+    				} else {
+    					if (!_.contains(filters[property], 'undefined')) {
+    						return false;
+    					}
+    				}
+    			}
+    		}
+    		return true;
+    	});
+    }
+    
+    /*
+    * Returns a unique list of values for an array at a specific property
+    */
+    var getProperties = function(prop, arr) {
+    	var list = [];
+    	if (arr.length && _.isArray(arr[0][prop])) {
+    		var arrList = _.pluck(arr, prop);
+    		_.each(arrList, function(arr) { 
+    			list = list.concat(arr);	
+    		});
+    	} else {
+    		list = _.pluck(arr,  prop);
+    	}
+    	
+    	return _.uniq(list);
+    }
+    
+    
+    //----------------------\
+    // Construction
+    //----------------------/
+    
+    this.init(opt);
+}
+
+
+/*
+* Name: ZumpTextAssist
+* Date: 01/07/2015
+*/
+var ZumpTextAssist = function(opt) {
+    
+    //----------------------\
+    // Javascript Objects
+    //----------------------/
+    var zumpTextAssist = this;
+    var resultList;
+    var property = '';
+    var currentSearch = '';
+    var onSelection;
+    
+    
+    //----------------------\
+    //JQuery Objects
+    //----------------------/
+    var $input;
+    var $dropdown;
+    var $dropdownList;
+    
+    //----------------------\
+    // Prototype Functions
+    //----------------------/
+    
+    /*
+    * Initialization based on options
+    */
+    this.init = function(opt) {
+        
+        /*
+        * Grab input element from options
+        */
+        if (isDef(opt.inputElement)) {
+        	if (opt.inputElement instanceof jQuery) {
+        		$input = opt.inputElement
+        	} else if (_.isString(opt.intputElement)) {
+            	$input = $(opt.inputElement);
+        	}
+            createDropdown();
+        }
+        
+        /*
+        * Grab search property from options
+        */
+        if (isDef(opt.searchProp)) {
+            property = opt.searchProp;
+        }
+        
+        /*
+        * Grab current set of items
+        */
+        if (isDef(opt.items)) {
+            if (_.isFunction(opt.items)) {
+                resultList = opt.items;
+            }
+        }
+        
+        /*
+        * Grab on enter event callback
+        */
+        if (isDef(opt.onSelection)) {
+        	if (_.isFunction(opt.onSelection)) {
+        		onSelection = opt.onSelection;
+        	}
+        }
+        
+        /*
+        * Resize result container dropdown on resize of page
+        */
+        $(document).on('resize', function(){
+           resizeResultContainer(); 
+        });
+        
+        /*
+        * Stop normal propagation on Up, Down, and Enter
+        */
+        $input.on('keydown', function(e) {
+	    	var code = e.keyCode || e.which;
+	    	
+	    	if (code == 13 || code == 38 || code == 40) {
+		    	e.stopImmediatePropagation();
+		    	return false;
+	    	}
+	    })
+	    
+	    /*
+	    * Key Events within input box
+	    */
+	    .on('keyup', function(e){
+	    	var code = e.keyCode || e.which;
+	    	
+	    	/*
+	    	* Enter key - select active result item
+	    	*/
+	    	if (code == 13) {
+	    		var $curActive = $dropdownList.find('.dropdown-list-item.active');
+		        if ($curActive.length) {
+		        	updateInput($curActive.attr('result'), true);
+		        }
+		        
+		        if (onSelection) {
+	        		onSelection($input.val(), zumpTextAssist.resetInput);
+		        }
+		        
+			 	e.preventDefault();
+      			return false;
+	    	}
+	    	
+	    	/*
+	    	* Up/Down keys - select prev/next result item
+	    	*/
+	    	else if (code == 38 || code == 40) {
+			 	var $curActive = $dropdownList.find('.dropdown-list-item.active');
+			 	var $nextActive;
+			 	
+			 	if ($curActive.length == 0) {
+			 	    $nextActive = code == 38 ? 
+			 	    	$dropdownList.find('.dropdown-list-item').last() : 
+			 	    	$dropdownList.find('.dropdown-list-item').first();
+			 	} else {
+			 	    $curActive.removeClass('active');
+			 	    $nextActive = code == 38 ? $curActive.prev() : $curActive.next();
+			 	}
+			 	
+			 	if ($nextActive.length > 0) {
+			    	$nextActive.addClass('active');
+			    	updateScroll($nextActive);
+			    	$input.val($nextActive.attr('result'))
+			 	} else {
+			 		$input.val(currentSearch);
+			 	}
+			 	
+			 	e.preventDefault();
+			 	return false;
+			 }
+			 
+			 /*
+			 * All other keys
+			 */
+			 else {
+			     updateInput($input.val());
+			 }
+			 
+	    })
+	    
+	    /*
+	    * Show results on click
+	    */
+	    .on('click', function(e){
+	    	e.preventDefault();
+	    	updateInput($input.val());
+	    	return false;
+	    })
+	    
+	    /*
+	    * Hide results on leave
+	    */
+        .on('focusout', function(e){
+        	if ($(e.relatedTarget)[0] != $dropdown[0] && !$dropdownList.has(e.relatedTarget).length > 0) {
+        		setResultsVisibility(false);
+        	}
+        	
+        	e.preventDefault();
+        	e.stopPropagation();
+	    	return false;
+        });
+        
+        /*
+        * Click event on a result item
+        */
+        $dropdownList.on('click', '.dropdown-list-item', function(){
+            updateInput($(this).attr('result'), true);
+            
+            if (onSelection) {
+	        	onSelection($input.val(), zumpTextAssist.resetInput);
+	        }
+	        
+        	$input.focus();
+        });
+        
+        /*
+	    * Hide results on leave
+	    */
+        $dropdown.on('focusout', function(e){
+        	if ($(e.relatedTarget)[0] != $input[0] && !$dropdownList.has(e.relatedTarget).length > 0) {
+        		setResultsVisibility(false);
+        	}
+        	
+        	e.preventDefault();
+        	e.stopPropagation();
+	    	return false;
+        });
+        
+	    /*
+	    * Start up events
+	    */
+        resizeResultContainer();
+    }
+    
+    this.resetInput = function() {
+    	updateInput('', true);
+    }
+    
+    
+    //----------------------\
+    // Private Functions
+    //----------------------/
+    
+    /*
+    * Update Results Container Scroll Position
+    */
+    var updateScroll = function($activeResult) {
+    	var curTop = $dropdown.scrollTop();
+    	var curBottom = $dropdown.height();
+    	var resultTop = $activeResult.position().top;
+    	var resultBottom = resultTop  + $activeResult.outerHeight();
+    	
+    	if (resultTop < curTop) { 
+    		$dropdown.scrollTop(resultTop);	
+    	} else if (resultBottom > curBottom) {
+    		$dropdown.scrollTop(curTop + (resultBottom - curBottom));
+    	}
+    }
+    
+    /*
+    * Update Input
+    */
+    var updateInput = function(newVal, hideAlways) {
+    	if (newVal) {
+    		$input.val(newVal);
+			currentSearch = $input.val();
+    	}
+    	
+    	setResultsVisibility(updateResults() && !hideAlways);
+    }
+    
+    /*
+    * Update Results
+    */
+    var updateResults = function() {
+    	$dropdownList.empty();
+		var results = getResults(currentSearch);
+		
+		_.each(results, function(result) {
+			var resultHtml = generateResult(result);
+			$dropdownList.append(resultHtml);
+		});
+		
+		return results.length > 0;
+    }
+    
+    /*
+    * Shows the results list
+    */
+    var setResultsVisibility = function(shouldShow) {
+    	if (shouldShow && !$dropdown.is(':visible')) {
+    		$dropdown.show();
+    	}
+    	
+    	if (!shouldShow) {
+    		$dropdown.hide();
+    	}
+    }
+    
+    /*
+    * Resizes the result view to the width of the input
+    */
+    var resizeResultContainer = function() {
+        
+        if ($input) {
+	        var leftOff = $input.position().left;
+	    	var topOff = $input.position().top;
+	    	
+	    	$dropdown.css({width: $input.outerWidth() + 'px'});
+	    	$dropdown.css({left: leftOff, 
+	    		top: topOff + $input.outerHeight()});
+        }
+    }
+    
+    /*
+    * Creates the dropdown div/list to hold result items
+    */
+    var createDropdown = function() {
+        $input.after('<div class="dropdown-list-display" tabindex="-1">' +
+                        '<ul class="list-unstyled dropdown-search-list">' +
+                        '</ul>' +
+                    '</div>');
+        
+        $dropdown = $input.siblings('div.dropdown-list-display');
+        $dropdownList = $dropdown.find('.dropdown-search-list');
+    }
+    
+    /*
+    * Creates the dropdown div/list to hold result items
+    */
+    var generateResult = function(result) {
+    	
+        return '<li class="dropdown-list-item" tabindex="0" result="' + result + '">' +
+                    '<span><i class="fa fa-ellipsis-v"></i></span>' +
+                    result +
+                '</li>';
+    }
+    
+    /*
+    * Returns a set of matched results for the provided input
+    */
+    var getResults = function(val) {
+        if (!val) return [];
+        var curItem;
+        var results = getProperties(resultList());
+        
+    	var filtered = _.filter(results, function(item) {
+    		if (_.isNumber(item)) {
+    			curItem = String(item);
+    		} else {
+    			curItem = item;
+    		}
+    		
+    		return curItem.toLowerCase().indexOf(val.toLowerCase()) >= 0;	
+    	});
+    	
+    	return filtered.sort();
+    }
+    
+    /*
+    * Returns a unique list of values for an array at a specific property
+    */
+    var getProperties = function(items) {
+    	var list = [];
+    	if (items.length && _.isArray(items[0][property])) {
+    		var arrList = _.pluck(items, property);
+    		_.each(arrList, function(arr) { 
+    			list = list.concat(arr);	
+    		});
+    	} else {
+    		list = _.pluck(items, property);
+    	}
+    	
+    	return _.uniq(list);
+    }
+    
+    
+    this.init(opt);
 }

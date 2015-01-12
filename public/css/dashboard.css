@@ -997,3 +997,49 @@ img.fit-parent {
 .tag-list-item:focus {
     background-color: #ccc;
 }
+
+/*===================================================================*/
+/*                                                                   */
+/*                   Autocomplete List                               */
+/*                                                                   */
+/*===================================================================*/
+
+*:focus {
+    outline: none;
+}
+
+.dropdown-list-display {
+    max-height: 100px;
+    z-index: 1000;
+    background-color: #ffffff;
+    border-radius: 0px 0px 5px 5px;
+    position: absolute;
+    border: 1px solid #949494;
+    -webkit-box-shadow: 4px 3px 5px 0px rgba(31, 31, 31, 0.29);
+    -moz-box-shadow: 4px 3px 5px 0px rgba(31, 31, 31, 0.29);
+    box-shadow: 4px 3px 5px 0px rgba(31, 31, 31, 0.29);
+    overflow: auto;
+    display: none;
+}
+
+.dropdown-search-list {
+    margin-bottom: 0px;
+}
+
+.dropdown-list-item {
+    padding: 3px 5px;
+    cursor: pointer;
+    font-size: .8em;
+}
+
+.dropdown-list-item span {
+    margin-right: 5px;
+}
+
+.dropdown-list-item:hover {
+    background-color: #ccc;
+}
+
+.dropdown-list-item.active {
+    background-color: #ccc;
+}
