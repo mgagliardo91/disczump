@@ -1,15 +1,36 @@
 var Error = require('./utils/error');
+var UserController = require('./controllers/user');
 var DiscController = require('./controllers/disc');
 var DiscImageController = require('./controllers/discImage');
 var passport = require('passport');
 var logger = require('../config/logger.js').logger;
+var config = require('../config/config.js');
 var Busboy = require('busboy');
 var gfs;
+var gm = require('gm').subClass({ imageMagick: true });
 
 // app/api.js
 module.exports = function(app, passport, gridFs) {
     
     gfs = gridFs;
+    
+    app.route('/account/preferences')
+        .get(hasAccess, function(req, res) {
+            UserController.getPreferences(req.user._id, function(err, user) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json(user);
+            })
+        })
+        .put(hasAccess, function(req, res) {
+            UserController.updatePreferences(req.user._id, req.body, function (err, user) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json(user);
+            });
+        });
     
     app.route('/public/users/:userId/discs')
     
@@ -128,7 +149,13 @@ module.exports = function(app, passport, gridFs) {
                                 return res.json(discImage);
                             })
                           });
-                        file.pipe(ws);
+                          
+                        gm(file).size({bufferStream: true}, function(err, size) {
+                            this.resize(size.width > config.images.maxSize ? config.images.maxSize : size.width);
+                            this.stream('png', function (err, stdout, stderr) {
+                              stdout.pipe(ws);
+                            });
+                        });
                     } else {
                         sendResponse = true;
                         file.resume();

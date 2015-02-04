@@ -40,3 +40,9 @@
 .alert {
      padding: 10px;
 }
+
+@media screen and (max-height: 700px) {
+     .signup-form-cell {
+          padding-top: 100px !important;
+     }
+}

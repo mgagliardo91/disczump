@@ -9,6 +9,7 @@ var flash    = require('connect-flash');
 var morgan       = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser   = require('body-parser');
+var device       = require('express-device');
 var session      = require('express-session');
 var exphbs = require('express-handlebars');
 var config = require('./config/config.js');
@@ -30,12 +31,19 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use('/static', express.static(__dirname + '/public'));
+app.use(device.capture());
 
 // required for passport
 app.use(session({ secret: config.secret}));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
+
+app.use(function (req, res, next) {
+  req.device.isMobile = req.device.type == 'phone' 
+    || req.device.type == 'tablet';
+  next();
+});
 
 
 var hbs = exphbs.create({

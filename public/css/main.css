@@ -6,10 +6,6 @@
     padding-right: 10px;
 }
 
-.navbar-header {
-     padding-right: 20px;
-}
-
 .nav-search {
      margin-top: 8px;
      margin-bottom: 8px;
@@ -42,4 +38,68 @@ ul.nav {
     -khtml-user-select: none;
     -webkit-user-select: none;
     user-select: none;
+}
+
+.navbar {
+	z-index: 1000;
+}
+
+.navbar-center .navbar-brand {
+    float: none;
+    cursor: pointer;
+}
+
+.navbar-center {
+	position: absolute;
+	width: 100%;
+	left: 0;
+	top: 0;
+	text-align: center;
+	margin: auto;
+	height:100%;
+}
+
+.btn-inverse {
+	position: relative;
+	padding: 9px 10px;
+	background-color: transparent;
+	border: none;
+	color: #999;
+	cursor: pointer;
+	z-index: 1000;
+}
+
+.btn-inverse:hover {
+	color: #999;
+}
+
+#nav-filter.active {
+    color: #fff;
+}
+
+.navbar-toggle:hover {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+.navbar-toggle {
+	color: #999;
+	z-index: 1000;
+}
+
+.nav.navbar-nav {
+    z-index: 1000;
+}
+
+@media (max-width: 767px) {
+	.btn-inverse {
+		border: 1px solid transparent !important;
+		border-radius: 4px !important;
+		border-color: #333 !important;
+		margin-left: 15px !important;
+	}
+	
+	#nav-filter.active {
+		border-color: #fff !important;
+    }
 }

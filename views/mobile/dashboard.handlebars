@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+    <title>DiscZump - Dashboard</title>
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="/static/css/mobile/dashboard.css">
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+</head>
+<body>
+    <div data-role="panel" id="side-panel" data-position="left" data-display="reveal" data-position-fixed="true" >
+        <div class="ui-panel-inner">
+            <div class="panel settings-panel panel-dark panel-main" id="settings-container">
+                <div class="panel-heading">Settings</div>
+                <ul class="list-group">
+                    <a class="list-group-item panel-link-item clickable" id="settings-filter" panel-href="#filter-container">Filter <i class="fa fa-filter fa-fw pull-right"></i></a>
+                    <a class="list-group-item panel-link-item clickable" id="settings-colorize" panel-href="#colorize-container">Colorize <i class="fa fa-adjust fa-fw pull-right"></i></a>
+                </ul>
+            </div>
+            <div class="panel settings-panel panel-dark" id="filter-container">
+                <div class="panel-heading"><i class="btn-back fa fa-arrow-left fa-fw pull-left" panel-href="#settings-container"></i>Filter</div>
+                <ul class="list-group" id="filter-list">
+                </ul>
+            </div>
+            <div class="panel settings-panel panel-dark" id="colorize-container">
+                <div class="panel-heading"><i class="btn-back fa fa-arrow-left fa-fw pull-left" panel-href="#settings-container"></i>Colorize</div>
+                <ul class="list-group" id="colorize-list">
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div data-role="page" id="disc-inventory">
+        <div data-role="content">
+            <div class="disc-inventory-list" id="disc-inventory-container">
+            </div>
+        </div>
+    </div>
+    <script src="https://rawgit.com/enyo/dropzone/master/dist/dropzone.js"></script>
+    <script src="/static/js/mobile/dashboard.js"></script>
+</body>
+</html>

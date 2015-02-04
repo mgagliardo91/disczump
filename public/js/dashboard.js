@@ -15,6 +15,8 @@ var discList = [];
 var discs = [];
 var paginateOptions = {displayCount: 20, currentPage: 1, lastPage: 1};
 var dropzones = [];
+var changeObject = {};
+var fnLock = false;
 
 var refPageTop;
 var refContBottom;
@@ -31,7 +33,8 @@ $(document).ready(function(){
     refPageTop = $('body').outerHeight() - $('body').height() - $('nav').outerHeight();
     refContBottom = refPageTop + $inventoryContainer.outerHeight() - $inventoryHeader.outerHeight();
      
-     $(window).on('resize', function(){
+     $(window).on('resize', function() {
+     	console.log('resizing');
         resizeSearch($searchResults, $searchBar, true); 
         resizeResultHeader();
      });
@@ -97,16 +100,19 @@ $(document).ready(function(){
 			
 	  		$searchResults.hide();
 	  });
-     
-	 $(document).on('click', '.disc-item', function() {
-	 	var disc = getDisc($(this).attr('discid'));
+	 
+	 $(document).on('click', '.disc-content-image', function() {
+	 	var disc = getDisc($(this).parents('.disc-item').attr('discid'));
 		generateViewDisc(disc);
 	 });
 	 
-	 $(document).on('click', '.page-dynamic', function() {
-	 	var page = parseInt($(this).text());
-	 	paginateOptions.currentPage = page;
-	 	showDiscs(true);
+	 $(document).on('click', '.fa-delete-disc-item', function() {
+	 	deleteConfirmationModal($(this).parents('.disc-item').attr('discid'));
+	 });
+	 
+	 $(document).on('click', '.fa-edit-disc-item', function() {
+	 	var disc = getDisc($(this).parents('.disc-item').attr('discid'));
+	 	generateDiscInputForm(disc);
 	 });
 	 
 	 $('#page-back').click(function(){
@@ -137,20 +143,16 @@ $(document).ready(function(){
 	 });
 	 
 	 $('#create-disc-modal').click(function(e){
-	 	generateCreateDiscForm();
-	 });
-	 
-	 $('#btn-delete-disc').click(function(e){
-	 	deleteConfirmationModal();
+	 	generateDiscInputForm();
 	 });
 	
 	$(document).on('click', '.image-preview:not(.active)', function(){
 		var src = $(this).children('img').attr('src');
 		var $blockDisplay = $(this).parents('.image-block-display');
-		var $mainImage = $blockDisplay.find('#disc-main-image');
+		var $primAryimage = $blockDisplay.find('#disc-primary-image');
 		
 		$blockDisplay.find('.image-preview.active').removeClass('active');
-		$mainImage.attr('src', src);
+		$primAryimage.attr('src', src);
 		$(this).addClass('active');
 	});
 	
@@ -227,26 +229,6 @@ $(document).ready(function(){
 	 });
 });
 
-/*var loading = function() {
-        // add the overlay with loading image to the page
-        var backgroundOverlay = '<div id="overlay">' +
-            '<img id="loading" src="/static/img/loading.GIF">' +
-            '</div>';
-        $(backgroundOverlay).appendTo('body');
-
-        // click on the overlay to remove it
-        $('#overlay').click(function() {
-            $(this).remove();
-        });
-
-        // hit escape to close the overlay
-        $(document).keyup(function(e) {
-            if (e.which === 27) {
-                $('#overlay').remove();
-            }
-        });
-    };*/
-
 var searchLock = function(e) {
 	e.stopPropagation();
 	myFilter.clearFilter('name');
@@ -282,6 +264,14 @@ function updateSearchResults($section, list) {
 		$output.children('.result-item-empty').show();
 	}
 }
+
+var delay = (function(){
+  var timer = 0;
+  return function(callback, ms){
+    clearTimeout (timer);
+    timer = setTimeout(callback, ms);
+  };
+})();
 
 function generateResultItem(item) {
 	return '<div class="result-item">' + item +
@@ -342,20 +332,17 @@ function showDiscs(maintainPage) {
 	var sorted = mySort.doSort(discList);
 	var paged = paginate(sorted);
 	_.each(paged, function(disc) {
-		getAllDiscImages(disc._id, updateDiscImage);
+		getPrimaryDiscImage(disc.primaryImage, updateDiscImage);
 		$filterResults.append(generateDiscTemplate(disc));
 	});
 	updateHeader(sorted.length);
 	resizeResultHeader();
 }
 
-function updateDiscImage(success, discImages) {
+function updateDiscImage(success, discImage) {
 	if (success) {
-		if (discImages.length > 0) {
-			var discImage = discImages[0];
-			var $discItem = $('div.disc-item[discId="' + discImage.discId + '"]');
-			$discItem.find('.disc-content-image img').attr('src', '/files/' + discImage.fileId);
-		}
+		var $discItem = $('div.disc-item[discId="' + discImage.discId + '"]');
+		$discItem.find('.disc-content-image img').attr('src', '/files/' + discImage.fileId);
 	}
 }
 
@@ -392,80 +379,83 @@ function generateDiscTemplate(disc) {
 	});
 	
 	 return '<div class="disc-item-container">' +
-                                '<div class="disc-item" discId="' + disc._id + '">' +
-                                    '<div class="disc-content-image-container">' +
-                                        '<div class="disc-content-image">' +
-                                            '<img src="https://placehold.it/150x150" />' +
-                                        '</div>' +
-                                    '</div>' +
-                                    '<div class="disc-content-info-container">' +
-                                        '<div class="disc-info-main-pane">' +
-                                            '<div class="disc-info-left-pane div-inline float-left">' +
-                                                '<div class="disc-info-brand">' + (disc.brand ? disc.brand : '') + '</div>' +
-                                                '<div class="disc-info-name">' + (disc.name ? disc.name : '') + '</div>' +
-                                            '</div>' +
-                                            '<div class="disc-info-right-pane div-inline float-left">' +
-                                                '<div class="div-inline float-left div-split-horiz">' +
-                                                    '<table>' +
-                                                        '<tr>' +
-                                                            '<td class="disc-info-label">Type:</td>' +
-                                                            '<td class="disc-info-value">' +(disc.type ? disc.type : '') + '</td>' +
-                                                        '</tr>' +
-                                                        '<tr>' +
-                                                            '<td class="disc-info-label">Material:</td>' +
-                                                            '<td class="disc-info-value">' +(disc.material ? disc.material : '') + '</td>' +
-                                                        '</tr>' +
-                                                    '</table>' +
-                                                '</div>' +
-                                                '<div class="div-inline float-left div-split-horiz">' +
-                                                    '<table>' +
-                                                        '<tr>' +
-                                                            '<td class="disc-info-label">Color:</td>' +
-                                                            '<td class="disc-info-value">' +(disc.color ? disc.color : '') + '</td>' +
-                                                        '</tr>' +
-                                                        '<tr>' +
-                                                            '<td class="disc-info-label">Weight:</td>' +
-                                                            '<td class="disc-info-value">' + ((typeof disc.weight != 'undefined') ? disc.weight : '') + '</td>' +
-                                                        '</tr>' +
-                                                    '</table>' +
-                                                '</div>' +
-                                            '</div>' +
-                                        '</div>' +
-                                        '<div>' +
-                                            '<div class="disc-info-left-pane div-inline float-left">' +
-                                                '<div class="disc-info-bottom">' +
-                                                    '<div class="disc-info-numbers">' +
-                                                    ((typeof disc.speed != 'undefined') ? disc.speed : '??') + ' | ' +
-                                                    ((typeof disc.glide != 'undefined') ? disc.glide : '??') +' | ' +
-                                                    ((typeof disc.turn != 'undefined') ? disc.turn : '??') + ' | ' +
-                                                    ((typeof disc.fade != 'undefined') ? disc.fade : '??') + '</div>' +
-                                                '</div>' +
-                                            '</div>' +
-                                            '<div class="disc-info-right-pane div-inline float-left">' +
-                                                '<div class="disc-info-bottom">' +
-                                                    '<div class="disc-info-tags div-inline float-left">' +
-                                                        '<span class="disc-info-tag-label">Tags:</span>' +
-                                                        tagHTML +
-                                                    '</div>' +
-                                                '</div>' +
-                                            '</div>' +
-                                        '</div>' +
-                                    '</div>' +
-                                    '<div class="clearfix"></div>' +
+                '<div class="disc-item" discId="' + disc._id + '">' +
+                    '<div class="disc-content-image-container">' +
+                        '<div class="disc-content-image">' +
+                            '<img src="https://placehold.it/150x150" />' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="disc-content-action-container float-right">' +
+                		'<table>' +
+                            '<tr class="disc-item-actions-top">' +
+                                '<td class="disc-item-delete">' +
+                                	'<span><i class="fa fa-minus-circle fa-lg fa-dim fa-delete-disc-item"></i></span>' +
+                                '</td>' +
+                            '</tr>' +
+                            '<tr class="disc-item-actions-bottom">' +
+                                '<td class="disc-item-edit">' +
+                                	'<span><i class="fa fa-pencil fa-lg fa-dim fa-edit-disc-item"></i></span>' +
+                                '</td>' +
+                            '</tr>' +
+                        '</table>' +
+                    '</div>' +
+                    '<div class="disc-content-info-container">' +
+                        '<div class="disc-info-main-pane">' +
+                            '<div class="disc-info-left-pane div-inline float-left">' +
+                                '<div class="disc-info-brand">' + (disc.brand ? disc.brand : '') + '</div>' +
+                                '<div class="disc-info-name">' + (disc.name ? disc.name : '') + '</div>' +
+                            '</div>' +
+                            '<div class="disc-info-right-pane div-inline float-left">' +
+                                '<div class="div-inline float-left div-split-horiz">' +
+                                    '<table>' +
+                                        '<tr>' +
+                                            '<td class="disc-info-label">Type:</td>' +
+                                            '<td class="disc-info-value">' +(disc.type ? disc.type : '') + '</td>' +
+                                        '</tr>' +
+                                        '<tr>' +
+                                            '<td class="disc-info-label">Material:</td>' +
+                                            '<td class="disc-info-value">' +(disc.material ? disc.material : '') + '</td>' +
+                                        '</tr>' +
+                                    '</table>' +
                                 '</div>' +
-                            '</div>';
-	
-}
-
-function generateModalTemplate(disc) {
-	return '<p>' + disc.type + '</p>' +
-			'<p>' + disc.material + '</p>' +
-			'<p>' + disc.color + '</p>' +
-			'<p>' + disc.weight + '</p>' +
-			'<p>' + disc.speed + '</p>' +
-			'<p>' + disc.glide + '</p>' +
-			'<p>' + disc.turn + '</p>' +
-			'<p>' + disc.fade + '</p>'
+                                '<div class="div-inline float-left div-split-horiz">' +
+                                    '<table>' +
+                                        '<tr>' +
+                                            '<td class="disc-info-label">Color:</td>' +
+                                            '<td class="disc-info-value">' +(disc.color ? disc.color : '') + '</td>' +
+                                        '</tr>' +
+                                        '<tr>' +
+                                            '<td class="disc-info-label">Weight:</td>' +
+                                            '<td class="disc-info-value">' + ((typeof disc.weight != 'undefined') ? disc.weight : '') + '</td>' +
+                                        '</tr>' +
+                                    '</table>' +
+                                '</div>' +
+                            '</div>' +
+                            
+                        '</div>' +
+                        '<div>' +
+                            '<div class="disc-info-left-pane div-inline float-left">' +
+                                '<div class="disc-info-bottom">' +
+                                    '<div class="disc-info-numbers">' +
+                                    ((typeof disc.speed != 'undefined') ? disc.speed : '??') + ' | ' +
+                                    ((typeof disc.glide != 'undefined') ? disc.glide : '??') +' | ' +
+                                    ((typeof disc.turn != 'undefined') ? disc.turn : '??') + ' | ' +
+                                    ((typeof disc.fade != 'undefined') ? disc.fade : '??') + '</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="disc-info-right-pane div-inline float-left">' +
+                                '<div class="disc-info-bottom">' +
+                                    '<div class="disc-info-tags div-inline float-left">' +
+                                        '<span class="disc-info-tag-label">Tags:</span>' +
+                                        tagHTML +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="clearfix"></div>' +
+                '</div>' +
+            '</div>';
 }
 
 function paginate(toPaginate) {
@@ -487,26 +477,53 @@ function paginate(toPaginate) {
 	return toPaginate.slice(start, end);
 }
 
-function generateModal($header, $body, $footer, options) {
+/*-------------------------------------------------------------------------------------------*/
+/*                                     MODAL JQUERY                                          */
+/*-------------------------------------------------------------------------------------------*/
+/*
+					                  /`¯/) 
+					                ,/ ../  
+					               / .../ 
+					              /´¯../`¯¯'/´¯`·¸ 
+					          /'/...../..../...../¨¯\ 
+					        ('(...´...´.... ¯~/'....') 
+					         \.................'...../ 
+					          ''...\.......... _.·´ 
+					            \..............( 
+					              \.............\
+*/
+/*-------------------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------*/
+
+/*
+* Generates a modal popup with the specified parameters
+*/
+function generateModal(opt) {
 	// params fns, onCreate, onShow
 	
+	// Remove all other modals
 	$('.custom-modal').remove();
+	
+	// private vars
 	var headerText = '';
 	var bodyText = '';
 	var footerText = '';
 	
-	if ($header) {
-		headerText = $header.html();
+	// Get modal building blocks
+	if (isDef(opt.header)) {
+		headerText = opt.header;
 	}
 	
-	if ($body) {
-		bodyText = $('<div></div>').append($body).html();
+	if (isDef(opt.body)) {
+		bodyText = opt.body;
 	}
 	
-	if ($footer) {
-		footerText = $footer.html();
+	if (isDef(opt.footer)) {
+		footerText = opt.footer;
 	}
 	
+	// Create modal
 	var $modal = $('<div class="modal custom-modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>');
 	$modal.html('<div class="modal-dialog">' + 
             '<div class="modal-content">' + 
@@ -521,9 +538,9 @@ function generateModal($header, $body, $footer, options) {
             
      $('body').append($modal);
      
-     if (options.fns) {
-     	var fns = options.fns;
-     	_.each(fns, function(fn) {
+     // Setup events
+     if (isDef(opt.fns)) {
+     	_.each(opt.fns, function(fn) {
      		if (fn.name && fn.function) {
      			$modal.find('[fn-title="' + fn.name +'"]').on('click', function() {
      				fn.function($(this), $modal.find('.modal-body'), function() {
@@ -534,24 +551,58 @@ function generateModal($header, $body, $footer, options) {
      	});
      }
      
+    // On hide event
     $modal.on('hidden.bs.modal', function (e) {
-	  $modal.remove();
+    	if (isDef(opt.onClose)) {
+			opt.onClose($modal.find('.modal-body'));
+		}
+    	
+	  	$modal.remove();
+	  	$(window).off('resize', resizeModal);
+	  
 	});
 	
+	// On shown event
 	$modal.on('shown.bs.modal', function (e) {
-	  if (options.onShow) {
-			options.onShow($modal.find('.modal-body'));
+		
+		resizeModal();
+		
+	  if (isDef(opt.onShow)) {
+			opt.onShow($modal.find('.modal-body'));
 		}
 	});
 	
-	if (options.onCreate) {
-		options.onCreate($modal.find('.modal-body'));
+	// On create event
+	if (isDef(opt.onCreate)) {
+		opt.onCreate($modal.find('.modal-body'));
 	}
 	
-    $modal.modal({show: true, backdrop: 'static'});
+	// Resize based on window size
+	$(window).on('resize', resizeModal);
 	
+	// show modal
+	fnLock = false;
+    $modal.modal({show: true, backdrop: 'static'});
 }
 
+/*
+* Resizes the modal based on the window screen size
+*/
+function resizeModal() {
+	var windowHeight = $(window).height();
+	var headerHeight = $('.modal-header').outerHeight();
+	var footerHeight = $('.modal-footer').outerHeight();
+	var height = Math.max((windowHeight - headerHeight - footerHeight - 62), 120);
+	
+	$('.modal-body').css({
+		maxHeight: height + 'px',
+		overflow: 'auto'
+	});
+}
+
+/*
+* Exports the inventory to an excel sheet
+*/
 function exportList() {
 	var $header = $('<div></div>').html(
 		'<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>' +
@@ -629,171 +680,16 @@ function exportList() {
 	generateModal($header, $form, $footer, {fns: fns});
 }
 
-function generateViewDisc(disc) {
-	var color = typeof disc.color == 'undefined' ? "" : disc.color;
-	var type = typeof disc.type == 'undefined' ? "" : disc.type;
-	var material = typeof disc.material == 'undefined' ? "" : disc.material;
-	var notes = typeof disc.notes == 'undefined' ? "" : disc.notes;
-	var weight = typeof disc.weight == 'undefined' ? "" : disc.weight;
-	var speed = typeof disc.speed == 'undefined' ? "" : disc.speed;
-	var glide = typeof disc.glide == 'undefined' ? "" : disc.glide;
-	var turn = typeof disc.turn == 'undefined' ? "" : disc.turn;
-	var fade = typeof disc.fade == 'undefined' ? "" : disc.fade;
-	
-	var $header = $('<div></div>').html(
-			'<div class="row">' +
-	              '<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>' +
-	              '<h4 class="modal-title">' + disc.brand + ' ' + disc.name + '</h4>' +
-	          '</div>' +
-	          '<div class="row">' +
-	              '<p class="modal-title-disc-type">' + type + '</p>' +
-	          '</div>'
-		);
-	var $body =  $('<div id="viewDiscModal" discId="' + disc._id + '"></div>');
-	$body.html('<div class="image-block-display">' +
-		                '<div class="image-block">' +
-		                    '<div class="image-block-frame">' +
-		                        '<img src="https://placehold.it/250x250" class="fit-parent" id="disc-main-image">' +
-		                    '</div>' +
-		                '</div>' +
-		                '<div class="image-list">' +
-		                    '<div class="image-list-container image-list-container-simple">' +
-		                        '<div class="image-list-table" id="disc-image-table">' +
-			                        '<div class="image-item-container">' +
-			                                '<div class="image-item">' +
-			                                    '<div class="image-preview active">' +
-			                                        '<img src="https://placehold.it/250x250" class="fit-parent">' +
-			                                    '</div>' +
-			                                '</div>' +
-		                            '</div>' +
-		                        '</div>' +
-		                    '</div>' +
-		                '</div>' +
-		            '</div>' +
-                    '<div class="row">' +
-                        '<div class="col-sm-2">' +
-                            '<p class="view-disc-label">Material:</p>' +
-                        '</div>' +
-                        '<div class="col-sm-7">' +
-                            '<p>' + material + '</p>' +
-                        '</div>' +
-                        '<div class="col-sm-2">' +
-                            '<p class="view-disc-label">Speed:</p>' +
-                        '</div>' +
-                        '<div class="col-sm-1">' +
-                            '<p>' + speed + '</p>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="row">' +
-                        '<div class="col-sm-2">' +
-                            '<p class="view-disc-label">Color:</p>' +
-                        '</div>' +
-                        '<div class="col-sm-7">' +
-                            '<p>' + color + '</p>' +
-                        '</div>' +
-                        '<div class="col-sm-2">' +
-                            '<p class="view-disc-label">Glide:</p>' +
-                        '</div>' +
-                        '<div class="col-sm-1">' +
-                            '<p>' + glide + '</p>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="row">' +
-                        '<div class="col-sm-2">' +
-                            '<p class="view-disc-label">Weight:</p>' +
-                        '</div>' +
-                        '<div class="col-sm-7">' +
-                            '<p>' + weight + '</p>' +
-                        '</div>' +
-                        '<div class="col-sm-2">' +
-                            '<p class="view-disc-label">Turn:</p>' +
-                        '</div>' +
-                        '<div class="col-sm-1">' +
-                            '<p>' + turn + '</p>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="row">' +
-                        '<div class="col-sm-2">' +
-                            '<p class="view-disc-label">Notes:</p>' +
-                        '</div>' +
-                        '<div class="col-sm-7">' +
-                            '<p>' + notes + '</p>' +
-                        '</div>' +
-                        '<div class="col-sm-2">' +
-                            '<p class="view-disc-label">Fade:</p>' +
-                        '</div>' +
-                        '<div class="col-sm-1">' +
-                            '<p>' + fade + '</p>' +
-                        '</div>' +
-                    '</div>');
-               
-     var $footer = $('<div></div>').html(
-     	'<div class="row">' +
-              '<div class="col-sm-2">' +
-                  '<button type="button" id="btn-delete-disc" class="btn btn-danger" fn-title="delete" discId=' + disc._id + '><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete</button>' +
-              '</div>' +
-              '<div class="col-sm-2">' +
-                  '<button type="button" id="btn-edit-disc" class="btn btn-warning" fn-title="edit"><span><i class="fa fa-pencil fa-tools"></i></span>Edit</button>' +
-              '</div>' +
-              '<div class="col-sm-2 col-sm-offset-6">' +
-                  '<button type="button" class="btn btn-default" fn-title="close">Close</button>' +
-              '</div>' +
-          '</div>'
-     );
- 
-	var fns = [
-				{
-					name: 'close',
-					function: function($btn, $inner, done) {
-						done();
-						console.log('Closed disc view.');
-					}
-				},
-				{
-					name: 'edit',
-					function: function($btn, $inner, done) {
-						generateEditDiscForm(disc);
-						done();
-					}
-				},
-				{
-					name: 'delete',
-					function: function($btn, $inner, done) {
-						deleteConfirmationModal($btn.attr('discId'));
-						done();
-					}
-				}
-	];
-	
-	var onCreate = function($inner){
-		var discId = $('#viewDiscModal').attr('discId');
-		
-		getAllDiscImages(discId, function(success, images) { 
-			if (success) {
-				populateDiscImages(images, $inner);
-			}	
-		});
-	}
-	
-     generateModal($header, $body, $footer, {fns:fns, onCreate:onCreate});
-     
-     
-}
-
+/*
+* Alerts the user that a disc will be deleted
+*/
 function deleteConfirmationModal(discId) {
-	var $header = $('<div></div>').html(
-		'<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>' +
-          '<h4 class="modal-title">WARNING!</h4>'
-		);
-	var $body =  $('<div></div>');
-	$body.html(
-		'<p>Are you sure you want to delete this disc and all of its data?</p>'
-		);
+	var header = '<h4 class="modal-title">WARNING!</h4>';
+          
+	var body =  '<p>Are you sure you want to delete this disc and all of its data?</p>';
 			
-	var $footer = $('<div></div>').html(
-		'<button type="button" class="btn btn-default" fn-title="cancel">Cancel</button>' +
-		'<button type="button" id="btn-confirm-delete-disc" class="btn btn-danger" fn-title="confirm-delete" discId=' + discId + '><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete Disc</button>'
-		);
+	var footer = '<button type="button" class="btn btn-default" fn-title="cancel">Cancel</button>' +
+		'<button type="button" id="btn-confirm-delete-disc" class="btn btn-danger" fn-title="confirm-delete" discId=' + discId + '><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete Disc</button>';
 		
 	var fns = [
 				{
@@ -813,274 +709,425 @@ function deleteConfirmationModal(discId) {
 							} else {
 								// error logic
 							}
-							
 							done();
 						});
 					}
 				}
 		];
-	
-	generateModal($header, $body, $footer, {fns: fns});
+		
+	generateModal({
+		header: header, 
+		body: body, 
+		footer: footer, 
+		fns: fns
+	});
 }
 
-function generateEditDiscForm(disc) {
-	var $header = $('<div></div>').html(
-		'<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>' +
-          '<h4 class="modal-title">Edit Disc</h4>'
-		);
-	var $form =  $('<form class="form-horizontal" role="form" id="createDiscForm" discId="' + disc._id + '" autocomplete="off"></form>');
-	$form.html('<div class="form-group">' +
-	                  '<label for="md-add-brand" class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>' +
-	                  '<div class="col-sm-10">' +
-	                      '<input type="text" class="form-control" id="create-disc-brand" param="brand" required>' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	                  '<label for="md-add-name" class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>' +
-	                  '<div class="col-sm-10">' +
-	                      '<input type="text" class="form-control" id="create-disc-name" param="name" required>' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	                  '<label for="md-add-material" class="col-sm-2 control-label">Material</label>' +
-	                  '<div class="col-sm-10">' +
-	                      '<input type="text" class="form-control" id="create-disc-material" param="material">' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	                  '<label for="md-add-type" class="col-sm-2 control-label">Type</label>' +
-	                  '<div class="col-sm-10">' +
-	                      '<select class="form-control" id="create-disc-type"  param="type">' +
-	                          '<option value="" selected></option>' +
-	                          '<option value="Putt/Approach">Putt/Approach</option>' +
-	                          '<option value="Mid-range">Mid-range</option>' +
-	                          '<option value="Fairway Driver">Fairway Driver</option>' +
-	                          '<option value="Distance Driver">Distance Driver</option>' +
-	                          '<option value="Mini">Mini</option>' +
-	                      '</select>' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	                  '<label for="md-add-weight" class="col-sm-2 control-label">Weight</label>' +
-	                  '<div class="col-sm-10">' +
-	                      '<input type="number" class="form-control" id="create-disc-weight" param="weight">' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	                  '<label for="md-add-color" class="col-sm-2 control-label">Color</label>' +
-	                  '<div class="col-sm-10">' +
-	                      '<input type="text" class="form-control" id="create-disc-color" param="color">' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	                  '<label for="md-add-speed" class="col-sm-2 control-label">Speed</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control" id="create-disc-speed" param="speed">' +
-	                  '</div>' +
-	                  '<label for="md-add-glide" class="col-sm-2 control-label">Glide</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control" id="create-disc-glide" param="glide">' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	                  '<label for="md-add-turn" class="col-sm-2 control-label">Turn</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control" id="create-disc-turn" param="turn">' +
-	                  '</div>' +
-	                  '<label for="md-add-fade" class="col-sm-2 control-label">Fade</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control" id="create-disc-fade" param="fade">' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	                  '<label for="md-add-notes" class="col-sm-2 control-label">Notes</label>' +
-	                  '<div class="col-sm-10">' +
-	                      '<textarea class="form-control" id="create-disc-notes" rows="3" param="notes"></textarea>' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	                  '<label class="col-sm-2 control-label">Select Images</label>' +
-	                  '<div class="col-sm-5">' +
-                            '<div class="upload-img" id="disc-img-front">' +
-                            		'<span class="placeholder"><i class="fa fa-camera-retro"></i></span>' +
-                            		'<div id="disc-img-front-click" class="upload-img-click"></div>' +
-                            '</div>' +
-	                  '</div>' +
-	                  '<div class="col-sm-5">' +
-	                      '<a href="#" class="thumbnail">' +
-	                          '<img id="img-back" data-src="holder.js/100%x180" alt="Back">' +
-	                      '</a>' +
-	                  '</div>' +
-	              '</div>');
-               
-     var $footer = $('<div></div>').html(
-     	'<button type="button" class="btn btn-default" fn-title="cancel">Cancel</button>' +
-		'<button type="button" id="btn-save-disc" class="btn btn-primary" fn-title="save" discId=' + disc._id + '><span><i class="fa fa-save fa-tools"></i></span>Save</button>'
-	);
+
+function generateDiscInputForm(disc) {
+	var isEdit = isDef(disc);
+	var discId = isEdit ? disc._id : '';
 	
-	var fns = [
+	var header = '<h4 class="modal-title">' + (isEdit ? 'Edit' : 'Create') + ' Disc</h4>';
+          
+    var footer = '<button type="button" class="btn btn-default" fn-title="close">Close</button>' +
+		'<button type="button" class="btn btn-primary" fn-title="save" discId=' + discId + '><span><i class="fa fa-save fa-tools"></i></span>Save</button>';
+		
+	var form = '<form class="form-horizontal" role="form" discId="' + discId + '" autocomplete="off">' +
+				'<div class="form-group">' +
+	                '<label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>' +
+	                '<div class="col-sm-4">' +
+	                    '<input type="text" id=disc-brand class="form-control text-assist" param="brand">' +
+	                '</div>' +
+	                '<label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>' +
+	                '<div class="col-sm-4">' +
+	                    '<input type="text" id=disc-name class="form-control text-assist" param="name">' +
+	                '</div>' +
+	            '</div>' +
+	            '<div class="form-group">' +
+	                '<label class="col-sm-2 control-label">Type</label>' +
+	                '<div class="col-sm-4">' +
+	                    '<select id=disc-type class="form-control" param="type">' +
+	                        '<option value=""' + (isEdit ? '' : 'selected') + '></option>' +
+	                        '<option value="Putt/Approach">Putt/Approach</option>' +
+	                        '<option value="Mid-range">Mid-range</option>' +
+	                        '<option value="Fairway Driver">Fairway Driver</option>' +
+	                        '<option value="Distance Driver">Distance Driver</option>' +
+	                        '<option value="Mini">Mini</option>' +
+	                     '</select>' +
+	                '</div>' +
+	                '<label class="col-sm-2 control-label">Material</label>' +
+	                '<div class="col-sm-4">' +
+	                    '<input type="text" id=disc-material class="form-control text-assist" param="material">' +
+	                '</div>' +
+	            '</div>' +
+	            '<div class="form-group">' +
+	                '<label class="col-sm-2 control-label">Weight</label>' +
+	                '<div class="col-sm-4">' +
+	                    '<input type="number" id=disc-weight class="form-control text-assist" param="weight">' +
+	                '</div>' +
+	                '<label class="col-sm-2 control-label">Color</label>' +
+	                '<div class="col-sm-4">' +
+	                    '<input type="text" id=disc-color class="form-control text-assist" param="color">' +
+	                '</div>' +
+	            '</div>' +
+	            '<div class="form-group">' +
+	                '<label class="col-sm-2 control-label">Speed</label>' +
+	                '<div class="col-sm-4">' +
+	                    '<input type="number" id=disc-speed class="form-control text-assist" param="speed">' +
+	                '</div>' +
+	                '<label class="col-sm-2 control-label">Glide</label>' +
+	                '<div class="col-sm-4">' +
+	                    '<input type="number" id=disc-glide class="form-control text-assist" param="glide">' +
+	                '</div>' +
+	            '</div>' +
+	            '<div class="form-group">' +
+	                '<label class="col-sm-2 control-label">Turn</label>' +
+	                '<div class="col-sm-4">' +
+	                    '<input type="number" id=disc-turn class="form-control text-assist" param="turn">' +
+	                '</div>' +
+	                '<label class="col-sm-2 control-label">Fade</label>' +
+	                '<div class="col-sm-4">' +
+	                    '<input type="number" id=disc-fade class="form-control text-assist" param="fade">' +
+	                '</div>' +
+	            '</div>' +
+	            '<div class="form-group tag-input-group">' +
+	                '<label class="col-sm-2 control-label">Tags</label>' +
+	                '<div class="col-sm-10">' +
+	                    '<div style="position:relative">' +
+	                        '<div class="input-group add-disc-tag-container">' +
+	                            '<input type="text" class="form-control add-disc-tag">' +
+	                            '<span class="input-group-btn">' +
+	                                '<button class="btn btn-default add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>' +
+	                            '</span>' +
+	                        '</div>' +
+	                    '</div>' +
+	                '</div>' +
+	                '<div class="col-sm-10 col-sm-offset-2">' +
+	                    '<div class="tag-list-container">' +
+	                    '</div>' +
+	                '</div>' +
+	            '</div>' +
+	            '<div class="form-group">' +
+	                '<label class="col-sm-2 control-label">Notes</label>' +
+	                '<div class="col-sm-10">' +
+	                    '<textarea id=disc-notes class="form-control create-disc-textarea" rows="3" param="notes"></textarea>' +
+	                '</div>' +
+	            '</div>' +
+	            '<div class="image-accordian-area">' +
+	            	(isEdit ? 
+		            '<div class="current-images-accordion-container">' +
+		                '<div class="current-images-accordion-header">' +
+		                    '<label class="current-images-label no-select" aria-expanded="true" aria-controls="collapseCurrentImages"><span><i class="fa fa-chevron-right fa-tools"></i></span>Current Pictures</label>' +
+		            	'</div>' +
+		            	'<div class="current-images-panel-collapse collapse" id="collapseCurrentImages">' +
+				            '<div class="image-list">' +
+				                '<div class="image-list-container image-list-container-simple">' +
+				                    '<div class="image-list-table" id="existing-image-list">' +
+				                    '</div>' +
+				                '</div>' +
+				            '</div>' +
+				        '</div>' +
+			        '</div>' : '') +
+		            '<div class="add-images-accordion-container">' +
+		                '<div class="add-images-accordion-header">' +
+		                    '<label class="add-images-label no-select" aria-controls="collapseDropzone"><span><i class="fa fa-chevron-right fa-tools"></i></span>Add Pictures</label>' +
+		                '</div>' +
+		                '<div class="dropzone-panel-collapse collapse" id="collapseDropzone">' +
+		                    '<div class="image-list dropzone-area">' +
+		                        '<div class="image-list-container" id="dropzone-container">' +
+		                            '<div class="image-list-table" id="dropzone-previews">' +
+		                                '<div class="image-item-container image-add" id="dropzone-trigger">' +
+		                                    '<div class="image-item">' +
+		                                        '<div class="image-entity">' +
+		                                            '<span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>' +
+		                                        '</div>' +
+		                                    '</div>' +
+		                                '</div>' +
+		                            '</div>' +
+		                        '</div>' +
+		                    '</div>' +
+		                '</div>' +
+		            '</div>' +
+	            '</div>' +
+			'</form>';
+	
+	var modalParams = (isEdit ? getEditParams() : getCreateParams());
+	
+	generateModal({
+		header: header,
+		body: form,
+		footer: footer,
+		fns: modalParams.fns,
+		onCreate: function($inner) {
+		    createDropZone($inner.find('.dropzone-area'));
+		    
+			$inner.find('.add-images-label').click(function(e) {
+		        var $chevron = $(this).find('.fa');
+		        if ($chevron.hasClass('fa-chevron-right')) {
+		            $chevron.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+		        } else {
+		            $chevron.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+		        }
+		        $('#collapseDropzone').collapse('toggle');
+		    });
+			
+			modalParams.onCreate($inner);
+		},
+		onShow: function($inner) {
+			var $tagInput = $inner.find('.add-disc-tag');
+			var $addCustomTag = $inner.find('.add-custom-tag');
+			var $tagContainer = $inner.find('.tag-list-container');
+			var tagTextAssist;
+			
+		    $addCustomTag.click(function(){
+		    	if ($tagInput.val().length > 0) {
+					$tagContainer.append(generateTagItem($tagInput.val()));
+		    		$tagInput.val('');
+		    	}
+		    });
+			
+			$inner.on('click', '.tag-item-remove', function(){
+				var $parent = $(this).parents('.tag-item');
+				$parent.remove();
+				
+				if ($tagContainer.is(':empty')){
+					$tagContainer.empty();
+				}
+			});
+			
+			/*
+			* Setup Autocomplete Handlers
+			*/
+			
+			$inner.find('.text-assist').each(function(index) {
+				new ZumpTextAssist({
+			        inputElement: $(this),
+			        searchProp: $(this).attr('param'),
+			        items: function() { return discs; }, 
+			        onSelection: function(item) {
+			        	console.log('Selected: ' + item);
+			        }
+			    });
+			});
+			
+			tagTextAssist = new ZumpTextAssist({
+				inputElement: $tagInput,
+				searchProp: 'tagList',
+				items: function() { return discs; }, 
+		        onSelection: function(item, reset) {
+		        	if (item.length > 0) {
+		        		$tagContainer.append(generateTagItem(item));
+		    			reset();
+		        	}
+		        }
+			});
+			
+			modalParams.onShow($inner);
+		},
+		onClose: function($inner) {
+			
+			var $dropzone = $inner.find('.dropzone-area');
+			var id = $dropzone.attr('dropzoneid');
+			var dropzone = dropzones.splice(id, 1)[0];
+			
+			modalParams.onClose($inner);
+		}
+	});
+}
+
+function getEditParams() {
+	return {
+		fns: [
 				{
-					name: 'cancel',
+					name: 'close',
 					function: function($btn, $inner, done) {
+						if (fnLock) return;
+						
 						done();
-						console.log('Canceled editing of disc.');
 					}
 				},
 				{
 					name: 'save',
 					function: function($btn, $inner, done) {
-						var discId = $btn.attr('discId');
-						var disc = createDisc($inner, discId);
+						if (fnLock) return;
+						
+						fnLock = true;
+						$inner.find('div.alert').remove();
+						
+						var disc = createDisc($inner, changeObject.curDisc);
+						
 						console.log(JSON.stringify(disc));
-						putDisc(disc, function(success) {
+						
+						putDisc(disc, function(success, retData) {
 							if (success) {
-								updateFilter(true);
+								if (isDef(changeObject.imageRemovals)) {
+									_.each(changeObject.imageRemovals, function(imageId) {
+										deleteImage(imageId);
+									});
+								}
+								
+								var $dropzone = $inner.find('.dropzone-area');
+								var id = $dropzone.attr('dropzoneid');
+								var dropzone = dropzones[id];
+								if (dropzone && dropzone.getAcceptedFiles().length > 0) {
+									dropzone.options.url = '/api/discs/' + retData._id + '/images';
+									dropzone.on('queuecomplete', function() {
+										getDiscById(retData._id, function(err, disc) {
+											updateFilter(true);
+										});
+										
+										done();
+									})
+									
+									dropzone.processQueue();
+								} else {
+									done();
+									updateFilter(true);
+								}
 							} else {
-								// error logic
+								$inner.prepend(generateError(retData.message, 'ERROR'));
 							}
-							
-							done();
 						});
 					}
 				}
-	];
+		],
+		onCreate : function($inner) {
+			changeObject = {};
+			
+			var discId = $inner.find('form').attr('discId');
+			changeObject.curDisc = copyDisc(discId);
+			
+			var disc = changeObject.curDisc;
+			var tagList = disc['tagList'];
+			var $tagContainer = $inner.find('.tag-list-container');
+			var $imageContainer = $inner.find('#existing-image-list');
+			
 	
-	var onCreate = function($inner) {
-		
-		var discId = $('#createDiscForm').attr('discId');
-		var disc = getDisc(discId);
-
-		$('#create-disc-brand').val(disc.brand);
-		$('#create-disc-name').val(disc.name);
-		$('#create-disc-material').val(disc.material);
-		$('#create-disc-type').val(disc.type);
-		$('#create-disc-weight').val(disc.weight);
-		$('#create-disc-color').val(disc.color);
-		$('#create-disc-speed').val(disc.speed);
-		$('#create-disc-glide').val(disc.glide);
-		$('#create-disc-turn').val(disc.turn);
-		$('#create-disc-fade').val(disc.fade);
-		$('#create-disc-notes').val(disc.notes);
+			$('#disc-brand').val(getSafe(disc.brand, ''));
+			$('#disc-name').val(getSafe(disc.name, ''));
+			$('#disc-material').val(getSafe(disc.material, ''));
+			$('#disc-type').val(getSafe(disc.type, ''));
+			$('#disc-weight').val(getSafe(disc.weight, ''));
+			$('#disc-color').val(getSafe(disc.color, ''));
+			$('#disc-speed').val(getSafe(disc.speed, ''));
+			$('#disc-glide').val(getSafe(disc.glide, ''));
+			$('#disc-turn').val(getSafe(disc.turn, ''));
+			$('#disc-fade').val(getSafe(disc.fade, ''));
+			$('#disc-notes').val(getSafe(disc.notes, ''));
+			
+			$inner.find('.current-images-label').click(function(e) {
+		        var $chevron = $(this).find('.fa');
+		        if ($chevron.hasClass('fa-chevron-right')) {
+		        	if ($('#collapseCurrentImages').find('.image-item-container').length > 0) {
+			            $chevron.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+			        	$('#collapseCurrentImages').collapse('show');
+		        	}
+		        } else {
+		            $chevron.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+		        	$('#collapseCurrentImages').collapse('hide');
+		        }
+		    });
+		    
+		    $imageContainer.on('click', '.image-remove', function() {
+				var $imageContainer = $inner.find('#existing-image-list');
+		    	var $parent = $(this).parents('.image-item-container');
+		    	var imageId = $parent.attr('imageid');
+		    	var disc = changeObject.curDisc;
+		    	
+		    	$parent.remove();
+		    	
+		    	if (!isDef(changeObject.imageRemovals)) {
+		    		changeObject.imageRemovals = [];
+		    	}
+		    	
+		    	if (disc.primaryImage == imageId) {
+		    		var $images = $imageContainer.find('.image-item-container');
+		    		if ($images.length) {
+		    			var $newPrimary = $images.first();
+		    			disc.primaryImage = $newPrimary.attr('imageid');
+		    			updateExistingImage(disc.primaryImage);
+		    		} else {
+		    			disc.primaryImage = '';
+		    		}
+		    	}
+		    	
+		    	changeObject.imageRemovals.push(imageId);
+		    	
+		    	console.log(disc);
+		    	console.log(changeObject);
+		    });
+		    
+		    $imageContainer.on('click', '.image-make-primary', function() {
+		    	var $parent = $(this).parents('.image-item-container');
+		    	var imageId = $parent.attr('imageid');
+		    	var disc = changeObject.curDisc;
+		    	
+		    	disc.primaryImage = imageId;
+		    	updateExistingImage(imageId);
+		    });
+			
+		    _.each(tagList, function(tag) {
+		    	$tagContainer.append(generateTagItem(tag));
+		    });
+			
+			getAllDiscImages(discId, function(success, images) { 
+				if (success) {
+					var primaryImage = disc.primaryImage;
+					_.each(images, function(image) {
+						$imageContainer.append(generateImageItem(primaryImage, image, true));
+					})
+				}	
+			});
+		},
+		onShow : function() {
+			
+		},
+		onClose: function($inner) {
+			fnLock = false;
+		}
 	}
-	
-    generateModal($header, $form, $footer, {fns: fns, onCreate: onCreate});
 }
 
-function generateCreateDiscForm() {
-	var $header = $('<div></div>').html(
-		'<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>' +
-          '<h4 class="modal-title">Add Disc</h4>'
-		);
-	var $form =  $('<form class="form-horizontal" role="form" id="createDiscForm" autocomplete="off"></form>');
-	$form.html('<div class="form-group">' +
-	                  '<label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="text" class="form-control text-assist" param="brand">' +
-	                  '</div>' +
-	                  '<label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="text" class="form-control text-assist" param="name">' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	              	  '<label class="col-sm-2 control-label">Type</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<select class="form-control" param="type">' +
-	                      	  '<option value="" selected></option>' +
-	                          '<option value="Putt/Approach">Putt/Approach</option>' +
-	                          '<option value="Mid-range">Mid-range</option>' +
-	                          '<option value="Fairway Driver">Fairway Driver</option>' +
-	                          '<option value="Distance Driver">Distance Driver</option>' +
-	                          '<option value="Mini">Mini</option>' +
-	                      '</select>' +
-	                  '</div>' +
-	                  '<label class="col-sm-2 control-label">Material</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="text" class="form-control text-assist" param="material">' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	                  '<label class="col-sm-2 control-label">Weight</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control text-assist" param="weight">' +
-	                  '</div>' +
-	                  '<label class="col-sm-2 control-label">Color</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="text" class="form-control text-assist" param="color">' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	                  '<label class="col-sm-2 control-label">Speed</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control text-assist" param="speed">' +
-	                  '</div>' +
-	                  '<label class="col-sm-2 control-label">Glide</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control text-assist" param="glide">' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group">' +
-	                  '<label class="col-sm-2 control-label">Turn</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control text-assist" param="turn">' +
-	                  '</div>' +
-	                  '<label class="col-sm-2 control-label">Fade</label>' +
-	                  '<div class="col-sm-4">' +
-	                      '<input type="number" class="form-control text-assist" param="fade">' +
-	                  '</div>' +
-	              '</div>' +
-	              '<div class="form-group tag-input-group">' +
-        	          '<label class="col-sm-2 control-label">Tags</label>' +
-                      '<div class="col-sm-10">' +
-                      	'<div style="position:relative">' +
-	                      '<div class="input-group add-disc-tag-container">' +
-	                        '<input type="text" class="form-control add-disc-tag">' +
-	                        '<span class="input-group-btn">' +
-						        '<button class="btn btn-default add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>' +
-						    '</span>' +
-	                      '</div>' +
-	                     '</div>' +
-	                  '</div>' +
-                      '<div class="col-sm-10 col-sm-offset-2">' +
-	                        '<div class="tag-list-container">' +
-	                      	'</div>' +
-                      '</div>' +
-                  '</div>' +
-	              '<div class="form-group">' +
-	                  '<label class="col-sm-2 control-label">Notes</label>' +
-	                  '<div class="col-sm-10">' +
-	                      '<textarea class="form-control create-disc-textarea" rows="3" param="notes"></textarea>' +
-	                  '</div>' +
-		          '</div>' +
-					'<div class="image-list dropzone-area">' +
-					    '<div class="image-list-container" id="dropzone-container">' +
-					        '<div class="image-list-table" id="dropzone-previews">' +
-					            '<div class="image-item-container image-add" id="dropzone-trigger">' +
-					                '<div class="image-item">' +
-					                    '<div class="image-entity">' +
-					                        '<span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>' +
-					                    '</div>' +
-					                '</div>' +
-					            '</div>' +
-					        '</div>' +
-					    '</div>' +
-					'</div>');
-               
-     var $footer = $('<div></div>').html(
-     	'<button type="button" class="btn btn-default" fn-title="close">Close</button>' +
-		'<button type="button" id="btn-add-disc" class="btn btn-primary" fn-title="create"><span><i class="fa fa-plus-circle fa-tools"></i></span>Add Disc</button>'
-	);
+function updateExistingImage(imageId) {
+	var $curPrimary = $('.primary-image-banner-static');
 	
-	var fns = [
+	if ($curPrimary.length) {
+		var $parent = $curPrimary.parents('.image-overlay-static');
+		
+		$parent.siblings('.image-overlay').find('.image-remove').after(
+			'<div class="image-make-primary" title="Make Primary">' +
+			'<i class="fa fa-star-o fa-lg"></i>' +
+			'</div>'
+			);
+		
+		$parent.remove();
+	}
+	
+	var $image = $('.image-item-container[imageid="' + imageId + '"]');
+	if ($image.length) {
+		var $overlay = $image.find('.image-overlay');
+			
+		$overlay.find('.image-make-primary').remove();
+		$overlay.after('<div class="image-overlay-static">' +
+												'<div class="primary-image-banner-static">' +
+													'<i class="fa fa-star fa-lg"></i>' +
+												'</div>' +
+											'</div>');
+	}
+}
+
+function getCreateParams() {
+	return {
+		fns: [
 				{
 					name: 'close',
 					function: function($btn, $inner, done) {
 						done();
-						console.log('Closed without creating a disc.');
 					}
 				},
 				{
-					name: 'create',
+					name: 'save',
 					function: function($btn, $inner, done) {
 						$inner.find('div.alert').remove();
 						var disc = createDisc($inner);
@@ -1088,13 +1135,17 @@ function generateCreateDiscForm() {
 							if (success) {
 								var $dropzone = $inner.find('.dropzone-area');
 								var id = $dropzone.attr('dropzoneid');
-								var dropzone = dropzones.splice(id, 1)[0];
+								var dropzone = dropzones[0];
 								if (dropzone && dropzone.getAcceptedFiles().length > 0) {
 									dropzone.options.url = '/api/discs/' + retData._id + '/images';
 									dropzone.on('queuecomplete', function() {
-										$inner.prepend(generateSuccess(retData.Brand + ' ' + retData.name + ' was successfully added.'));
-										updateFilter(true);
-										$('#createDiscForm').trigger("reset");
+										$inner.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.'));
+										getDiscById(retData._id, function(err, disc) {
+											updateFilter(true);
+										});
+										$inner.find('form').trigger("reset");
+										
+										$('#dropzone-trigger').siblings().remove();
 										dropzone.disable();
 										dropzone.enable();
 									})
@@ -1111,70 +1162,22 @@ function generateCreateDiscForm() {
 						});
 					}
 				}
-	];
-	
-	var onCreate = function($inner) {
-		createDropZone($inner.find('.dropzone-area'));
-	}
-	
-	var onShow = function($inner) {
-		var $tagInput = $inner.find('.add-disc-tag');
-		var $addCustomTag = $inner.find('.add-custom-tag');
-		var $tagContainer = $inner.find('.tag-list-container');
-		var tagTextAssist;
-		
-	    $addCustomTag.click(function(){
-	    	if ($tagInput.val().length > 0) {
-				$tagContainer.append(generateTagItem($tagInput.val()));
-	    		$tagInput.val('');
-	    	}
-	    });
-		
-		$inner.on('click', '.tag-item-remove', function(){
-			var $parent = $(this).parents('.tag-item');
-			$parent.remove();
+		],
+		onCreate : function($inner) {
 			
-			if ($tagContainer.is(':empty')){
-				$tagContainer.empty();
-			}
-		});
+		},
+		onShow : function($inner) {
+			
+		},
+		onClose: function($inner) {
 		
-		/*
-		* Setup Autocomplete Handlers
-		*/
-		
-		$inner.find('.text-assist').each(function(index) {
-			new ZumpTextAssist({
-		        inputElement: $(this),
-		        searchProp: $(this).attr('param'),
-		        items: function() { return discs; }, 
-		        onSelection: function(item) {
-		        	console.log('Selected: ' + item);
-		        }
-		    });
-		});
-		
-		tagTextAssist = new ZumpTextAssist({
-			inputElement: $tagInput,
-			searchProp: 'tagList',
-			items: function() { return discs; }, 
-	        onSelection: function(item, reset) {
-	        	if (item.length > 0) {
-	        		$tagContainer.append(generateTagItem(item));
-	    			reset();
-	        	}
-	        }
-		});
+		}
 	}
-	
-     generateModal($header, $form, $footer, {fns: fns, onCreate: onCreate, onShow: onShow});
 }
 
-function createDisc($form, discId) {
-	var disc = {};
-	
-	if(discId) {
-		disc._id = discId;
+function createDisc($form, disc) {
+	if (!isDef(disc)) {
+		disc = {};
 	}
 	
 	var $fields = $form.find('input');
@@ -1214,35 +1217,55 @@ function hasAttr($elem, attribute) {
 	return (typeof attr !== typeof undefined && attr !== false);
 }
 
-var delay = (function(){
-  var timer = 0;
-  return function(callback, ms){
-    clearTimeout (timer);
-    timer = setTimeout(callback, ms);
-  };
-})();
+function generateImageItem(primaryImage, image, withOverlay) {
+	if (withOverlay) {
+		return '<div class="image-item-container" imageid="' + image._id + '">' +
+					'<div class="image-item">' +
+						'<div class="image-entity">' +
+							'<img src="/files/' + image.fileId +'" class="fit-parent">' +
+						'</div>' +
+						(primaryImage == image._id ? 
+						'<div class="image-overlay">' +
+							'<span class="image-remove"><i class="fa fa-times fa-lg"></i></span>' +
+                        '</div>' +
+                        '<div class="image-overlay-static">' +
+							'<div class="primary-image-banner-static"><i class="fa fa-star fa-lg"></i></div>' +
+                        '</div>' :
+						'<div class="image-overlay">' +
+							'<span class="image-remove"><i class="fa fa-times fa-lg"></i></span>' +
+							'<div class="image-make-primary" title="Make Primary"><i class="fa fa-star-o fa-lg"></i></div>' +
+						'</div>') +
+					'</div>' +
+				'</div>'; 
+	} else {
+		//add return for VIEW DISC modal with no overlay
+		return false;
+	}
+}
 
-function populateDiscImages(imageArray, $inner) {
-		var $mainImage = $inner.find('#disc-main-image');
+/* Remove
+function populateDiscImages(discId, imageArray, $inner) {
+		var disc = getDisc(discId);
+		var $primAryimage = $inner.find('#disc-primary-image');
 		var $imageTable = $inner.find('#disc-image-table');
 		$imageTable.empty();
 		
 		for (var i = 0; i < imageArray.length; i++) {
 			var image = imageArray[i];
 			
-			if (i == 0) {
-				$mainImage.attr('src', '/files/' + image.fileId);
+			if (disc.primaryImage == image._id) {
+				$primAryimage.attr('src', '/files/' + image.fileId);
 			}
 			
 			$imageTable.append('<div class="image-item-container">' +
                                 '<div class="image-item">' +
-                                    '<div class="image-preview' + (i == 0 ? ' active' : '') + '">' +
+                                    '<div class="image-preview' + (disc.primaryImage == image._id ? ' active' : '') + '">' +
                                         '<img src="/files/' + image.fileId +'" class="fit-parent">' +
                                     '</div>' +
                                 '</div>' +
                             '</div>');
 		}
-}
+}*/
 
 function createDropZone($div) {
 	var template = '<div class="image-item-container">' +
@@ -1254,7 +1277,7 @@ function createDropZone($div) {
                             '<div class="image-overlay">' +
                                 '<span class="image-remove" data-dz-remove><i class="fa fa-times fa-lg"></i></span>' +
                                 '<div class="image-title"><span data-dz-name></span></div>' +
-                                '<div class="im age-size" data-dz-size></div>' +
+                                '<div class="image-size" data-dz-size></div>' +
                             '</div>' +
                         '</div>' +
                     '</div>';
@@ -1265,8 +1288,8 @@ function createDropZone($div) {
 	var myDropzone = new Dropzone('#' + $container.attr('id'), {
 				  url: "/api/discs",
 				  method: "POST",
-				  thumbnailWidth: 150,
-				  thumbnailHeight: 150,
+				  thumbnailWidth: 100,
+				  thumbnailHeight: 100,
 				  parallelUploads: 10,
 				  maxFiles: 10,
 				  paramName: 'discImage',
@@ -1284,7 +1307,7 @@ function createDropZone($div) {
 	                 if (this.files[10] != null){
 	                   this.removeFile(this.files[10]);
 	                 } else {
-	                 	$imageAdd.insertAfter('.image-item-container:last-child');
+	                 	$imageAdd.insertAfter('#dropzone-previews > .image-item-container:last-child');
 	                 	$container.animate({scrollLeft: $table.innerWidth()}, 2000);
 	                 }
 	               }).on('success', function(file, response){
@@ -1314,6 +1337,8 @@ function createDropZone($div) {
 					              \.............\
 */
 /*-------------------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------*/
 
 function getAllDiscs(callback) {
 	var success = false;
@@ -1334,6 +1359,38 @@ function getAllDiscs(callback) {
 		complete: function(){
 			if (callback) {
 				callback(success);
+			}
+		}
+     });
+}
+
+function getDiscById(discId, callback) {
+	var success = false;
+	var disc = {};
+    $.ajax({
+		type: "GET",
+		dataType: "json",
+		url: url + 'discs/' + discId,
+		contentType: "application/json",
+		success: function (data) {
+		   	if(data && typeof data._id != 'undefined') {
+				discs = _.filter(discs, function(disc){
+					return disc._id != data._id;
+				});
+				discs.push(data);
+				disc = data;
+				console.log('Refreshed disc [' + discId + ']');
+				success = true;
+			}
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, disc);
 			}
 		}
      });
@@ -1374,7 +1431,6 @@ function postDisc(disc, callback) {
 			console.log(request.responseText);
 			console.log(textStatus);
 			console.log(errorThrown);
-			
 			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
 		},
 		complete: function(){
@@ -1387,6 +1443,7 @@ function postDisc(disc, callback) {
 
 function putDisc(disc, callback) {
 	var success = false;
+	var retData;
 	$.ajax({
 		type: "PUT",
 		dataType: "json",
@@ -1394,23 +1451,38 @@ function putDisc(disc, callback) {
 		contentType: "application/json",
 		data: JSON.stringify(disc),
 		success: function (data) {
-			if(data && typeof data._id != 'undefined') {
+			retData = {'error' : {message : 'Unable to process request.', type : 'Unknown Error'}};
+			
+			if (!data) {
+				success = false;
+				return;
+			}
+			
+			if (data.error) {
+				retData = data.error;
+				success = false;
+				return;
+			}
+			
+			if (typeof data._id != 'undefined') {
 				discs = _.filter(discs, function(disc){
 					return disc._id != data._id;
 				});
 				discs.push(data);
 				console.log('Saved disc changes.');
 				success = true;
+				retData = data;
 			}
 		},
 		error: function (request, textStatus, errorThrown) {
 		   console.log(request.responseText);
 		   console.log(textStatus);
 		   console.log(errorThrown);
+		   retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
 		},
 		complete: function(){
 		   if (callback) {
-			callback(success);
+			callback(success, retData);
 		   }
 		}
 	});
@@ -1470,6 +1542,62 @@ function getAllDiscImages(discId, callback) {
      });
 }
 
+function getPrimaryDiscImage(imageId, callback) {
+	if (!isDef(imageId)) {
+		return callback(false);
+	}
+	
+	var success = false;
+	var image = {};
+    $.ajax({
+		type: "GET",
+		dataType: "json",
+		url: url + 'images/' + imageId,
+		contentType: "application/json",
+		success: function (data) {
+		   	image = data;
+			success = true;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, image);
+			}
+		}
+     });
+}
+
+
+function deleteImage(imageId, callback) {
+	var success = false;
+	$.ajax({
+		type: "DELETE",
+		dataType: "json",
+		url: url + '/images/' + imageId,
+		contentType: "application/json",
+		success: function (data) {
+			if(data && typeof data._id != 'undefined') {
+				console.log('Deleted image with id [' + data._id + '].');
+				success = true;
+			}
+		},
+		error: function (request, textStatus, errorThrown) {
+		   console.log(request.responseText);
+		   console.log(textStatus);
+		   console.log(errorThrown);
+		},
+		complete: function(){
+		   if (callback) {
+			callback(success);
+		   }
+		}
+	});
+}
+
 // POTENTIALLY REMOVE
 function getProperties(prop) {
 	var list = [];
@@ -1526,8 +1654,20 @@ function getDisc(id) {
 	return _.first(_.where(discs, {'_id' : id}));
 }
 
-
-
+function copyDisc(id) {
+	var disc = getDisc(id);
+	var newDisc = undefined;
+	
+	if (disc) {
+		newDisc = {};
+		
+		for (var param in disc) {
+			newDisc[param] = disc[param];
+		}
+	}
+	
+	return newDisc;
+}
 
 /*
 * Name: ZumpSort
@@ -1701,13 +1841,14 @@ var ZumpSort = function(opt) {
     	return groupAndSort(arr, toSort, 0);
     }
     
-    var simpleSort = function(sorter, arr) {
-    	return zumpSort.genericSort(sorter, arr);
-    }
-    
     //----------------------\
     // Private Functions
     //----------------------/
+    
+    
+    var simpleSort = function(sorter, arr) {
+    	return zumpSort.genericSort(sorter, arr);
+    }
     
     /*
     * Recursive Sort Routine
@@ -2310,6 +2451,7 @@ var ZumpTextAssist = function(opt) {
     var property = '';
     var currentSearch = '';
     var onSelection;
+    var tabTrigger = false;
     
     
     //----------------------\
@@ -2377,10 +2519,21 @@ var ZumpTextAssist = function(opt) {
         */
         $input.on('keydown', function(e) {
 	    	var code = e.keyCode || e.which;
+	    	var $curActive = $dropdownList.find('.dropdown-list-item.active');
 	    	
 	    	if (code == 13 || code == 38 || code == 40) {
 		    	e.stopImmediatePropagation();
 		    	return false;
+	    	}
+	    	
+	    	else if (code == 9 && $curActive.length) {
+	    		tabTrigger = true;
+		    	e.stopImmediatePropagation();
+		    	return false;
+	    	}
+	    	
+	    	else if (code == 9) {
+	    		setResultsVisibility(false);
 	    	}
 	    })
 	    
@@ -2393,7 +2546,7 @@ var ZumpTextAssist = function(opt) {
 	    	/*
 	    	* Enter key - select active result item
 	    	*/
-	    	if (code == 13) {
+	    	if (code == 13 || (code == 9 && tabTrigger)) {
 	    		var $curActive = $dropdownList.find('.dropdown-list-item.active');
 		        if ($curActive.length) {
 		        	updateInput($curActive.attr('result'), true);
@@ -2403,6 +2556,7 @@ var ZumpTextAssist = function(opt) {
 	        		onSelection($input.val(), zumpTextAssist.resetInput);
 		        }
 		        
+		        tabTrigger = false;
 			 	e.preventDefault();
       			return false;
 	    	}
@@ -2527,7 +2681,7 @@ var ZumpTextAssist = function(opt) {
     * Update Input
     */
     var updateInput = function(newVal, hideAlways) {
-    	if (newVal) {
+    	if (isDef(newVal)) {
     		$input.val(newVal);
 			currentSearch = $input.val();
     	}
@@ -2540,6 +2694,7 @@ var ZumpTextAssist = function(opt) {
     */
     var updateResults = function() {
     	$dropdownList.empty();
+    	
 		var results = getResults(currentSearch);
 		
 		_.each(results, function(result) {
@@ -2597,7 +2752,6 @@ var ZumpTextAssist = function(opt) {
     var generateResult = function(result) {
     	
         return '<li class="dropdown-list-item" tabindex="0" result="' + result + '">' +
-                    '<span><i class="fa fa-ellipsis-v"></i></span>' +
                     result +
                 '</li>';
     }
@@ -2606,7 +2760,7 @@ var ZumpTextAssist = function(opt) {
     * Returns a set of matched results for the provided input
     */
     var getResults = function(val) {
-        if (!val) return [];
+        if (!val || val == '') return [];
         var curItem;
         var results = getProperties(resultList());
         

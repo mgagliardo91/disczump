@@ -1,5 +1,7 @@
 var Error = require('../utils/error')
 var DiscImage = require('../models/discImage');
+var Disc = require('../models/disc');
+var DiscController = require('./disc');
 var _ = require('underscore');
 var async = require('async');
 
@@ -46,11 +48,27 @@ function postDiscImage(userId, discId, fileId, callback) {
     discImage.discId = discId;
     discImage.fileId = fileId;
 
-	discImage.save(function(err){
-		if (err)
+	discImage.save(function(err, savedDiscImage){
+		if (err) {
 			return callback(Error.createError(err, Error.internalError));
-		else
-			return callback(null, discImage);
+		} else {
+			console.log('Attempting to find disc in the post disc image function.');
+			Disc.findById(discId, function(err, disc) {
+				if (!err && !_.isEmpty(disc) && !disc.primaryImage) {
+					console.log('Updating disc primary image due to new image creation.')
+					disc.primaryImage = savedDiscImage._id;
+					
+					disc.save(function(err) {
+						if (err) console.log(err);
+						
+						return callback(null, savedDiscImage);
+					});
+				} else {
+					
+					return callback(null, savedDiscImage);
+				}
+			});
+		}
 	});
 }
 
@@ -68,7 +86,25 @@ function deleteDiscImage(userId, imageId, gfs, callback) {
 		if (_.isEmpty(discImage))
 			return callback(null, discImage);
 		
-		deleteDiscImageObj(discImage, gfs, callback);
+		Disc.findById(discImage.discId, function(err, disc) {
+			if (!err && !disc && !_.isEmpty(disc)) {
+				if (disc.primaryImage == discImage._id) {
+					console.log('Attempting to locate new disc image for primary.');
+					DiscImage.findOne({fileId : {'$ne': discImage.fileId }}, function (err, nextImage) {
+						if (!err && !nextImage) {
+							console.log('New image located.');
+							disc.primaryImage = nextImage._id;
+						} else {
+							disc.primaryImage = null;
+						}
+						
+						disc.save();
+					})
+				}
+			}	
+		});
+		
+		return deleteDiscImageObj(discImage, gfs, callback);
 	});
 }
 

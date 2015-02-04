@@ -12,5 +12,8 @@ module.exports = {
     'routes': {
         'resetPassword' : 'recover',
         'confirmAccount' : 'confirm'
+    },
+    'images': {
+        'maxSize': 500
     }
 };

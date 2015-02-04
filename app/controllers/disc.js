@@ -192,13 +192,29 @@ function putDisc(userId, discId, data, callback) {
 	   			}
 	   		});
 	   	}
-		
-		disc.save(function(err){
-			if (err)
-				return callback(Error.createError(err, Error.internalError));
-			else
-				return callback(null, disc);
-		});
+	   	
+	   	if (data.primaryImage) {
+	   		console.log('Updating primary image.');
+	   		DiscImageController.getDiscImage(userId, data.primaryImage, function(err, discImage) {
+	   			if (!err && discImage && !_.isEmpty(discImage)) {
+	   				disc.primaryImage = discImage._id;
+	   			}
+	   			
+	   			disc.save(function(err){
+					if (err)
+						return callback(Error.createError(err, Error.internalError));
+					else
+						return callback(null, disc);
+				});
+	   		});
+	   	} else {
+	   		disc.save(function(err){
+				if (err)
+					return callback(Error.createError(err, Error.internalError));
+				else
+					return callback(null, disc);
+			});
+	   	}
 	});
 }
 

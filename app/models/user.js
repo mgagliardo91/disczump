@@ -16,6 +16,15 @@ var userSchema = mongoose.Schema({
         token        : String,
         email        : String,
         name         : String
+    },
+    preferences      : {
+        colorize     : {
+            'putter'    : '',
+            'mid'       : '',
+            'fairway'   : '',
+            'distance'  : '',
+            'mini'      : ''
+        }
     }
 
 });

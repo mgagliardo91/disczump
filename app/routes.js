@@ -14,10 +14,20 @@ module.exports = function(app, passport) {
     });
 
     app.get('/dashboard', isLoggedIn, function(req, res) {
-        return res.render('dashboard', {
-            user : req.user,
-            isDashboard : true
-        });
+        if (req.device.isMobile) {
+            return res.render('mobile/dashboard', {
+                user : req.user,
+                isDashboard : true,
+                isMobile: true
+            });
+        } else {
+            return res.render('dashboard', {
+                user : req.user,
+                isDashboard : true
+            });
+        }
+        
+        
     });
     
     app.get('/profile', isLoggedIn, function(req, res) {
@@ -140,6 +150,7 @@ module.exports = function(app, passport) {
                 url: 'signup',
                 text: 'Sign Up'
             },
+            isMobile: req.device.isMobile,
             message: {
                 error: req.flash('error'),
                 info: req.flash('info'),

@@ -16,6 +16,7 @@ var discSchema = mongoose.Schema({
     turn            : Number,
     fade            : Number,
     notes           : String,
+    primaryImage    : String,
     tagList         : [String],
     visible         : {type:Boolean, default: false}
     
