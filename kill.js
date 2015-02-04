@@ -1,7 +1,7 @@
 (function(){
     "use strict";
     var fs = require('fs');
-    fs.unlinkSync('./data/mongod.lock');
+   
     var exec    = require('child_process').exec,
         lCmd    = 'kill -9'             +   ' ' + /* kill finded process */
                   '`ps ax'              +   '|' + /* show all process    */

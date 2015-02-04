@@ -9,9 +9,9 @@ module.exports = {
         'callbackURL'   : 'http://localhost:8080/auth/facebook/callback'
     },
     'gmailAuth' : {
-        'user': 'disczump@gmail.com',
-        'clientId': '349788309355-umpd9us6d7vc3tpl0qphrgefgl7rk994.apps.googleusercontent.com',
-        'clientSecret': 'f59IbvBTTag9qYbLzyYenk-x',
-        'refreshToken': '1/VIBjpYRZbFHjk7KWcAEVX3HtwvEA3LszcUR-boOoYHUMEudVrK5jSpoR30zcRFq6',
+        'user': 'mike@disczump.com',
+        'clientId': '723723683604-s6u02iaupjn5n4u170hh7jvoua4km472.apps.googleusercontent.com',
+        'clientSecret': 'xxNzkZ4m3rqU3-GypyaFaPQk',
+        'refreshToken': '1/JMhx2AJhcZKVgShKyOSWy0qWfrh4iGKd7scJ02rQhuAMEudVrK5jSpoR30zcRFq6',
     }
 };
