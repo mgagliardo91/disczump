@@ -6,7 +6,8 @@ var discImageSchema = mongoose.Schema({
 
     userId          : String,
     discId          : String,
-    fileId          : String
+    fileId          : String,
+    thumbnailId     : String
     
 });
 

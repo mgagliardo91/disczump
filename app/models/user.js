@@ -9,7 +9,8 @@ var userSchema = mongoose.Schema({
         email        : String,
         password     : String,
         date_joined  : {type: Date, default: Date.now()},
-        active       : {type: Boolean, default: false}
+        active       : {type: Boolean, default: false},
+        passcode     : String
     },
     facebook         : {
         id           : String,
@@ -19,11 +20,11 @@ var userSchema = mongoose.Schema({
     },
     preferences      : {
         colorize     : {
-            'putter'    : '',
-            'mid'       : '',
-            'fairway'   : '',
-            'distance'  : '',
-            'mini'      : ''
+            'putter'    : {type: String, default: 'rgb(251, 131, 131)'},
+            'mid'       : {type: String, default: 'rgb(251, 221, 131)'},
+            'fairway'   : {type: String, default: 'rgb(139, 251, 131)'},
+            'distance'  : {type: String, default: 'rgb(131, 219, 251)'},
+            'mini'      : {type: String, default: 'rgb(165, 131, 251)'}
         }
     }
 

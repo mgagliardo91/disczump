@@ -14,6 +14,11 @@ module.exports = {
         'confirmAccount' : 'confirm'
     },
     'images': {
-        'maxSize': 500
+        'maxSize': 800,
+        'thumbnailSize': 150
+    },
+    'development': {
+        'beta': true,
+        'passcode': '9E913935EB47FD1F',
     }
 };

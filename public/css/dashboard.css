@@ -375,6 +375,14 @@ select, option {
     min-width: 450px;
 }
 
+.disc-colorize {
+    float: left;
+    height: 75px;
+    background-color: #fff;
+    width: 10px;
+    margin-right: 10px;
+}
+
 .disc-content-image-container {
     float: left;
     display: table;
@@ -400,7 +408,7 @@ select, option {
 .disc-content-info-container {
     width: auto;
     height: 100%;
-    margin-left: 85px;
+    margin-left: 105px;
     margin-right: 30px;
     padding: 0px 10px;
 }

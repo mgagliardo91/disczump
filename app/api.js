@@ -136,7 +136,7 @@ module.exports = function(app, passport, gridFs) {
                 busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
                     if (fieldname == 'discImage' && /^image\//.test(mimetype)) {
                         console.log("Fieldname: " + fieldname + "; Filename: " + filename + "; Encoding: " + encoding + "; MIME: " + mimetype); 
-                        var ws = gfs.createWriteStream({
+                        /*var ws = gfs.createWriteStream({
                                       mode: 'w',
                                       content_type: mimetype,
                                       filename: filename
@@ -155,6 +155,26 @@ module.exports = function(app, passport, gridFs) {
                             this.stream('png', function (err, stdout, stderr) {
                               stdout.pipe(ws);
                             });
+                        });*/
+                        
+                        DiscImageController.saveImage(gm, gfs, file, {
+                            mimetype: mimetype,
+                            filename: filename,
+                            maxSize: config.images.maxSize
+                            }, function(newFile) {
+                                DiscImageController.postDiscImage(req.user._id, disc._id, newFile._id, function(err, discImage) {
+                                    if (err)
+                                        return res.json(err);
+                                    
+                                    DiscImageController.createThumbnail(gm, gfs, discImage, function(err, image) {
+                                        if (err)
+                                            return res.json(err);
+                                        
+                                        return res.json(image);
+                                    });
+                                    
+                                    return res.json(discImage);
+                                });
                         });
                     } else {
                         sendResponse = true;

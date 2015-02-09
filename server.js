@@ -56,7 +56,7 @@ var gridFs = new Grid(mongoose.connection.db, mongoose.mongo);
 
 // routes ======================================================================
 var mainRouter = express.Router();
-require('./app/routes.js')(mainRouter, passport);
+require('./app/routes.js')(mainRouter, passport, gridFs);
 app.use('/', mainRouter);
 
 var apiRouter = express.Router();

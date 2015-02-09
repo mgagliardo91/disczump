@@ -52,7 +52,7 @@ module.exports = {
                     if (err)
                         return callback(err);
                     
-                    return callback(null, confirm);
+                    return callback(null, user);
                 });
             });
         });
@@ -93,7 +93,7 @@ module.exports = {
 }
 
 function generateConfirmationEmail(user, confirm) {
-    var html = fs.readFileSync('./private/html/confirmAccount.html', 'utf8');
+    var html = fs.readFileSync('./private/html/confirmAccount.handlebars', 'utf8');
     var template = Handlebars.compile(html);
     return template({user: user, confirm : confirm});
 }

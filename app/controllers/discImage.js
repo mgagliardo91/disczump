@@ -4,14 +4,72 @@ var Disc = require('../models/disc');
 var DiscController = require('./disc');
 var _ = require('underscore');
 var async = require('async');
+var mongoose = require('mongoose');
+var config = require('../../config/config.js');
 
 module.exports = {
+	createThumbnail: createThumbnail,
+	saveImage: saveImage,
     getDiscImages: getDiscImages,
     getDiscImage: getDiscImage,
     postDiscImage: postDiscImage,
     putDiscImage: putDiscImage,
     deleteDiscImage: deleteDiscImage,
     deleteDiscImages: deleteDiscImages
+}
+
+function createThumbnail(gm, gfs, discImage, callback) {
+	gfs.files.find({_id:mongoose.Types.ObjectId(discImage.fileId)}).toArray(function(err, files) {
+        if(err)
+            return callback(err);
+        
+        if(files.length === 0){
+          return callback(new Error('File metadata does not exist'));
+        }
+        
+        var file = files[0];
+        
+        var rs = gfs.createReadStream({
+          _id: discImage.fileId
+        });
+        
+        saveImage(gm, gfs, rs, {
+        	mimetype: file.contentType, 
+        	filename: file.filename, 
+        	maxSize: config.images.thumbnailSize
+        }, function(newFile) {
+        	discImage.thumbnailId = newFile._id;
+        	discImage.save(function(err) {
+        		if (err) return callback(err);
+        		
+        		return callback(null, discImage);
+        	});
+        });
+    });
+}
+
+function saveImage(gm, gfs, readStream, fileParams, callback) {
+	var ws = gfs.createWriteStream({
+                  mode: 'w',
+                  content_type: fileParams.mimetype,
+                  filename: fileParams.filename
+              });
+
+    ws.on('close', function (file) {
+    	callback(file);
+      });
+      
+    gm(readStream).size({bufferStream: true}, function(err, size) {
+    	if (size.width > size.height) {
+    		this.resize(size.width > fileParams.maxSize ? fileParams.maxSize : size.width);
+    	} else {
+    		this.resize(null, size.height > fileParams.maxSize ? fileParams.maxSize : size.height);
+    	}
+    	
+        this.stream('png', function (err, stdout, stderr) {
+          stdout.pipe(ws);
+        });
+    });
 }
 
 /// Get All Images by User for a disc
@@ -52,10 +110,8 @@ function postDiscImage(userId, discId, fileId, callback) {
 		if (err) {
 			return callback(Error.createError(err, Error.internalError));
 		} else {
-			console.log('Attempting to find disc in the post disc image function.');
 			Disc.findById(discId, function(err, disc) {
 				if (!err && !_.isEmpty(disc) && !disc.primaryImage) {
-					console.log('Updating disc primary image due to new image creation.')
 					disc.primaryImage = savedDiscImage._id;
 					
 					disc.save(function(err) {
@@ -89,10 +145,8 @@ function deleteDiscImage(userId, imageId, gfs, callback) {
 		Disc.findById(discImage.discId, function(err, disc) {
 			if (!err && !disc && !_.isEmpty(disc)) {
 				if (disc.primaryImage == discImage._id) {
-					console.log('Attempting to locate new disc image for primary.');
 					DiscImage.findOne({fileId : {'$ne': discImage.fileId }}, function (err, nextImage) {
 						if (!err && !nextImage) {
-							console.log('New image located.');
 							disc.primaryImage = nextImage._id;
 						} else {
 							disc.primaryImage = null;

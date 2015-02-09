@@ -2,10 +2,12 @@ var Disc = require('./controllers/disc');
 var Recover = require('./utils/recover');
 var Confirm = require('./utils/confirm');
 var Mailer = require('./utils/mailer.js');
+var DevController = require('../app/controllers/development.js')
 var configRoutes = require('../config/config.js').routes;
+var development = require('../config/config.js').development;
 
 // app/routes.js
-module.exports = function(app, passport) {
+module.exports = function(app, passport, gridFs) {
 
     // Site
     
@@ -42,11 +44,16 @@ module.exports = function(app, passport) {
     });
     
     app.get('/' + configRoutes.confirmAccount + '/:authorizationId', function(req, res){
-            Confirm.confirmAccount(req.params.authorizationId, function(err, confirm){
+            Confirm.confirmAccount(req.params.authorizationId, function(err, user){
                 if (err)
                     req.flash('error', err);
-                else
+                else {
                     req.flash('info', 'Account confirmation successful.');
+                    
+                    if (user.local.passcode) {
+                        DevController.createDiscData(gridFs, user._id);
+                    }
+                }
                 
                 return res.redirect('/login');
             });
@@ -169,9 +176,11 @@ module.exports = function(app, passport) {
             if (err)
                 return next(err);
                 
-            if (!user)
+            if (!user) {
+                req.flash('error', 'Invalid username or password. Please try again.');
+                
                 return res.redirect('/login');
-            else {
+            } else {
                 if (!user.local.active) {
                     req.flash('info', 'Account not activated.');
                     req.flash('link.url', '/' + configRoutes.confirmAccount + '/user/' + user._id);
@@ -196,6 +205,8 @@ module.exports = function(app, passport) {
 
         // render the page and pass in any flash data if it exists
         res.render('signup', {
+            username: req.flash('username'),
+            password: req.flash('password'),
             route: {
                 url: 'login',
                 text: 'Log In'
@@ -203,12 +214,24 @@ module.exports = function(app, passport) {
             message: {
                 error: req.flash('error'),
                 info: req.flash('info')
-            }
+            },
+            beta: development.beta
         });
     });   
     
     // process the signup form
     app.post('/signup', function(req, res, next) {
+        
+        if (development.beta) { 
+            // validate passcode 
+            if (!req.body.passcode || (req.body.passcode != development.passcode)) {
+                req.flash('error', 'Invalid passcode. Please try again.');
+                req.flash('username', req.body.username);
+                req.flash('password', req.body.password);
+                return res.redirect('/signup');
+            }
+        }
+        
         passport.authenticate('local-signup', function(err, user, info) {
             if (err)
                 return next(err);

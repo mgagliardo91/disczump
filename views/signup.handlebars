@@ -26,7 +26,11 @@
                     <div class="signup-form-stacked">
                         <div class="input-group">
                             <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
+                            {{#if username}}
+                            <input class="form-control" id="username" type="email" name="username" placeholder="Email" value="{{username}}">
+                            {{else}}
                             <input class="form-control" id="username" type="email" name="username" placeholder="Email">
+                            {{/if}}
                         </div>
                         <div class="input-group">
                             <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
@@ -34,9 +38,15 @@
                         </div>
                         <div class="input-group">
                             <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                            <input class="form-control" id="verify-password" type="password" placeholder="Verify Password" disabled>
+                            <input class="form-control" id="verify-password" type="password" placeholder="Verify Password">
                         </div>
-                        <button id="submit" class="btn btn-submit btn-block" type="submit" disabled>Sign up</button>
+                        {{#if beta}}
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-info fa-fw"></i></span>
+                            <input class="form-control" id="passcode" type="text" name="passcode" placeholder="Passcode">
+                        </div>
+                        {{/if}}
+                        <button id="submit" class="btn btn-submit btn-block" type="submit">Sign up</button>
                     </div>
                 </form>
             </div>

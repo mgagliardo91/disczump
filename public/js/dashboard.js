@@ -22,6 +22,8 @@ var refPageTop;
 var refContBottom;
 var isFixed = false, isHidden = false;
 
+var userPrefs;
+
 $(document).ready(function(){
     $searchResults = $('#search-results');
     $searchBar = $('#search-all');
@@ -169,7 +171,6 @@ $(document).ready(function(){
      	$searchBar.focus();
      });
     
-    
     /// Library Objects
     mySort = new ZumpSort({
 	    sortToggle: '#results-header-sort',
@@ -220,13 +221,19 @@ $(document).ready(function(){
      resizeSearch($searchResults, $searchBar, true, true);
      resizeResultHeader();
      $searchResults.hide();
-     getAllDiscs(function(success){
-		if (success) {
-			initialize();
-		} else {
-			alert('Unable to intialize');
-		}
-	 });
+     getUserPreferences(function(success, prefs) {
+     	if (success) {
+     		userPrefs = prefs;
+     		
+     		getAllDiscs(function(success){
+				if (success) {
+					initialize();
+				} else {
+					alert('Unable to intialize');
+				}
+			 });
+     	}
+     });
 });
 
 var searchLock = function(e) {
@@ -342,7 +349,7 @@ function showDiscs(maintainPage) {
 function updateDiscImage(success, discImage) {
 	if (success) {
 		var $discItem = $('div.disc-item[discId="' + discImage.discId + '"]');
-		$discItem.find('.disc-content-image img').attr('src', '/files/' + discImage.fileId);
+		$discItem.find('.disc-content-image img').attr('src', '/files/' + discImage.thumbnailId);
 	}
 }
 
@@ -371,6 +378,22 @@ function updateHeader(count) {
 	}
 }
 
+function getColorize(type) {
+	if (!isDef(userPrefs.colorize)) return undefined;
+	
+	if (type == 'Putt/Approach') {
+		return userPrefs.colorize['putter'];
+	} else if (type == 'Mid-range') {
+		return userPrefs.colorize['mid'];
+	} else if (type == 'Fairway Driver') {
+		return userPrefs.colorize['fairway'];
+	} else if (type == 'Distance Driver') {
+		return userPrefs.colorize['distance'];
+	} else if (type == 'Mini') {
+		return userPrefs.colorize['mini'];
+	} else return undefined;
+}
+
 function generateDiscTemplate(disc) {
 	var tagHTML = '';
 	
@@ -378,8 +401,12 @@ function generateDiscTemplate(disc) {
 		tagHTML = tagHTML + '<span class="disc-info-tag">' + tag + '</span>';
 	});
 	
+	var color = getColorize(disc.type);
+	
 	 return '<div class="disc-item-container">' +
                 '<div class="disc-item" discId="' + disc._id + '">' +
+                	'<div class="disc-colorize"' + (isDef(color) ? ' style="background-color: ' + color + '"' : '') + '>' + 
+                	'</div>' +
                     '<div class="disc-content-image-container">' +
                         '<div class="disc-content-image">' +
                             '<img src="https://placehold.it/150x150" />' +
@@ -426,7 +453,7 @@ function generateDiscTemplate(disc) {
                                         '</tr>' +
                                         '<tr>' +
                                             '<td class="disc-info-label">Weight:</td>' +
-                                            '<td class="disc-info-value">' + ((typeof disc.weight != 'undefined') ? disc.weight : '') + '</td>' +
+                                            '<td class="disc-info-value">' + ((typeof disc.weight != 'undefined') ? disc.weight + 'g': '') + '</td>' +
                                         '</tr>' +
                                     '</table>' +
                                 '</div>' +
@@ -1222,7 +1249,7 @@ function generateImageItem(primaryImage, image, withOverlay) {
 		return '<div class="image-item-container" imageid="' + image._id + '">' +
 					'<div class="image-item">' +
 						'<div class="image-entity">' +
-							'<img src="/files/' + image.fileId +'" class="fit-parent">' +
+							'<img src="/files/' + image.thumbnailId +'" class="fit-parent">' +
 						'</div>' +
 						(primaryImage == image._id ? 
 						'<div class="image-overlay">' +
@@ -1339,6 +1366,31 @@ function createDropZone($div) {
 /*-------------------------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------------------------*/
+
+function getUserPreferences(callback) {
+	var success = false;
+	var userPrefs = {};
+    $.ajax({
+		type: "GET",
+		dataType: "json",
+		url: url + 'account/preferences',
+		contentType: "application/json",
+		success: function (data) {
+		   	userPrefs = data;
+			success = true;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, userPrefs);
+			}
+		}
+     });
+}
 
 function getAllDiscs(callback) {
 	var success = false;

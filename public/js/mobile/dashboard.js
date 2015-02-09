@@ -352,7 +352,7 @@ var ZumpInventory = function(opt) {
     	var $discItem = $('div.disc-item[discId="' + discImage.discId + '"]');
     	
     	if (success) {
-    		$discItem.find('.disc-content-image img').attr('src', '/files/' + discImage.fileId);
+    		$discItem.find('.disc-content-image img').attr('src', '/files/' + discImage.thumbnailId);
     	}
     	
     	$discItem.find('.disc-content-image').find('i.fa-spinner').remove();

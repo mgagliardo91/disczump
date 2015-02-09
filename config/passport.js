@@ -92,11 +92,16 @@ module.exports = function(passport) {
                 
                 newUser.local.email    = username;
                 newUser.local.password = newUser.generateHash(password);
+                
+                if (req.body.passcode) {
+                    newUser.local.passcode = req.body.passcode;
+                }
 
                 newUser.save(function(err) {
                     if (err)
                         throw err;
                     logger.info('Created new user %s.', newUser.local.email);
+                    
                     return done(null, newUser);
                 });
             }
