@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+{{#section 'head'}}
+<head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# testdisczumpfb: http://ogp.me/ns/fb/testdisczumpfb#">
+    <title>DiscZump - Disc View</title>
+    <link rel="stylesheet" href="/static/css/viewdisc.css">
+    <link rel="stylesheet" href="/static/css/jquery-ui.min.css">
+    <meta property="og:url"                content="https://disczumpserver-mgagliardo.c9.io/disc/{{disc._id}}" />
+    <meta property="fb:app_id"             content="1433417853616595" />
+    <meta property="og:type"               content="disczumpfb:disc" />
+    <meta property="og:title"              content="{{disc.brand}} {{disc.name}}" />
+    <meta property="og:description"        content="[Condition: Good] | [Material: {{disc.material}}] | [Weight: {{disc.weight}}]" />
+    <meta property="og:image"              content="https://disczumpserver-mgagliardo.c9.io/files/{{disc.retPrimaryImage.fileId}}/600" />
+</head>
+{{/section}}
+<body>
+    <div id="fb-root"></div>
+    <script>(function(d, s, id) {
+          var js, fjs = d.getElementsByTagName(s)[0];
+          if (d.getElementById(id)) return;
+          js = d.createElement(s); js.id = id;
+          js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.3&appId=1433417853616595";
+          fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));    
+    </script>
+    <div class="container public-disc-view" id="{{disc._id}}">
+        <div class=row>
+            <div class="public-disc-title-area">
+                <span class="public-disc-name">{{disc.brand}} {{disc.name}}</span> by <a href="/" class="public-user-link">{{alias.display}}
+                {{#if alias.image}}
+                <img class="public-user-image" src="{{alias.image}}" />
+                {{/if}}</a>
+                <div class="fb-share-button" data-href="https://disczumpserver-mgagliardo.c9.io/disc/{{disc._id}}" data-layout="button"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-7 col-md-6 col-lg-6 public-col-pd">
+                <div class="public-image-area">
+                    <div class="image-block-display">
+                        <div class="image-block">
+                            <div class="image-block-frame">
+                                <img src="/files/{{disc.retPrimaryImage.fileId}}" thumbnailId={{disc.retPrimaryImage.thumbnailId}} class="fit-parent" id="disc-main-image">
+                            </div>
+                        </div>
+                        <div class="image-list">
+                            <div class="image-list-container image-list-container-simple">
+                                <div class="image-list-table" id="disc-image-table">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="hidden-xs col-sm-5 col-md-6 col-lg-6 public-col-pd">
+                <div class="public-disc-data-container">
+                    <div class="row public-disc-data">
+                        <div class="col-sm-12 col-md-12 col-lg-6 public-col-pd public-disc-data-left">
+                            <div class="public-disc-data-list-container">
+                                <div class="public-disc-data-list-item">
+                                    <span class="public-disc-label lj-label">Material:</span>
+                                    <span class="public-disc-list-text">{{disc.material}}</span>
+                                </div>
+                                <div class="public-disc-data-list-item">
+                                    <span class="public-disc-label lj-label">Color:</span>
+                                    <span class="public-disc-list-text">{{disc.color}}</span>
+                                </div>
+                                <div class="public-disc-data-list-item">
+                                    <span class="public-disc-label lj-label">Weight:</span>
+                                    {{#if disc.weight}}
+                                    <span class="public-disc-list-text">{{disc.weight}} g</span>
+                                    {{else}}
+                                    <span class="public-disc-list-text"></span>
+                                    {{/if}}
+                                </div>
+                                <div class="public-disc-data-list-item">
+                                    <span class="public-disc-label lj-label">Condition:</span>
+                                    <span class="public-disc-list-text">8/10</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-12 col-lg-6 public-col-pd public-disc-data-right">
+                            <span class="flight-number-table-title public-disc-label">{{disc.type}}</span>
+                            <div class="flight-number-table-container">
+                                <table class="flight-number-table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="flight-number-table-cell">
+                                                <p class="flight-number-table-cell-title">Speed</p>
+                                                {{#if disc.speed}}
+                                                <p class="flight-number-table-cell-value">{{disc.speed}}</p>
+                                                {{else}}
+                                                <p class="flight-number-table-cell-value">--</p>
+                                                {{/if}}
+                                            </td>
+                                            <td class="flight-number-table-cell">
+                                                <p class="flight-number-table-cell-title">Glide</p>
+                                                {{#if disc.glide}}
+                                                <p class="flight-number-table-cell-value">{{disc.glide}}</p>
+                                                {{else}}
+                                                <p class="flight-number-table-cell-value">--</p>
+                                                {{/if}}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="flight-number-table-cell">
+                                                <p class="flight-number-table-cell-title">Turn</p>
+                                                {{#if disc.turn}}
+                                                <p class="flight-number-table-cell-value">{{disc.turn}}</p>
+                                                {{else}}
+                                                <p class="flight-number-table-cell-value">--</p>
+                                                {{/if}}
+                                            </td>
+                                            <td class="flight-number-table-cell">
+                                                <p class="flight-number-table-cell-title">Fade</p>
+                                                {{#if disc.fade}}
+                                                <p class="flight-number-table-cell-value">{{disc.fade}}</p>
+                                                {{else}}
+                                                <p class="flight-number-table-cell-value">--</p>
+                                                {{/if}}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row public-disc-notes">
+                        <p class="public-disc-label"><i>Notes</i></p>
+                        {{#if disc.notes}}
+                        <p>{{disc.notes}}</p>
+                        {{else}}
+                        <p>- None -</p>
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row public-user-discs-container">
+            <div class="row public-user-discs-title">
+                <span>Other discs in {{alias.display}}'s inventory:</span>
+            </div>
+            <div class="row public-user-discs-list">
+                <div class="public-user-discs-table">
+                    <div class="public-user-disc-item-container">
+                        <div class="public-user-disc-item">
+                            <img src="https://placehold.it/250x250" class="fit-parent">
+                        </div>
+                        <div class="public-user-disc-item-text">
+                            <span>Discraft<br>Zone</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery-ui.min.js"></script>
+    <script src="/static/js/viewdisc.js"></script>
+</body>
+</html>

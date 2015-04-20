@@ -9,10 +9,17 @@
         <style type="text/css">
             body { padding-top: 80px; }
         </style>
+        <script language="javascript">
+            var image = new Image();
+            image.src = '/static/logo/logo_small.svg';
+            
+            var image2 = new Image();
+            image2.src = '/static/logo/logo_block.svg';
+        </script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
         <script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
         <script src="https://cdn.rawgit.com/jashkenas/underscore/master/underscore.js"></script>
-        {{{head}}}
+        {{{_sections.head}}}
     </head>
     <body>
         <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
@@ -29,7 +36,7 @@
         				</a>
         				{{/if}}
                     {{else}}
-                    <a class="navbar-brand" href="/">DiscZump</a>
+                    <a href="/"><img src="/static/logo/logo_text.svg" class="nav-logo"></a>
                     {{/if}}
                 </div>
                 {{#if isMobile}}
@@ -39,31 +46,46 @@
                     {{#if user}}
                     <ul class="nav navbar-nav navbar-right">
                         <li class="dropdown">
+                          {{#if user.local.image}}
+                          <a href="#" class="dropdown-toggle image-link" data-toggle="dropdown" role="button" aria-expanded="false"><img src="{{user.local.image}}"/><span class="caret"></span></a>
+                          {{else}}
                           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ user.local.email }}<span class="caret"></span></a>
+                          {{/if}}
                           <ul class="dropdown-menu" role="menu">
                             {{#if isDashboard}}
                             <li><a href="#" class="btn-tools btn-add-disc" role="button" id="create-disc-modal"><span><i class="fa fa-plus-circle fa-tools"></i></span>Add Disc</a></li>
                             <li><a href="#" class="btn-tools btn-export-list" role="button" id="export-list"><span><i class="fa fa-external-link fa-tools"></i></span>Export List</a></li>
                             <li class="divider"></li>
                             <li><a href="/profile"><span><i class="fa fa-user fa-tools"></i></span>Profile</a></li>
+                            {{#if isLinked}}
+                            <li><a href="/account/link"><span><i class="fa fa-facebook-square fa-tools"></i></span>Unlink Account</a></li>
+                            {{else}}
+                            <li><a href="/account/link"><span><i class="fa fa-facebook-square fa-tools"></i></span>Link Account</a></li>
+                            {{/if}}
                             {{/if}}
                             {{#if isProfile}}
-                            <li><a href="/dashboard"><span><i class="fa fa-user fa-tools"></i></span>Dashboard</a></li>
+                            <li><a href="/dashboard"><span><i class="fa fa-tachometer fa-tools"></i></span>Dashboard</a></li>
                             {{/if}}
                             <li><a href="/logout" data-ajax="false"><span><i class="fa fa-sign-out fa-tools"></i></span>Logout</a></li>
                           </ul>
                         </li>
                     </ul>
-                    <div class="row">
-                        <div class="input-group nav-search col-md-7 col-md-offset-2">
-                            <input type="text" class="form-control" id="search-all" placeholder="Search All...">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="button" id="search-request">
-                                    <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                                </button>
-                            </span>
+                    {{#if isDashboard}}
+                    <div class="nav-view">
+                        <div>
+                            <span class="nav-view-label hidden-sm">View As:</span>
+                            <input type="checkbox" id="inventory-view">
                         </div>
                     </div>
+                    <div class="input-group nav-search">
+                        <input type="text" class="form-control" id="search-all" placeholder="Search All...">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="button" id="search-request">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+                    </div>
+                    {{/if}}
                     {{else}}
                     <ul class="nav navbar-nav navbar-right">
                         {{#if route}}

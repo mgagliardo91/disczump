@@ -10,13 +10,14 @@ var userSchema = mongoose.Schema({
         password     : String,
         date_joined  : {type: Date, default: Date.now()},
         active       : {type: Boolean, default: false},
-        passcode     : String
+        passcode     : String,
+        image        : String
     },
     facebook         : {
         id           : String,
         token        : String,
         email        : String,
-        name         : String
+        name         : String,
     },
     preferences      : {
         colorize     : {

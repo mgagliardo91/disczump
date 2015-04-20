@@ -1,34 +1,120 @@
-.user-info-container {
-    height: 200px;
+.sidebar {
+    position: fixed;
+    top: 51px;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+    display: block;
+    padding: 30px 0px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: #f5f5f5;
+    border-right: 1px solid #eee;
 }
 
-.user-image-container {
-    width: 200px;
-    display: table;
-    border: 1px solid black;
-    height: 100%;
+.nav-sidebar {
+    list-style: none;
+    padding-left: 0px;
+    font-weight: bold;
 }
 
-.user-details-container {
+.nav-sidebar > li {
+    padding: 10px 20px;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+.nav-sidebar > li {
+    color: #000;
+}
+
+.nav-sidebar > li:hover {
+   background-color: rgba(0, 142, 221, 0.25);
+}
+
+.nav-sidebar > li.active {
+    background-color: rgb(0, 142, 221);
+    cursor: default;
+    color: #fff;
+}
+
+.page {
+    display: none;
+    padding: 0px 50px;
+    max-width: 1000px;
+    min-width: 650px;
+}
+
+.page > .row {
+    margin: 0px;
+    margin-bottom: 30px;
+}
+
+.profile-image {
+    width: 170px;
+    height: 170px;
+    float: left;
+    text-align: center;
+    border: 1px solid rgb(163, 163, 163);
+    background-color: rgb(245, 245, 245);
+    padding: 10px;
+}
+
+.profile-image > img {
+    max-width: 150px;
+    max-height: 150px;
+    border: 1px solid rgb(163, 163, 163);
+}
+
+.profile-status {
     width: auto;
-    height: 100%;
-    margin-left: 220px;
-    border: 1px solid black;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    border-radius: 5px;
-}
-
-.user-details-container > div {
-    height: 100%;
+    height: 170px;
+    margin-left: 170px;
+    padding-left: 20px;
     display: table;
-    padding: 5px;
 }
 
-.user-info {
-    background-color: blue;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    border-radius: 5px;
-    height: 100%;
+.row-label {
+    font-weight: bold;
+    padding: 2px 10px;
+    background-color: rgba(245, 245, 245, 1);
+    color: #000;
+    margin-bottom: 10px;
+    border: 1px solid rgb(163, 163, 163);
+    }
+
+.profile-actions {
+    padding-left: 25px;
+    list-style: none;
+    color: rgb(0, 142, 221);
+}
+
+.profile-actions > li {
+    padding: 2px 0px;
+}
+
+.data-table {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.data-row {
+    font-size: 1.1em;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.data-label {
+    float: left;
+    width: 100px;
+    text-align: right;
+    font-weight: bold;
+}
+
+.data-value {
+    margin-left: 110px;
+}
+
+.pie-chart {
+    width: 100%;
 }

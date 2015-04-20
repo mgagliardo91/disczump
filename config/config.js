@@ -19,6 +19,6 @@ module.exports = {
     },
     'development': {
         'beta': true,
-        'passcode': '9E913935EB47FD1F',
+        'passcode': '2015BETADZ',
     }
 };

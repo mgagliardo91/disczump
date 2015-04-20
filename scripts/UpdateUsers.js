@@ -9,16 +9,7 @@ mongoose.connect('mongodb://' + configDB.database.host + ':' +
 User.find(function(err, users) {
     
     async.each(users, function(user, callback) {
-        user["preferences"] = {
-                'colorize'     : {
-                'putter'    : 'rgb(251, 131, 131)',
-                'mid'       : 'rgb(251, 221, 131)',
-                'fairway'   : 'rgb(139, 251, 131)',
-                'distance'  : 'rgb(131, 219, 251)',
-                'mini'      : 'rgb(165, 131, 251)'
-            }
-        };
-        
+        user.local.
         
         user.save(function(err) {
             if (err)

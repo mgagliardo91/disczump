@@ -1,15 +1,20 @@
 var Disc = require('./controllers/disc');
+var UserController = require('./controllers/user');
 var Recover = require('./utils/recover');
 var Confirm = require('./utils/confirm');
 var Mailer = require('./utils/mailer.js');
 var DevController = require('../app/controllers/development.js')
 var configRoutes = require('../config/config.js').routes;
 var development = require('../config/config.js').development;
+var fbGraph = require('fbgraph');
 
 // app/routes.js
 module.exports = function(app, passport, gridFs) {
 
     // Site
+    app.get('/facebook', function(req, res) {
+       return res.render('facebook'); 
+    });
     
     app.get('/', isLoggedIn, function(req, res) {
         res.redirect('/dashboard');
@@ -25,7 +30,12 @@ module.exports = function(app, passport, gridFs) {
         } else {
             return res.render('dashboard', {
                 user : req.user,
-                isDashboard : true
+                isDashboard : true,
+                isLinked : typeof(req.user.facebook.token) !== 'undefined',
+                info: {
+                    title: req.flash('infoTitle'),
+                    text: req.flash('infoText')
+                }
             });
         }
         
@@ -37,25 +47,64 @@ module.exports = function(app, passport, gridFs) {
            user: req.user,
            isProfile : true
         });
-    })
+    });
+    
+    app.get('/profile/delete', isLoggedIn, function(req, res) {
+        UserController.deleteUser(req.user._id, gridFs, function(err, user) {
+            if (err) {
+                console.log(err);
+                return res.redirect('/profile');
+            }
+            
+            req.logout();
+            return res.redirect('/');
+        });
+    });
     
     app.get('/test', function(req, res) {
        res.render('test'); 
     });
     
+    app.get('/disc/:discid', function(req, res) {
+        var userId = undefined;
+        if (req.user) userId = req.user._id;
+    
+       Disc.getPublicDisc(userId, req.params.discid, function(err, disc) {
+           if (err)
+                return res.send(err);
+            
+            UserController.getAlias(disc.userId, function(err, alias){
+               if (err)
+                    return res.send(err);
+                    
+                return res.render('viewdisc', {
+                    disc: disc,
+                    alias: alias
+                });
+            });
+       }) ;
+    });
+    
     app.get('/' + configRoutes.confirmAccount + '/:authorizationId', function(req, res){
             Confirm.confirmAccount(req.params.authorizationId, function(err, user){
-                if (err)
+                if (err) {
                     req.flash('error', err);
-                else {
-                    req.flash('info', 'Account confirmation successful.');
+                    return res.redirect('/login');
+                } else {
                     
                     if (user.local.passcode) {
                         DevController.createDiscData(gridFs, user._id);
                     }
+                    
+                    req.login(user, function(err) {
+                        if (err) {
+                            req.flash('error', err);
+                            return res.redirect('/login');
+                        } 
+                        
+                        return res.redirect('/account/link');
+                    });
                 }
-                
-                return res.redirect('/login');
             });
         });
     
@@ -148,8 +197,9 @@ module.exports = function(app, passport, gridFs) {
     
     // show the login form
     app.get('/login', function(req, res) {
-        if (req.isAuthenticated())
-            res.redirect('/dashboard');
+        if (req.isAuthenticated()) {
+            return res.redirect('/dashboard');
+        }
         
         // render the page and pass in any flash data if it exists
         res.render('login', {
@@ -251,14 +301,43 @@ module.exports = function(app, passport, gridFs) {
     // =====================================
     // FACEBOOK ROUTES =====================
     // =====================================
+    app.get('/account/link', isLoggedIn, function(req, res) {
+        if (req.user.facebook.token) {
+            res.render('linkfacebook', {
+               unlink: true
+           });
+        } else {
+            res.render('linkfacebook');
+        }
+    });
+    
+    app.get('/account/link/facebook', isLoggedIn, passport.authorize('facebook', 
+        { scope : ['email', 'user_photos'] }));
+    
+    app.get('/account/link/facebook/callback', isLoggedIn,
+            passport.authorize('facebook', {
+                successRedirect : '/dashboard',
+                failureRedirect : '/account/link'
+            }));
+    
+    app.get('/account/unlink/facebook', isLoggedIn, function(req, res) {
+        var user = req.user;
+        user.facebook.token = undefined;
+        user.save(function(err) {
+            req.flash('infoTitle', 'Unlink Successful');
+            req.flash('infoText', 'Your Facebook account is no longer linked.');
+            res.redirect('/dashboard');
+        });
+    });
+    
     // route for facebook authentication and login
-    app.get('/auth/facebook', passport.authenticate('facebook', { scope : 'email' }));
+    app.get('/auth/facebook', passport.authenticate('facebook', { scope : ['email', 'user_photos'] }));
 
     // handle the callback after facebook has authenticated the user
     app.get('/auth/facebook/callback',
         passport.authenticate('facebook', {
-            successRedirect : '/profile',
-            failureRedirect : '/'
+            successRedirect : '/dashboard',
+            failureRedirect : '/login'
         }));
 
     // route for logging out

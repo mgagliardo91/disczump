@@ -7,10 +7,30 @@
 }
 
 .nav-search {
-     margin-top: 8px;
-     margin-bottom: 8px;
-     border-top: 1px solid transparent;
-     border-bottom: 1px solid transparent;
+	margin-top: 8px;
+	margin-bottom: 8px;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid transparent;
+	width: 20%;
+	float: left;
+	margin-left: 20px;
+}
+
+.nav-view {
+	display: none;
+	float: right;
+	height: 50px;
+}
+
+.nav-view > div {
+	display: table-cell;
+	vertical-align: middle;
+}
+
+.nav-view-label {
+	color: #fff; 
+	font-weight: bold;
+	margin-right: 10px;
 }
 
 ul.nav {
@@ -49,6 +69,29 @@ ul.nav {
     cursor: pointer;
 }
 
+.image-link {
+	padding-top: 0px !important;
+	padding-bottom: 0px !important;
+	margin-top: 5px !important;
+}
+
+.image-link > img {
+	width: 40px;
+	max-width: 40px !important;
+	max-height: 40px;
+	margin-right: 5px;
+}
+
+.nav-logo {
+    height: 30px;
+    margin-top: 10px;
+}
+
+.main-logo {
+	width: 200px;
+	margin-bottom: 40px;
+}
+
 .navbar-center {
 	position: absolute;
 	width: 100%;
@@ -85,6 +128,8 @@ ul.nav {
 .navbar-toggle {
 	color: #999;
 	z-index: 1000;
+	margin-top: 4px !important;
+	margin-bottom: 0px !important;
 }
 
 .nav.navbar-nav {
@@ -102,4 +147,51 @@ ul.nav {
 	#nav-filter.active {
 		border-color: #fff !important;
     }
+}
+
+.page-alert {
+	position: absolute;
+	z-index: 5000;
+	top: 0;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0;
+	right: 0;
+	width: 40%;
+	max-width: 600px;
+	padding: 5px 20px;
+	border-top-right-radius: 0px;
+	border-top-left-radius: 0px;
+	display: none;
+}
+
+.page-container {
+	padding-top: 100px;
+	max-width: 600px;
+}
+
+.page-body {
+	padding-bottom: 30px;
+}
+
+.btn-wide {
+	width: 150px;
+}
+
+.btn-wide > i {
+	font-size: 20px;
+}
+
+.fb-color {
+	color: #3b5999;
+}
+
+.btn-facebook {
+	background-color: #3b5999;
+	color: #fff;
+}
+
+a.btn-facebook:hover {
+	background-color: #2E467B;
+	color: #fff;
 }

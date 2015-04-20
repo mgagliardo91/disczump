@@ -59,14 +59,14 @@ function saveImage(gm, gfs, readStream, fileParams, callback) {
     	callback(file);
       });
       
-    gm(readStream).size({bufferStream: true}, function(err, size) {
+    gm(readStream).quality(90).size({bufferStream: true}, function(err, size) {
     	if (size.width > size.height) {
     		this.resize(size.width > fileParams.maxSize ? fileParams.maxSize : size.width);
     	} else {
     		this.resize(null, size.height > fileParams.maxSize ? fileParams.maxSize : size.height);
     	}
     	
-        this.stream('png', function (err, stdout, stderr) {
+        this.stream('jpeg', function (err, stdout, stderr) {
           stdout.pipe(ws);
         });
     });
@@ -74,7 +74,7 @@ function saveImage(gm, gfs, readStream, fileParams, callback) {
 
 /// Get All Images by User for a disc
 function getDiscImages(userId, discId, callback) {
-	DiscImage.find({userId: userId, discId : discId}, function(err, discImages) {
+	DiscImage.find({discId : discId}, function(err, discImages) {
 		if (err)
 			return callback(Error.createError(err, Error.internalError));
 		
@@ -88,7 +88,7 @@ function getDiscImage(userId, imageId, callback) {
 		if (err) 
 			return callback(Error.createError(err, Error.internalError));
 			
-		if (image && image.userId == userId) 
+		if (image) 
 			return callback(null, image);
 		else
 			return callback(null, {});
@@ -164,17 +164,29 @@ function deleteDiscImage(userId, imageId, gfs, callback) {
 
 /// Delete Image Object
 function deleteDiscImageObj(discImage, gfs, callback) {
-	gfs.remove({_id:discImage.fileId}, function (err) {
-	  if (err)
-	  	return callback(Error.createError(err, Error.internalError));
-	  	
-	  	discImage.remove(function (err, discImage) {
-			if (err)
-				return callback(Error.createError(err, Error.internalError));
-			
-			console.log('Deleted disc image object: ' + discImage._id);
-			return callback(null, discImage);
+	var fileId = discImage.fileId;
+	var thumbnailId = discImage.thumbnailId;
+	
+	if (fileId) {
+		gfs.remove({_id:fileId}, function (err) {
+		 	if (err)
+			  	console.log(err);
 		});
+	}
+	
+	if (thumbnailId) {
+		gfs.remove({_id:thumbnailId}, function (err) {
+		 	if (err)
+			  	console.log(err);
+		});
+	}
+	
+	discImage.remove(function (err, discImage) {
+		if (err)
+			return callback(Error.createError(err, Error.internalError));
+		
+		console.log('Deleted disc image object: ' + discImage._id);
+		return callback(null, discImage);
 	});
 }
 

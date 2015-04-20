@@ -15,6 +15,7 @@ var logger                  = require('./logger.js').logger;
 var UserController          = require('../app/controllers/user');
 
 var configAuth = require('./auth');
+var fbGraph = require('fbgraph');
 
 module.exports = function(passport) {
 
@@ -30,39 +31,77 @@ module.exports = function(passport) {
     
     passport.use(new FacebookStrategy({
 
-        clientID        : configAuth.facebookAuth.clientID,
-        clientSecret    : configAuth.facebookAuth.clientSecret,
-        callbackURL     : configAuth.facebookAuth.callbackURL
+        clientID            : configAuth.facebookAuth.clientID,
+        clientSecret        : configAuth.facebookAuth.clientSecret,
+        callbackURL         : configAuth.facebookAuth.callbackURL,
+        passReqToCallback   : true
 
     },
-    function(token, refreshToken, profile, done) {
-
+    function(req, token, refreshToken, profile, done) {
+        
         process.nextTick(function() {
+            
+            if (!req.user) {
+                
+                 User.findOne({'facebook.id' : profile.id }, function(err, user) {
+    
+                    if (err)
+                        return done(err);
+    
+                    if (user) {
+                        
+                        fbGraph.get(user.facebook.id + "/picture?width=500&access_token=" + token, function(err, pic) {
+                            if (!err && pic.image) {
+                                user.local.image = pic.location;
+                                user.save();
+                            }
+                        });
+                        
+                        if (!user.facebook.token) {
+                            user.facebook.token = token;
+                            user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
+                            user.facebook.email = profile.emails ? profile.emails[0].value : undefined;
 
-            User.findOne({ 'facebook.id' : profile.id }, function(err, user) {
-
-                if (err)
-                    return done(err);
-
-                if (user) {
+                            user.save(function(err) {
+                                if (err)
+                                    throw err;
+                                return done(null, user);
+                            });
+                        } else {
+                            return done(null, user);
+                        }
+                    } else {
+                        return done(null, null, req.flash('error', 
+                        'Cannot find an account associated with the facebook credentials.'));
+                    }
+    
+                });
+            } else {
+                
+                var user = req.user;
+                console.log(profile);
+                user.facebook.id = profile.id;
+                user.facebook.token = profile.token;
+                user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
+                user.facebook.email = profile.emails ? profile.emails[0].value : undefined;
+                
+                fbGraph.get(profile.id + "/picture?width=500&access_token=" + token, function(err, pic) {
+                    if (!err && pic.image) {
+                        user.local.image = pic.location;
+                        user.save();
+                    }
+                });
+                
+                // save the user
+                user.save(function(err) {
+                    if (err)
+                        throw err;
+                    req.flash('infoTitle', 'Link Successful');
+                    req.flash('infoText', 'You can now login using Facebook!');
                     return done(null, user);
-                } else {
-                    var newUser            = new User();
-
-                    newUser.facebook.id    = profile.id;              
-                    newUser.facebook.token = token;                 
-                    newUser.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
-                    newUser.facebook.email = profile.emails[0].value;
-
-                    newUser.save(function(err) {
-                        if (err)
-                            throw err;
-
-                        return done(null, newUser);
-                    });
-                }
-
-            });
+                });
+            }
+           
         });
 
     }));

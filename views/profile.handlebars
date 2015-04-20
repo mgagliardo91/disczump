@@ -5,26 +5,70 @@
     <link rel="stylesheet" href="/static/css/profile.css">
 </head>
 <body>
-    <div class="container profile-container">
-        <div class="row user-info-container">
-            <div class="div-inline user-image-container">
-                
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-3 col-md-3 col-lg-2 sidebar">
+                <ul class="nav-sidebar">
+                    <li class="active" pg-select="#pg-settings">Account Settings</li>
+                    <li pg-select="#pg-preferences">Preferences</li>
+                    <li pg-select="#pg-statistics">Statistics</li>
+                </ul>
             </div>
-            <div class="user-details-container">
-                <div>
-                    <dl class="dl-horizontal">
-                      <dt>Username:</dt>
-                      <dd>{{ user.local.email }}</dd>
-                      <dt>Date Joined:</dt>
-                      <dd>{{ user.local.date_joined }}</dd>
-                    </dl>
+            <div class="col-sm-9 col-sm-offset-3 col-md-9 col-md-offset-3 col-lg-10 col-lg-offset-2">
+                <div class="page" id="pg-settings">
+                    <div class="row">
+                        <div class="profile-image">
+                            <img src="{{user.local.image}}" />
+                        </div>
+                        <div class="profile-status">
+                            <div class="data-table">
+                                <div class="data-row">
+                                    <div class="data-label">Username:</div>
+                                    <div class="data-value">{{user.local.email}}</div>
+                                </div>
+                                <div class="data-row">
+                                    <div class="data-label">Status:</div>
+                                    {{#if user.local.active}}
+                                    <div class="data-value">Active</div>
+                                    {{else}}
+                                    <div class="data-value">Inactive</div>
+                                    {{/if}}
+                                </div>
+                                <div class="data-row">
+                                    <div class="data-label">Facebook:</div>
+                                    {{#if user.facebook.id}}
+                                    <div class="data-value">Linked</div>
+                                    {{else}}
+                                    <div class="data-value">Not Linked</div>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="row-label">Actions</div>
+                        <ul class="profile-actions">
+                            <li><a href="/">Change Password</a></li>
+                            <li><a href="/account/link">Link Facebook Account</a></li>
+                            <li><a href="/profile/delete">Delete Account</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="page" id="pg-preferences">
+                </div>
+                <div class="page" id="pg-statistics">
+                    <div class="row" style="height: 400px">
+                        <div id="discByType" class="pie-chart"></div>
+                    </div>
+                    <div class="row">
+                        <div id="discByBrand" class="pie-chart"></div> 
+                    </div>
                 </div>
             </div>
-            <div class="clearfix"></div>
         </div>
     </div>
     
-    <script src="https://rawgit.com/enyo/dropzone/master/downloads/dropzone.js"></script>
+    <script src="/static/js/jquery.canvasjs.min.js"></script>
     <script src="/static/js/profile.js"></script>
 </body>
 </html>

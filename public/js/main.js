@@ -1,3 +1,12 @@
+var url = "/api/";
+
+function preloadImage() {
+    var image = new Image();
+    image.src = '/static/logo/logo_small.svg';
+    
+    var image2 = new Image();
+    image2.src = 'static/logo/logo_block.svg';
+}
 
 /*
 * Name: getSafe
@@ -13,4 +22,54 @@ function getSafe(obj, backup) {
 */
 function isDef(obj) {
 	return typeof obj !== 'undefined';
+}
+
+function getAllDiscImages(discId, callback) {
+	var success = false;
+	var images = [];
+    $.ajax({
+		type: "GET",
+		dataType: "json",
+		url: url + 'discs/' + discId + '/images',
+		contentType: "application/json",
+		success: function (data) {
+		   	images = data;
+			success = true;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, images);
+			}
+		}
+     });
+}
+
+function getAllDiscs(callback) {
+	var success = false;
+	var discs = [];
+    $.ajax({
+		type: "GET",
+		dataType: "json",
+		url: url + 'discs/',
+		contentType: "application/json",
+		success: function (data) {
+		   	discs = data;
+			success = true;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, discs);
+			}
+		}
+     });
 }

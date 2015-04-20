@@ -25,7 +25,7 @@ function getPublicDiscs(userId, callback) {
 	});
 }
 
-function getPublicDisc(discId, callback) {
+function getPublicDisc(userId, discId, callback) {
 	Disc.findById(discId, function(err, disc) {
 	    if (err)
 	   		return callback(Error.createError(err, Error.internalError));
@@ -33,10 +33,24 @@ function getPublicDisc(discId, callback) {
 	   	if (!disc)
 	   		return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
 	   	
-	   	if (disc.visible)
-	   		return callback(null, disc);
-	   	else
+	   	if (disc.visible || (userId && userId == disc.userId)) {
+	   		if (disc.primaryImage) {
+				DiscImageController.getDiscImage(userId, disc.primaryImage, function(err, image) {
+					if (err)
+						return callback(Error.createError(err, Error.internalError));
+					
+					if (image) {
+						disc.retPrimaryImage = image;
+					}
+					
+					return callback(null, disc);
+				});
+			} else {
+				return callback(null, disc);
+			}
+	   	} else {
 	   		return callback(Error.createError('Disc is not visible to the public.', Error.unauthorizedError));
+	   	}
 	});
 }
 
@@ -64,11 +78,11 @@ function getDisc(userId, discId, callback) {
 		
 		if (!disc)
 	   		return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
-		
-		if (disc.userId == userId) 
+		if (disc.userId == userId) {
 			return callback(null, disc);
-		else
+		} else {
 	   		return callback(Error.createError('Not authorized to view disc.', Error.unauthorizedError));
+		}
 	});	
 }
 
@@ -86,6 +100,10 @@ function postDisc(userId, data, callback) {
    	disc.type = data.type;
    	disc.color = data.color;
    	disc.notes = data.notes;
+   	
+   	if (data.visible) {
+   		disc.visible = data.visible;
+   	}
    	
    	var param;
    	if (data.weight && _.isNumber(param = parseInt(data.weight))) {
@@ -109,7 +127,6 @@ function postDisc(userId, data, callback) {
    	}
    	
    	disc.tagList = [];
-   	console.log(data.tagList);
    	if (data.tagList) {
    		_.each(data.tagList, function(tag) {
    			if (tag !== "" && !_.contains(disc.tagList, tag)) {
@@ -158,6 +175,10 @@ function putDisc(userId, discId, data, callback) {
 		if (data.notes) {
 			disc.notes = data.notes;
 		}
+		
+	   	if (typeof(data.visible) !== 'undefined') {
+	   		disc.visible = data.visible;
+	   	}
 		
 		if (data.image) {
 			disc.image = data.image;

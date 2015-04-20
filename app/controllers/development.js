@@ -14,29 +14,47 @@ module.exports = {
 
 function createDiscData(gridfs, userId) {
     
-    _.each(dev.data, function(discObj) {
-        
-        // Create Disc
+    
+    
+    async.eachSeries(dev.data, function(discObj, devCallback) {
         DiscController.postDisc(userId, discObj.disc, function(err, disc) {
             if (err) {
                 return console.log(err);
             }
             
-            DiscImageController.saveImage(gm, gridfs, dev.dir + '/' + discObj.image, {
-                mimetype: discObj.mimetype,
-                filename: discObj.image,
-                maxSize: config.images.maxSize
-                }, function(newFile) {
-                    DiscImageController.postDiscImage(userId, disc._id, newFile._id, function(err, discImage) {
-                        if (err)
-                            return console.log(err);
-                        
-                        DiscImageController.createThumbnail(gm, gridfs, discImage, function(err, image) {
-                            if (err)
-                                return console.log(err);
-                        });
+            async.eachSeries(discObj.images, function(image, callback) {
+                    DiscImageController.saveImage(gm, gridfs, dev.dir + '/' + image.image, {
+                        mimetype: image.mimetype,
+                        filename: image.image,
+                        maxSize: config.images.maxSize
+                        }, function(newFile) {
+                            DiscImageController.postDiscImage(userId, disc._id, newFile._id, function(err, discImage) {
+                                if (err)
+                                    return callback(err);
+                                
+                                DiscImageController.createThumbnail(gm, gridfs, discImage, function(err, imageThumb) {
+                                    if (err)
+                                        return callback(err);
+                                    
+                                    callback();
+                                });
+                            });
                     });
-            });
-        })
+                }, function(err) {
+                    if (err) {
+                        console.log('Error creating BETA account: ' + err);
+                    }
+                    
+                    console.log('Finished creating disc [' + disc._id + ']');
+                    
+                    devCallback();
+                });
+        }, function(err) {
+            if (err) {
+                console.log('Error creating BETA account: ' + err);
+            }
+            
+            return;
+        });
     });
 }

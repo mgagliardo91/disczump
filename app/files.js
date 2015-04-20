@@ -11,7 +11,7 @@ module.exports = function(app, gridFs) {
     gfs = gridFs;
     
     app.route('/:fileId')
-        .get(hasAccess, function(req, res) {
+        .get(function(req, res) {
             
             gfs.files.find({_id:mongoose.Types.ObjectId(req.params.fileId)}).toArray(function(err, files) {
                 if(err)
@@ -37,7 +37,7 @@ module.exports = function(app, gridFs) {
         });
         
     app.route('/:fileId/:resize')
-        .get(hasAccess, function(req, res) {
+        .get(function(req, res) {
             var width, height;
             
             if(!/^\d{1,3}([x]\d{1,3}){0,1}$/.test(req.params.resize)) {
