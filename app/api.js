@@ -32,25 +32,18 @@ module.exports = function(app, passport, gridFs) {
             });
         });
     
-    app.route('/public/users/:userId/discs')
+    app.route('/users/:userId/discs')
     
         .get(function(req, res) {
-           DiscController.getPublicDiscs(req.params.userId, function(err, discs) {
+            var userId = undefined;
+            if (req.user) userId = req.user._id;
+            
+            
+            DiscController.getDiscs(userId, req.params.userId, function(err, discs) {
                 if (err)
                     return res.json(err);
                 
                 return res.json(discs);
-           });
-        });
-        
-        
-    app.route('/public/discs/:discId')
-        .get(function(req, res) {
-            DiscController.getPublicDisc(req.params.discId, function(err, disc) {
-                if (err)
-                  return res.json(err);
-                
-                return res.json(disc);
             });
         });
     
@@ -68,7 +61,7 @@ module.exports = function(app, passport, gridFs) {
     
         
         .get(hasAccess, function(req, res) {
-            DiscController.getDiscs(req.user._id, function(err, discs) {
+            DiscController.getDiscs(req.user._id, req.user._id, function(err, discs) {
                 if (err)
                   return res.json(err);
             
@@ -79,8 +72,11 @@ module.exports = function(app, passport, gridFs) {
         
     app.route('/discs/:discId')
     
-        .get(hasAccess, function(req, res) {
-            DiscController.getDisc(req.user._id, req.params.discId, function(err, disc) {
+        .get(function(req, res) {
+            var userId = undefined;
+            if (req.user) userId = req.user._id;
+            
+            DiscController.getDisc(userId, req.params.discId, function(err, disc) {
                 if (err)
                   return res.json(err);
             
@@ -110,12 +106,15 @@ module.exports = function(app, passport, gridFs) {
         });
     
     app.route('/discs/:discId/images')
-        .get(hasAccess, function(req, res) {
-            DiscController.getDisc(req.user._id, req.params.discId, function(err, disc) {
+        .get(function(req, res) {
+            var userId = undefined;
+            if (req.user) userId = req.user._id;
+            
+            DiscController.getDisc(userId, req.params.discId, function(err, disc) {
                 if (err)
                     return res.json(err);
                 
-                DiscImageController.getDiscImages(req.user._id, disc._id, function(err, discImages) {
+                DiscImageController.getDiscImages(userId, disc._id, function(err, discImages) {
                     if (err)
                         return res.json(err);
                     
@@ -135,27 +134,7 @@ module.exports = function(app, passport, gridFs) {
                  
                 busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
                     if (fieldname == 'discImage' && /^image\//.test(mimetype)) {
-                        console.log("Fieldname: " + fieldname + "; Filename: " + filename + "; Encoding: " + encoding + "; MIME: " + mimetype); 
-                        /*var ws = gfs.createWriteStream({
-                                      mode: 'w',
-                                      content_type: mimetype,
-                                      filename: filename
-                                  });
-                        ws.on('close', function (file) {
-                            DiscImageController.postDiscImage(req.user._id, disc._id, file._id, function(err, discImage) {
-                                if (err)
-                                    return res.json(err);
-                                
-                                return res.json(discImage);
-                            })
-                          });
-                          
-                        gm(file).size({bufferStream: true}, function(err, size) {
-                            this.resize(size.width > config.images.maxSize ? config.images.maxSize : size.width);
-                            this.stream('png', function (err, stdout, stderr) {
-                              stdout.pipe(ws);
-                            });
-                        });*/
+                        console.log("Fieldname: " + fieldname + "; Filename: " + filename + "; Encoding: " + encoding + "; MIME: " + mimetype);
                         
                         DiscImageController.saveImage(gm, gfs, file, {
                             mimetype: mimetype,
@@ -192,8 +171,11 @@ module.exports = function(app, passport, gridFs) {
         });
     
     app.route('/images/:imageId')
-        .get(hasAccess, function(req, res) {
-            DiscImageController.getDiscImage(req.user._id, req.params.imageId, function(err, discImage) {
+        .get(function(req, res) {
+            var userId = undefined;
+            if (req.user) userId = req.user._id;
+            
+            DiscImageController.getDiscImage(userId, req.params.imageId, function(err, discImage) {
                 if (err)
                     return res.json(err);
                     

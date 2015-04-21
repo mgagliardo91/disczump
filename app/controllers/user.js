@@ -71,7 +71,7 @@ function deleteUser(userId, gfs, callback) {
 			return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
 		
 		console.log('Initiating deletion of user: ' + user._id);
-		DiscController.getDiscs(user._id, function(err, discs) {
+		DiscController.getDiscs(user._id, user._id, function(err, discs) {
 			
 			console.log('Deleting [' + discs.length + '] discs owned by user.');
 			

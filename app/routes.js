@@ -69,7 +69,7 @@ module.exports = function(app, passport, gridFs) {
         var userId = undefined;
         if (req.user) userId = req.user._id;
     
-       Disc.getPublicDisc(userId, req.params.discid, function(err, disc) {
+       Disc.getDisc(userId, req.params.discid, function(err, disc) {
            if (err)
                 return res.send(err);
             

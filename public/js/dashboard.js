@@ -1146,6 +1146,10 @@ function getEditParams() {
 									dropzone.options.url = '/api/discs/' + retData._id + '/images';
 									dropzone.on('queuecomplete', function() {
 										getDiscById(retData._id, function(err, disc) {
+											discs = _.filter(discs, function(curDisc){
+												return curDisc._id != disc._id;
+											});
+											discs.push(disc);
 											updateFilter(true);
 										});
 										
@@ -1315,6 +1319,10 @@ function getCreateParams() {
 									dropzone.on('queuecomplete', function() {
 										$inner.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.'));
 										getDiscById(retData._id, function(err, disc) {
+											discs = _.filter(discs, function(curDisc){
+												return curDisc._id != disc._id;
+											});
+											discs.push(disc);
 											updateFilter(true);
 										});
 										$inner.find('form').trigger("reset");
@@ -1518,38 +1526,6 @@ function getUserPreferences(callback) {
      });
 }
 
-function getDiscById(discId, callback) {
-	var success = false;
-	var disc = {};
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + 'discs/' + discId,
-		contentType: "application/json",
-		success: function (data) {
-		   	if(data && typeof data._id != 'undefined') {
-				discs = _.filter(discs, function(disc){
-					return disc._id != data._id;
-				});
-				discs.push(data);
-				disc = data;
-				console.log('Refreshed disc [' + discId + ']');
-				success = true;
-			}
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, disc);
-			}
-		}
-     });
-}
-
 function postDisc(disc, callback) {
 	var success = false;
 	var retData;
@@ -1573,7 +1549,7 @@ function postDisc(disc, callback) {
 				return;
 			}
 			
-		   	if (typeof data._id != 'undefined') {
+		   	if (typeof data._id !== 'undefined') {
 		   		discs.push(data);
 		   		success = true;
 		   		retData = data;
@@ -1670,36 +1646,6 @@ function deleteDisc(discId, callback) {
 		}
 	});
 }
-
-function getPrimaryDiscImage(imageId, callback) {
-	if (!isDef(imageId)) {
-		return callback(false);
-	}
-	
-	var success = false;
-	var image = {};
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + 'images/' + imageId,
-		contentType: "application/json",
-		success: function (data) {
-		   	image = data;
-			success = true;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, image);
-			}
-		}
-     });
-}
-
 
 function deleteImage(imageId, callback) {
 	var success = false;
@@ -2727,6 +2673,7 @@ var ZumpFilter = function(opt) {
     // Javascript Objects
     //----------------------/
     var filters = {};
+    var filterItems = [];
     var filterChangeEvent;
     
     //----------------------\
@@ -2764,6 +2711,8 @@ var ZumpFilter = function(opt) {
         
         // Set filter array
         if (isDef(opt.items)) {
+        	filterItems = opt.items;
+        	console.log(filterItems);
             _.each(opt.items, function(item) {
                 if (isDef(item.property)) {
                     // Create your div to add to screen using data
@@ -2789,7 +2738,7 @@ var ZumpFilter = function(opt) {
 			var $parent = $(this).parents('.filter-item-parent');
 			var option = $parent.attr('id').match(/-([a-zA-Z]+)/)[1];
 			var val = $(this).attr('filterOn');
-			var filterHeading = $parent.siblings('.panel-heading').text();
+			var filterHeading = _.findWhere(filterItems, {property: option}).text;
 			
 			if (!_.contains(filters[option], val)) {
 				$(this).append('<span class="glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>');
@@ -2977,7 +2926,7 @@ var ZumpFilter = function(opt) {
     //----------------------/
     
     var updateCurrentFilters = function(args) {
-    	if (!args.val.length) args.val = "- None -";
+    	if (!args.val.length || args.val === 'undefined') args.val = "- None -";
     	var $currentFilterItemContainer = $('.current-filter-item-container');
     	var $currentFilterOptionVal = $('.current-filter-item[curFilterId="current-filter-' + args.option + '-' + args.val + '"]');
     	if (args.fn === 'add') {

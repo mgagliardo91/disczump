@@ -193,8 +193,6 @@
     min-width: 100px;
     width: 100px;
     height: 100px;
-    opacity: 0.5;
-    filter: alpha(opacity=50); /* For IE8 and earlier */
     cursor: pointer;
     text-align: center;
 }
