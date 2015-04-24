@@ -174,6 +174,10 @@
     padding: 10px 0px;
 }
 
+.public-user-discs-table-wrapper {
+    overflow: hidden;
+}
+
 .public-user-discs-table {
     position: relative;
     display: table;
@@ -202,6 +206,28 @@
     text-align: center;
     font-size: 1em;
     padding: 3px 0px;
+}
+
+.scroll-btn {
+    width: 40px;
+    height: 100px;
+    text-align: center;
+    display: table;
+}
+
+.scroll-btn:hover {
+    cursor: pointer;
+    background-color: rgb(210, 210, 210);
+    border-radius: 5px;
+}
+
+.scroll-btn > i {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.hidden {
+    display: none;
 }
 
 /*===================================================================*/
@@ -253,25 +279,10 @@
 
 .image-list-container-simple {
     border: 0px;
-     -webkit-box-shadow: none;
+    -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none;
     padding: 0px;
-}
-
-.image-list-container::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
- 
-.image-list-container::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
-    border-radius: 10px;
-}
- 
-.image-list-container::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
 }
 
 .image-list-table {
@@ -300,16 +311,6 @@
     position: relative;
 }
 
-.image-entity {
-    min-width: 100px;
-    min-height: 100px;
-    width: 100px;
-    height: 100px;
-    text-align: center;
-    vertical-align: middle;
-    display: table-cell;
-}
-
 .image-preview { 
     display: table-cell;
     vertical-align: middle;
@@ -336,96 +337,4 @@
 img.fit-parent {
     max-width: 100%;
     max-height: 100%;
-}
-
-.image-overlay {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    z-index: 100;
-    width: 100%;
-    height: 100%;
-    color: #fff;
-    background-color: rgba(60, 60, 60, 0.75);
-    display: none;
-}
-
-.image-overlay-static {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    z-index: 100;
-    color: #fff;
-}
-
-.image-progress {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    z-index: 99;
-    height: 100%;
-    background-color: rgba(150, 51, 0, 0.71);
-}
-
-.image-remove {
-    position: absolute;
-    right: 0px;
-    padding-right: 5px;
-    padding-top: 2px;
-    z-index: 101;
-    cursor: pointer;
-}
-
-.image-size {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    width: 100%;
-    overflow:hidden;
-    text-overflow:ellipsis;
-}
-
-.image-title { 
-    position: absolute;
-    bottom: 5px;
-    left: 5px;
-    width: 100%;
-    overflow:hidden;
-    text-overflow:ellipsis;
-}
-
-.image-add .image-entity {
-    text-align: center;
-    display: table-cell;
-    vertical-align: middle;
-    cursor: pointer;
-}
-
-.add-images-accordion-container {
-    margin-top: 10px;
-}
-
-.image-accordian-area label:hover {
-    cursor: pointer;
-    text-decoration: underline;
-}
-
-.image-make-primary {
-    position: absolute;
-    overflow: hidden;
-    cursor: pointer;
-    padding: 2px 5px;
-}
-
-.primary-image-banner-static {
-    position: absolute;
-    overflow: hidden;
-    padding: 2px 5px;
-    background-color: rgba(0, 0, 0, 0.72);
-    color: rgb(255, 232, 0) !important;
-    cursor: default;
-    -webkit-box-shadow: 2px 1px 5px 1px rgba(0, 0, 0, 0.5);
-    -moz-box-shadow: 2px 1px 5px 1px rgba(0, 0, 0, 0.5);
-    box-shadow: 2px 1px 5px 1px rgba(0, 0, 0, 0.5);
-    border-bottom-right-radius: 2px;
 }

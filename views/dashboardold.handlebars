@@ -1,8 +1,8 @@
 <!doctype html>
 <html>
 <head>
-    <title>DiscZump - Profile</title>
-    <link rel="stylesheet" href="/static/css/profile.css">
+    <title>DiscZump - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/bootstrap-switch.min.css">
     <link rel="stylesheet" href="/static/css/bootstrap-slider.css">
 </head>
@@ -39,26 +39,20 @@
             </div>
         </div>
     </div>
-    <div class="container-fluid">
+    <div class="container-fluid no-select" id="filter-container">
         <div class="row">
-            <div class="col-sm-3 col-md-3 col-lg-2 sidebar">
-                <div class="toolbar">
-                    <span class="pull-left"><i class="fa fa-home fa-toolbar-icon"></i></span>
-                    <span class="pull-right"><i class="fa fa-plus fa-toolbar-icon"></i></span>
-                    <span class="pull-right"><i class="fa fa-filter fa-toolbar-icon"></i></span>
-                    <div class="clearfix"></div>
+            <div class="col-md-3 col-sm-3 col-lg-3 hidden-xs">
+                <div id="filter-main" class="well">
+                    <div class="filter-title current-filter-hidden text-center">Zump Filter</div>
+                    <div id="current-filter-container">
+                    </div>
+                    <div id="filter-content">
+                    </div>
                 </div>
-                <ul class="nav-sidebar">
-                    <li class="active" pg-select="#pg-dashboard">Dashboard</li>
-                    <li id ="gallery-select" pg-select="#pg-gallery">Gallery</li>
-                    <li pg-select="#pg-settings">Account Settings</li>
-                    <li pg-select="#pg-preferences">Preferences</li>
-                    <li pg-select="#pg-statistics">Statistics</li>
-                </ul>
+                <div class="clearfix"></div>
             </div>
-            <div class="col-sm-9 col-sm-offset-3 col-md-9 col-md-offset-3 col-lg-10 col-lg-offset-2">
-                <div class="page" id="pg-dashboard">
-                    <div class="row">
+            <div class="col-md-9 col-sm-9 col-lg-9">
+                <div class="row">
                     <div class="disc-inventory-header" id="inventory-header">
                         <div class="header-static header-row">
                             <div class="div-inline float-left" style="width: 30%">
@@ -108,68 +102,13 @@
                         </div>
                     </div>
                 </div>
-                </div>
-                <div class="page" id="pg-gallery">
-                    <div id="gallery-container"></div>
-                </div>
-                <div class="page" id="pg-settings">
-                    <div class="row">
-                        <div class="profile-image">
-                            <img src="{{user.local.image}}" />
-                        </div>
-                        <div class="profile-status">
-                            <div class="data-table">
-                                <div class="data-row">
-                                    <div class="data-label">Username:</div>
-                                    <div class="data-value">{{user.local.email}}</div>
-                                </div>
-                                <div class="data-row">
-                                    <div class="data-label">Status:</div>
-                                    {{#if user.local.active}}
-                                    <div class="data-value">Active</div>
-                                    {{else}}
-                                    <div class="data-value">Inactive</div>
-                                    {{/if}}
-                                </div>
-                                <div class="data-row">
-                                    <div class="data-label">Facebook:</div>
-                                    {{#if user.facebook.id}}
-                                    <div class="data-value">Linked</div>
-                                    {{else}}
-                                    <div class="data-value">Not Linked</div>
-                                    {{/if}}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="row-label">Actions</div>
-                        <ul class="profile-actions">
-                            <li><a href="/">Change Password</a></li>
-                            <li><a href="/account/link">Link Facebook Account</a></li>
-                            <li><a href="/profile/delete">Delete Account</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="page" id="pg-preferences">
-                </div>
-                <div class="page" id="pg-statistics">
-                    <div class="row" style="height: 400px">
-                        <div id="discByType" class="pie-chart"></div>
-                    </div>
-                    <div class="row">
-                        <div id="discByBrand" class="pie-chart"></div> 
-                    </div>
-                </div>
             </div>
         </div>
     </div>
-    
-    <script src="/static/js/jquery.canvasjs.min.js"></script>
     <script src="https://rawgit.com/enyo/dropzone/master/dist/dropzone.js"></script>
     <script src="/static/js/bootstrap-switch.min.js"></script>
     <script src="/static/js/bootstrap-slider.js"></script>
     <script src="/static/js/jquery-ui.min.js"></script>
-    <script src="/static/js/profile.js"></script>
+    <script src="/static/js/dashboard.js"></script>
 </body>
 </html>

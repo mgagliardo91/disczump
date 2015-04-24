@@ -9,7 +9,6 @@ mongoose.connect('mongodb://' + configDB.database.host + ':' +
 User.find(function(err, users) {
     
     async.each(users, function(user, callback) {
-        user.local.
         
         user.save(function(err) {
             if (err)

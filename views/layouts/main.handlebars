@@ -56,7 +56,7 @@
                             <li><a href="#" class="btn-tools btn-add-disc" role="button" id="create-disc-modal"><span><i class="fa fa-plus-circle fa-tools"></i></span>Add Disc</a></li>
                             <li><a href="#" class="btn-tools btn-export-list" role="button" id="export-list"><span><i class="fa fa-external-link fa-tools"></i></span>Export List</a></li>
                             <li class="divider"></li>
-                            <li><a href="/profile"><span><i class="fa fa-user fa-tools"></i></span>Profile</a></li>
+                            <li><a href="/dashboard?view=settings"><span><i class="fa fa-user fa-tools"></i></span>Profile</a></li>
                             {{#if isLinked}}
                             <li><a href="/account/link"><span><i class="fa fa-facebook-square fa-tools"></i></span>Unlink Account</a></li>
                             {{else}}
@@ -71,12 +71,6 @@
                         </li>
                     </ul>
                     {{#if isDashboard}}
-                    <div class="nav-view">
-                        <div>
-                            <span class="nav-view-label hidden-sm">View As:</span>
-                            <input type="checkbox" id="inventory-view">
-                        </div>
-                    </div>
                     <div class="input-group nav-search">
                         <input type="text" class="form-control" id="search-all" placeholder="Search All...">
                         <span class="input-group-btn">

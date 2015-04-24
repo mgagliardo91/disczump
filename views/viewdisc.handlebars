@@ -34,17 +34,28 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-xs-12 col-sm-7 col-md-6 col-lg-6 public-col-pd">
+            <div class="col-xs-12 col-sm-7 col-md-6 col-lg-6 public-col-pd no-select">
                 <div class="public-image-area">
                     <div class="image-block-display">
                         <div class="image-block">
                             <div class="image-block-frame">
+                                {{#if disc.retPrimaryImage.fileId}}
                                 <img src="/files/{{disc.retPrimaryImage.fileId}}" thumbnailId={{disc.retPrimaryImage.thumbnailId}} class="fit-parent" id="disc-main-image">
+                                {{else}}
+                                <img src="/static/logo/logo_small.svg" thumbnailId="logo" class="fit-parent" id="disc-main-image">
+                                {{/if}}
                             </div>
                         </div>
                         <div class="image-list">
                             <div class="image-list-container image-list-container-simple">
                                 <div class="image-list-table" id="disc-image-table">
+                                    <div class="image-item-container logo-placeholder">
+                                        <div class="image-item">
+                                            <div class="image-preview active">
+                                                <img src="/static/logo/logo_small.svg" class="fit-parent">
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -139,9 +150,14 @@
             <div class="row public-user-discs-title">
                 <span>Other discs in {{alias.display}}'s inventory:</span>
             </div>
-            <div class="row public-user-discs-list">
-                <div class="public-user-discs-table">
+            <div class="row public-user-discs-list no-select">
+                <div class="scroll-btn float-left"><i class="fa fa-chevron-left fa-3x scroll-chevron scroll-left hidden"></i></div>
+                <div class="scroll-btn float-right"><i class="fa fa-chevron-right fa-3x scroll-chevron scroll-right hidden"></i></div>
+                <div class="public-user-discs-table-wrapper">
+                    <div class="public-user-discs-table">
+                    </div>
                 </div>
+                <div class="clearfix"></div>
             </div>
         </div>
     </div>

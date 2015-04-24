@@ -26,15 +26,16 @@ function isDef(obj) {
 
 function getAllDiscImages(discId, callback) {
 	var success = false;
-	var images = [];
+	var retData;
     $.ajax({
 		type: "GET",
 		dataType: "json",
 		url: url + 'discs/' + discId + '/images',
 		contentType: "application/json",
 		success: function (data) {
-		   	images = data;
-			success = true;
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
 		},
 		error: function (request, textStatus, errorThrown) {
 			console.log(request.responseText);
@@ -43,7 +44,7 @@ function getAllDiscImages(discId, callback) {
 		},
 		complete: function(){
 			if (callback) {
-				callback(success, images);
+				callback(success, retData);
 			}
 		}
      });
@@ -55,15 +56,16 @@ function getPrimaryDiscImage(imageId, callback) {
 	}
 	
 	var success = false;
-	var image = {};
+	var retData;
     $.ajax({
 		type: "GET",
 		dataType: "json",
 		url: url + 'images/' + imageId,
 		contentType: "application/json",
 		success: function (data) {
-		   	image = data;
-			success = true;
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
 		},
 		error: function (request, textStatus, errorThrown) {
 			console.log(request.responseText);
@@ -72,7 +74,7 @@ function getPrimaryDiscImage(imageId, callback) {
 		},
 		complete: function(){
 			if (callback) {
-				callback(success, image);
+				callback(success, retData);
 			}
 		}
      });
@@ -80,15 +82,16 @@ function getPrimaryDiscImage(imageId, callback) {
 
 function getAllDiscs(callback) {
 	var success = false;
-	var discs = [];
+	var retData;
     $.ajax({
 		type: "GET",
 		dataType: "json",
 		url: url + 'discs/',
 		contentType: "application/json",
 		success: function (data) {
-		   	discs = data;
-			success = true;
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
 		},
 		error: function (request, textStatus, errorThrown) {
 			console.log(request.responseText);
@@ -97,7 +100,7 @@ function getAllDiscs(callback) {
 		},
 		complete: function(){
 			if (callback) {
-				callback(success, discs);
+				callback(success, retData);
 			}
 		}
      });
@@ -105,15 +108,16 @@ function getAllDiscs(callback) {
 
 function getAllPublicDiscsByUser(userId, callback) {
 	var success = false;
-	var discs = [];
+	var retData;
     $.ajax({
 		type: "GET",
 		dataType: "json",
 		url: url + 'users/' + userId + '/discs',
 		contentType: "application/json",
 		success: function (data) {
-		   	discs = data;
-			success = true;
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
 		},
 		error: function (request, textStatus, errorThrown) {
 			console.log(request.responseText);
@@ -122,7 +126,7 @@ function getAllPublicDiscsByUser(userId, callback) {
 		},
 		complete: function(){
 			if (callback) {
-				callback(success, discs);
+				callback(success, retData);
 			}
 		}
      });
@@ -130,15 +134,16 @@ function getAllPublicDiscsByUser(userId, callback) {
 
 function getDiscById(discId, callback) {
 	var success = false;
-	var disc = {};
+	var retData = {};
     $.ajax({
 		type: "GET",
 		dataType: "json",
 		url: url + 'discs/' + discId,
 		contentType: "application/json",
 		success: function (data) {
-			disc = data;
-			success = true;
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
 		},
 		error: function (request, textStatus, errorThrown) {
 			console.log(request.responseText);
@@ -147,8 +152,156 @@ function getDiscById(discId, callback) {
 		},
 		complete: function(){
 			if (callback) {
-				callback(success, disc);
+				callback(success, retData);
 			}
 		}
      });
+}
+
+
+function getUserPreferences(callback) {
+	var success = false;
+	var retData = {};
+    $.ajax({
+		type: "GET",
+		dataType: "json",
+		url: url + 'account/preferences',
+		contentType: "application/json",
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, retData);
+			}
+		}
+     });
+}
+
+function postDisc(disc, callback) {
+	var success = false;
+	var retData;
+    $.ajax({
+		type: "POST",
+		dataType: "json",
+		url: url + 'discs/',
+		contentType: "application/json",
+		data: JSON.stringify(disc),
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, retData);
+		   	}
+		}
+     });
+}
+
+function putDisc(disc, callback) {
+	var success = false;
+	var retData;
+	$.ajax({
+		type: "PUT",
+		dataType: "json",
+		url: url + '/discs/' + disc._id,
+		contentType: "application/json",
+		data: JSON.stringify(disc),
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+		   console.log(request.responseText);
+		   console.log(textStatus);
+		   console.log(errorThrown);
+		   retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
+		},
+		complete: function(){
+		   if (callback) {
+			callback(success, retData);
+		   }
+		}
+	});
+}
+
+function deleteDisc(discId, callback) {
+	var success = false;
+	var retData;
+	$.ajax({
+		type: "DELETE",
+		dataType: "json",
+		url: url + '/discs/' + discId,
+		contentType: "application/json",
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+		   console.log(request.responseText);
+		   console.log(textStatus);
+		   console.log(errorThrown);
+		},
+		complete: function(){
+		   if (callback) {
+			callback(success, retData);
+		   }
+		}
+	});
+}
+
+function deleteImage(imageId, callback) {
+	var success = false;
+	var retData;
+	$.ajax({
+		type: "DELETE",
+		dataType: "json",
+		url: url + 'images/' + imageId,
+		contentType: "application/json",
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+		   console.log(request.responseText);
+		   console.log(textStatus);
+		   console.log(errorThrown);
+		},
+		complete: function(){
+		   if (callback) {
+			callback(success, retData);
+		   }
+		}
+	});
+}
+
+function validateServerData(data) {
+	
+	if (!data) {
+		return {success: false, retData: {message : 'Unable to process request.', type : 'Unknown Error'}};
+	}
+				
+	if (data.error) {
+		return {success: false, retData: data.error};
+	}
+	
+	return {success: true, retData: data};
 }

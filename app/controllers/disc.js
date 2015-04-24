@@ -108,24 +108,23 @@ function postDisc(userId, data, callback) {
         disc.visible = data.visible;
     }
     
-    var param;
-    if (data.weight && _.isNumber(param = parseInt(data.weight))) {
-        disc.weight = param;
+    if (data.weight && _.isNumber(parseInt(data.weight))) {
+        disc.weight = data.weight;
     }
     
-    if (data.speed && _.isNumber(param = parseInt(data.speed))) {
+    if (data.speed && _.isNumber(parseInt(data.speed))) {
         disc.speed = data.speed;
     }
     
-    if (data.glide && _.isNumber(param = parseInt(data.glide))) {
+    if (data.glide && _.isNumber(parseInt(data.glide))) {
         disc.glide = data.glide;
     }
     
-    if (data.turn && _.isNumber(param = parseInt(data.turn))) {
+    if (data.turn && _.isNumber(parseInt(data.turn))) {
         disc.turn = data.turn;
     }
     
-    if (data.fade && _.isNumber(param = parseInt(data.fade))) {
+    if (data.fade && _.isNumber(parseInt(data.fade))) {
         disc.fade = data.fade;
     }
     
@@ -187,24 +186,23 @@ function putDisc(userId, discId, data, callback) {
             disc.image = data.image;
         }
         
-        var param;
-        if (data.weight && _.isNumber(param = parseInt(data.weight))) {
-            disc.weight = param;
+        if (data.weight && _.isNumber(parseInt(data.weight))) {
+            disc.weight = data.weight;
         }
         
-        if (data.speed && _.isNumber(param = parseInt(data.speed))) {
+        if (data.speed && _.isNumber(parseInt(data.speed))) {
             disc.speed = data.speed;
         }
         
-        if (data.glide && _.isNumber(param = parseInt(data.glide))) {
+        if (data.glide && _.isNumber(parseInt(data.glide))) {
             disc.glide = data.glide;
         }
         
-        if (data.turn && _.isNumber(param = parseInt(data.turn))) {
+        if (data.turn && _.isNumber(parseInt(data.turn))) {
             disc.turn = data.turn;
         }
         
-        if (data.fade && _.isNumber(param = parseInt(data.fade))) {
+        if (data.fade && _.isNumber(parseInt(data.fade))) {
             disc.fade = data.fade;
         }
         

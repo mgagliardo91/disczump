@@ -26,13 +26,15 @@ var fnLock = false;
 var refPageTop;
 var refContBottom;
 var isFixed = false, isHidden = false;
-
-// Preloading
 var imgArray = new Array();
 
 var userPrefs;
+var pageEvents = {};
 
 $(document).ready(function(){
+   
+   /* Variables */
+   
     $searchResults = $('#search-results');
     $searchBar = $('#search-all');
 	$filterResults = $('#filter-results');
@@ -41,7 +43,12 @@ $(document).ready(function(){
 	$inventoryHeader = $('#inventory-header');
     $inventoryContainer = $('.disc-inventory-container');
     $dynamicHeader = $('#disc-inventory-header-dynamic');
-    
+   
+    /* Initial Commands */
+   
+   $('.page').hide();
+   
+   /* Logic */
     refPageTop = $('body').outerHeight() - $('body').height() - $('nav').outerHeight();
     refContBottom = refPageTop + $inventoryContainer.outerHeight() - $inventoryHeader.outerHeight();
      
@@ -51,14 +58,56 @@ $(document).ready(function(){
 		  appId: '1433417853616595',
 		});
 	}); 
-     
-     $(window).on('resize', function() {
+   
+   /* Event Listeners */
+   
+   $('.nav-sidebar > li').click(function(e){
+       e.stopPropagation();
+       var $this = $(this);
+       var nav = $(this).attr('pg-select');
+       var $page = $(nav);
+       var $curPage = $('.page:visible');
+       
+       if (!$curPage.length) {
+           if (isDef(pageEvents[$curPage.attr('id')])) {
+               pageEvents[$curPage.attr('id')](false);
+           }
+            $page.fadeIn(100, function() {
+                $this.addClass('active');
+                if (isDef(pageEvents[$page.attr('id')])) {
+                   pageEvents[$page.attr('id')](true);
+               }
+            });
+            return;
+       }
+       
+       if ($page.length && !$page.is(':visible')) {
+           $curPage.fadeOut(100, function() {
+               if (isDef(pageEvents[$curPage.attr('id')])) {
+                   pageEvents[$curPage.attr('id')](false);
+               }
+               $('.nav-sidebar > li').removeClass('active');
+                $page.fadeIn(100, function() {
+                    $this.addClass('active');
+                    if (isDef(pageEvents[$page.attr('id')])) {
+                       pageEvents[$page.attr('id')](true);
+                   }
+                });
+           });
+       } else {
+           $this.addClass('active').siblings().removeClass('active');
+       }
+       
+      return false;
+   });
+   
+   $(window).on('resize', function() {
      	console.log('resizing');
-        resizeSearch($searchResults, $searchBar, true); 
+        //resizeSearch($searchResults, $searchBar, true); 
         resizeResultHeader();
-     });
+    });
      
-      $(window).scroll(function(){
+    $(window).scroll(function(){
     	var curTop = $(window).scrollTop();
     	var heightRemaining = $('body').height() - ($(window).height() - curTop);
     	console.log(heightRemaining);
@@ -77,32 +126,15 @@ $(document).ready(function(){
     	}
     });
      
-     $(window).click(function(e) {
-     	$.each($('.hide-on-close'), function(index) {
-     		if ($(this).is(':visible')) {
+    $(window).click(function(e) {
+    	$.each($('.hide-on-close'), function(index) {
+    		if ($(this).is(':visible')) {
 	     		$(this).hide();
 	     	}	
      	});
      });
      
-     $('#inventory-view').bootstrapSwitch({
-     	onText: 'Gallery',
-     	offText: 'Table',
-     	onSwitchChange: function(e, state) {
-     		if (state) {
-     			pageSettings.tableMode = false;
-     			$filterContainer.fadeOut(300, function() {
-     				$galleryContainer.fadeIn(300);
-     				showDiscGallery();
-     			});
-     		} else {
-     			pageSettings.tableMode = true;
-     			$galleryContainer.fadeOut(300, function() {
-     				$filterContainer.fadeIn(300);	
-     				hideDiscGallery();
-     			});
-     		}
-     	}
+     $('#gallery-select').click(function(e) {
      });
      
      $('.nav-view').css('display', 'table');
@@ -166,6 +198,11 @@ $(document).ready(function(){
 	 	disc.visible = !disc.visible;
 	 	putDisc(disc, function(success, retData) {
 	 		if (success) {
+	 			discs = _.filter(discs, function(disc){
+					return disc._id != retData._id;
+				});
+				discs.push(retData);
+				console.log('Saved disc changes.');
 	 			updateDiscItem(disc);
 	 		} else {
 	 			console.log(generateError(retData.message, 'ERROR'));
@@ -257,8 +294,9 @@ $(document).ready(function(){
      $('#search-request').click(function() {
      	$searchBar.focus();
      });
+  
+    /* Library Objects */
     
-    /// Library Objects
     mySort = new ZumpSort({
 	    sortToggle: '#results-header-sort',
 	    sortContainer: '.current-sort-container',
@@ -309,8 +347,15 @@ $(document).ready(function(){
     
 	
      // Start on-load commands
-     //loading();
      resizeSearch($searchResults, $searchBar, true, true);
+     pageEvents['pg-gallery'] = function(showing) {
+         if (showing) {
+     		pageSettings.tableMode = false;
+            showDiscGallery();
+         } else {
+     		pageSettings.tableMode = true;
+         }
+     }
      resizeResultHeader();
      $searchResults.hide();
      getUserPreferences(function(success, prefs) {
@@ -320,6 +365,7 @@ $(document).ready(function(){
      		getAllDiscs(function(success, discsFromServer){
 				if (success) {
 					discs = discsFromServer;
+					createTypePie();
 					initialize();
 				} else {
 					alert('Unable to intialize');
@@ -329,8 +375,35 @@ $(document).ready(function(){
      });
     
     $('.page-alert').slideDown(300);
+    $('.nav-sidebar > li.active').trigger('click');
+    
+    setTimeout(function() {
+        initializePage();
+    }, 200);
+ 
 });
 
+
+/*
+* Initialize based on search params
+*/
+function initializePage() {
+    console.log('initializing');
+    var params = getSearchParameters();
+    if (params.view) {
+        $('.nav-sidebar > li[pg-select="#pg-' + params.view + '"]').trigger('click');
+    }
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*                          Dashboard                                */
+/*                                                                   */
+/*===================================================================*/
+
+/*
+* Locks the search bar if user clicked on actual disc item
+*/
 var searchLock = function(e) {
 	e.stopPropagation();
 	myFilter.clearFilter('name');
@@ -338,6 +411,9 @@ var searchLock = function(e) {
 	$searchBar.trigger('keyup');
 };
 
+/*
+* Global search method
+*/
 function doSearch() {
 	var search = $searchBar.val();
 	
@@ -354,6 +430,9 @@ function doSearch() {
 	});
 }
 
+/*
+* Shows search based on results
+*/
 function updateSearchResults($section, list) {
 	var $output = $section.children('.result-section-output');
 	$output.children('.result-item:not(.result-item-empty)').remove();
@@ -365,41 +444,20 @@ function updateSearchResults($section, list) {
 	} else {
 		$output.children('.result-item-empty').show();
 	}
-}
+}   
 
-var delay = (function(){
-  var timer = 0;
-  return function(callback, ms){
-    clearTimeout (timer);
-    timer = setTimeout(callback, ms);
-  };
-})();
-
-function generateResultItem(item) {
-	return '<div class="result-item">' + item +
-    		'<span class="glyphicon glyphicon-leaf pull-left" aria-hidden="true"></span>' + 
-		'</div>';
-}
-
-function generateTagResult(item) {
-	return '<li class="tag-list-item" tabindex="0">' +
-        '<span><i class="fa fa-tag"></i></span>' +
-        item +
-    '</li>';
-}
-
-function generateTagItem(item) {
-	return '<div class="tag-item" tagVal="' + item +  '">' +
-		'<p class="tag-item-text">' + item + ' <span class="tag-item-remove"><i class="fa fa-times"></i></span></p>' +
-		'</div>';
-}
-
+/*
+* Filters the discs and redraws the results table
+*/
 function updateFilter(generateFilters) {
 	discList = myFilter.filter(discs, generateFilters);
 	showDiscs();
 	resizeResultHeader();
 }
 
+/*
+* Resizes the search results container
+*/
 function resizeSearch($element, $relative, relScreen, forceShow) {
 	if (forceShow) {
 		$element.show();
@@ -415,16 +473,25 @@ function resizeSearch($element, $relative, relScreen, forceShow) {
 	}
 }
 
+/*
+* Ensures the header width maintains the result view width
+*/
 function resizeResultHeader() {
 	$inventoryHeader.css({
 		'width': $inventoryContainer.outerWidth()
 	});
 }
 
+/*
+* Initialize function
+*/
 function initialize() {
 	updateFilter(true);
 }
 
+/*
+* Shows the gallery view
+*/
 function showDiscGallery() {
 	var sorted = mySort.doSort(discList);
 	myGallery.showGallery(sorted);
@@ -433,15 +500,24 @@ function showDiscGallery() {
 	});
 }
 
+/*
+* Hides the gallery view
+*/
 function hideDiscGallery() {
 	myGallery.hideGallery();
 }
 
+/*
+* Reloads a single disc item
+*/
 function updateDiscItem(disc) {
 	$('div.disc-item[discId="' + disc._id + '"]').empty().append(generateDiscData(disc));
 	getPrimaryDiscImage(disc.primaryImage, updateDiscImage);
 }
 
+/*
+* Reloads the results section
+*/
 function showDiscs(maintainPage) {
 	if (!maintainPage) {
 		paginateOptions.currentPage = 1;
@@ -458,6 +534,9 @@ function showDiscs(maintainPage) {
 	resizeResultHeader();
 }
 
+/*
+* Locates the image source and updates with the file name
+*/
 function updateDiscImage(success, discImage) {
 	if (success) {
 		var $discItem = $('div.disc-item[discId="' + discImage.discId + '"]');
@@ -469,6 +548,9 @@ function updateDiscImage(success, discImage) {
 	}
 }
 
+/*
+* Updates the sort header
+*/
 function updateHeader(count) {
 	$('#results-header-count').text('Results: ' + count);
 	
@@ -494,6 +576,9 @@ function updateHeader(count) {
 	}
 }
 
+/*
+* Returns the color based on the user preferences
+*/
 function getColorize(type) {
 	if (!isDef(userPrefs.colorize)) return undefined;
 	
@@ -510,6 +595,9 @@ function getColorize(type) {
 	} else return undefined;
 }
 
+/*
+* Generaes the container to hold the disc row
+*/
 function generateDiscTemplate(disc) {
 	var discContainer = $('<div class="disc-item-container"></div>');
 	var discItem = $('<div class="disc-item" discId="' + disc._id + '"></div>');
@@ -520,6 +608,9 @@ function generateDiscTemplate(disc) {
 	 return discContainer;
 }
 
+/*
+* Creates a standard disc data row
+*/
 function generateDiscData(disc) {
 	var tagHTML = '';
 	
@@ -624,6 +715,9 @@ function generateDiscData(disc) {
                     '<div class="clearfix"></div>';
 }
 
+/*
+* Paginates the provided array
+*/
 function paginate(toPaginate) {
 	var lastPage = 1;
 	
@@ -643,24 +737,6 @@ function paginate(toPaginate) {
 	return toPaginate.slice(start, end);
 }
 
-/*-------------------------------------------------------------------------------------------*/
-/*                                     MODAL JQUERY                                          */
-/*-------------------------------------------------------------------------------------------*/
-/*
-					                  /`¯/) 
-					                ,/ ../  
-					               / .../ 
-					              /´¯../`¯¯'/´¯`·¸ 
-					          /'/...../..../...../¨¯\ 
-					        ('(...´...´.... ¯~/'....') 
-					         \.................'...../ 
-					          ''...\.......... _.·´ 
-					            \..............( 
-					              \.............\
-*/
-/*-------------------------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------------------------*/
 
 /*
 * Generates a modal popup with the specified parameters
@@ -869,8 +945,12 @@ function deleteConfirmationModal(discId) {
 					name: 'confirm-delete',
 					function: function($btn, $inner, done) {
 						var discId = $btn.attr('discId');
-						deleteDisc(discId, function(success) {
+						deleteDisc(discId, function(success, data) {
 							if (success) {
+								discs = _.filter(discs, function(disc){
+									return disc._id != data._id;
+								});
+								console.log('Deleted disc.');
 								updateFilter(true);
 							} else {
 								// error logic
@@ -889,7 +969,9 @@ function deleteConfirmationModal(discId) {
 	});
 }
 
-
+/*
+* Generates the modal containing the form to either edit/create a disc
+*/
 function generateDiscInputForm(disc) {
 	var isEdit = isDef(disc);
 	var discId = isEdit ? disc._id : '';
@@ -1108,6 +1190,9 @@ function generateDiscInputForm(disc) {
 	});
 }
 
+/*
+* Generates the object needed to issue a edit disc modal
+*/
 function getEditParams() {
 	return {
 		fns: [
@@ -1133,9 +1218,19 @@ function getEditParams() {
 						
 						putDisc(disc, function(success, retData) {
 							if (success) {
+								discs = _.filter(discs, function(disc){
+									return disc._id != retData._id;
+								});
+								discs.push(retData);
+								console.log('Saved disc changes.');
+								
 								if (isDef(changeObject.imageRemovals)) {
 									_.each(changeObject.imageRemovals, function(imageId) {
-										deleteImage(imageId);
+										deleteImage(imageId, function(success, data) {
+											if (success) {
+												console.log('Deleted image with id [' + data._id + '].');
+											}
+										});
 									});
 								}
 								
@@ -1267,6 +1362,9 @@ function getEditParams() {
 	}
 }
 
+/*
+* Locates an image source and updates with correct file path
+*/
 function updateExistingImage(imageId) {
 	var $curPrimary = $('.primary-image-banner-static');
 	
@@ -1295,6 +1393,9 @@ function updateExistingImage(imageId) {
 	}
 }
 
+/*
+* Generates the object needed to issue a create disc modal
+*/
 function getCreateParams() {
 	return {
 		fns: [
@@ -1311,6 +1412,7 @@ function getCreateParams() {
 						var disc = createDisc($inner);
 						postDisc(disc, function(success, retData) {
 							if (success) {
+								discs.push(retData);
 								var $dropzone = $inner.find('.dropzone-area');
 								var id = $dropzone.attr('dropzoneid');
 								var dropzone = dropzones[0];
@@ -1357,6 +1459,9 @@ function getCreateParams() {
 	}
 }
 
+/*
+* Creates a disc based on a HTML form
+*/
 function createDisc($form, disc) {
 	if (!isDef(disc)) {
 		disc = {};
@@ -1398,14 +1503,39 @@ function createDisc($form, disc) {
 	
 }
 
-function hasAttr($elem, attribute) {
-	var attr = $elem.attr(attribute);
-	return (typeof attr !== typeof undefined && attr !== false);
+/*
+* Generates the HTML for a search result item
+*/
+function generateResultItem(item) {
+	return '<div class="result-item">' + item +
+    		'<span class="glyphicon glyphicon-leaf pull-left" aria-hidden="true"></span>' + 
+		'</div>';
 }
 
-function generateImageItem(primaryImage, image, withOverlay) {
-	if (withOverlay) {
-		return '<div class="image-item-container" imageid="' + image._id + '">' +
+/*
+* Generates the HTML for a tag result
+*/
+function generateTagResult(item) {
+	return '<li class="tag-list-item" tabindex="0">' +
+        '<span><i class="fa fa-tag"></i></span>' +
+        item +
+    '</li>';
+}
+
+/*
+* Generates the HTML for a tag
+*/
+function generateTagItem(item) {
+	return '<div class="tag-item" tagVal="' + item +  '">' +
+		'<p class="tag-item-text">' + item + ' <span class="tag-item-remove"><i class="fa fa-times"></i></span></p>' +
+		'</div>';
+}
+
+/*
+* Generates an image item for a 
+*/
+function generateImageItem(primaryImage, image) {
+	return '<div class="image-item-container" imageid="' + image._id + '">' +
 					'<div class="image-item">' +
 						'<div class="image-entity">' +
 							'<img src="/files/' + image.thumbnailId +'" class="fit-parent">' +
@@ -1423,12 +1553,11 @@ function generateImageItem(primaryImage, image, withOverlay) {
 						'</div>') +
 					'</div>' +
 				'</div>'; 
-	} else {
-		//add return for VIEW DISC modal with no overlay
-		return false;
-	}
 }
 
+/*
+* Creates a dropzone area for image upload
+*/
 function createDropZone($div) {
 	var template = '<div class="image-item-container">' +
                         '<div class="image-item">' +
@@ -1482,198 +1611,52 @@ function createDropZone($div) {
 	$div.attr('dropzoneId', dropzones.length - 1);
 }
 
-/*-------------------------------------------------------------------------------------------*/
-/*                                     CONTROLLER JQUERY                                     */
-/*-------------------------------------------------------------------------------------------*/
+
+/* Global Methods */
+
 /*
-					                      /´¯/) 
-					                    ,/¯../ 
-					                   /..../ 
-					              /´¯/'...'/´¯¯`·¸ 
-					          /'/.../..../......./¨¯\ 
-					        ('(...´...´.... ¯~/'....') 
-					         \.................'...../ 
-					          ''...\.......... _.·´ 
-					            \..............( 
-					              \.............\
+* Returns the current search params
 */
-/*-------------------------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------------------------*/
-
-function getUserPreferences(callback) {
-	var success = false;
-	var userPrefs = {};
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + 'account/preferences',
-		contentType: "application/json",
-		success: function (data) {
-		   	userPrefs = data;
-			success = true;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, userPrefs);
-			}
-		}
-     });
+function getSearchParameters() {
+      var prmstr = window.location.search.substr(1);
+      return prmstr != null && prmstr != "" ? transformToAssocArray(prmstr) : {};
 }
 
-function postDisc(disc, callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "POST",
-		dataType: "json",
-		url: url + 'discs/',
-		contentType: "application/json",
-		data: JSON.stringify(disc),
-		success: function (data) {
-			retData = {'error' : {message : 'Unable to process request.', type : 'Unknown Error'}};
-			
-			if (!data) {
-				success = false;
-				return;
-			}
-			
-			if (data.error) {
-				retData = data.error;
-				success = false;
-				return;
-			}
-			
-		   	if (typeof data._id !== 'undefined') {
-		   		discs.push(data);
-		   		success = true;
-		   		retData = data;
-		   	} else {
-				success = false;
-		   	}
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-		   	}
-		}
-     });
+/*
+* Transforms a string to an object
+*/
+function transformToAssocArray( prmstr ) {
+    var params = {};
+    var prmarr = prmstr.split("&");
+    for ( var i = 0; i < prmarr.length; i++) {
+        var tmparr = prmarr[i].split("=");
+        params[tmparr[0]] = tmparr[1];
+    }
+    return params;
 }
 
-function putDisc(disc, callback) {
-	var success = false;
-	var retData;
-	$.ajax({
-		type: "PUT",
-		dataType: "json",
-		url: url + '/discs/' + disc._id,
-		contentType: "application/json",
-		data: JSON.stringify(disc),
-		success: function (data) {
-			retData = {'error' : {message : 'Unable to process request.', type : 'Unknown Error'}};
-			
-			if (!data) {
-				success = false;
-				return;
-			}
-			
-			if (data.error) {
-				retData = data.error;
-				success = false;
-				return;
-			}
-			
-			if (typeof data._id != 'undefined') {
-				discs = _.filter(discs, function(disc){
-					return disc._id != data._id;
-				});
-				discs.push(data);
-				console.log('Saved disc changes.');
-				success = true;
-				retData = data;
-			}
-		},
-		error: function (request, textStatus, errorThrown) {
-		   console.log(request.responseText);
-		   console.log(textStatus);
-		   console.log(errorThrown);
-		   retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
-		},
-		complete: function(){
-		   if (callback) {
-			callback(success, retData);
-		   }
-		}
-	});
+/*
+* Excutes a function after a specified period of time
+*/
+var delay = (function(){
+  var timer = 0;
+  return function(callback, ms){
+    clearTimeout (timer);
+    timer = setTimeout(callback, ms);
+  };
+})();
+
+/*
+* Checks to see if an element has an attribute
+*/
+function hasAttr($elem, attribute) {
+	var attr = $elem.attr(attribute);
+	return (typeof attr !== typeof undefined && attr !== false);
 }
 
-function deleteDisc(discId, callback) {
-	var success = false;
-	$.ajax({
-		type: "DELETE",
-		dataType: "json",
-		url: url + '/discs/' + discId,
-		contentType: "application/json",
-		success: function (data) {
-			if(data && typeof data._id != 'undefined') {
-				discs = _.filter(discs, function(disc){
-					return disc._id != data._id;
-				});
-				console.log('Deleted disc.');
-				success = true;
-			}
-		},
-		error: function (request, textStatus, errorThrown) {
-		   console.log(request.responseText);
-		   console.log(textStatus);
-		   console.log(errorThrown);
-		},
-		complete: function(){
-		   if (callback) {
-			callback(success);
-		   }
-		}
-	});
-}
-
-function deleteImage(imageId, callback) {
-	var success = false;
-	$.ajax({
-		type: "DELETE",
-		dataType: "json",
-		url: url + 'images/' + imageId,
-		contentType: "application/json",
-		success: function (data) {
-			if(data && typeof data._id != 'undefined') {
-				console.log('Deleted image with id [' + data._id + '].');
-				success = true;
-			}
-		},
-		error: function (request, textStatus, errorThrown) {
-		   console.log(request.responseText);
-		   console.log(textStatus);
-		   console.log(errorThrown);
-		},
-		complete: function(){
-		   if (callback) {
-			callback(success);
-		   }
-		}
-	});
-}
-
-// POTENTIALLY REMOVE
+/*
+* Returns a list of properties for the given disc list
+*/
 function getProperties(prop) {
 	var list = [];
 	if (discs.length && _.isArray(discs[0][prop])) {
@@ -1688,12 +1671,18 @@ function getProperties(prop) {
 	return _.uniq(list);
 }
 
+/*
+* Checks to see if an object contains a property
+*/
 function containSearch(val, properties, callback) {
 	_.each(properties, function(prop) {
 		callback(prop, checkContains(val, prop));
 	});
 }
 
+/*
+* Checks to see if a property contains the value
+*/
 function checkContains(val, prop){
 	if (!val || !prop) return [];
 	var filtered = _.filter(getProperties(prop), function(item) {
@@ -1702,21 +1691,33 @@ function checkContains(val, prop){
 	return filtered;
 }
 
+/*
+* Generates a information message
+*/
 function generateInfo(message, title) {
 	
 	return generateMessage('info', message, title);
 }
 
+/*
+* Generates an error message
+*/
 function generateError(message, title) {
 	
 	return generateMessage('danger', message, title);
 }
 
+/*
+* Generates a success message
+*/
 function generateSuccess(message, title) {
 	
 	return generateMessage('success', message, title);
 }
 
+/*
+* Generates a standard message based on arguments
+*/
 function generateMessage(type, message, title) {
 	
 	return '<div class="alert alert-' + type + '" role="alert">' +
@@ -1725,10 +1726,16 @@ function generateMessage(type, message, title) {
 		    		'</div>';
 }
 
+/*
+* Returns a disc based on the id
+*/
 function getDisc(id) {
 	return _.first(_.where(discs, {'_id' : id}));
 }
 
+/*
+* Creates a copy of a disc item
+*/
 function copyDisc(id) {
 	var disc = getDisc(id);
 	var newDisc = undefined;
@@ -1744,7 +1751,91 @@ function copyDisc(id) {
 	return newDisc;
 }
 
+/*===================================================================*/
+/*                                                                   */
+/*                          Statistics                               */
+/*                                                                   */
+/*===================================================================*/
+function createTypePie() {
+    var discList = _.groupBy(discs, 'type');
+    var data = [];
+    
+    for(var group in discList) {
+        data.push({
+           label: group,
+           y: discList[group].length,
+           legendText: group
+        });
+    }
+    
+    $("#discByType").CanvasJSChart({ 
+		title: { 
+			text: "Discs by Type",
+			fontSize: 24
+		},
+		width: 600,
+		axisY: { 
+			title: "Products in %" 
+		}, 
+		legend :{ 
+			verticalAlign: "center", 
+			horizontalAlign: "right" 
+		}, 
+		data: [ 
+		{ 
+			type: "pie", 
+			showInLegend: true, 
+			toolTipContent: "{label} <br/> {y} discs", 
+			indexLabel: "#percent%", 
+			dataPoints: data
+		} 
+		] 
+	});
+}
 
+function createBrandPie() {
+    var discs = _.groupBy(discList, 'brand');
+    var data = [];
+    console.log(discs);
+    
+    for(var group in discs) {
+        data.push({
+           label: group,
+           y: discs[group].length,
+           legendText: group
+        });
+    }
+    
+    $("#discByBrand").CanvasJSChart({ 
+		title: { 
+			text: "Discs by Brand",
+			fontSize: 24
+		},
+		width: 600,
+		axisY: { 
+			title: "Products in %" 
+		}, 
+		legend :{ 
+			verticalAlign: "center", 
+			horizontalAlign: "right" 
+		}, 
+		data: [ 
+		{ 
+			type: "pie", 
+			showInLegend: true, 
+			toolTipContent: "{label} <br/> {y} discs", 
+			indexLabel: "#percent%", 
+			dataPoints: data
+		} 
+		] 
+	});
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*                     Library Objects                               */
+/*                                                                   */
+/*===================================================================*/
 
 /*
 * Name: ZumpGallery
@@ -1789,6 +1880,8 @@ var ZumpGallery = function(opt) {
 	* Shows the gallery
 	*/
 	this.showGallery = function(objects) {
+	    removeListeners();
+	    
 		var count = objects.length;
 		objList = objects;
 		
@@ -1810,8 +1903,8 @@ var ZumpGallery = function(opt) {
 		
 		objCount = count;
 		setupListeners();
-		gallerySetup();
 		$galleryContainer.show();
+		gallerySetup();
 	}
 	
 	/*
@@ -1833,7 +1926,6 @@ var ZumpGallery = function(opt) {
 			var galItem = _.first(_.where(objList, {'_id' : objId}));
 			galItem.galImage = '/files/' + params.image;
 		}
-		
 	}
 	
 	//----------------------\
@@ -1878,7 +1970,8 @@ var ZumpGallery = function(opt) {
 		$galleryTable.empty();
 		$galleryMenu.find('.gallery-row-count').text(itemsPerRow);
 		
-		var width = $(window).width();
+		console.log($galleryContainer.width());
+		var width = $galleryContainer.width();
 		var rowCount = Math.ceil(objCount/itemsPerRow);
 		var colCount = itemsPerRow;
 		
@@ -1970,7 +2063,8 @@ var ZumpGallery = function(opt) {
 	* Function to resize gallery based on screen size
 	*/
 	var resizeGallery = function() {
-		var width = $(window).width();
+	    console.log('resizing');
+		var width = $galleryContainer.width();
 		var rowCount = Math.ceil(objCount/itemsPerRow);
 		var colCount = itemsPerRow;
 		
@@ -1991,11 +2085,6 @@ var ZumpGallery = function(opt) {
 	
 	this.init(opt);
 }
-
-
-
-
-
 
 /*
 * Name: ZumpLightbox
