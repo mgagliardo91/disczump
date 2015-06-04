@@ -16,6 +16,7 @@ var UserController          = require('../app/controllers/user');
 var EventController          = require('../app/controllers/event');
 
 var configAuth = require('./auth');
+var localConfig = require('./localConfig');
 var fbGraph = require('fbgraph');
 
 module.exports = function(passport) {
@@ -34,7 +35,7 @@ module.exports = function(passport) {
 
         clientID            : configAuth.facebookAuth.clientID,
         clientSecret        : configAuth.facebookAuth.clientSecret,
-        callbackURL         : configAuth.facebookAuth.callbackURL,
+        callbackURL         : localConfig.serverURL + '/auth/facebook/callback',
         passReqToCallback   : true
 
     },

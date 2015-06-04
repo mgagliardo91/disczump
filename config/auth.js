@@ -6,7 +6,6 @@ module.exports = {
     'facebookAuth' : {
         'clientID'      : '1433417853616595', // your App ID
         'clientSecret'  : '8f4bdccf243ed064d9446ef2f43f7054', // your App Secret
-        'callbackURL'   : 'https://disczumpserver-mgagliardo.c9.io/auth/facebook/callback'
     },
     'gmailAuth' : {
         'user': 'mike@disczump.com',
