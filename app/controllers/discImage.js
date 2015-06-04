@@ -60,10 +60,15 @@ function saveImage(gm, gfs, readStream, fileParams, callback) {
       });
       
     gm(readStream).quality(90).size({bufferStream: true}, function(err, size) {
-    	if (size.width > size.height) {
-    		this.resize(size.width > fileParams.maxSize ? fileParams.maxSize : size.width);
-    	} else {
-    		this.resize(null, size.height > fileParams.maxSize ? fileParams.maxSize : size.height);
+    	if (err)
+    		console.log(err);
+    	
+    	if (typeof size !== 'undefined') {
+    		if (size.width > size.height) {
+	    		this.resize(size.width > fileParams.maxSize ? fileParams.maxSize : size.width);
+	    	} else {
+	    		this.resize(null, size.height > fileParams.maxSize ? fileParams.maxSize : size.height);
+	    	}
     	}
     	
         this.stream('jpeg', function (err, stdout, stderr) {
