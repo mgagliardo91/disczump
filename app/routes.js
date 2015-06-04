@@ -27,9 +27,9 @@ module.exports = function(app, passport, gridFs) {
                 if (err) {
                     return res.render('notification', {
                         notify: {
-                            pageHeader: err.error.type,
-                            header: err.error.type,
-                            strong: err.error.message,
+                            pageHeader: err.error.message.type,
+                            header: err.error.message.type,
+                            strong: err.error.message.message,
                             text: 'When we enter beta, you will receive instructions on how to create' + 
                                 ' your personalized account.',
                             buttonIcon: 'fa-home',
@@ -114,9 +114,9 @@ module.exports = function(app, passport, gridFs) {
             if (err) {
                return res.render('notification', {
                    notify : {
-                       pageHeader: err.error.type,
-                       header: err.error.type,
-                       strong: err.error.message,
+                       pageHeader: err.error.message.type,
+                       header: err.error.message.type,
+                       strong: err.error.message.message,
                        text: 'The owner of this disc has not yet made it visible to the public.',
                        buttonIcon: 'fa-home',
                        buttonText: 'Return Home',
@@ -129,9 +129,9 @@ module.exports = function(app, passport, gridFs) {
                 if (err) {
                     return res.render('notification', {
                        notify : {
-                           pageHeader: err.error.type,
-                           header: err.error.type,
-                           strong: err.error.message,
+                           pageHeader: err.error.message.type,
+                           header: err.error.message.type,
+                           strong: err.error.message.message,
                            text: 'The owner of this disc has not yet made it visible to the public.',
                            buttonIcon: 'fa-home',
                            buttonText: 'Return Home',
@@ -152,7 +152,7 @@ module.exports = function(app, passport, gridFs) {
     app.get('/' + configRoutes.confirmAccount + '/:authorizationId', function(req, res){
             Confirm.confirmAccount(req.params.authorizationId, function(err, user){
                 if (err) {
-                    req.flash('error', err);
+                    req.flash('error', err.error.message);
                     return res.redirect('/login');
                 } else {
                     
@@ -217,13 +217,13 @@ module.exports = function(app, passport, gridFs) {
         .post(function(req, res){
             Recover.initializeRecovery(req.body.username, function(err, message) {
                 if (err) {
-                  req.flash('error', err);
+                  req.flash('error', err.error.message);
                   return res.redirect('/' + configRoutes.resetPassword);
                 }
                 
                 Mailer.sendMail(req.body.username, 'DiscZump Password Recovery', message, function(err, result) {
                     if (err) {
-                      req.flash('error', err);
+                      req.flash('error', err.error.message);
                       return res.redirect('/' + configRoutes.resetPassword);
                     }
                         
@@ -266,7 +266,7 @@ module.exports = function(app, passport, gridFs) {
         .post(function(req, res) {
             Recover.resetPassword(req.params.authorizationId, req.body.password, function(err, user) {
                 if (err) {
-                    req.flash('error', err);
+                    req.flash('error', err.error.message);
                     return res.redirect(req.params.authorizationId);
                 }
                 

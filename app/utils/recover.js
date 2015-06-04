@@ -5,6 +5,7 @@ var crypto              = require('crypto');
 var Handlebars = require('handlebars');
 var fs = require('fs');
 var configRoutes = require('../../config/config').routes;
+var localConfig = require('../../config/localConfig');
 var Error = require('../utils/error');
 
 module.exports = {
@@ -76,5 +77,5 @@ module.exports = {
 function generateRecoveryEmail(user, recover) {
     var html = fs.readFileSync('./private/html/recoverPassword.handlebars', 'utf8');
     var template = Handlebars.compile(html);
-    return template({user: user, recover : recover});
+    return template({user: user, recover : recover, serverURL: localConfig.serverURL});
 }

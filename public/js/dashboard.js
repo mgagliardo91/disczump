@@ -108,7 +108,7 @@ $(document).ready(function(){
                	if (isDef(pageEvents[$curPage.attr('id')])) {
                 	pageEvents[$curPage.attr('id')](false);
                	}
-               	$('.nav-sidebar > li').removeClass('active');
+               	$('.nav-sidebar li.sidebar-select').removeClass('active');
                 $page.fadeIn(100, function() {
                     $this.addClass('active');
                     if (isDef(pageEvents[$page.attr('id')])) {

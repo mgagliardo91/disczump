@@ -36,19 +36,15 @@ $(document).ready(function(){
        } 
     });
     
-    
-    $('#main-background').css('height', $(window).height() + 'px');
-    
     var emailValidate = new ZumpValidate({
         items: [
             {id:'email', type:'email'},
         ]
     });
+        
 });
 
 function doScroll() {
-    $('#main-background').css('height', $(window).height() + 'px');
-    
     var offset = $(window).scrollTop();
         
     $('.scroll-icon i').css({

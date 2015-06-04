@@ -15,6 +15,7 @@ var exphbs = require('express-handlebars');
 var config = require('./config/config.js');
 var oauth2 = require('./config/oauth2.js');
 var logger = require('./config/logger.js').logger;
+var localServer = require('./config/localConfig.js');
 var Grid = require('gridfs-stream');
 
 // configuration ===============================================================
@@ -81,4 +82,4 @@ app.use('/files', testRouter);
 
 // launch ======================================================================
 app.listen(port);
-logger.info('Server running at %s:%s', process.env.IP, port);
+logger.info('[' + localServer.serverIdentity + '] Server running at %s:%s', process.env.IP, port);

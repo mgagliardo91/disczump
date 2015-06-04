@@ -1,6 +1,7 @@
 var nodemailer = require("nodemailer");
 var logger = require('../../config/logger.js').logger;
 var config = require('../../config/auth.js').gmailAuth;
+var Error = require('../utils/error');
 
 var generator = require('xoauth2').createXOAuth2Generator({
     user: config.user,
@@ -29,7 +30,7 @@ module.exports = {
         
         smtpTransport.sendMail(mailOptions, function(error, response){
             if(error)
-                return callback(error);
+                return callback(Error.createError(error, Error.internalError));
             
             callback(null);
         });
