@@ -11,7 +11,7 @@ var Error = require('../utils/error');
 module.exports = {
     initializeRecovery : function(username, callback) {
         if (!username)
-            return callback('A valid email is required to recover a password.');
+            return callback(Error.createError('A valid email is required to recover a password.'));
         
         User.findOne({'local.email': username}, function(err, user) {
            if (err)

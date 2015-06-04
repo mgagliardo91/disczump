@@ -548,9 +548,13 @@ $(document).ready(function(){
 		generatePlot(prop, type);
 	});
 	
-	//
-    // Start on-load commands
-    //
+
+    /*===================================================================*/
+	/*                                                                   */
+	/*                       Start on-load commands                      */
+	/*                                                                   */
+	/*===================================================================*/
+
     pageEvents['pg-gallery'] = function(showing) {
         if (showing) {
     		pageSettings.tableMode = false;
