@@ -1,5 +1,5 @@
 // config/passport.js
-
+var _                       = require('underscore');
 var LocalStrategy           = require('passport-local').Strategy;
 var BasicStrategy           = require('passport-http').BasicStrategy;
 var FacebookStrategy        = require('passport-facebook').Strategy;
@@ -13,6 +13,7 @@ var RefreshToken            = require('../app/models/refreshToken');
 var logger                  = require('./logger.js').logger;
 
 var UserController          = require('../app/controllers/user');
+var EventController          = require('../app/controllers/event');
 
 var configAuth = require('./auth');
 var fbGraph = require('fbgraph');
@@ -79,7 +80,6 @@ module.exports = function(passport) {
             } else {
                 
                 var user = req.user;
-                console.log(profile);
                 user.facebook.id = profile.id;
                 user.facebook.token = profile.token;
                 user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
@@ -88,20 +88,20 @@ module.exports = function(passport) {
                 fbGraph.get(profile.id + "/picture?width=500&access_token=" + token, function(err, pic) {
                     if (!err && pic.image) {
                         user.local.image = pic.location;
-                        user.save();
                     }
-                });
-                
-                // save the user
-                user.save(function(err) {
-                    if (err)
-                        throw err;
-                    req.flash('infoTitle', 'Link Successful');
-                    req.flash('infoText', 'You can now login using Facebook!');
-                    return done(null, user);
+                    
+                    // save the user
+                    user.save(function(err) {
+                        if (err)
+                            throw err;
+                        
+                        EventController.createEvent(user._id, EventController.types.AccountLink);
+                        req.flash('infoTitle', 'Link Successful');
+                        req.flash('infoText', 'You can now login using Facebook!');
+                        return done(null, user);
+                    });
                 });
             }
-           
         });
 
     }));
@@ -127,10 +127,24 @@ module.exports = function(passport) {
                     return done(null, false, req.flash('error', 'Password must be 6 or more characters.'));
                 }
                 
+                if (!_.has(req.body, 'zipCode') || !/^\d{5}$/.test(req.body.zipCode)) {
+                    return done(null, false, req.flash('error', 'A valid zip code is required to create an account.'));
+                }
+                
                 var newUser  = new User();
                 
                 newUser.local.email    = username;
                 newUser.local.password = newUser.generateHash(password);
+                newUser.local.zipCode  = req.body.zipCode;
+                
+                
+                if (!(typeof req.body.alias === 'undefined')) {
+                    newUser.local.alias = req.body.alias;
+                }
+                
+                if (!(typeof req.body.pdgaNumber === 'undefined')) {
+                    newUser.local.pdgaNumber = req.body.pdgaNumber;
+                }
                 
                 if (req.body.passcode) {
                     newUser.local.passcode = req.body.passcode;
@@ -139,7 +153,10 @@ module.exports = function(passport) {
                 newUser.save(function(err) {
                     if (err)
                         throw err;
+                        
                     logger.info('Created new user %s.', newUser.local.email);
+                    newUser.addEvent('Account created.');
+                    EventController.createEvent(newUser._id, EventController.types.AccountCreation);
                     
                     return done(null, newUser);
                 });

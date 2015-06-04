@@ -1,5 +1,5 @@
-var mongoose            = require('mongoose');
-var DevController            = require('../app/controllers/development.js');
+var mongoose = require('mongoose');
+var DevController = require('../app/controllers/development.js');
 var configDB = require('../config/config.js');
 var Grid = require('gridfs-stream');
 var async = require('async');

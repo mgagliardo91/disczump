@@ -1,80 +1,94 @@
 <!doctype html>
 <html>
 <head>
-    <title>DiscZump - Profile</title>
-    <link rel="stylesheet" href="/static/css/profile.css">
+    <title>DiscZump - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/bootstrap-switch.min.css">
     <link rel="stylesheet" href="/static/css/bootstrap-slider.css">
+    <link href='https://fonts.googleapis.com/css?family=Orbitron:400,900' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Play:400,700' rel='stylesheet' type='text/css'>
 </head>
 <body>
     {{#if info.text}}
     <div class="alert alert-info page-alert" role="alert">
-    	<button type="button" class="close" data-dismiss="alert">×</button>
+    	<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
     	{{#if info.title}}<strong>{{info.title}}:</strong> {{/if}}{{info.text}}
     </div>
     {{/if}}
-    <div id="search-results" class="hide-on-close">
-        <div class="result-section" id="results-name">
-            <div class="result-section-title">Name</div>
-            <div class="result-section-output">
-                <div class="result-item result-item-empty">No Results.</div>
-            </div>
-        </div>
-        <div class="result-section" id="results-brand">
-            <div class="result-section-title">Brand</div>
-            <div class="result-section-output">
-                <div class="result-item result-item-empty">No Results.</div>
-            </div>
-        </div>
-        <div class="result-section" id="results-type">
-            <div class="result-section-title">Type</div>
-            <div class="result-section-output">
-                <div class="result-item result-item-empty">No Results.</div>
-            </div>
-        </div>
-        <div class="result-section" id="results-tagList">
-            <div class="result-section-title">Tags</div>
-            <div class="result-section-output">
-                <div class="result-item result-item-empty">No Results.</div>
-            </div>
-        </div>
+    <div id="tutorial">
+        <div class="tutorial-title">Tutorial</div>
+        <div class="tutorial-overlay"></div>
+        <div class="tutorial-footer"></div>
     </div>
     <div class="container-fluid">
         <div class="row">
-            <div class="col-sm-3 col-md-3 col-lg-2 sidebar">
-                <div class="toolbar">
-                    <span class="pull-left"><i class="fa fa-home fa-toolbar-icon"></i></span>
-                    <span class="pull-right"><i class="fa fa-plus fa-toolbar-icon"></i></span>
-                    <span class="pull-right"><i class="fa fa-filter fa-toolbar-icon"></i></span>
+            <div class="sidebar">
+                <div class="sidebar-nav-toolbar">
+                    <span class="sidebar-nav-select active pull-left" nav-select="#sidebar-home"><i class="fa fa-home fa-toolbar-icon"></i></span>
+                    <span class="sidebar-nav-select pull-left" nav-select="#sidebar-filter"><i class="fa fa-filter fa-toolbar-icon"></i><span id="filter-count"></span></span>
+                    <span class="toolbar-icon" id="create-disc-modal"><i class="fa fa-plus fa-toolbar-icon"></i></span>
+                    <span class="toolbar-border"></span>
                     <div class="clearfix"></div>
                 </div>
-                <ul class="nav-sidebar">
-                    <li class="active" pg-select="#pg-dashboard">Dashboard</li>
-                    <li id ="gallery-select" pg-select="#pg-gallery">Gallery</li>
-                    <li pg-select="#pg-settings">Account Settings</li>
-                    <li pg-select="#pg-preferences">Preferences</li>
-                    <li pg-select="#pg-statistics">Statistics</li>
+                <input type="text" class="search-format" id="search-all" placeholder="Search...">
+                <ul class="nav-sidebar no-select" id="sidebar-home">
+                    <h5 class="sidebar-section-header"><span>Views</span><hr /><div class="clearfix"></div></h5>
+                    <section id="section-views">
+                    <li class="sidebar-select" pg-select="#pg-dashboard"><span class="float-left fa-tools"><i class="fa fa-tachometer fa-sidebar-icon"></i></span><span class="sidebar-select-text">Dashboard</span></li>
+                    <li class="sidebar-select" pg-select="#pg-gallery"><span class="float-left fa-tools"><i class="fa fa-film fa-sidebar-icon"></i></span><span class="sidebar-select-text">Gallery</span></li>
+                    <li class="sidebar-select" pg-select="#pg-statistics"><span class="float-left fa-tools"><i class="fa fa-pie-chart fa-sidebar-icon"></i></span><span class="sidebar-select-text">Statistics</span></li>
+                    </section>
+                    <h5 class="sidebar-section-header"><span>Settings</span><hr /><div class="clearfix"></div></h5>
+                    <li class="sidebar-select" pg-select="#pg-settings"><span class="float-left fa-tools"><i class="fa fa-user fa-sidebar-icon"></i></span><span class="sidebar-select-text">Account</span></li>
+                    <li class="sidebar-select" pg-select="#pg-preferences"><span class="float-left fa-tools"><i class="fa fa-cogs fa-sidebar-icon"></i></span><span class="sidebar-select-text">Preferences</span></li>
+                </ul>
+                <ul class="nav-sidebar" id="sidebar-search" style="display: none;">
+                    <div id="search-results-container">
+                        <div class="result-section" id="results-name">
+                            <h5 class="sidebar-section-header"><span>Name</span><hr /></h5><div class="clearfix"></div>
+                            <div class="result-section-output">
+                                <li class="result-item-empty">No Results</li>
+                            </div>
+                        </div>
+                        <div class="result-section" id="results-brand">
+                            <h5 class="sidebar-section-header"><span>Brand</span><hr /></h5><div class="clearfix"></div>
+                            <div class="result-section-output">
+                                <li class="result-item-empty">No Results</li>
+                            </div>
+                        </div>
+                        <div class="result-section" id="results-tagList">
+                            <h5 class="sidebar-section-header"><span>Tag</span><hr /></h5><div class="clearfix"></div>
+                            <div class="result-section-output">
+                                <li class="result-item-empty">No Results</li>
+                            </div>
+                        </div>
+                    </div>
+                </ul>
+                <ul class="nav-sidebar" id="sidebar-filter" style="display: none;">
+                    <h5 class="sidebar-section-header"><span>Current Filters</span><hr /></h5><div class="clearfix"></div>
+                    <div id="current-filter-container"></div>
+                    <h5 class="sidebar-section-header"><span>Filter</span><hr /></h5><div class="clearfix"></div>
+                    <div id="filter-container"></div>
                 </ul>
             </div>
-            <div class="col-sm-9 col-sm-offset-3 col-md-9 col-md-offset-3 col-lg-10 col-lg-offset-2">
+            <div class="page-view">
                 <div class="page" id="pg-dashboard">
+                    <div class="row">
+                        <div class="page-title">Dashboard<hr></div>
+                    </div>
                     <div class="row">
                     <div class="disc-inventory-header" id="inventory-header">
                         <div class="header-static header-row">
                             <div class="div-inline float-left" style="width: 30%">
-                                <form class="form-inline" role="form">
-                                    <div class="form-group">
-                                        <p class="form-control-static header-text">Display:</p>
-                                        <select class="form-control input-sm" id="paginate-display-count">
-                                            <option value="20">20</option>
-                                            <option value="40">40</option>
-                                            <option value="60">60</option>
-                                            <option value="80">80</option>
-                                            <option value="100">100</option>
-                                            <option value="All">All</option>
-                                        </select>
-                                    </div>
-                                </form>
+                                <p class="form-control-static header-text">Display:</p>
+                                <select class="header-select" id="paginate-display-count">
+                                    <option value="20">20</option>
+                                    <option value="40">40</option>
+                                    <option value="60">60</option>
+                                    <option value="80">80</option>
+                                    <option value="100">100</option>
+                                    <option value="All">All</option>
+                                </select>
                             </div>
                             <div class="div-inline float-left text-center" style="width: 40%">
                                 <ul class="list-inline form-control-static" id="paginate-nav">
@@ -83,8 +97,10 @@
                                 </ul>
                             </div>
                             <div class="div-inline float-left" style="width: 30%">
-                                <div class="div-inline float-left header-text text-left" style="width: 40%" id="results-header-sort">
-                                    <i class="fa fa-sort"></i> Sort
+                                <div class="div-inline float-left header-text text-left" style="width: 40%">
+                                    <span id="results-header-sort">
+                                        <i class="fa fa-sort"></i> Sort
+                                    </span>
                                 </div>
                                 <div class="div-inline float-left header-text text-right" style="width: 60%" id="results-header-count">
                                     Results: 0
@@ -110,12 +126,72 @@
                 </div>
                 </div>
                 <div class="page" id="pg-gallery">
+                    <div class="row">
+                        <div class="page-title">Gallery<hr></div>
+                    </div>
                     <div id="gallery-container"></div>
+                </div>
+                <div class="page" id="pg-statistics">
+                    <div class="row">
+                        <div class="page-title">Statistics<hr></div>
+                    </div>
+                    <div class="row">
+                        <div class="statistics-settings">
+                            <div class="form-horizontal form-small">
+                                <div class="form-group">
+                                    <label for="graph-base" class="col-sm-3 col-sm-offset-1 control-label">Graph By
+                                        <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="graph-base"></i>
+                                    </label>
+                                    <div class="col-sm-5">
+                                        <select id="graph-base" class="form-control">
+                                            <option value="brand">Brand</option>
+                                            <option value="type">Type</option>
+                                            <option value="material">Material</option>
+                                            <option value="weight">Weight</option>
+                                            <option value="color">Color</option>
+                                            <option value="speed">Speed</option>
+                                            <option value="glide">Glide</option>
+                                            <option value="turn">Turn</option>
+                                            <option value="fade">Fade</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="graph-type" class="col-sm-3 col-sm-offset-1 control-label">Graph Type
+                                        <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="graph-type"></i>
+                                    </label>
+                                    <div class="col-sm-5">
+                                        <select id="graph-type" class="form-control">
+                                            <option value="pie">Pie</option>
+                                            <option value="column">Column</option>
+                                            <option value="doughnut">Doughnut</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-sm-5 col-sm-offset-4">
+                                        <button id="render-graph" class="btn btn-primary pull-right">Render</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div> 
+                    </div>
+                    <div class="row statistics-container">
+                        <div id="statistics-plot"></div>
+                    </div>
                 </div>
                 <div class="page" id="pg-settings">
                     <div class="row">
+                        <div class="page-title">Account Settings<hr></div>
+                    </div>
+                    <div class="row">
                         <div class="profile-image">
+                            {{#if user.local.image}}
                             <img src="{{user.local.image}}" />
+                            {{else}}
+                            <span class="user-default-image"><i class="fa fa-user"></i></span>
+                            {{/if}}
                         </div>
                         <div class="profile-status">
                             <div class="data-table">
@@ -143,22 +219,269 @@
                         </div>
                     </div>
                     <div class="row">
+                        <div class="row-label">Personal Information</div>
+                        <div class="form-horizontal form-small" id="accountForm">
+                            <div class="form-group">
+                                <label for="accountAllias" class="col-sm-3 control-label">Alias
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="account-alias"></i>
+                                </label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" id="accountAlias" placeholder="Alias" value="{{user.local.alias}}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="accountZipCode" class="col-sm-3 control-label">Zip Code</label>
+                                <div class="col-sm-3">
+                                    <input type="text" class="form-control" id="accountZipCode" placeholder="Zip Code" value="{{user.local.zipCode}}">
+                                </div>
+                                <div class="col-sm-6 lh-input" id="accountCityState">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="accountPDGA" class="col-sm-3 control-label">PDGA Number</label>
+                                <div class="col-sm-3">
+                                    <input type="text" class="form-control" id="accountPDGA" placeholder="PDGA Number" value="{{user.local.pdgaNumber}}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <button id="accountSave" class="btn btn-primary pull-right">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="row-label">Actions</div>
-                        <ul class="profile-actions">
-                            <li><a href="/">Change Password</a></li>
-                            <li><a href="/account/link">Link Facebook Account</a></li>
-                            <li><a href="/profile/delete">Delete Account</a></li>
-                        </ul>
+                        <div class="form-horizontal form-small" id="accountActionsForm">
+                            <div class="password-accordion-container">
+                                <div class="form-group">
+                                    <label id="password-accordion-label" class="no-select col-sm-6" aria-expanded="false" aria-controls="expand-change-password">
+                                        <span><i class="fa fa-chevron-right fa-tools"></i></span>Change Password
+                                    </label>
+                                </div>
+                                <div class="collapse" id="expand-change-password">
+                                    <div class="form-group">
+                                        <label for="current-password" class="col-sm-4 col-sm-offset-1 control-label">Current Password</label>
+                                        <div class="col-sm-6">
+                                            <input type="password" class="form-control" id="current-password" placeholder="Current Password">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="new-password" class="col-sm-4 col-sm-offset-1 control-label">New Password</label>
+                                        <div class="col-sm-6">
+                                            <input type="password" class="form-control" id="new-password" placeholder="New Password">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirm-password" class="col-sm-4 col-sm-offset-1 control-label">Confirm Password</label>
+                                        <div class="col-sm-6">
+                                            <input type="password" class="form-control" id="confirm-password" placeholder="Confirm Password">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                    <div class="col-sm-12">
+                                        <button id="change-password-save" class="btn btn-primary pull-right">Save</button>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-4 col-sm-offset-4 form-center">
+                                    <a href="/account/link">
+                                        <button id="facebook-link" class="btn btn-primary"><span><i class="fa fa-facebook-square fa-tools"></i></span>Manage Facebook</button>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-4 col-sm-offset-4 form-center">
+                                    <button id="account-delete" class="btn btn-danger"><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete Account</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="page" id="pg-preferences">
-                </div>
-                <div class="page" id="pg-statistics">
-                    <div class="row" style="height: 400px">
-                        <div id="discByType" class="pie-chart"></div>
+                    <div class="row">
+                        <div class="page-title">Preferences
+                            <a href="#" id="default-settings-restore">Restore Default Preferences</a>
+                        <hr></div>
                     </div>
                     <div class="row">
-                        <div id="discByBrand" class="pie-chart"></div> 
+                        <div class="row-label">Default Settings</div>
+                        <div class="form-horizontal form-small" id="preferences-form">
+                            <div class="form-group">
+                                <label for="default-view" class="col-sm-3 control-label">View
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="default-view"></i>
+                                </label>
+                                <div class="col-sm-5">
+                                    <select id="default-view" class="form-control">
+                                        <option value="dashboard">Dashboard</option>
+                                        <option value="gallery">Gallery</option>
+                                        <option value="statistics">Statistics</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="display-count" class="col-sm-3 control-label">Display Count
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="display-count"></i>
+                                </label>
+                                <div class="col-sm-5">
+                                    <select id="display-count" class="form-control">
+                                        <option value="20">20</option>
+                                        <option value="40">40</option>
+                                        <option value="60">60</option>
+                                        <option value="80">80</option>
+                                        <option value="100">100</option>
+                                        <option value="All">All</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="items-per-row" class="col-sm-3 control-label">Items Per Row
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="items-per-row"></i>
+                                </label>
+                                <div class="col-sm-5">
+                                    <select id="items-per-row" class="form-control">
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                        <option value="9">9</option>
+                                        <option value="10">10</option>
+                                        <option value="11">11</option>
+                                        <option value="12">12</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="sort-order-primary" class="col-sm-3 control-label">Primary Sort
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="primary-sort"></i>
+                                </label>
+                                <div class="col-sm-4">
+                                    <select id="sort-order-primary" class="form-control">
+                                        <option value="brand">Brand</option>
+                                        <option value="name">Name</option>
+                                        <option value="type">Type</option>
+                                        <option value="material">Material</option>
+                                        <option value="weight">Weight</option>
+                                        <option value="color">Color</option>
+                                        <option value="speed">Speed</option>
+                                        <option value="glide">Glide</option>
+                                        <option value="turn">Turn</option>
+                                        <option value="fade">Fade</option>
+                                    </select>
+                                </div>
+                                <label for="sort-order-primary-direction" class="col-sm-2 control-label">Direction</label>
+                                <div class="col-sm-3">
+                                    <select id="sort-order-primary-direction" class="form-control">
+                                        <option value="Ascending">Ascending</option>
+                                        <option value="Descending">Descending</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="sort-order-secondary" class="col-sm-3 control-label">Secondary Sort
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="secondary-sort"></i>
+                                </label>
+                                <div class="col-sm-4">
+                                    <select id="sort-order-secondary" class="form-control">
+                                        <option value="brand">Brand</option>
+                                        <option value="name">Name</option>
+                                        <option value="type">Type</option>
+                                        <option value="material">Material</option>
+                                        <option value="weight">Weight</option>
+                                        <option value="color">Color</option>
+                                        <option value="speed">Speed</option>
+                                        <option value="glide">Glide</option>
+                                        <option value="turn">Turn</option>
+                                        <option value="fade">Fade</option>
+                                    </select>
+                                </div>
+                                <label for="sort-order-secondary-direction" class="col-sm-2 control-label">Direction</label>
+                                <div class="col-sm-3">
+                                    <select id="sort-order-secondary-direction" class="form-control">
+                                        <option value="Ascending">Ascending</option>
+                                        <option value="Descending">Descending</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <div class="checkbox pull-left">
+                                        <label>
+                                            <input type="checkbox" id="enable-secondary-sort"> Enable Secondary Sort
+                                            <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="enable-secondary-sort"></i>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <button id="default-settings-save" class="btn btn-primary pull-right">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="row-label">Colorize</div>
+                        <div class="form-horizontal form-small" id="colorize-form">
+                            <div class="form-group">
+                                <label for="colorize-visibility" class="col-sm-6 control-label">Colorize Visibility
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="colorize-visibility"></i>
+                                </label>
+                                <div class="col-sm-6">
+                                    <input type="checkbox" id="colorize-visibility">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="colorize-distance-driver" class="col-sm-6 control-label colorize-label">Distance Driver</label>
+                                <div class="col-sm-6">
+                                    <div class="colorize-container">
+                                        <div class="colorize-item" id="colorize-distance-driver"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="colorize-fairway-driver" class="col-sm-6 control-label colorize-label">Fairway Driver</label>
+                                <div class="col-sm-6">
+                                    <div class="colorize-container">
+                                        <div class="colorize-item" id="colorize-fairway-driver"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="colorize-mid-range" class="col-sm-6 control-label colorize-label">Mid-range</label>
+                                <div class="col-sm-6">
+                                    <div class="colorize-container">
+                                        <div class="colorize-item" id="colorize-mid-range"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="colorize-putt-approach" class="col-sm-6 control-label colorize-label">Putt/Approach</label>
+                                <div class="col-sm-6">
+                                    <div class="colorize-container">
+                                        <div class="colorize-item" id="colorize-putt-approach"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="colorize-mini" class="col-sm-6 control-label colorize-label">Mini</label>
+                                <div class="col-sm-6">
+                                    <div class="colorize-container">
+                                        <div class="colorize-item" id="colorize-mini"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <button id="colorize-save" class="btn btn-primary pull-right">Save</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -170,6 +493,7 @@
     <script src="/static/js/bootstrap-switch.min.js"></script>
     <script src="/static/js/bootstrap-slider.js"></script>
     <script src="/static/js/jquery-ui.min.js"></script>
-    <script src="/static/js/profile.js"></script>
+    <script src="/static/js/validation.js"></script>
+    <script src="/static/js/dashboard.js"></script>
 </body>
 </html>

@@ -9,12 +9,15 @@
 <body>
     <div data-role="panel" id="side-panel" data-position="left" data-display="reveal" data-position-fixed="true" >
         <div class="ui-panel-inner">
-            <div class="panel settings-panel panel-dark panel-main" id="settings-container">
-                <div class="panel-heading">Settings</div>
-                <ul class="list-group">
-                    <a class="list-group-item panel-link-item clickable" id="settings-filter" panel-href="#filter-container">Filter <i class="fa fa-filter fa-fw pull-right"></i></a>
-                    <a class="list-group-item panel-link-item clickable" id="settings-colorize" panel-href="#colorize-container">Colorize <i class="fa fa-adjust fa-fw pull-right"></i></a>
-                </ul>
+            <div class="panel panel-main settings-panel" id="settings-container">
+                <div class="custom-panel panel-dark">
+                    <div class="panel-heading">Settings</div>
+                    <ul class="list-group">
+                        <a class="list-group-item panel-link-item clickable" id="settings-filter" panel-href="#filter-container">Filter <i class="fa fa-filter fa-fw pull-right"></i></a>
+                        <a class="list-group-item panel-link-item clickable" id="settings-colorize" panel-href="#colorize-container">Colorize <i class="fa fa-adjust fa-fw pull-right"></i></a>
+                    </ul>
+                </div>
+                <div class="panel-btn" id="add-disc-btn">Add Disc</div>
             </div>
             <div class="panel settings-panel panel-dark" id="filter-container">
                 <div class="panel-heading"><i class="btn-back fa fa-arrow-left fa-fw pull-left" panel-href="#settings-container"></i>Filter</div>

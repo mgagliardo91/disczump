@@ -14,8 +14,6 @@ module.exports = {
 
 function createDiscData(gridfs, userId) {
     
-    
-    
     async.eachSeries(dev.data, function(discObj, devCallback) {
         DiscController.postDisc(userId, discObj.disc, function(err, disc) {
             if (err) {

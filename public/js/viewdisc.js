@@ -59,11 +59,9 @@ $(document).ready(function() {
                         return disc._id == discId;
                     });
                     interval = Math.floor($('.public-user-discs-table-wrapper').width() / 110);
-                    if (userPublicDiscs.length > interval) {
-                        $('.scroll-chevron').removeClass('hidden');
-                    }
                     getMargin(interval);
                     getNext(curIndex, interval);
+                    resizeUserDiscList();
                 }
             });
         }
@@ -112,9 +110,9 @@ function resizeUserDiscList() {
     getMargin(interval);
     getNext(curIndex, interval);
     if (userPublicDiscs.length > interval) {
-        $('.scroll-chevron').removeClass('hidden');
+        $('.scroll-chevron').removeClass('disable');
     } else {
-        $('.scroll-chevron').addClass('hidden');
+        $('.scroll-chevron').addClass('disable');
     }
 }
 

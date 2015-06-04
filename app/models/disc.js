@@ -18,7 +18,8 @@ var discSchema = mongoose.Schema({
     notes           : String,
     primaryImage    : String,
     tagList         : [String],
-    visible         : {type:Boolean, default: false}
+    visible         : {type:Boolean, default: false},
+    condition       : String
     
 });
 

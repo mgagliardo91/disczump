@@ -9,7 +9,7 @@
     <div class="signup-form-container">
         <div class="signup-form-cell">
             <div class="signup-form-center">
-                <form action="/signup" method="post" autocomplete="off">
+                <form action="/signup" method="post" autocomplete="off" id="signup-form">
                     <img src="/static/logo/logo_small.svg" class="main-logo" />
                     {{#if message.error}}
                     <div class="alert alert-danger" role="alert">
@@ -24,21 +24,40 @@
                     </div>
                     {{/if}}
                     <div class="signup-form-stacked">
-                        <div class="input-group">
+                        <div class="input-group" id="emailGroup">
                             <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
-                            {{#if username}}
                             <input class="form-control" id="username" type="email" name="username" placeholder="Email" value="{{username}}">
-                            {{else}}
-                            <input class="form-control" id="username" type="email" name="username" placeholder="Email">
-                            {{/if}}
                         </div>
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                            <input class="form-control" id="password" type="password" name="password" placeholder="Password">
+                        <div class="input-group-inline">
+                            <div class="input-group inline">
+                                <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                                <input class="form-control" id="password" type="password" name="password" placeholder="Password">
+                            </div>
+                            <div class="input-group inline">
+                                <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                                <input class="form-control" id="verify-password" type="password" placeholder="Verify Password">
+                            </div>
+                            <div class="clearfix"></div>
                         </div>
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                            <input class="form-control" id="verify-password" type="password" placeholder="Verify Password">
+                        <div class="input-group-inline">
+                            <div class="input-group inline">
+                                <span class="input-group-addon"><i class="fa fa-location-arrow fa-fw"></i></span>
+                                <input class="form-control" id="zipCode" type="text" name="zipCode" placeholder="Zip Code" value="{{zipCode}}">
+                            </div>
+                            <div id="citystate" class="text-left inline">
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="input-group-inline">
+                            <div class="input-group inline">
+                                <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
+                                <input class="form-control" id="alias" type="text" name="alias" placeholder="Alias - Optional" value="{{alias}}">
+                            </div>
+                            <div class="input-group inline">
+                                <span class="input-group-addon"><i class="fa fa-trophy fa-fw"></i></span>
+                                <input class="form-control" id="pdgaNumber" type="text" name="pdgaNumber" placeholder="PDGA Number - Optional" value="{{pdgaNumber}}">
+                            </div>
+                            <div class="clearfix"></div>
                         </div>
                         {{#if beta}}
                         <div class="input-group">
@@ -52,6 +71,7 @@
             </div>
         </div>
     </div>
+    <script src="/static/js/access.js"></script>
     <script src="/static/js/validation.js"></script>
 </body>
 </html>

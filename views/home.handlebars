@@ -2,15 +2,11 @@
 <html>
 <head>
     <title>DiscZump - Home</title>
-    <link href='https://fonts.googleapis.com/css?family=Shadows+Into+Light+Two' rel='stylesheet' type='text/css'>
     <link href="https://fonts.googleapis.com/css?family=Orbitron:400,900" rel="stylesheet" type="text/css">
     <link href='https://fonts.googleapis.com/css?family=Play' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" href="/static/css/test.css">
+    <link rel="stylesheet" href="/static/css/home.css">
 </head>
 <body>
-    <div id="tutorial">
-      
-    </div>
     <div class="dz-nav">
       <a href="/" id="dz-nav-logo"><img src="/static/logo/logo_text.svg" class="nav-logo"></a>
       <div class="navbar-btn-container full-height float-right">
@@ -43,8 +39,7 @@
         </div>
     </div>
     <div class="section-info" id="section-inventory">
-        <div id="inventory-carousel" class="carousel slide">
-          <!-- Indicators -->
+        <div id="inventory-carousel" class="carousel slide">=
           <ol class="carousel-indicators">
             <li data-target="#inventory-carousel" data-slide-to="0" class="active"></li>
             <li data-target="#inventory-carousel" data-slide-to="1" class=""></li>
@@ -161,12 +156,12 @@
             </div>
         </div>
     </div>
-    <div class="section-info" id="section-platform">
+    <div class="section-info wpad" id="section-platform">
       <div class="section-title">
         Cross-Platform Design
       </div>
       <div class="section-inner">
-        <div class="section-graphic">
+        <div class="section-graphic section-icons">
           <i class="fa fa-desktop"></i>
           <i class="fa fa-laptop"></i>
           <i class="fa fa-tablet"></i>
@@ -178,12 +173,40 @@
         </div>
       </div>
     </div>
+    <div class="section-info wpad" id="section-beta">
+      <div class="section-title">
+        We're Entering Beta!
+      </div>
+      <div class="section-inner">
+        <div class="section-graphic">
+          <img class="logo-block" src="/static/logo/logo_small_beta.svg">
+        </div>
+        <div class="section-details">
+          We have been working hard to build a <b>highly-functional</b> and <b>feature-rich</b> disc 
+          golf inventory website. Soon we will need people like yourself to dive in 
+          and become one of the first to use DiscZump. If you'd like to become an 
+          official beta user, enter your email address below and we will send you 
+          instructions on how to join when our beta officially begins!
+        </div>
+        <div class="section-input">
+          <form action="/beta" method="post" id="submit-email">
+            <div class="input-group">
+              <input type="text" name="email" class="form-control" placeholder="Email Address" id="email">
+              <span class="input-group-btn">
+                <button class="btn btn-default" type="submit">Join!</button>
+              </span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
     <div class="section-info" id="section-footer">
       <div class="footer-bar">
         <span class="footer-links"><a href="mailto:admin@disczump.com">Contact Us</a></span>
         <span>Copyright <i class="fa fa-copyright"></i> DiscZump, LLC.</span>
       </div>
     </div>
-    <script src="/static/js/test.js"></script>
+    <script src="/static/js/validation.js"></script>
+    <script src="/static/js/home.js"></script>
 </body>
 </html>

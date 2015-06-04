@@ -6,6 +6,10 @@
     padding: 10px;
 }
 
+.public-disc-view {
+    padding-bottom: 20px;
+}
+
 .public-disc-title-area {
     font-size: 1.1em;
 }
@@ -166,6 +170,9 @@
     position: relative;
     font-size: 1.2em;
     width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .public-user-discs-list {
@@ -215,19 +222,20 @@
     display: table;
 }
 
-.scroll-btn:hover {
+.scroll-chevron:hover {
     cursor: pointer;
     background-color: rgb(210, 210, 210);
     border-radius: 5px;
 }
 
+.disable {
+    cursor: auto !important;
+    background-color: #FFF !important;
+}
+
 .scroll-btn > i {
     display: table-cell;
     vertical-align: middle;
-}
-
-.hidden {
-    display: none;
 }
 
 /*===================================================================*/

@@ -1,0 +1,6 @@
+data/
+lib/
+node_modules/
+private/images
+.c9/
+mongod

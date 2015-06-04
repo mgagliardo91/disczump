@@ -93,9 +93,6 @@ function getDisc(userId, discId, callback) {
 function postDisc(userId, data, callback) {
     var disc = new Disc();
     disc.userId = userId;
-    if (!data.brand || !data.name || data.brand == '' || data.name == '') {
-        return callback(Error.createError('Invalid data received for disc creation.', Error.invalidDataError));
-    }
     
     disc.brand = data.brand;
     disc.name = data.name;
@@ -103,33 +100,54 @@ function postDisc(userId, data, callback) {
     disc.type = data.type;
     disc.color = data.color;
     disc.notes = data.notes;
+    disc.condition = data.condition;
     
-    if (data.visible) {
+    if (_.has(data, 'visible')) {
         disc.visible = data.visible;
     }
     
-    if (data.weight && _.isNumber(parseInt(data.weight))) {
-        disc.weight = data.weight;
+    if (_.has(data, 'weight')) {
+        if (data.weight == '') {
+            disc.weight = undefined;
+        } else if ( _.isNumber(parseInt(data.weight)) && !(_.isNaN(parseInt(data.weight)))){
+            disc.weight = data.weight;
+        }
     }
     
-    if (data.speed && _.isNumber(parseInt(data.speed))) {
-        disc.speed = data.speed;
+    if (_.has(data, 'speed')) {
+        if (data.speed == '') {
+            disc.speed = undefined;
+        } else if ( _.isNumber(parseInt(data.speed)) && !(_.isNaN(parseInt(data.speed)))){
+            disc.speed = data.speed;
+        }
     }
     
-    if (data.glide && _.isNumber(parseInt(data.glide))) {
-        disc.glide = data.glide;
+    if (_.has(data, 'glide')) {
+        if (data.glide == '') {
+            disc.glide = undefined;
+        } else if ( _.isNumber(parseInt(data.glide)) && !(_.isNaN(parseInt(data.glide)))){
+            disc.glide = data.glide;
+        }
     }
     
-    if (data.turn && _.isNumber(parseInt(data.turn))) {
-        disc.turn = data.turn;
+    if (_.has(data, 'turn')) {
+        if (data.turn == '') {
+            disc.turn = undefined;
+        } else if ( _.isNumber(parseInt(data.turn)) && !(_.isNaN(parseInt(data.turn)))){
+            disc.turn = data.turn;
+        }
     }
     
-    if (data.fade && _.isNumber(parseInt(data.fade))) {
-        disc.fade = data.fade;
+    if (_.has(data, 'fade')) {
+        if (data.fade == '') {
+            disc.fade = undefined;
+        } else if ( _.isNumber(parseInt(data.fade)) && !(_.isNaN(parseInt(data.fade)))){
+            disc.fade = data.fade;
+        }
     }
     
     disc.tagList = [];
-    if (data.tagList) {
+    if (_.has(data, 'tagList')) {
         _.each(data.tagList, function(tag) {
             if (tag !== "" && !_.contains(disc.tagList, tag)) {
                 disc.tagList.push(tag);
@@ -153,60 +171,84 @@ function putDisc(userId, discId, data, callback) {
             
         if (!disc)
             return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
-            
-        if (data.brand) {
+        
+        if (typeof data.brand !== 'undefined') {
             disc.brand = data.brand;
         }
         
-        if (data.name) {
+        if (typeof data.name !== 'undefined') {
             disc.name = data.name;
         }
         
-        if (data.material) {
+        if (_.has(data, 'material')) {
             disc.material = data.material;
         }
         
-        if (data.type) {
+        if (_.has(data, 'type')) {
             disc.type = data.type;
         }
         
-        if (data.color) {
+        if (_.has(data, 'color')) {
             disc.color = data.color;
         }
         
-        if (data.notes) {
+        if (_.has(data, 'notes')) {
             disc.notes = data.notes;
         }
         
-        if (typeof(data.visible) !== 'undefined') {
+        if (_.has(data, 'visible')) {
             disc.visible = data.visible;
         }
         
-        if (data.image) {
+        if (_.has(data, 'condition')) {
+            disc.condition = data.condition;
+        }
+        
+        if (_.has(data, 'image')) {
             disc.image = data.image;
         }
         
-        if (data.weight && _.isNumber(parseInt(data.weight))) {
+        if (_.has(data, 'weight')) {
+        if (data.weight == '') {
+            disc.weight = undefined;
+        } else if ( _.isNumber(parseInt(data.weight)) && !(_.isNaN(parseInt(data.weight)))){
             disc.weight = data.weight;
         }
-        
-        if (data.speed && _.isNumber(parseInt(data.speed))) {
+    }
+    
+    if (_.has(data, 'speed')) {
+        if (data.speed == '') {
+            disc.speed = undefined;
+        } else if ( _.isNumber(parseInt(data.speed)) && !(_.isNaN(parseInt(data.speed)))){
             disc.speed = data.speed;
         }
-        
-        if (data.glide && _.isNumber(parseInt(data.glide))) {
+    }
+    
+    if (_.has(data, 'glide')) {
+        if (data.glide == '') {
+            disc.glide = undefined;
+        } else if ( _.isNumber(parseInt(data.glide)) && !(_.isNaN(parseInt(data.glide)))){
             disc.glide = data.glide;
         }
-        
-        if (data.turn && _.isNumber(parseInt(data.turn))) {
+    }
+    
+    if (_.has(data, 'turn')) {
+        if (data.turn == '') {
+            disc.turn = undefined;
+        } else if ( _.isNumber(parseInt(data.turn)) && !(_.isNaN(parseInt(data.turn)))){
             disc.turn = data.turn;
         }
-        
-        if (data.fade && _.isNumber(parseInt(data.fade))) {
+    }
+    
+    if (_.has(data, 'fade')) {
+        if (data.fade == '') {
+            disc.fade = undefined;
+        } else if ( _.isNumber(parseInt(data.fade)) && !(_.isNaN(parseInt(data.fade)))){
             disc.fade = data.fade;
         }
+    }
         
-        if (data.tagList) {
+        if (typeof data.tagList !== 'undefined') {
             disc.tagList = [];
             _.each(data.tagList, function(tag) {
                 if (tag !== "" && !_.contains(disc.tagList, tag)) {
@@ -215,7 +257,7 @@ function putDisc(userId, discId, data, callback) {
             });
         }
         
-        if (data.primaryImage) {
+        if (typeof data.primaryImage !== 'undefined') {
             console.log('Updating primary image.');
             DiscImageController.getDiscImage(userId, data.primaryImage, function(err, discImage) {
                 if (!err && discImage && !_.isEmpty(discImage)) {

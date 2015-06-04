@@ -6,32 +6,41 @@
     <link rel="stylesheet" href="/static/css/signup.css">
 </head>
 <body>
-    <div class="signup-form-container">
-        <div class="signup-form-cell">
-            <div class="signup-form-center">
-                <form action="/recover/{{recover.authorizationId}}" method="post" autocomplete="off">
-                    <h1 class="signup-title">Reset your damn password</h1>
-                    {{#if message.error}}
-                    <div class="alert alert-danger" role="alert">
-                        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                        <strong>Error: </strong>{{message.error}}
-                    </div>
-                    {{/if}}
-                    <div class="signup-form-stacked">
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                            <input class="form-control" id="password" type="password" name="password" placeholder="Password">
+    <div class="page-container container">
+        <div class="page-header">
+            <img src="/static/logo/logo_small_round.svg">
+            <h1>Create A New Password</h1>
+        </div>
+        <div>
+            Create a new password to access your account.
+        </div>
+        <div class="signup-form-container">
+            <div class="signup-form-cell">
+                <div class="signup-form-center">
+                    <form action="/recover/{{recover.authorizationId}}" method="post" id="reset-form" autocomplete="off">
+                        {{#if message.error}}
+                        <div class="alert alert-danger" role="alert">
+                            <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <strong>Error: </strong>{{message.error}}
                         </div>
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                            <input class="form-control" id="verify-password" type="password" placeholder="Verify Password" disabled>
+                        {{/if}}
+                        <div class="signup-form-stacked">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                                <input class="form-control" id="password" type="password" name="password" placeholder="Password">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                                <input class="form-control" id="verify-password" type="password" placeholder="Verify Password">
+                            </div>
+                            <button id="submit" class="btn btn-submit btn-block" type="submit">Reset</button>
                         </div>
-                        <button id="submit" class="btn btn-submit btn-block" type="submit" disabled>Reset</button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
+    <script src="/static/js/access.js"></script>
     <script src="/static/js/validation.js"></script>
 </body>
 </html>

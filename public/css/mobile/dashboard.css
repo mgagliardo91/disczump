@@ -4,7 +4,7 @@
 }
 
 .ui-page, .ui-panel {
-    padding-top: 56px;
+    padding-top: 50px;
 }
 
 .ui-panel.ui-panel-open {
@@ -23,8 +23,23 @@ body {
     display: none;
 }
 
+.navbar-btn-list .active {
+    color: #FFF;
+}
+
 .panel {
     margin: 0px;
+    background-color: transparent;
+}
+
+.panel-btn {
+    border-radius: 4px;
+    background-color: rgb(0, 142, 221);
+    color: #FFF;
+    padding: 10px 15px;
+    font-weight: bold;
+    text-align: center;
+    margin: 10px 0px 0px 0px;
 }
 
 .item-active {
@@ -53,7 +68,7 @@ body {
 }
 
 .filter-active {
-    color: blue !important;
+    color: rgb(0, 142, 221) !important;
     font-weight: bold;
 }
 
@@ -86,11 +101,31 @@ body {
     -o-webkit-overflow-scrolling: touch;
 }
 
+.custom-panel {
+    margin-bottom: 20px;
+    background-color: #fff;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 1px 1px rgba(0,0,0,.05);
+    box-shadow: 0 1px 1px rgba(0,0,0,.05);
+}
+
+.custom-panel > .list-group .list-group-item {
+    border-width: 1px 0;
+    border-radius: 0;
+}
+
+.custom-panel > .list-group:last-child .list-group-item:last-child {
+  border-bottom: 0;
+  border-bottom-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
 .panel-dark {
     border-color: #949494;
 }
 
-.panel-dark > .panel-heading {
+.panel-heading {
     background-color: #CDCDCD;
     border-color: #949494;
     text-align: center;
@@ -110,6 +145,11 @@ a.panel-link-item {
 
 .list-group {
     margin-bottom: 0px;
+}
+
+.list-group-item:first-child {
+    border-width: 1px 0px;
+    border-radius: 0px;
 }
 
 .colorize-list-group {
@@ -158,7 +198,6 @@ a.panel-link-item {
 
 .disc-options {
     position: absolute;
-    background-color: blue;
     width: 150px;
     height: 100%;
     top: 0;

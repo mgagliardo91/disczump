@@ -11,7 +11,7 @@
 
 .signup-form-cell {
      width: 100%;
-     padding-top: 100px;
+     padding: 20px 0px;
      display: table-cell;
      text-align: center;
      vertical-align: middle;
@@ -20,7 +20,7 @@
 .signup-form-center {
      display: inline-block;
      text-align: center;
-     width: 300px;
+     width: 500px;
 }
 
 .input-group {
@@ -41,8 +41,23 @@
      padding: 10px;
 }
 
-@media screen and (max-height: 700px) {
-     .signup-form-cell {
-          padding-top: 100px !important;
-     }
+.input-group-inline > div.inline {
+     width: 48%;
+}
+
+.input-group-inline > div.inline:first-child {
+     float: left;
+}
+
+.input-group-inline > div.inline:nth-of-type(2) {
+     float: right;
+}
+
+.input-group-inline + div {
+     clear: both;
+}
+
+#citystate {
+  line-height: 34px;
+  font-weight: bold;
 }

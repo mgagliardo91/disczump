@@ -5,51 +5,110 @@
     user-select: none;
 }
 
-.navbar-text {
-    margin-right: 0px;
+/*Overrides Bootstrap tooltip max-width*/
+.tooltip-inner {
+	max-width: 300px;
+}
+
+/*Overrides Bootstrap tooltip z-index*/
+.tooltip {
+	z-index: 800;
 }
 
 .fa-tools {
     padding-right: 10px;
 }
 
-.nav-search {
-	margin-top: 8px;
-	margin-bottom: 8px;
-	border-top: 1px solid transparent;
-	border-bottom: 1px solid transparent;
-	width: 20%;
-	float: left;
-	margin-left: 20px;
+.full-height {
+	height: 100%;
 }
 
-.nav-view {
-	display: none;
-	float: right;
+.zump-navbar {
+	z-index: 2000;
 	height: 50px;
+	margin-bottom: 20px;
 }
 
-.nav-view > div {
+.zump-navbar-fixed-top {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+
+.zump-navbar-header {
+	margin: 0px;
+}
+
+.zump-nav {
+	margin: 0px;
+	list-style: none;
+}
+
+.zump-nav > li {
+	float: left;
+	position: relative;
+	display: block;
+}
+
+
+.zump-nav > li > a {
+	position: relative;
+	display: block;
+	padding: 10px 15px;
+	color: #999;
+	text-decoration: none;
+}
+
+.zump-navbar-dropdown > .dropdown-toggle:hover {
+	color: #FFF;
+}
+
+.zump-navbar-dropdown > .dropdown-toggle i {
+	padding-left: 5px;
+}
+
+.zump-navbar-dropdown-menu {
+	margin-top: 0;
+	border-top-right-radius: 0;
+	border-top-left-radius: 0;
+	left: auto;
+	right: 0;
+}
+
+.navbar-btn-container {
+	display: table;
+}
+
+.navbar-btn-list {
 	display: table-cell;
 	vertical-align: middle;
 }
 
-.nav-view-label {
-	color: #fff; 
-	font-weight: bold;
-	margin-right: 10px;
+.navbar-btn-list a {
+	color: rgb(134, 134, 134);
 }
 
-ul.nav {
-     padding: 0px 20px;
+.navbar-btn-list a:hover {
+	text-decoration: none;
+	color: rgb(0, 142, 221);
 }
 
-.modal-dialog {
-    z-index: 2000;
+.nav-btn {
+	border: 1px solid rgb(134, 134, 134);
+	border-radius: 5px;
+	padding: 8px 10px;
+	margin: 0px 5px;
+}
+
+.navbar-btn-list a:hover .nav-btn {
+	cursor: pointer;
+	border: 2px solid rgb(0, 142, 221);
+	margin: 0px 4px;
 }
 
 .div-inline {
-    display: inline-block;
+    display: inline-block !important;
 }
 
 .float-left {
@@ -60,26 +119,20 @@ ul.nav {
     float: right;
 }
 
-.no-select {
-    -moz-user-select: none;
-    -khtml-user-select: none;
-    -webkit-user-select: none;
-    user-select: none;
-}
+/*.navbar-center .navbar-brand {*/
+/*    float: none;*/
+/*    cursor: pointer;*/
+/*}*/
 
-.navbar {
-	z-index: 1000;
-}
-
-.navbar-center .navbar-brand {
-    float: none;
-    cursor: pointer;
+.navbar-logo {
+	font-size: 1.4em;
+	color: rgb(134, 134, 134);
 }
 
 .image-link {
 	padding-top: 0px !important;
 	padding-bottom: 0px !important;
-	margin-top: 5px !important;
+	/*margin-top: 5px !important;*/
 }
 
 .image-link > img {
@@ -87,6 +140,25 @@ ul.nav {
 	max-width: 40px !important;
 	max-height: 40px;
 	margin-right: 5px;
+}
+
+.image-link > .user-icon-default {
+	text-align: center;
+}
+
+.image-link > .user-icon-default > i {
+	width: 40px;
+	height: 40px;
+	font-size: 30px;
+	padding-top: 5px;
+	padding-left: 0px;
+	margin-right: 5px;
+	background-color: #fff;
+	color: #999;
+}
+
+.image-link > .user-icon-default > i:hover {
+	color: #999;
 }
 
 .nav-logo {
@@ -139,23 +211,6 @@ ul.nav {
 	margin-bottom: 0px !important;
 }
 
-.nav.navbar-nav {
-    z-index: 1000;
-}
-
-@media (max-width: 767px) {
-	.btn-inverse {
-		border: 1px solid transparent !important;
-		border-radius: 4px !important;
-		border-color: #333 !important;
-		margin-left: 15px !important;
-	}
-	
-	#nav-filter.active {
-		border-color: #fff !important;
-    }
-}
-
 .page-alert {
 	position: absolute;
 	z-index: 5000;
@@ -173,7 +228,7 @@ ul.nav {
 }
 
 .page-container {
-	padding-top: 100px;
+	padding-top: 20px;
 	max-width: 600px;
 }
 
@@ -201,4 +256,26 @@ ul.nav {
 a.btn-facebook:hover {
 	background-color: #2E467B;
 	color: #fff;
+}
+
+@media (max-width: 767px) {
+	.btn-inverse {
+		border: 1px solid transparent !important;
+		border-radius: 4px !important;
+		border-color: #333 !important;
+		margin-left: 15px !important;
+	}
+	
+	#nav-filter.active {
+		border-color: #fff !important;
+    }
+}
+
+.page-header > h1{
+  line-height: 50px;
+  margin-left: 70px;
+}
+
+.page-header > img {
+	float: left;
 }

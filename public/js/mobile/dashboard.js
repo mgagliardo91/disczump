@@ -1,4 +1,4 @@
-var $navFilter;
+var $navSettings;
 var $sidePanel;
 var $discInventory;
 var $discInventoryList;
@@ -15,11 +15,12 @@ $(document).on("pagecreate", "#disc-inventory", function () {
     
     $discInventory = $('#disc-inventory');
     $discInventoryList = $('#disc-inventory-container');
-    $navFilter = $('#nav-filter');
+    $navSettings = $('#nav-settings');
     $sidePanel = $('#side-panel');
     
     
-    $navFilter.on('vclick', function(e){
+    $navSettings.on('vclick', function(e){
+        console.log('clicked');
         e.stopPropagation();
         $sidePanel.panel('toggle');
         return false;
@@ -27,16 +28,20 @@ $(document).on("pagecreate", "#disc-inventory", function () {
     
     $sidePanel.on("panelopen", function (event, ui) { 
         $discInventoryList.css('overflow', 'hidden');
-        $navFilter.addClass('active');
+        $navSettings.addClass('active');
         $sidePanel.on("touchmove", function() {
             return false;
         });
     }).on("panelclose", function (event, ui) {
         $discInventoryList.css('overflow', 'auto');
-        $navFilter.removeClass('active');
+        $navSettings.removeClass('active');
         $sidePanel.off("touchmove");
         $('.panel').hide();
         $('.panel-main').show();
+    });
+    
+    $('#add-disc-btn').on('vclick', function() {
+        //open add disc panel
     });
     
     $(document).on('swiperight', '#disc-inventory > .ui-panel-wrapper', function(e) {
@@ -195,7 +200,7 @@ var ZumpInventory = function(opt) {
     //----------------------\
     // Javascript Objects
     //----------------------/
-    var swipeThreshold = 50;
+    var swipeThreshold = 30;
     var xCoord = -1;
     var yCoord;
     var isSwipe = false;
@@ -286,6 +291,12 @@ var ZumpInventory = function(opt) {
            $(this).addClass('vdown');
         }).on('vmouseup', '.disc-options > div', function(){
            $(this).removeClass('vdown'); 
+        });
+        
+        $(document).on('vclick', '.disc-item', function() {
+           var id = $(this).attr('discid');
+           
+           location.href = '/disc/' + id;
         });
     }
     

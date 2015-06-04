@@ -24,6 +24,92 @@ function isDef(obj) {
 	return typeof obj !== 'undefined';
 }
 
+function getCityState(zipcode, callback) {
+	var success = false;
+	var retData;
+	$.ajax({
+		type: "GET",
+		dataType: "json",
+		url: 'https://api.zippopotam.us/us/' + zipcode,
+		success: function (data) {
+			if (data.places.length) {
+			    var place = data.places[0];
+			    retData = place['place name'] + ", " + place['state abbreviation'];
+			} else {
+				retData = 'Unknown';
+			}
+			success = true;
+		},
+		error: function (request, textStatus, errorThrown) {
+		   if (request.status == 404) {
+		   		retData = 'Invalid zip code';
+		   }
+		},
+		complete: function() {
+			if (callback) {
+				callback(success, retData);
+		   }
+		}
+	});
+}
+
+function resetPassword(currentPw, newPw, callback) {
+	var success = false;
+	var retData;
+	var reset = {'currentPw': currentPw, 'newPw': newPw};
+	$.ajax({
+		type: "PUT",
+		dataType: "json",
+		url: url + '/account/reset',
+		contentType: "application/json",
+		data: JSON.stringify(reset),
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+		   console.log(request.responseText);
+		   console.log(textStatus);
+		   console.log(errorThrown);
+		   retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
+		},
+		complete: function(){
+		   if (callback) {
+				callback(success, retData);
+		   }
+		}
+	});
+}
+
+function putAccount(account, callback) {
+	var success = false;
+	var retData;
+	$.ajax({
+		type: "PUT",
+		dataType: "json",
+		url: url + '/account',
+		contentType: "application/json",
+		data: JSON.stringify(account),
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+		   console.log(request.responseText);
+		   console.log(textStatus);
+		   console.log(errorThrown);
+		   retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
+		},
+		complete: function(){
+		   if (callback) {
+				callback(success, retData);
+		   }
+		}
+	});
+}
+
 function getAllDiscImages(discId, callback) {
 	var success = false;
 	var retData;
@@ -185,6 +271,47 @@ function getUserPreferences(callback) {
      });
 }
 
+function updatePreferences(prefs, callback) {
+        var success = false;
+        var type = typeof prefs === 'undefined' ? 
+        	'POST' : 'PUT';
+    	var retData = {};
+        $.ajax({
+    		type: type,
+    		dataType: "json",
+    		data: JSON.stringify(prefs),
+    		url: url + 'account/preferences',
+    		contentType: "application/json",
+    		success: function (data) {
+    		   	retData = {'error' : {message : 'Unable to process request.', type : 'Unknown Error'}};
+    			
+    			if (!data) {
+    				success = false;
+    				return;
+    			}
+    			
+    			if (data.error) {
+    				retData = data.error;
+    				success = false;
+    				return;
+    			}
+    			
+    			retData = data;
+    			success = true;
+    		},
+    		error: function (request, textStatus, errorThrown) {
+    			console.log(request.responseText);
+    			console.log(textStatus);
+    			console.log(errorThrown);
+    		},
+    		complete: function(){
+    			if (callback) {
+    				callback(success, retData);
+    			}
+    		}
+         });
+    }
+
 function postDisc(disc, callback) {
 	var success = false;
 	var retData;
@@ -219,7 +346,7 @@ function putDisc(disc, callback) {
 	$.ajax({
 		type: "PUT",
 		dataType: "json",
-		url: url + '/discs/' + disc._id,
+		url: url + 'discs/' + disc._id,
 		contentType: "application/json",
 		data: JSON.stringify(disc),
 		success: function (data) {
@@ -247,7 +374,7 @@ function deleteDisc(discId, callback) {
 	$.ajax({
 		type: "DELETE",
 		dataType: "json",
-		url: url + '/discs/' + discId,
+		url: url + 'discs/' + discId,
 		contentType: "application/json",
 		success: function (data) {
 			var retVal = validateServerData(data);

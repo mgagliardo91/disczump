@@ -14,7 +14,8 @@ var pageSettings = {
 var mySort;
 var myFilter;
 var myGallery;
-var searchRequest;
+var myZumpColorPicker;
+var zipValidation;
 
 var discList = [];
 var discs = [];
@@ -23,6 +24,7 @@ var dropzones = [];
 var changeObject = {};
 var fnLock = false;
 
+var activePage;
 var refPageTop;
 var refContBottom;
 var isFixed = false, isHidden = false;
@@ -31,11 +33,17 @@ var imgArray = new Array();
 var userPrefs;
 var pageEvents = {};
 
+var chartProp;
+var chartPropName;
+var chartType;
+
+activePage = $('.sidebar-nav-toolbar').find('.sidebar-nav-select.active').attr('nav-select');
+
 $(document).ready(function(){
    
-   /* Variables */
-   
-    $searchResults = $('#search-results');
+   	/* Variables */
+   	
+    $searchResults = $('#sidebar-search');
     $searchBar = $('#search-all');
 	$filterResults = $('#filter-results');
 	$filterContainer = $('#filter-container');
@@ -43,236 +51,281 @@ $(document).ready(function(){
 	$inventoryHeader = $('#inventory-header');
     $inventoryContainer = $('.disc-inventory-container');
     $dynamicHeader = $('#disc-inventory-header-dynamic');
-   
+   	
     /* Initial Commands */
-   
-   $('.page').hide();
-   
-   /* Logic */
+   	$('.page').hide();
+   	
+   	/* Logic */
     refPageTop = $('body').outerHeight() - $('body').height() - $('nav').outerHeight();
     refContBottom = refPageTop + $inventoryContainer.outerHeight() - $inventoryHeader.outerHeight();
      
 	$.ajaxSetup({ cache: true });
 	$.getScript('//connect.facebook.net/en_UK/all.js', function(){
 		FB.init({
-		  appId: '1433417853616595',
+			appId: '1433417853616595',
 		});
 	}); 
-   
-   /* Event Listeners */
-   
-   $('.nav-sidebar > li').click(function(e){
-       e.stopPropagation();
-       var $this = $(this);
-       var nav = $(this).attr('pg-select');
-       var $page = $(nav);
-       var $curPage = $('.page:visible');
-       
-       if (!$curPage.length) {
-           if (isDef(pageEvents[$curPage.attr('id')])) {
-               pageEvents[$curPage.attr('id')](false);
-           }
+   	
+   	/* Event Listeners */
+	$('.sidebar-nav-select').click(function(e) {
+		e.stopPropagation();
+    	var $this = $(this);
+    	var nav = $this.attr('nav-select');
+       	var $nav = $(nav);
+       	var $curNav = $('.nav-sidebar:visible');
+       	
+       	if ($nav.length && !$nav.is(':visible')) {
+       		activePage = nav;
+       		$curNav.fadeOut(100, function() {
+				$this.addClass('active').siblings('.sidebar-nav-select').removeClass('active');
+       			$nav.fadeIn(100);
+       		});
+       	}
+	});
+	
+   	$('.nav-sidebar li.sidebar-select').click(function(e){
+    	e.stopPropagation();
+       	var $this = $(this);
+       	var nav = $(this).attr('pg-select');
+       	var $page = $(nav);
+       	var $curPage = $('.page:visible');
+       	
+       	if (!$curPage.length) {
+           	if (isDef(pageEvents[$curPage.attr('id')])) {
+            	pageEvents[$curPage.attr('id')](false);
+           	}
             $page.fadeIn(100, function() {
-                $this.addClass('active');
+            	$this.addClass('active');
                 if (isDef(pageEvents[$page.attr('id')])) {
-                   pageEvents[$page.attr('id')](true);
-               }
+                	pageEvents[$page.attr('id')](true);
+               	}
             });
             return;
-       }
+       	}
        
-       if ($page.length && !$page.is(':visible')) {
-           $curPage.fadeOut(100, function() {
-               if (isDef(pageEvents[$curPage.attr('id')])) {
-                   pageEvents[$curPage.attr('id')](false);
-               }
-               $('.nav-sidebar > li').removeClass('active');
+       	if ($page.length && !$page.is(':visible')) {
+           	$curPage.fadeOut(100, function() {
+               	if (isDef(pageEvents[$curPage.attr('id')])) {
+                	pageEvents[$curPage.attr('id')](false);
+               	}
+               	$('.nav-sidebar > li').removeClass('active');
                 $page.fadeIn(100, function() {
                     $this.addClass('active');
                     if (isDef(pageEvents[$page.attr('id')])) {
-                       pageEvents[$page.attr('id')](true);
-                   }
+                		pageEvents[$page.attr('id')](true);
+                   	}
                 });
-           });
-       } else {
-           $this.addClass('active').siblings().removeClass('active');
-       }
-       
-      return false;
-   });
-   
-   $(window).on('resize', function() {
-     	console.log('resizing');
-        //resizeSearch($searchResults, $searchBar, true); 
+           	});
+       	} else {
+           	$this.addClass('active').siblings().removeClass('active');
+       	}
+       	
+      	return false;
+   	});
+   	
+   	$(window).on('resize', function() {
         resizeResultHeader();
-    });
+        resizeTagLists();
+        resizeSidebar();
+   	});
      
     $(window).scroll(function(){
     	var curTop = $(window).scrollTop();
-    	var heightRemaining = $('body').height() - ($(window).height() - curTop);
-    	console.log(heightRemaining);
-    	if (!isFixed && curTop >= refPageTop) {
-    		var headerTop = $inventoryHeader.offset().top;
-    		$inventoryHeader.addClass('header-fixed');
-    		$inventoryHeader.css({
+    	var heightRemaining = $('body').outerHeight() - curTop - $(window).outerHeight();
+    	if (!isFixed && curTop >= refPageTop && heightRemaining > $inventoryHeader.outerHeight() + 20) {
+			var headerTop = $inventoryHeader.offset().top;
+			$inventoryHeader.addClass('header-fixed');
+			$inventoryHeader.css({
 				top: $('nav').outerHeight()
 			});
 			isFixed = true;
-    	}
+		}
     	
-    	if (isFixed &&  curTop < refPageTop) {
-    		$inventoryHeader.removeClass('header-fixed');
+		if (isFixed &&  curTop < refPageTop) {
+			$inventoryHeader.removeClass('header-fixed');
 			isFixed = false;
-    	}
+		}
     });
      
     $(window).click(function(e) {
-    	$.each($('.hide-on-close'), function(index) {
-    		if ($(this).is(':visible')) {
-	     		$(this).hide();
-	     	}	
+		$.each($('.hide-on-close'), function(index) {
+			if ($(this).is(':visible')) {
+				$(this).hide();
+			}	
      	});
-     });
-     
-     $('#gallery-select').click(function(e) {
-     });
-     
-     $('.nav-view').css('display', 'table');
-     
-     $searchBar.focusin(function(){
-     	$(this).trigger('keyup');
-     }).on('keyup', function(){
-     	delay(function(){
-	     	if ($searchBar.val().length > 0) {
-	     		if (!$searchResults.is(':visible')) {
-	     			$searchResults.show();
-	     		}
-	               doSearch();
-	          } else {
-	               $searchResults.hide();
-	          }
-		}, 200 );
-     }).click(function(e) { e.stopPropagation(); });
-     
-     $('#search-request').click(function() {
-     	$searchBar.focus();
-     });
-	  
-	  $(document).on('click', '.result-item:not(.result-item-empty)', function(e) {
-	  		e.stopPropagation();
-	  		var $parent = $(this).parents('.result-section');
-			var option = $parent.attr('id').match(/-([a-zA-Z]+)/)[1];
-			var val = $(this).text();
-			
-			if (option == 'name') {
-	  			$searchBar.val(val).attr('readonly', true);
-	  			$searchBar.bind('click', searchLock);
-	  			myFilter.filterOnly(option, val);
-	  		} else {
-	  			$searchBar.val('');
-				myFilter.pushFilterItem(option, val, true);
-	  		}
-			
-	  		$searchResults.hide();
-	  });
+    });
+
+	//--------------Search Bar--------------//
+
+	$searchBar.focusin(function() {
+		$(this).trigger('keyup');
+    }).on('keyup', function() {
+		delay(function() {
+			if ($searchBar.val().length > 0) {
+				if (!$searchResults.is(':visible')) {
+					$(activePage).hide();
+					$searchResults.show();
+				}
+				doSearch();
+			} else {
+				$searchResults.hide();
+				$(activePage).show();
+			}
+	}, 100 );
+    }).click(function(e) {
+    	e.stopPropagation();
+    });
+    
+    $('#sidebar-search').focusout(function() {
+    	$searchResults.hide();
+		$(activePage).show();
+    });
+    
+    $(document).click(function(e) {
+    	if ($searchResults.is(':visible')) {
+    		if (!$(e.target).closest('#sidebar-search').length) {
+		        $searchResults.hide();
+				$(activePage).show();
+		    }
+    	}
+	});
+	
+	$(document).on('mouseenter', '#search-results-container li', function() {
+		$(this).find('.fa-search-results').show();
+	}).on('mouseleave', '#search-results-container li', function() {
+		$(this).find('.fa-search-results').hide();
+	});
+	
+	$(document).on('click', '.result-section-output li:not(.result-item-empty)', function(e) {
+		e.stopPropagation();
+		var $parent = $(this).parents('.result-section');
+		var option = $parent.attr('id').match(/-([a-zA-Z]+)/)[1];
+		var val = $(this).text();
+		
+		$searchBar.val('');
+		myFilter.clearFilters();
+		myFilter.pushFilterItem(option, val, true);
+		$searchResults.hide();
+		$(activePage).show();
+	});
 	 
-	 $(document).on('click', '.fa-delete-disc-item', function() {
-	 	deleteConfirmationModal($(this).parents('.disc-item').attr('discid'));
-	 });
+	$(document).on('click', '.fa-delete-disc-item', function() {
+		var discId = $(this).parents('.disc-item').attr('discid');
+		var text = 'Are you sure you want to delete this disc and all of its data?';
+		generateConfirmationModal('WARNING!', text, 'Delete', function($btn, $inner, done) {
+			deleteDisc(discId, function(success, data) {
+				if (success) {
+					discs = _.filter(discs, function(disc){
+						return disc._id != data._id;
+					});
+					updateFilter(true);
+				} else {
+					// error logic
+				}
+				done();
+			});
+		});
+	});
+	
+	$(document).on('click', '.fa-edit-disc-item', function() {
+	var disc = getDisc($(this).parents('.disc-item').attr('discid'));
+		generateDiscInputForm(disc);
+	});
 	 
-	 $(document).on('click', '.fa-edit-disc-item', function() {
-	 	var disc = getDisc($(this).parents('.disc-item').attr('discid'));
-	 	generateDiscInputForm(disc);
-	 });
-	 
-	 $(document).on('click', '.fa-share-disc-item', function() {
-	 	var disc = getDisc($(this).parents('.disc-item').attr('discid'));
-	 	var winTop = ($(window).height() / 2) - (300 / 2);
-        var winLeft = ($(window).width() / 2) - (600 / 2);
+	$(document).on('click', '.fa-share-disc-item', function() {
+		var disc = getDisc($(this).parents('.disc-item').attr('discid'));
+		var winTop = ($(window).height() / 2) - (300 / 2);
+		var winLeft = ($(window).width() / 2) - (600 / 2);
         window.open('http://www.facebook.com/sharer/sharer.php?app_id=1433417853616595&u=https://disczumpserver-mgagliardo.c9.io/disc/' + disc._id + 
         	'&display=popup&ref=plugin&src=share_button', 'sharer', 'top=' + winTop + ',left=' + winLeft + ',toolbar=0,status=0,width=' + 600 + ',height=' + 300);
-	 });
+	});
 	 
-	 $(document).on('click', '.fa-visible-disc-item', function() {
-	 	var disc = getDisc($(this).parents('.disc-item').attr('discid'));
-	 	disc.visible = !disc.visible;
-	 	putDisc(disc, function(success, retData) {
-	 		if (success) {
-	 			discs = _.filter(discs, function(disc){
+	$(document).on('click', '.fa-visible-disc-item', function() {
+		var disc = getDisc($(this).parents('.disc-item').attr('discid'));
+		disc.visible = !disc.visible;
+		putDisc(disc, function(success, retData) {
+			if (success) {
+				discs = _.filter(discs, function(disc){
 					return disc._id != retData._id;
 				});
 				discs.push(retData);
-				console.log('Saved disc changes.');
-	 			updateDiscItem(disc);
-	 		} else {
-	 			console.log(generateError(retData.message, 'ERROR'));
-	 		}
-	 	});
-	 });
+				updateDiscItem(disc);
+			} else {
+				console.log(generateError(retData.message, 'ERROR'));
+			}
+		});
+	});
 	 
-	 $(document).on('click', '.disc-info-tag', function() {
-	 	myFilter.pushFilterItem('tagList', $(this).text());
-	 });
+	$(document).on('click', '.disc-info-tag', function() {
+		myFilter.pushFilterItem('tagList', $(this).text());
+	});
 	 
-	 $(document).on('click', '.disc-content-image', function(e) {
-	 	var discItem = $(this).parents('.disc-item');
-	 	var disc = getDisc(discItem.attr('discid'));
-	 	
-	 	getAllDiscImages(disc._id, function(success, images) {
-	 		if (success && images.length > 0) {
-	 			var zumpLightbox = new ZumpLightbox({
-			 		content: {
-			 			imageArray: images,
-			 			defaultImage: disc.primaryImage
-			 		},
-			 		onCreate: function($lightbox) {
-			 			console.log('Created.')
-			 		},
-			 		onShow: function($lightbox) {
-			 			console.log('Showed.')
-			 		},
-			 		onHide: function() {
-			 			console.log('Hidden');
-			 		}
-			 	});
-			 	
-			 	zumpLightbox.showLightbox();
-	 		}
-	 	});
-	 });
+	$(document).on('click', '.disc-content-image', function(e) {
+		var discItem = $(this).parents('.disc-item');
+		var disc = getDisc(discItem.attr('discid'));
+		
+		getAllDiscImages(disc._id, function(success, images) {
+			if (success && images.length > 0) {
+				var zumpLightbox = new ZumpLightbox({
+					content: {
+						imageArray: images,
+						defaultImage: disc.primaryImage
+					},
+					onCreate: function($lightbox) {
+					},
+					onShow: function($lightbox) {
+					},
+					onHide: function() {
+					}
+				});
+				zumpLightbox.showLightbox();
+			}
+		});
+	});
 
-	 $('#page-back').click(function(){
-	 	paginateOptions.currentPage -= 1;	
-	 	showDiscs(true);
-	 });
-	 
-	 $('#page-forward').click(function(){
-	 	paginateOptions.currentPage += 1;
-	 	showDiscs(true);	
-	 });
-	 
-	 $('#paginate-display-count').on('change', function(){
-	 	var val = $(this).val();
-	 	val = parseInt(val);
-	 	if (_.isNaN(val)) {
-	 		paginateOptions.displayCount = -1;
-	 		paginateOptions.currentPage = 1;
-	 	} else {
-	 		paginateOptions.displayCount = parseInt(val);
-	 	}
-	 	
-	 	showDiscs();
-	 });
-	 
-	 $('#export-list').click(function(e){
-	 	exportList();
-	 });
-	 
-	 $('#create-disc-modal').click(function(e){
-	 	generateDiscInputForm();
-	 });
+	$(document).on('vmouseup', 'input[type="text"]', function(e) {
+		e.stopImmediatePropagation();
+		e.stopPropagation();
+		return false;
+	});
 	
-	$(document).on('click', '.image-preview:not(.active)', function(){
+	$('#page-back').click(function(){
+		paginateOptions.currentPage -= 1;	
+		showDiscs(true);
+	});
+	
+	$('#page-forward').click(function(){
+		paginateOptions.currentPage += 1;
+		showDiscs(true);	
+	});
+	
+	$(document).on('click', '.page-dynamic:not(.active)', function() {
+		paginateOptions.currentPage = parseInt($(this).text(), 10);
+		showDiscs(true);
+	});
+	
+	$('#paginate-display-count').on('change', function(){
+		var val = $(this).val();
+		val = parseInt(val);
+		if (_.isNaN(val)) {
+			paginateOptions.displayCount = -1;
+			paginateOptions.currentPage = 1;
+		} else {
+			paginateOptions.displayCount = parseInt(val);
+		}
+		
+		showDiscs();
+	});
+	
+	$('#export-list').click(function(e){
+		exportList();
+	});
+	
+	$(document).on('click', '#create-disc-modal', function() {
+		generateDiscInputForm();
+	});
+	
+	$(document).on('click', '.image-preview:not(.active)', function() {
 		var src = $(this).children('img').attr('src');
 		var $blockDisplay = $(this).parents('.image-block-display');
 		var $primAryimage = $blockDisplay.find('#disc-primary-image');
@@ -290,12 +343,387 @@ $(document).ready(function(){
 	}).on('mouseleave', '.image-item', function(){
 		$(this).find('.image-overlay').hide();
 	});
-     
-     $('#search-request').click(function() {
-     	$searchBar.focus();
-     });
-  
-    /* Library Objects */
+	
+    $('#search-request').click(function() {
+    	$searchBar.focus();
+    });
+    
+    /*===================================================================*/
+	/*                                                                   */
+	/*                    Account Settings Listeners                     */
+	/*                                                                   */
+	/*===================================================================*/
+    
+    $('#accountSave').click(function() {
+    	$('#accountForm').find('.alert').remove();
+    	
+    	if (!zipValidation.isAllValid()) {
+    		return $('#accountForm').prepend(generateError('Invalid zip code.', 'ERROR'));
+    	}
+    	
+    	var alias = $('#accountAlias').val();
+    	var zipCode = $('#accountZipCode').val();
+    	var pdga = $('#accountPDGA').val();
+    	
+    	putAccount({
+    		alias : alias,
+    		zipCode: zipCode,
+    		pdgaNumber: pdga
+    	}, function(success, retData) {
+    		if (success) {
+    			$('#accountAlias').val(retData.alias);
+    			$('#accountZipCode').val(retData.zipCode).parent().removeClass('has-success');
+    			$('#accountPDGA').val(retData.pdgaNumber);
+    			$('#accountForm').prepend(generateSuccess('Account successfully updated.', 'Success'));
+    			autoCloseAlert($('#accountForm').find('.alert'), 3000);
+    		}
+    	});
+    });
+    
+    var changePasswordValidate = new ZumpValidate({
+        items: [
+            {id:'new-password', type: 'text', min: 6, hint: 'Password must be at least 6 characters in length.'},
+            {id:'confirm-password', type:'compare', refId:'new-password'}
+        ]
+    });
+    
+    $('#change-password-save').click(function() {
+    	$('#accountActionsForm').find('.alert').remove();
+    	
+    	var currentPassword = $('#current-password').val();
+    	var newPassword = $('#new-password').val();
+    	var confirmPassword = $('#confirm-password').val();
+    	
+    	// check new == confirm
+    	if (changePasswordValidate.isAllValid()) {
+    		resetPassword(currentPassword, newPassword, function(success, retData) {
+	    		if (success) {
+	    			$('#accountActionsForm').prepend(generateSuccess('Password has been changed successfully.', 'Success'));
+	    			autoCloseAlert($('#accountActionsForm').find('.alert'), 3000);
+	    			$('#current-password').val('');
+			    	$('#new-password').val('').parent().removeClass('has-success');
+			    	$('#confirm-password').val('').parent().removeClass('has-success');
+	    		} else {
+	    			$('#accountActionsForm').prepend(generateError(retData.message, retData.type));
+	    			$('#current-password').val('');
+			    	$('#new-password').val('').parent().removeClass('has-success has-error');
+			    	$('#confirm-password').val('').parent().removeClass('has-success has-error');
+	    		}
+	    	});
+    	} else {
+    		$('#accountActionsForm').prepend(generateError('New password and confirmed password do not match.', 'ERROR'));
+    		$('#current-password').val('');
+	    	$('#new-password').val('').parent().removeClass('has-success has-error');
+	    	$('#confirm-password').val('').parent().removeClass('has-success has-error');
+    	}
+    });
+    
+    $('#account-delete').click(function() {
+    	var text = 'Are you sure you want to delete your account?';
+    	generateConfirmationModal('WARNING!', text, 'Delete', function() {
+			window.location.href = '/profile/delete';
+		});
+    });
+    
+    $('#password-accordion-label').click(function(e) {
+        var $chevron = $(this).find('.fa');
+        if ($chevron.hasClass('fa-chevron-right')) {
+            $chevron.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+        } else {
+            $chevron.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+        }
+        $('#expand-change-password').collapse('toggle');
+    });
+    
+    /*===================================================================*/
+	/*                                                                   */
+	/*                       Preferences Listeners                       */
+	/*                                                                   */
+	/*===================================================================*/
+    
+    $('#default-settings-save').click(function() {
+    	$('#preferences-form').find('.alert').remove();
+    	
+    	var defaultView = $('#default-view').val();
+    	var displayCount = $('#display-count').val();
+    	var galleryCount = $('#items-per-row').val();
+    	var primarySort	= $('#sort-order-primary').val();
+    	var primarySortDirection = $('#sort-order-primary-direction').val() == 'Ascending' ? true : false;
+    	var secondarySort	= $('#sort-order-secondary').val();
+    	var secondarySortDirection = $('#sort-order-secondary-direction').val() == 'Ascending' ? true : false;
+    	var enableSecondarySort = $('#enable-secondary-sort').is(':checked');
+    	var defaultSortArray;
+    	
+    	if (enableSecondarySort) {
+    		if (primarySort == secondarySort) {
+	    		$('#preferences-form').prepend(generateError('Sort properties must be different.', 'ERROR'));
+	    		return;
+	    	} else {
+	    		defaultSortArray = [{property : primarySort, sortAsc : primarySortDirection}, {property : secondarySort, sortAsc : secondarySortDirection}];
+	    	}
+    	} else {
+    		defaultSortArray = [{property : primarySort, sortAsc : primarySortDirection}];
+    	}
+    	
+    	updatePreferences({
+    		displayCount : displayCount,
+    		defaultSort : defaultSortArray,
+    		defaultView : defaultView,
+    		galleryCount : galleryCount
+    	}, function(success, retData) {
+    		if (success) {
+    			$('#preferences-form').prepend(generateSuccess('Default settings saved successfully. Changes will take effect when page is <a href="/">reloaded</a>.', 'Success'));
+    			userPrefs = retData;
+    		}
+    	});
+    });
+    $('#default-settings-restore').click(function() {
+    	var text = 'Are you sure you want to restore your preferences?';
+    	
+    	generateConfirmationModal('Warning!', text, 'Restore', function() {
+			updatePreferences(undefined, function(success, retData) {
+	    		if (success) {
+	    			$('#preferences-form').prepend(generateSuccess('Default settings have been restored. Changes will take effect when page is <a href="/">reloaded</a>.', 'Success'));
+	    			userPrefs = retData;
+	    		}
+	    	});
+		});
+    });
+    
+    $('#colorize-save').click(function() {
+    	$('#colorize-form').find('.alert').remove();
+    	
+    	var colorizeVisibility = $('#colorize-visibility').bootstrapSwitch('state');
+    	var distance = $('#colorize-distance-driver').css('background-color');
+    	var fairway = $('#colorize-fairway-driver').css('background-color');
+    	var mid = $('#colorize-mid-range').css('background-color');
+    	var putter = $('#colorize-putt-approach').css('background-color');
+    	var mini = $('#colorize-mini').css('background-color');
+    	
+    	updatePreferences({
+    		colorizeVisibility : colorizeVisibility,
+    		colorize : {
+    			distance : distance,
+    			fairway : fairway,
+    			mid : mid,
+    			putter : putter,
+    			mini : mini
+    		}
+    	}, function(success, retData) {
+    		if (success) {
+    			$('#colorize-form').prepend(generateSuccess('Colorize settings saved successfully.', 'Success'));
+    			autoCloseAlert($('#colorize-form').find('.alert'), 3000);
+    			userPrefs = retData;
+    			showDiscs(true);
+    		}
+    	});
+    });
+    
+    $('#enable-secondary-sort').change(function() {
+		if ($(this).is(':checked')) {
+			$('#sort-order-secondary').removeAttr('disabled');
+			$('#sort-order-secondary-direction').removeAttr('disabled');
+		} else {
+			$('#sort-order-secondary').attr('disabled', 'disabled');
+			$('#sort-order-secondary-direction').attr('disabled', 'disabled');
+		}
+	});
+	
+	$('.colorize-item').click(function() {
+		var $this = $(this);
+		myZumpColorPicker.getColor($this, function(success, color) {
+			$this.css('backgroundColor', color);
+		});
+	});
+	
+    /*===================================================================*/
+	/*                                                                   */
+	/*                       Statistics Listeners                        */
+	/*                                                                   */
+	/*===================================================================*/
+	
+	$('#render-graph').click(function() {
+		var prop = $('#graph-base').val();
+		var type = $('#graph-type').val();
+		generatePlot(prop, type);
+	});
+	
+	//
+    // Start on-load commands
+    //
+    pageEvents['pg-gallery'] = function(showing) {
+        if (showing) {
+    		pageSettings.tableMode = false;
+    	    showDiscGallery();
+        } else {
+     		pageSettings.tableMode = true;
+        }
+    }
+    pageEvents['pg-dashboard'] = function(showing) {
+    	if (showing) {
+			resizeResultHeader();
+			resizeTagLists();
+    	}
+    }
+    resizeSidebar();
+    resizeResultHeader();
+    resizeTagLists();
+    $searchResults.hide();
+    getUserPreferences(function(success, prefs) {
+    	if (success) {
+    		userPrefs = prefs;
+    		setUserPrefs();
+    		initializeTooltips();
+    		zumpLibraryInit();
+    		loadUserPrefs();
+    		getAllDiscs(function(success, discsFromServer){
+				if (success) {
+					discs = discsFromServer;
+					initialize();
+				} else {
+					alert('Unable to intialize');
+				}
+			});
+     	}
+    });
+    
+    $('.page-alert').slideDown(300);
+    
+    setTimeout(function() {
+        initializePage();
+    }, 200);
+    
+    $('#tutorial').hide();
+    //createOverlay($('#section-views'));
+ 
+});
+
+
+/*
+* Initialize based on search params
+*/
+function initializePage() {
+    var params = getSearchParameters();
+    if (params.view) {
+        $('.nav-sidebar > li[pg-select="#pg-' + params.view + '"]').trigger('click');
+    }
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*              Account Settings & Preferences Functions             */
+/*                                                                   */
+/*===================================================================*/
+
+function setUserPrefs() {
+	if (userPrefs.defaultView.length > 0) {
+		$('#default-view').val(userPrefs.defaultView);
+	}
+	if (userPrefs.displayCount.length > 0) {
+		$('#display-count').val(userPrefs.displayCount);
+	}
+	if (userPrefs.galleryCount.length > 0) {
+		$('#items-per-row').val(userPrefs.galleryCount);
+	}
+	if (userPrefs.defaultSort.length > 0) {
+		$('#sort-order-primary').val(userPrefs.defaultSort[0].property);
+		userPrefs.defaultSort[0].sortAsc ? $('#sort-order-primary-direction').val("Ascending") : $('#sort-order-primary-direction').val("Descending");
+		$('#enable-secondary-sort').removeAttr('checked');
+		$('#sort-order-secondary').attr('disabled', 'disabled');
+		$('#sort-order-secondary-direction').attr('disabled', 'disabled');
+		if (userPrefs.defaultSort.length == 2) {
+			$('#enable-secondary-sort').attr('checked', 'checked');
+			$('#sort-order-secondary').removeAttr('disabled');
+			$('#sort-order-secondary-direction').removeAttr('disabled');
+			$('#sort-order-secondary').val(userPrefs.defaultSort[1].property);
+			userPrefs.defaultSort[1].sortAsc ? $('#sort-order-secondary-direction').val("Ascending") : $('#sort-order-secondary-direction').val("Descending");
+		}
+	}
+	$('#colorize-visibility').bootstrapSwitch('state', userPrefs.colorizeVisibility);
+	if (isDef(userPrefs.colorize)) {
+		$('#colorize-distance-driver').css('background-color', userPrefs.colorize.distance);
+		$('#colorize-fairway-driver').css('background-color', userPrefs.colorize.fairway);
+		$('#colorize-mid-range').css('background-color', userPrefs.colorize.mid);
+		$('#colorize-putt-approach').css('background-color', userPrefs.colorize.putter);
+		$('#colorize-mini').css('background-color', userPrefs.colorize.mini);
+	}
+}
+
+// TESTING///
+
+
+function loadUserPrefs() {
+	$('.sidebar-select[pg-select="#pg-' + userPrefs.defaultView + '"]').addClass('active').trigger('click');
+	$('#paginate-display-count').val(userPrefs.displayCount);
+	$('#paginate-display-count').trigger('change');
+	myGallery.updateGalleryCount(userPrefs.galleryCount);
+	
+}
+
+function initializeTooltips() {
+	var ttDefaultView = generateTooltipOptions('top', 'hover', 'Select a default view to show every time your DiscZump account loads.', '200px');
+	var ttDisplayCount = generateTooltipOptions('top', 'hover', 'Select a default number of discs to show per page when your DiscZump account loads the dashboard view.', '200px');
+	var ttItemsPerRow = generateTooltipOptions('top', 'hover', 'Select a default number of discs to show per row when DiscZump loads the gallery view.', '200px');
+	var ttPrimarySort = generateTooltipOptions('top', 'hover', 'Select a default primary sort property. This applies to any view.', '200px');
+	var ttSecondarySort = generateTooltipOptions('top', 'hover', 'Select a default secondary sort property. This applies to any view and will sort within your primary property.', '200px');
+	var ttEnableSecondarySort = generateTooltipOptions('top', 'hover', 'When checked, the secondary sort property will be used.', '200px');
+	var ttColorizeVisibility = generateTooltipOptions('top', 'hover', 'Show or hide the color strips seen in the dashboard view.', '200px');
+	var ttAccountAlias = generateTooltipOptions('top', 'hover', 'This is how your name is displayed publicly.', '200px');
+	var ttGraphBy = generateTooltipOptions('right', 'hover', 'This property will be used to generate the data in the graph.', '200px');
+	var ttGraphType = generateTooltipOptions('right', 'hover', 'Select the type of grah to generate.', '200px');
+	
+	$('i[tt="default-view"]').tooltip(ttDefaultView);
+	$('i[tt="display-count"]').tooltip(ttDisplayCount);
+	$('i[tt="items-per-row"]').tooltip(ttItemsPerRow);
+	$('i[tt="primary-sort"]').tooltip(ttPrimarySort);
+	$('i[tt="secondary-sort"]').tooltip(ttSecondarySort);
+	$('i[tt="enable-secondary-sort"]').tooltip(ttEnableSecondarySort);
+	$('i[tt="colorize-visibility"]').tooltip(ttColorizeVisibility);
+	$('i[tt="account-alias"]').tooltip(ttAccountAlias);
+	$('i[tt="graph-base"]').tooltip(ttGraphBy);
+	$('i[tt="graph-type"]').tooltip(ttGraphType);
+}
+
+function generateTooltipOptions(placement, trigger, title, width) {
+	
+	return {
+		delay: { "show": 200, "hide": 100 },
+		placement: placement,
+		trigger: trigger,
+		title: title,
+		template: '<div class="tooltip" role="tooltip" style="width: ' + width + ';">' +
+					'<div class="tooltip-arrow"></div>' +
+					'<div class="tooltip-inner"></div>' +
+					'</div>'
+	};
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*                          Library Init                             */
+/*                                                                   */
+/*===================================================================*/
+
+function zumpLibraryInit() {
+	
+    zipValidation = new ZumpValidate({
+    	items: [
+    		{id: 'accountZipCode', type:'zipcode', output: 'accountCityState'},
+            {id:'accountAlias'}
+    	]
+    });
+    
+    myZumpColorPicker = new ZumpColorPicker({
+       baseColors: [
+           {r: 255, g: 0, b: 0},
+           {r: 255, g: 128, b: 0},
+           {r: 255, g: 255, b: 0},
+           {r: 0, g: 255, b: 0},
+           {r: 0, g: 0, b: 255},
+           {r: 255, g: 0, b: 255},
+           {r: 128, g: 128, b: 128}
+        ]
+    });
     
     mySort = new ZumpSort({
 	    sortToggle: '#results-header-sort',
@@ -314,27 +742,24 @@ $(document).ready(function(){
 	        {text: 'Fade', property: 'fade', type: 'number'}
 	    ],
 	    triggerSort: showDiscs,
-	    init: [
-	    	{property: 'brand',sortAsc: true},
-	    	{property: 'name',sortAsc: true}
-    	]
+	    init: userPrefs.defaultSort
 	});
 	
 	myFilter = new ZumpFilter({
 		currentFilterContainer: '#current-filter-container',
-	    filterContainer: '#filter-content',
+	    filterContainer: '#filter-container',
 	    items: [
-	        {property: 'name', hideContainer: true},
+	        {text: 'Name', property: 'name', hideContainer: true},
 	        {text: 'Brand', property: 'brand'},
 	        {text: 'Tags', property: 'tagList'},
 	        {text: 'Type', property: 'type'},
 	        {text: 'Material', property: 'material'},
 	        {text: 'Weight', property: 'weight'},
 	        {text: 'Color', property: 'color'},
-	        {text: 'Speed', property: 'speed', groupText: 'Flight Numbers', groupProp: 'flightNumbers'},
-	        {text: 'Glide', property: 'glide', groupText: 'Flight Numbers', groupProp: 'flightNumbers'},
-	        {text: 'Turn', property: 'turn', groupText: 'Flight Numbers', groupProp: 'flightNumbers'},
-	        {text: 'Fade', property: 'fade', groupText: 'Flight Numbers', groupProp: 'flightNumbers'}
+	        {text: 'Speed', property: 'speed'},
+	        {text: 'Glide', property: 'glide'},
+	        {text: 'Turn', property: 'turn'},
+	        {text: 'Fade', property: 'fade'}
 	    ],
 	    onFilterChange: function() {
 	        updateFilter();
@@ -344,55 +769,6 @@ $(document).ready(function(){
 	myGallery = new ZumpGallery({
 		galleryContainer: '#gallery-container'
 	});
-    
-	
-     // Start on-load commands
-     resizeSearch($searchResults, $searchBar, true, true);
-     pageEvents['pg-gallery'] = function(showing) {
-         if (showing) {
-     		pageSettings.tableMode = false;
-            showDiscGallery();
-         } else {
-     		pageSettings.tableMode = true;
-         }
-     }
-     resizeResultHeader();
-     $searchResults.hide();
-     getUserPreferences(function(success, prefs) {
-     	if (success) {
-     		userPrefs = prefs;
-     		
-     		getAllDiscs(function(success, discsFromServer){
-				if (success) {
-					discs = discsFromServer;
-					createTypePie();
-					initialize();
-				} else {
-					alert('Unable to intialize');
-				}
-			 });
-     	}
-     });
-    
-    $('.page-alert').slideDown(300);
-    $('.nav-sidebar > li.active').trigger('click');
-    
-    setTimeout(function() {
-        initializePage();
-    }, 200);
- 
-});
-
-
-/*
-* Initialize based on search params
-*/
-function initializePage() {
-    console.log('initializing');
-    var params = getSearchParameters();
-    if (params.view) {
-        $('.nav-sidebar > li[pg-select="#pg-' + params.view + '"]').trigger('click');
-    }
 }
 
 /*===================================================================*/
@@ -401,15 +777,34 @@ function initializePage() {
 /*                                                                   */
 /*===================================================================*/
 
+function resizeSidebar() {
+	if ($('.sidebar').width() < 109) {
+		$('.sidebar').addClass('collapsed');
+		$('#sidebar-filter').on('mouseenter', collapsedFilterMouseenter);
+       	$('#sidebar-filter').on('mouseleave', collapsedFilterMouseleave);
+       	$('#sidebar-search').on('mouseenter', collapsedFilterMouseenter);
+       	$('#sidebar-search').on('mouseleave', collapsedFilterMouseleave);
+	} else {
+		$('.sidebar').removeClass('collapsed');
+		$('.sidebar').css('width', '');
+		$('#sidebar-filter').off('mouseenter', collapsedFilterMouseenter);
+		$('#sidebar-filter').off('mouseleave', collapsedFilterMouseleave);
+       	$('#sidebar-search').off('mouseenter', collapsedFilterMouseenter);
+       	$('#sidebar-search').off('mouseleave', collapsedFilterMouseleave);
+	}
+}
+
 /*
-* Locks the search bar if user clicked on actual disc item
+* Handles expanding filter when sidebar is collapsed
 */
-var searchLock = function(e) {
-	e.stopPropagation();
-	myFilter.clearFilter('name');
-	$(this).attr('readonly', false).unbind('click', searchLock);
-	$searchBar.trigger('keyup');
-};
+function collapsedFilterMouseenter() {
+	$('.sidebar').stop().animate({width:'250px'}, 300);
+}
+function collapsedFilterMouseleave() {
+	$('.sidebar').stop().animate({width:'109px'}, 300, function() {
+		$('.sidebar').css('width', '');
+	});
+}
 
 /*
 * Global search method
@@ -417,13 +812,11 @@ var searchLock = function(e) {
 function doSearch() {
 	var search = $searchBar.val();
 	
-	containSearch(search, ['name', 'brand', 'type', 'tagList'], function(prop, list) {
+	containSearch(search, ['name', 'brand', 'tagList'], function(prop, list) {
 		if (prop == 'name') {
 			updateSearchResults($('#results-name'), list);
 		} else if (prop == 'brand') {
 			updateSearchResults($('#results-brand'), list);
-		} else if (prop == 'type') {
-			updateSearchResults($('#results-type'), list);
 		} else if (prop == 'tagList') {
 			updateSearchResults($('#results-tagList'), list);
 		}
@@ -435,7 +828,7 @@ function doSearch() {
 */
 function updateSearchResults($section, list) {
 	var $output = $section.children('.result-section-output');
-	$output.children('.result-item:not(.result-item-empty)').remove();
+	$output.children('li:not(.result-item-empty)').remove();
 	if (list.length > 0) {
 		$output.children('.result-item-empty').hide();
 		_.each(list, function(result) {
@@ -450,27 +843,9 @@ function updateSearchResults($section, list) {
 * Filters the discs and redraws the results table
 */
 function updateFilter(generateFilters) {
+	$('#filter-count').text(myFilter.getCount() > 0 ? myFilter.getCount() : '');
 	discList = myFilter.filter(discs, generateFilters);
 	showDiscs();
-	resizeResultHeader();
-}
-
-/*
-* Resizes the search results container
-*/
-function resizeSearch($element, $relative, relScreen, forceShow) {
-	if (forceShow) {
-		$element.show();
-	}
-	
-	var leftOff = relScreen ? $relative.offset().left : $relative.position().left;
-	var topOff = relScreen ? $relative.offset().top : $relative.position().top;
-	
-	if ($element.is(':visible')) {
-		$element.css({width: $relative.outerWidth() + 'px'});
-		$element.css({left: leftOff, 
-		top: topOff + $relative.outerHeight()});
-	}
 }
 
 /*
@@ -479,6 +854,32 @@ function resizeSearch($element, $relative, relScreen, forceShow) {
 function resizeResultHeader() {
 	$inventoryHeader.css({
 		'width': $inventoryContainer.outerWidth()
+	});
+}
+
+/*
+* Adds "more" button if tags exceed available width in dashboard view
+*/
+function resizeTagLists() {
+	var $tagContainers = $filterResults.find('.disc-info-tags-container');
+	
+	$tagContainers.each(function(i) {
+		var $tagContainer = $(this);
+		var $tagList = $tagContainer.find('.disc-info-tags-inner');
+		var $tagLabel = $tagContainer.find('.disc-info-tag-label');
+		var $tagDropdown = $tagContainer.find('.tag-dropdown');
+		var dropdownHidden = $tagDropdown.is(":hidden");
+		if ($tagList.width() > ($tagContainer.width() - $tagLabel.width())) {
+			if (dropdownHidden) {
+				$tagList.find('.disc-info-tag').css('visibility', 'hidden');
+				$tagDropdown.show();
+			}
+		} else {
+			if (!dropdownHidden) {
+				$tagDropdown.hide();
+				$tagList.find('.disc-info-tag').css('visibility', 'visible');
+			}
+		}
 	});
 }
 
@@ -494,10 +895,10 @@ function initialize() {
 */
 function showDiscGallery() {
 	var sorted = mySort.doSort(discList);
-	myGallery.showGallery(sorted);
-	_.each(sorted, function(disc) {
+	myGallery.showGallery();
+	/*_.each(sorted, function(disc) {
 		getPrimaryDiscImage(disc.primaryImage, updateDiscImage);
-	});
+	});*/
 }
 
 /*
@@ -513,6 +914,9 @@ function hideDiscGallery() {
 function updateDiscItem(disc) {
 	$('div.disc-item[discId="' + disc._id + '"]').empty().append(generateDiscData(disc));
 	getPrimaryDiscImage(disc.primaryImage, updateDiscImage);
+	// Initialize notes tooltip
+	var ttNotes = generateTooltipOptions('left', 'hover', disc.notes, 'auto');
+	$('i[tt="notes"]').tooltip(ttNotes);
 }
 
 /*
@@ -525,26 +929,45 @@ function showDiscs(maintainPage) {
 	
 	$filterResults.empty();
 	var sorted = mySort.doSort(discList);
+	myGallery.updateGallery(sorted);
 	var paged = paginate(sorted);
-	_.each(paged, function(disc) {
-		getPrimaryDiscImage(disc.primaryImage, updateDiscImage);
-		$filterResults.append(generateDiscTemplate(disc));
-	});
+	
+	if (discList.length) {
+		_.each(sorted, function(disc) {
+			
+			if (!isDef(disc.tempFileId)) {
+					getPrimaryDiscImage(disc.primaryImage, updateDiscImage);	
+			}
+			
+			if (_.contains(paged, disc)) {
+				$filterResults.append(generateDiscTemplate(disc));
+				// Initialize notes tooltip
+				var ttNotes = generateTooltipOptions('left', 'hover', disc.notes, 'auto');
+				$('i[tt="notes"]').tooltip(ttNotes);
+			}
+		});
+	} else {
+		$filterResults.append(generateDiscTemplate('No Results'));
+	}
+	
 	updateHeader(sorted.length);
 	resizeResultHeader();
+	resizeTagLists();
+	renderPlot();
 }
 
 /*
 * Locates the image source and updates with the file name
 */
 function updateDiscImage(success, discImage) {
-	if (success) {
+	if (success && !_.isEmpty(discImage)) {
 		var $discItem = $('div.disc-item[discId="' + discImage.discId + '"]');
 		$discItem.find('.disc-content-image img').attr('src', '/files/' + discImage.thumbnailId);
+		myGallery.updateObject(discImage.discId, {image: discImage.fileId});
 		
-		if (!pageSettings.tableMode) {
-			myGallery.updateObject(discImage.discId, {image: discImage.fileId});
-		}
+		var disc = getDisc(discImage.discId);
+		disc.tempThumbnailId = discImage.thumbnailId;
+		disc.tempFileId = discImage.fileId;
 	}
 }
 
@@ -553,6 +976,9 @@ function updateDiscImage(success, discImage) {
 */
 function updateHeader(count) {
 	$('#results-header-count').text('Results: ' + count);
+	
+	console.log('Current page: ' + paginateOptions.currentPage);
+	console.log('Last page: ' + paginateOptions.lastPage);
 	
 	var $paginate = $('#paginate-nav');
 	var $pageInsert = $('#page-back');
@@ -600,12 +1026,21 @@ function getColorize(type) {
 */
 function generateDiscTemplate(disc) {
 	var discContainer = $('<div class="disc-item-container"></div>');
-	var discItem = $('<div class="disc-item" discId="' + disc._id + '"></div>');
 	
-	discItem.append(generateDiscData(disc));
-	discContainer.append(discItem);
-	
-	 return discContainer;
+	if (disc == "No Results") {
+		discContainer.append('<div class="disc-item">' +
+								'<div class="disc-content-info-container no-results">' +
+									'<span class="no-results"><i class="fa fa-exclamation-triangle"></i> No Results</span>' +
+								'</div>' +
+								'<div class="clearfix"></div>' +
+							'</div>');
+	} else {
+		var discItem = $('<div class="disc-item" discId="' + disc._id + '"></div>');
+		
+		discItem.append(generateDiscData(disc));
+		discContainer.append(discItem);
+	}
+	return discContainer;
 }
 
 /*
@@ -613,18 +1048,40 @@ function generateDiscTemplate(disc) {
 */
 function generateDiscData(disc) {
 	var tagHTML = '';
+	var tagDropdown = '';
+	var tagDropdownInner = '';
+	var flightNumbersHTML = '';
+	var notesHTML = '';
 	
 	_.each(disc.tagList, function(tag) {
+		tagDropdownInner = tagDropdownInner + '<li class="disc-info-tag"><a>' + tag + '</a></li>';
 		tagHTML = tagHTML + '<span class="disc-info-tag">' + tag + '</span>';
 	});
 	
+	tagDropdown = '<div class="dropdown tag-dropdown" style="display: none">' +
+				  	'<button class="btn btn-default dropdown-toggle btn-tag-dropdown" type="button" id="tag-dropdown-menu" data-toggle="dropdown" aria-expanded="false">More... <span><i class="fa fa-caret-down"></i></span></button>' +
+					  '<ul class="dropdown-menu tag-dropdown-menu" role="menu" aria-labelledby="tag-dropdown-menu">' +
+					  tagDropdownInner +
+					  '</ul>' +
+					'</div>';
+	
 	var color = getColorize(disc.type);
 	
-	 return '<div class="disc-colorize"' + (isDef(color) ? ' style="background-color: ' + color + '"' : '') + '>' + 
+	if (isDef(disc.notes) && disc.notes != '') {
+		notesHTML = '<span><i class="fa fa-file-text fa-lg fa-dim fa-disc-notes" data-toggle="tooltip" tt="notes"></i></span>';
+	}
+	
+	if ((typeof disc.speed != 'undefined') || (typeof disc.glide != 'undefined') || (typeof disc.turn != 'undefined') || (typeof disc.fade != 'undefined')) {
+		flightNumbersHTML = ((typeof disc.speed != 'undefined') ? disc.speed : '??') + ' | ' +
+	                        ((typeof disc.glide != 'undefined') ? disc.glide : '??') +' | ' +
+	                        ((typeof disc.turn != 'undefined') ? disc.turn : '??') + ' | ' +
+	                        ((typeof disc.fade != 'undefined') ? disc.fade : '??');
+	}
+	return '<div class="disc-colorize"' + (isDef(color) && userPrefs.colorizeVisibility ? ' style="background-color: ' + color + '"' : ' style="background-color:#FFF"') + '>' + 
                 	'</div>' +
                     '<div class="disc-content-image-container">' +
                         '<div class="disc-content-image">' +
-                            '<img src="/static/logo/logo_small_faded.svg" />' +
+                            '<img src="' + (isDef(disc.tempThumbnailId) ? '/files/' + disc.tempThumbnailId : '/static/logo/logo_small_faded.svg') + '" />' +
                         '</div>' +
                     '</div>' +
                     '<div class="disc-content-action-container float-right">' +
@@ -637,7 +1094,9 @@ function generateDiscData(disc) {
 	                                '</td>' +
 	                            '</tr>' +
 	                            '<tr class="disc-item-actions-middle">' +
-	                            	'<td></td>' +
+	                            	'<td>' +
+	                            		notesHTML +
+	                            	'</td>' +
 	                                '<td>' +
 	                                	'<span><i class="fa fa-pencil fa-lg fa-dim fa-edit-disc-item"></i></span>' +
 	                                '</td>' +
@@ -660,54 +1119,50 @@ function generateDiscData(disc) {
                     '<div class="disc-content-info-container">' +
                         '<div class="disc-info-main-pane">' +
                             '<div class="disc-info-left-pane div-inline float-left">' +
-                                '<div class="disc-info-brand">' + (disc.brand ? disc.brand : '') + '</div>' +
-                                '<div class="disc-info-name"><a target="_blank" href="/disc/' + disc._id + '">' + (disc.name ? disc.name : '') + '</a></div>' +
+                            	'<div class="disc-info-name-container float-left">' +
+	                                '<div class="disc-info-brand">' + (disc.brand ? disc.brand : '') + '</div>' +
+	                                '<div class="disc-info-name"><a target="_blank" href="/disc/' + disc._id + '">' + (disc.name ? disc.name : '') + '</a></div>' +
+                            	'</div>' +
+                            	(disc.condition ? '<div class="disc-info-condition float-right">' + disc.condition + '</div>' : '') +
+                            	'<div class="clearfix"></div>' +
                             '</div>' +
                             '<div class="disc-info-right-pane disc-specs div-inline float-left">' +
                                 '<div class="div-inline float-left div-split-horiz">' +
-                                    '<table>' +
-                                        '<tr>' +
-                                            '<td class="disc-info-label">Type:</td>' +
-                                            '<td class="disc-info-value">' +(disc.type ? disc.type : '') + '</td>' +
-                                        '</tr>' +
-                                        '<tr>' +
-                                            '<td class="disc-info-label">Material:</td>' +
-                                            '<td class="disc-info-value">' +(disc.material ? disc.material : '') + '</td>' +
-                                        '</tr>' +
-                                    '</table>' +
+                                	'<div class="disc-info-item">' +
+	                                	'<span class="disc-info-label">Type:</span>' +
+	                                	'<span class="disc-info-value">' + (disc.type ? disc.type : '') + '</span>' +
+                                	'</div>' +
+                                	'<div class="disc-info-item">' +
+	                                	'<span class="disc-info-label">Material:</span>' +
+	                                	'<span class="disc-info-value">' + (disc.material ? disc.material : '') + '</span>' +
+                                	'</div>' +
                                 '</div>' +
                                 '<div class="div-inline float-left div-split-horiz">' +
-                                    '<table>' +
-                                        '<tr>' +
-                                            '<td class="disc-info-label">Color:</td>' +
-                                            '<td class="disc-info-value">' +(disc.color ? disc.color : '') + '</td>' +
-                                        '</tr>' +
-                                        '<tr>' +
-                                            '<td class="disc-info-label">Weight:</td>' +
-                                            '<td class="disc-info-value">' + ((typeof disc.weight != 'undefined') ? disc.weight + 'g': '') + '</td>' +
-                                        '</tr>' +
-                                    '</table>' +
+                                	'<div class="disc-info-item">' +
+	                                	'<span class="disc-info-label">Color:</span>' +
+	                                	'<span class="disc-info-value">' + (disc.color ? disc.color : '') + '</span>' +
+                                	'</div>' +
+                                	'<div class="disc-info-item">' +
+	                                	'<span class="disc-info-label">Weight:</span>' +
+	                                	'<span class="disc-info-value">' + ((typeof disc.weight != 'undefined') ? disc.weight + ' g': '') + '</span>' +
+                                	'</div>' +
                                 '</div>' +
                             '</div>' +
-                            
                         '</div>' +
                         '<div style="margin-top: 10px">' +
                             '<div class="disc-info-left-pane div-inline float-left">' +
-                                '<div class="disc-info-bottom">' +
-                                    '<div class="disc-info-numbers">' +
-                                    ((typeof disc.speed != 'undefined') ? disc.speed : '??') + ' | ' +
-                                    ((typeof disc.glide != 'undefined') ? disc.glide : '??') +' | ' +
-                                    ((typeof disc.turn != 'undefined') ? disc.turn : '??') + ' | ' +
-                                    ((typeof disc.fade != 'undefined') ? disc.fade : '??') + '</div>' +
+                            	'<div class="disc-info-numbers">' +
+	                                flightNumbersHTML +
                                 '</div>' +
                             '</div>' +
                             '<div class="disc-info-right-pane div-inline float-left">' +
-                                '<div class="disc-info-bottom">' +
-                                    '<div class="disc-info-tags div-inline float-left">' +
-                                        '<span class="disc-info-tag-label">Tags:</span>' +
-                                        tagHTML +
-                                    '</div>' +
-                                '</div>' +
+                            	'<div class="disc-info-tags-container">' +
+                            		'<div class="disc-info-tags-list">' +
+                            			'<span class="disc-info-tag-label">Tags:</span>' +
+	                            			tagDropdown +
+		                                	'<span class="disc-info-tags-inner">' + tagHTML + '</span>' +
+                            		'</div>' +
+	                    		'</div>' +
                             '</div>' +
                             '<div class="clearfix"></div>' +
                         '</div>' +
@@ -737,12 +1192,10 @@ function paginate(toPaginate) {
 	return toPaginate.slice(start, end);
 }
 
-
 /*
 * Generates a modal popup with the specified parameters
 */
 function generateModal(opt) {
-	// params fns, onCreate, onShow
 	
 	// Remove all other modals
 	$('.custom-modal').remove();
@@ -798,7 +1251,7 @@ function generateModal(opt) {
     	if (isDef(opt.onClose)) {
 			opt.onClose($modal.find('.modal-body'));
 		}
-    	
+		$('body').css('overflow', 'auto');
 	  	$modal.remove();
 	  	$(window).off('resize', resizeModal);
 	  
@@ -806,10 +1259,10 @@ function generateModal(opt) {
 	
 	// On shown event
 	$modal.on('shown.bs.modal', function (e) {
-		
+		$('body').css('overflow', 'hidden');
 		resizeModal();
 		
-	  if (isDef(opt.onShow)) {
+	  	if (isDef(opt.onShow)) {
 			opt.onShow($modal.find('.modal-body'));
 		}
 	});
@@ -878,7 +1331,6 @@ function exportList() {
 					name: 'close',
 					function: function($btn, $inner, done) {
 						done();
-						console.log('Closed without exporting.');
 					}
 				},
 				{
@@ -925,39 +1377,24 @@ function exportList() {
 /*
 * Alerts the user that a disc will be deleted
 */
-function deleteConfirmationModal(discId) {
-	var header = '<h4 class="modal-title">WARNING!</h4>';
+function generateConfirmationModal(title, bodyText, btnText, deleteFn) {
+	var header = '<h4 class="modal-title">' + title + '</h4>';
           
-	var body =  '<p>Are you sure you want to delete this disc and all of its data?</p>';
+	var body =  '<p>' + bodyText + '</p>';
 			
 	var footer = '<button type="button" class="btn btn-default" fn-title="cancel">Cancel</button>' +
-		'<button type="button" id="btn-confirm-delete-disc" class="btn btn-danger" fn-title="confirm-delete" discId=' + discId + '><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete Disc</button>';
+		'<button type="button" class="btn btn-danger" fn-title="confirm"><span><i class="fa fa-minus-circle fa-tools"></i></span>' + btnText + '</button>';
 		
 	var fns = [
 				{
 					name: 'cancel',
 					function: function($btn, $inner, done) {
 						done();
-						console.log('Canceled disc deletion.');
 					}
 				},
 				{
-					name: 'confirm-delete',
-					function: function($btn, $inner, done) {
-						var discId = $btn.attr('discId');
-						deleteDisc(discId, function(success, data) {
-							if (success) {
-								discs = _.filter(discs, function(disc){
-									return disc._id != data._id;
-								});
-								console.log('Deleted disc.');
-								updateFilter(true);
-							} else {
-								// error logic
-							}
-							done();
-						});
-					}
+					name: 'confirm',
+					function: deleteFn
 				}
 		];
 		
@@ -997,10 +1434,10 @@ function generateDiscInputForm(disc) {
 	                '<div class="col-sm-4">' +
 	                    '<select id="disc-type" class="form-control" param="type">' +
 	                        '<option value=""' + (isEdit ? '' : 'selected') + '></option>' +
-	                        '<option value="Putt/Approach">Putt/Approach</option>' +
-	                        '<option value="Mid-range">Mid-range</option>' +
-	                        '<option value="Fairway Driver">Fairway Driver</option>' +
 	                        '<option value="Distance Driver">Distance Driver</option>' +
+	                        '<option value="Fairway Driver">Fairway Driver</option>' +
+	                        '<option value="Mid-range">Mid-range</option>' +
+	                        '<option value="Putt/Approach">Putt/Approach</option>' +
 	                        '<option value="Mini">Mini</option>' +
 	                     '</select>' +
 	                '</div>' +
@@ -1012,7 +1449,7 @@ function generateDiscInputForm(disc) {
 	            '<div class="form-group">' +
 	                '<label class="col-sm-2 control-label">Weight</label>' +
 	                '<div class="col-sm-4">' +
-	                    '<input type="number" id="disc-weight" class="form-control text-assist" param="weight">' +
+	                    '<input type="text" id="disc-weight" class="form-control text-assist number-validate" param="weight">' +
 	                '</div>' +
 	                '<label class="col-sm-2 control-label">Color</label>' +
 	                '<div class="col-sm-4">' +
@@ -1022,21 +1459,21 @@ function generateDiscInputForm(disc) {
 	            '<div class="form-group">' +
 	                '<label class="col-sm-2 control-label">Speed</label>' +
 	                '<div class="col-sm-4">' +
-	                    '<input type="number" id="disc-speed" class="form-control text-assist" param="speed">' +
+	                    '<input type="text" id="disc-speed" class="form-control text-assist weight-number-validate" param="speed">' +
 	                '</div>' +
 	                '<label class="col-sm-2 control-label">Glide</label>' +
 	                '<div class="col-sm-4">' +
-	                    '<input type="number" id="disc-glide" class="form-control text-assist" param="glide">' +
+	                    '<input type="text" id="disc-glide" class="form-control text-assist number-validate" param="glide">' +
 	                '</div>' +
 	            '</div>' +
 	            '<div class="form-group">' +
 	                '<label class="col-sm-2 control-label">Turn</label>' +
 	                '<div class="col-sm-4">' +
-	                    '<input type="number" id="disc-turn" class="form-control text-assist" param="turn">' +
+	                    '<input type="text" id="disc-turn" class="form-control text-assist number-validate" param="turn">' +
 	                '</div>' +
 	                '<label class="col-sm-2 control-label">Fade</label>' +
 	                '<div class="col-sm-4">' +
-	                    '<input type="number" id="disc-fade" class="form-control text-assist" param="fade">' +
+	                    '<input type="text" id="disc-fade" class="form-control text-assist number-validate" param="fade">' +
 	                '</div>' +
 	            '</div>' +
 	            '<div class="form-group tag-input-group">' +
@@ -1064,11 +1501,15 @@ function generateDiscInputForm(disc) {
 	            '</div>' +
 	            '<div class="form-group">' +
 	                '<label class="col-sm-2 control-label">Public</label>' +
-	                '<div class="col-sm-10">' +
+	                '<div class="col-sm-4">' +
 	                    '<input type="checkbox" name="visible" param="visible" id="disc-visibility">' +
 	                '</div>' +
+	                '<label class="col-sm-2 control-label allow-icon">Condition<i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="condition"></i></label>' +
+	                '<div class="col-sm-4">' +
+	                    '<input type="text" id="disc-condition" class="form-control text-assist condition-number-validate" param="condition">' +
+	                '</div>' +
 	            '</div>' +
-	            '<div class="image-accordian-area">' +
+	            '<div class="image-accordion-area">' +
 	            	(isEdit ? 
 		            '<div class="current-images-accordion-container">' +
 		                '<div class="current-images-accordion-header">' +
@@ -1141,6 +1582,12 @@ function generateDiscInputForm(disc) {
 		    	}
 		    });
 			
+			$('input[type=text]').focus(function(){
+			    $(this).one('mouseup', function(event){
+			        event.preventDefault;
+			    }).select();
+			});
+			
 			$inner.on('click', '.tag-item-remove', function(){
 				var $parent = $(this).parents('.tag-item');
 				$parent.remove();
@@ -1149,6 +1596,48 @@ function generateDiscInputForm(disc) {
 					$tagContainer.empty();
 				}
 			});
+			
+			$inner.find('.number-validate').on('focusin', function(e){
+				$(this).parent().removeClass('has-error');
+		    });
+			
+			$inner.find('.number-validate').on('focusout', function(e){
+				var val = $(this).val();
+				if (val != '' && !(/^-?\d+(\.\d+)?$/.test(val))) {
+					$(this).parent().addClass('has-error');
+				} else {
+					$(this).parent().removeClass('has-error');
+				}
+		    });
+		    
+		    $inner.find('.weight-number-validate').on('focusout', function(e){
+				var val = $(this).val();
+				if (val != '' && !(/^\d+(\.\d+)?$/.test(val))) {
+					$(this).parent().addClass('has-error');
+				} else {
+					$(this).parent().removeClass('has-error');
+				}
+		    });
+		    
+		    $inner.find('.condition-number-validate').on('focusout', function(e){
+				var val = $(this).val();
+				if (val != '' && !(/^\d\d?(\.\d)?$/.test(val))) {
+					$(this).parent().addClass('has-error');
+				} else {
+					$(this).parent().removeClass('has-error');
+				}
+		    });
+		    
+		    $inner.find('[tt="condition"]').tooltip({
+		    	delay: { "show": 200, "hide": 100 },
+		    	placement: 'top',
+		    	trigger: 'hover',
+		    	title: 'Condition based on Sleepy Scale. Must be integer with 1 optional decimal place.',
+		    	template: '<div class="tooltip" role="tooltip" style="width: 150px;">' +
+		    				'<div class="tooltip-arrow"></div>' +
+		    				'<div class="tooltip-inner"></div>' +
+		    				'</div>'
+		    });
 			
 			/*
 			* Setup Autocomplete Handlers
@@ -1160,7 +1649,6 @@ function generateDiscInputForm(disc) {
 			        searchProp: $(this).attr('param'),
 			        items: function() { return discs; }, 
 			        onSelection: function(item) {
-			        	console.log('Selected: ' + item);
 			        }
 			    });
 			});
@@ -1170,7 +1658,7 @@ function generateDiscInputForm(disc) {
 				searchProp: 'tagList',
 				items: function() { return discs; }, 
 		        onSelection: function(item, reset) {
-		        	if (item.length > 0) {
+		       		if (item.length > 0) {
 		        		$tagContainer.append(generateTagItem(item));
 		    			reset();
 		        	}
@@ -1214,52 +1702,67 @@ function getEditParams() {
 						
 						var disc = createDisc($inner, changeObject.curDisc);
 						
-						console.log(JSON.stringify(disc));
-						
-						putDisc(disc, function(success, retData) {
-							if (success) {
-								discs = _.filter(discs, function(disc){
-									return disc._id != retData._id;
-								});
-								discs.push(retData);
-								console.log('Saved disc changes.');
-								
-								if (isDef(changeObject.imageRemovals)) {
-									_.each(changeObject.imageRemovals, function(imageId) {
-										deleteImage(imageId, function(success, data) {
-											if (success) {
-												console.log('Deleted image with id [' + data._id + '].');
-											}
-										});
-									});
-								}
-								
-								var $dropzone = $inner.find('.dropzone-area');
-								var id = $dropzone.attr('dropzoneid');
-								var dropzone = dropzones[id];
-								if (dropzone && dropzone.getAcceptedFiles().length > 0) {
-									dropzone.options.url = '/api/discs/' + retData._id + '/images';
-									dropzone.on('queuecomplete', function() {
-										getDiscById(retData._id, function(err, disc) {
-											discs = _.filter(discs, function(curDisc){
-												return curDisc._id != disc._id;
-											});
-											discs.push(disc);
-											updateFilter(true);
-										});
-										
-										done();
-									})
+						if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
+							$inner.prepend(generateError('Brand and Name are required.', 'ERROR'));
+					    } else if ($('.has-error').length > 0) {
+					    	var errorText = '';
+					    	var errorLength = $('.has-error').length;
+					    	
+					    	_.each($('.has-error'), function(element) {
+					    		if (errorLength > 1) {
+					    			errorText = errorText + $(element).prev().text() + ', ';
+					    		} else {
+					    			errorText = errorText + $(element).prev().text();
+					    		}
+					    		errorLength = errorLength - 1;
+					    	});
+					    	
+					    	$inner.prepend(generateError('Invalid data in ' + ($('.has-error').length > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
+					    	
+					    } else if ($inner.find('div.alert').length == 0) {
+							putDisc(disc, function(success, retData) {
+								if (success) {
 									
-									dropzone.processQueue();
+									var index = discs.indexOf(getDisc(retData._id));
+									discs[index] = retData;
+									
+									if (isDef(changeObject.imageRemovals)) {
+										_.each(changeObject.imageRemovals, function(imageId) {
+											deleteImage(imageId, function(success, data) {
+												if (success) {
+													//deleted disc image
+												}
+											});
+										});
+									}
+									
+									var $dropzone = $inner.find('.dropzone-area');
+									var id = $dropzone.attr('dropzoneid');
+									var dropzone = dropzones[id];
+									if (dropzone && dropzone.getAcceptedFiles().length > 0) {
+										dropzone.options.url = '/api/discs/' + retData._id + '/images';
+										dropzone.on('queuecomplete', function() {
+											getDiscById(retData._id, function(err, disc) {
+												discs = _.filter(discs, function(curDisc){
+													return curDisc._id != disc._id;
+												});
+												discs.push(disc);
+												updateFilter(true);
+											});
+											
+											done();
+										})
+										
+										dropzone.processQueue();
+									} else {
+										done();
+										updateFilter(true);
+									}
 								} else {
-									done();
-									updateFilter(true);
+									$inner.prepend(generateError(retData.message, 'ERROR'));
 								}
-							} else {
-								$inner.prepend(generateError(retData.message, 'ERROR'));
-							}
-						});
+							});
+					    }
 					}
 				}
 		],
@@ -1286,6 +1789,7 @@ function getEditParams() {
 			$('#disc-turn').val(getSafe(disc.turn, ''));
 			$('#disc-fade').val(getSafe(disc.fade, ''));
 			$('#disc-notes').val(getSafe(disc.notes, ''));
+			$('#disc-condition').val(getSafe(disc.condition, ''));
 			
 			$('#disc-visibility').bootstrapSwitch('state', getSafe(disc.visible, false));
 			
@@ -1326,9 +1830,6 @@ function getEditParams() {
 		    	}
 		    	
 		    	changeObject.imageRemovals.push(imageId);
-		    	
-		    	console.log(disc);
-		    	console.log(changeObject);
 		    });
 		    
 		    $imageContainer.on('click', '.image-make-primary', function() {
@@ -1410,40 +1911,62 @@ function getCreateParams() {
 					function: function($btn, $inner, done) {
 						$inner.find('div.alert').remove();
 						var disc = createDisc($inner);
-						postDisc(disc, function(success, retData) {
-							if (success) {
-								discs.push(retData);
-								var $dropzone = $inner.find('.dropzone-area');
-								var id = $dropzone.attr('dropzoneid');
-								var dropzone = dropzones[0];
-								if (dropzone && dropzone.getAcceptedFiles().length > 0) {
-									dropzone.options.url = '/api/discs/' + retData._id + '/images';
-									dropzone.on('queuecomplete', function() {
-										$inner.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.'));
-										getDiscById(retData._id, function(err, disc) {
-											discs = _.filter(discs, function(curDisc){
-												return curDisc._id != disc._id;
+						console.log(disc.notes);
+						if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
+							$inner.prepend(generateError('Brand and Name are required.', 'ERROR'));
+					    } else if ($('.has-error').length > 0) {
+					    	var errorText = '';
+					    	var errorLength = $('.has-error').length;
+					    	
+					    	_.each($('.has-error'), function(element) {
+					    		if (errorLength > 1) {
+					    			errorText = errorText + $(element).prev().text() + ', ';
+					    		} else {
+					    			errorText = errorText + $(element).prev().text();
+					    		}
+					    		errorLength = errorLength - 1;
+					    	});
+					    	
+					    	$inner.prepend(generateError('Invalid data in ' + ($('.has-error').length > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
+					    	
+					    } else if ($inner.find('div.alert').length == 0) {
+					    	postDisc(disc, function(success, retData) {
+								if (success) {
+									discs.push(retData);
+									var $dropzone = $inner.find('.dropzone-area');
+									var id = $dropzone.attr('dropzoneid');
+									var dropzone = dropzones[0];
+									if (dropzone && dropzone.getAcceptedFiles().length > 0) {
+										dropzone.options.url = '/api/discs/' + retData._id + '/images';
+										dropzone.on('queuecomplete', function() {
+											$inner.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success'));
+											autoCloseAlert($inner.find('.alert'), 2000);
+											getDiscById(retData._id, function(err, disc) {
+												discs = _.filter(discs, function(curDisc){
+													return curDisc._id != disc._id;
+												});
+												discs.push(disc);
+												updateFilter(true);
 											});
-											discs.push(disc);
-											updateFilter(true);
-										});
-										$inner.find('form').trigger("reset");
+											$inner.find('form').trigger("reset");
+											
+											$('#dropzone-trigger').siblings().remove();
+											dropzone.disable();
+											dropzone.enable();
+										})
 										
-										$('#dropzone-trigger').siblings().remove();
-										dropzone.disable();
-										dropzone.enable();
-									})
-									
-									dropzone.processQueue();
+										dropzone.processQueue();
+									} else {
+										$inner.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success'));
+										autoCloseAlert($inner.find('.alert'), 2000);
+										updateFilter(true);
+										$('#createDiscForm').trigger("reset");
+									}
 								} else {
-									$inner.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.'));
-									updateFilter(true);
-									$('#createDiscForm').trigger("reset");
+									$inner.prepend(generateError(retData.message, 'ERROR'));
 								}
-							} else {
-								$inner.prepend(generateError(retData.message, 'ERROR'));
-							}
-						});
+							});
+					    }	
 					}
 				}
 		],
@@ -1454,7 +1977,6 @@ function getCreateParams() {
 			
 		},
 		onClose: function($inner) {
-		
 		}
 	}
 }
@@ -1468,6 +1990,7 @@ function createDisc($form, disc) {
 	}
 	
 	var $fields = $form.find('input');
+	
 	$.each($fields, function(index) {
 		var $field = $(this);
 		if (hasAttr($field, 'param')) {
@@ -1507,9 +2030,7 @@ function createDisc($form, disc) {
 * Generates the HTML for a search result item
 */
 function generateResultItem(item) {
-	return '<div class="result-item">' + item +
-    		'<span class="glyphicon glyphicon-leaf pull-left" aria-hidden="true"></span>' + 
-		'</div>';
+	return '<li>' + item + '<i class="fa fa-reply fa-search-results"></i></li>';
 }
 
 /*
@@ -1577,34 +2098,33 @@ function createDropZone($div) {
     var $container = $div.find('.image-list-container');
     var $table = $div.find('.image-list-table');
 	var myDropzone = new Dropzone('#' + $container.attr('id'), {
-				  url: "/api/discs",
-				  method: "POST",
-				  thumbnailWidth: 100,
-				  thumbnailHeight: 100,
-				  parallelUploads: 10,
-				  maxFiles: 10,
-				  paramName: 'discImage',
-				  previewTemplate: template,
-        	      acceptedFiles: "image/*",
-				  autoProcessQueue: false,
-				  previewsContainer: '#' + $table.attr('id'),
-				  clickable: '#' + $imageAdd.attr('id'),
-				  accept: function(file, done) {
-				  	console.log(file.type);
-	               done();
-	             },
-	             init: function() {
-	               this.on("addedfile", function() {
-	                 if (this.files[10] != null){
-	                   this.removeFile(this.files[10]);
-	                 } else {
-	                 	$imageAdd.insertAfter('#dropzone-previews > .image-item-container:last-child');
-	                 	$container.animate({scrollLeft: $table.innerWidth()}, 2000);
-	                 }
-	               }).on('success', function(file, response){
-			            console.log(response);
-			        });
-	             }
+		url: "/api/discs",
+		method: "POST",
+		thumbnailWidth: 100,
+		thumbnailHeight: 100,
+		parallelUploads: 10,
+		maxFiles: 10,
+		paramName: 'discImage',
+		previewTemplate: template,
+		acceptedFiles: "image/*",
+		autoProcessQueue: false,
+		previewsContainer: '#' + $table.attr('id'),
+		clickable: '#' + $imageAdd.attr('id'),
+		accept: function(file, done) {
+			done();
+		},
+		init: function() {
+			this.on("addedfile", function() {
+				if (this.files[10] != null){
+					this.removeFile(this.files[10]);
+				} else {
+					$imageAdd.insertAfter('#dropzone-previews > .image-item-container:last-child');
+					$container.animate({scrollLeft: $table.innerWidth()}, 2000);
+				}
+			}).on('success', function(file, response){
+				
+			});
+		}
 	});
 	
 	dropzones.push(myDropzone);
@@ -1618,8 +2138,8 @@ function createDropZone($div) {
 * Returns the current search params
 */
 function getSearchParameters() {
-      var prmstr = window.location.search.substr(1);
-      return prmstr != null && prmstr != "" ? transformToAssocArray(prmstr) : {};
+	var prmstr = window.location.search.substr(1);
+	return prmstr != null && prmstr != "" ? transformToAssocArray(prmstr) : {};
 }
 
 /*
@@ -1627,7 +2147,7 @@ function getSearchParameters() {
 */
 function transformToAssocArray( prmstr ) {
     var params = {};
-    var prmarr = prmstr.split("&");
+    var prmarr = prmstr.split("#");
     for ( var i = 0; i < prmarr.length; i++) {
         var tmparr = prmarr[i].split("=");
         params[tmparr[0]] = tmparr[1];
@@ -1720,10 +2240,20 @@ function generateSuccess(message, title) {
 */
 function generateMessage(type, message, title) {
 	
-	return '<div class="alert alert-' + type + '" role="alert">' +
-		        		'<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>' +
-		        		'<strong>' + (title ? title + ': ' : '') + '</strong>' + message +
-		    		'</div>';
+	return '<div class="alert alert-' + type + ' alert-dismissible fade in" role="alert">' +
+        		'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+        		'<h4><strong>' + (title ? title + '!' : '') + '</strong></h4>' +
+        		'<p>' + message + '</p>' +
+    		'</div>';
+}
+
+/*
+* Automatically closes an alert based on delay time
+*/
+function autoCloseAlert($element, delay) {
+	setTimeout(function() {
+		$element.children('.close').trigger('click');
+	}, delay);
 }
 
 /*
@@ -1756,11 +2286,43 @@ function copyDisc(id) {
 /*                          Statistics                               */
 /*                                                                   */
 /*===================================================================*/
-function createTypePie() {
-    var discList = _.groupBy(discs, 'type');
+
+function generatePlot(prop, type) {
+	var text = myFilter.getText(prop);
+	
+	if (typeof text !== 'undefined') {
+		showPlot(prop, text, type);
+	}
+}
+
+function renderPlot() {
+		var chart = $("#statistics-plot").CanvasJSChart();
+		if (typeof chart !== 'undefined') {
+			showPlot();
+		}
+}
+
+function showPlot(prop, propName, type) {
+	
+	if (isDef(prop)) {
+    	chartProp = prop;
+	}
+	
+	if (isDef(propName)) {
+    	chartPropName = propName;
+	}
+	
+	if (isDef(type)) {
+    	chartType = type;
+	}
+   
+	var discList = _.groupBy(myFilter.filter(discs, false), chartProp);
     var data = [];
+    var isSingleUnit = true;
     
     for(var group in discList) {
+    	if (group == 'undefined') continue;
+    	if (isSingleUnit && discList[group].length > 1) isSingleUnit = false;
         data.push({
            label: group,
            y: discList[group].length,
@@ -1768,67 +2330,51 @@ function createTypePie() {
         });
     }
     
-    $("#discByType").CanvasJSChart({ 
-		title: { 
-			text: "Discs by Type",
-			fontSize: 24
-		},
-		width: 600,
-		axisY: { 
-			title: "Products in %" 
-		}, 
-		legend :{ 
-			verticalAlign: "center", 
-			horizontalAlign: "right" 
-		}, 
-		data: [ 
-		{ 
-			type: "pie", 
-			showInLegend: true, 
-			toolTipContent: "{label} <br/> {y} discs", 
-			indexLabel: "#percent%", 
-			dataPoints: data
-		} 
-		] 
-	});
+    var chartData = getChartData(chartType, 
+    	chartPropName, data.length == 1, isSingleUnit);
+    chartData.data[0].dataPoints = data;
+    
+   $("#statistics-plot").CanvasJSChart(chartData);
+   
 }
 
-function createBrandPie() {
-    var discs = _.groupBy(discList, 'brand');
-    var data = [];
-    console.log(discs);
-    
-    for(var group in discs) {
-        data.push({
-           label: group,
-           y: discs[group].length,
-           legendText: group
-        });
-    }
-    
-    $("#discByBrand").CanvasJSChart({ 
+function getChartData(type, propName, isSingleCol, isSingleUnit) {
+	var properties = { 
+		exportFileName: "DiscZump - Discs by " + propName,
+		exportEnabled: true,
 		title: { 
-			text: "Discs by Brand",
-			fontSize: 24
+			text: "Discs by " + propName,
+			fontSize: 24,
 		},
-		width: 600,
 		axisY: { 
-			title: "Products in %" 
-		}, 
+			title: "Number of Discs",
+			titleFontSize: 20,
+			interval: isSingleUnit ? 1 : null
+		},
+		axisX: {
+			titleFontSize: 20,
+			interval: isSingleCol ? null : 1,
+			labelMaxWidth: 200
+		},
 		legend :{ 
 			verticalAlign: "center", 
 			horizontalAlign: "right" 
 		}, 
 		data: [ 
-		{ 
-			type: "pie", 
-			showInLegend: true, 
-			toolTipContent: "{label} <br/> {y} discs", 
-			indexLabel: "#percent%", 
-			dataPoints: data
-		} 
+			{ 
+				type: type,
+				showInLegend: false, 
+				toolTipContent: propName + ": {label} <br/> {y} discs"
+			} 
 		] 
-	});
+	};
+	
+	if (type == 'column') {
+		properties.axisX.labelAngle = 50;
+		properties.axisX.labelAutoFit = true;
+	}
+	
+	return properties;
 }
 
 /*===================================================================*/
@@ -1849,8 +2395,9 @@ var ZumpGallery = function(opt) {
     
 	var zumpGallery = this;
 	var objCount = 0;
-	var itemsPerRow = 6;
+	var itemsPerRow;
 	var objList = [];
+	var hasShown = false;
 	
     //----------------------\
     // JQuery Objects
@@ -1873,38 +2420,40 @@ var ZumpGallery = function(opt) {
 		if (isDef(opt.galleryContainer)) {
 			$galleryContainer = $(opt.galleryContainer);
 			createGallery();
+			setupListeners();
 		}
+		
+		if (isDef(opt.galleryCount)) {
+			itemsPerRow = opt.galleryCount;
+		}
+	}
+	
+	/*
+	* Update the gallery
+	*/
+	this.updateGallery = function(objects) {
+		objList = objects;
+		objCount = objects.length;
+		
+		gallerySetup();
+		this.showGallery();
+	}
+	
+	/*
+	* Set items per row
+	*/
+	this.updateGalleryCount = function(galleryCount) {
+		itemsPerRow = parseInt(galleryCount);
+		$gallerySlider.slider('setValue', itemsPerRow);
 	}
 	
 	/*
 	* Shows the gallery
 	*/
-	this.showGallery = function(objects) {
-	    removeListeners();
-	    
-		var count = objects.length;
-		objList = objects;
+	this.showGallery = function() {
 		
-		// Setup slider based on element count
-		if (count < 12) {
-			$gallerySlider.slider('setAttribute', 'max', Math.max(2, count));
-		} else {
-			$gallerySlider.slider('setAttribute', 'max', 12);
-		}
-		
-		if (count < 6) {
-			$gallerySlider.slider('setValue', Math.max(2, count));
-			itemsPerRow = Math.max(2, count);
-		} else {
-			$gallerySlider.slider('setValue', 6);
-			itemsPerRow = 6;
-		}
-		
-		
-		objCount = count;
-		setupListeners();
-		$galleryContainer.show();
-		gallerySetup();
+		if (!$galleryContainer.is(':visible')) $galleryContainer.show();
+		resizeGallery();
 	}
 	
 	/*
@@ -1921,10 +2470,10 @@ var ZumpGallery = function(opt) {
 	this.updateObject = function(objId, params) {
 		var $galleryItem = $('.disc-gallery-item[objId="' + objId + '"]');
 		
-		if (params.image) {
+		if ($galleryItem.length && params.image) {
 			$galleryItem.find('.disc-gallery-image > img').attr('src', '/files/' + params.image);
 			var galItem = _.first(_.where(objList, {'_id' : objId}));
-			galItem.galImage = '/files/' + params.image;
+			galItem.tempFileId = '/files/' + params.image;
 		}
 	}
 	
@@ -1953,7 +2502,7 @@ var ZumpGallery = function(opt) {
 			min: 2,
 			max: 12,
 			step: 1,
-			value: 6,
+			value: itemsPerRow,
 			tooltip: 'hide',
 			selection: 'none'
 		}).on('change', function(slider) {
@@ -1970,22 +2519,28 @@ var ZumpGallery = function(opt) {
 		$galleryTable.empty();
 		$galleryMenu.find('.gallery-row-count').text(itemsPerRow);
 		
-		console.log($galleryContainer.width());
-		var width = $galleryContainer.width();
 		var rowCount = Math.ceil(objCount/itemsPerRow);
 		var colCount = itemsPerRow;
 		
-		for (var i = 0; i < rowCount; i++) {
-			var $row = $(createGalleryRow());
-			for (var j = 0; j < colCount; j++) {
-				if (total == objCount) break;
-				
-				var $item = $(createGalleryItem(objList[total]));
-				$row.append($item);
-				
-				total++;
+		if (rowCount) {
+			for (var i = 0; i < rowCount; i++) {
+				var $row = $(createGalleryRow());
+				for (var j = 0; j < colCount; j++) {
+					if (total == objCount) break;
+					
+					var $item = $(createGalleryItem(objList[total]));
+					$row.append($item);
+					
+					total++;
+				}
+				$galleryTable.append($row);
 			}
-			$galleryTable.append($row);
+		} else {
+			$galleryTable.append('<tr class="disc-gallery-row">' +
+									'<td class="disc-gallery-item no-results">' +
+										'<span><i class="fa fa-exclamation-triangle"></i> No Results</span>' +
+									'</td>' +
+								'</tr>');
 		}
 		resizeGallery();
 	}
@@ -2012,7 +2567,7 @@ var ZumpGallery = function(opt) {
 					'</div>' + 
 					'<div class="disc-gallery-image-container">' + 
 						'<div class="disc-gallery-image">' + 
-							'<img src="' + getSafe(obj.galImage, '/static/logo/logo_small_faded.svg') + '" />' + 
+							'<img src="' + (isDef(obj.tempFileId) ? '/files/' + obj.tempFileId : '/static/logo/logo_small_faded.svg') + '" />' + 
 						'</div>' + 
 					'</div>' + 
 				'</td>';
@@ -2063,24 +2618,30 @@ var ZumpGallery = function(opt) {
 	* Function to resize gallery based on screen size
 	*/
 	var resizeGallery = function() {
-	    console.log('resizing');
 		var width = $galleryContainer.width();
-		var rowCount = Math.ceil(objCount/itemsPerRow);
 		var colCount = itemsPerRow;
-		
 		var itemWidth = Math.min(500, Math.floor(width / colCount * 0.99));
+		var fontsize = getGalleryFontSize(itemWidth);
 		
 		$('.disc-gallery-item').css({
 			width: itemWidth + 'px',
 			height: itemWidth + 'px',
 			maxWidth: itemWidth + 'px',
-			maxHeight: itemWidth + 'px'
+			maxHeight: itemWidth + 'px',
+			'font-size': fontsize
 		});
 		
 		$('.disc-gallery-item').find('img').css({
 			maxWidth: itemWidth + 'px',
 			maxHeight: itemWidth + 'px'
 		})
+	}
+	
+	/*
+	* Function to scale overlay text size
+	*/
+	var getGalleryFontSize = function(width) {
+		return width * 0.15;
 	}
 	
 	this.init(opt);
@@ -2091,8 +2652,6 @@ var ZumpGallery = function(opt) {
 * Date: 03/02/2015
 */
 var ZumpLightbox = function(opt) {
-	// params fns, onCreate, onShow
-	
 	
     //----------------------\
     // Javascript Objects
@@ -2249,7 +2808,6 @@ var ZumpLightbox = function(opt) {
 	var backdropCloseEvent = function(e) {
 		var $element = $(e.target);
 		if ($element.hasClass('click-to-close')) {
-    		$('body').css('overflow', 'auto');
 			$(this).fadeOut(200, function() {
 				if (isDef(onHideEvent)) {
 					hideLightbox();
@@ -2333,6 +2891,7 @@ var ZumpLightbox = function(opt) {
 	
 	function hideLightbox() {
 		stopListeners();
+		$('body').css('overflow', 'auto');
 		onHideEvent();
 	}
 	
@@ -2417,7 +2976,6 @@ var ZumpSort = function(opt) {
     var $sortContainer;
     var $addSortTrigger;
     
-    
     //----------------------\
     // Prototype Functions
     //----------------------/
@@ -2479,13 +3037,23 @@ var ZumpSort = function(opt) {
         /*
         * Listeners/Events
         */
-        
+		
         // Toggle Sort Container
         $sortToggle.click(function(){
 	       if ($dynamicHeader.is(':visible')) { 
-	            $dynamicHeader.slideUp(300);   
+	            $dynamicHeader.slideUp(300);
+	            $sortToggle.css({
+	       			'background-color' : 'initial',
+	       			'color' : '#000',
+	       			'border-color' : 'rgb(134, 134, 134)'
+	       		});
 	       } else {
-	           $dynamicHeader.slideDown(300); 
+	           	$dynamicHeader.slideDown(300);
+	           	$sortToggle.css({
+	       			'background-color' : 'rgb(0, 142, 221)',
+	       			'color' : '#FFF',
+	       			'border-color' : '#000'
+	       		});
 	       }
 	    });
         
@@ -2640,10 +3208,10 @@ var ZumpSort = function(opt) {
     	});
     	
         return '<div class="sort-field-container">' +
-                    '<div class="sort-field-arrange div-inline float-left text-center no-select"> <!-- Arrange Icon -->' +
+                    '<div class="sort-field-arrange float-left text-center no-select"> <!-- Arrange Icon -->' +
                         '<span><i class="fa fa-bars"></i></span>' +
                     '</div>' +
-                    '<div class="sort-field-remove div-inline float-right text-center no-select"> <!-- Remove Icon -->' +
+                    '<div class="sort-field-remove float-right text-center no-select"> <!-- Remove Icon -->' +
                         '<span><i class="fa fa-times"></i></span>' +
                     '</div>' +
                     '<div class="sort-field-form"> <!-- Form -->' +
@@ -2763,7 +3331,9 @@ var ZumpFilter = function(opt) {
     //----------------------/
     var filters = {};
     var filterItems = [];
+    var filterOrder = [];
     var filterChangeEvent;
+    var zumpFilter = this;
     
     //----------------------\
     //JQuery Objects
@@ -2789,9 +3359,7 @@ var ZumpFilter = function(opt) {
         
         if (isDef(opt.currentFilterContainer)) {
         	$currentFilterContainer = $(opt.currentFilterContainer);
-        	$currentFilterContainer.append('<div class="clear-all-filters text-center"><u>Clear All</u></div>' +
-                        						'<div class="current-filter-item-container"></div>');
-            $currentFilterContainer.hide();
+        	$currentFilterContainer.append('<div class="clear-all-filters text-center" style="display: none;">Clear All</div>');
         }
         
         if (isDef(opt.filterContainer)) {
@@ -2801,7 +3369,6 @@ var ZumpFilter = function(opt) {
         // Set filter array
         if (isDef(opt.items)) {
         	filterItems = opt.items;
-        	console.log(filterItems);
             _.each(opt.items, function(item) {
                 if (isDef(item.property)) {
                     // Create your div to add to screen using data
@@ -2821,118 +3388,77 @@ var ZumpFilter = function(opt) {
         /*
         * Listeners/Events
         */
-        $(document).on('click', '.filter-option:not(.filter-option-static)', function(e){
+        $(document).on('click', '.filter-option', function(e){
 			e.stopPropagation();
 			
 			var $parent = $(this).parents('.filter-item-parent');
 			var option = $parent.attr('id').match(/-([a-zA-Z]+)/)[1];
 			var val = $(this).attr('filterOn');
-			var filterHeading = _.findWhere(filterItems, {property: option}).text;
 			
-			if (!_.contains(filters[option], val)) {
-				$(this).append('<span class="glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>');
-				filters[option].push(val);
-				updateCurrentFilters({
-					option: option,
-					val: val,
-					fn: 'add',
-					filterHeading: filterHeading
-				});
-			} else {
-				$(this).children('.glyphicon').remove();
-				filters[option] = _.without(filters[option], val);
-				updateCurrentFilters({
-					option: option,
-					val: val,
-					fn: 'remove'
-				});
-			}
-			
-			if (isDef(filterChangeEvent)) filterChangeEvent();
+			toggleOption(option, val);
 	    });
 	    
 	    $(document).on('click', '.clear-all-filters', function(e){
-	    	$currentFilterContainer.slideUp(300, function() {
-	    		$('.current-filter-item-container').children('.current-filter-item').each(function() {
-	    			triggerClick($(this).attr('curFilterId')); 
-	    		});
-	    		$currentFilterContainer.find('.current-filter-item-container').empty();
-	    		$('.filter-title').removeClass('current-filter-shown').addClass('current-filter-hidden');
-	    	});
+	    	zumpFilter.clearFilters();
 	    });
 	    
-	    $(document).on('click', '.current-filter-item-remove', function(e){
-	    	var $currentFilterItem = $(this).closest('.current-filter-item');
-	    	if ($currentFilterItem.siblings().length == 0) { 
-	    		$currentFilterContainer.slideUp(300, function() {
-	    			triggerClick($currentFilterItem.attr('curFilterId'));
-	    			$currentFilterItem.remove();
-	    			$('.filter-title').removeClass('current-filter-shown').addClass('current-filter-hidden');
-	    		});
-	    	} else {
-	    		$currentFilterItem.slideUp(300, function() {
-	    			triggerClick($currentFilterItem.attr('curFilterId'));
-		    		$currentFilterItem.remove();
-	    		});
-	    	}
+	    $(document).on('click', '.remove-filter-item', function(e){
+		   	var curFilterId = $(this).parents('.current-filter-item').attr('curFilterId');
+	    	var optionVal = curFilterId.substring(15);
+	    	var option = optionVal.match(/([a-zA-z])+/)[0];
+	    	var val = optionVal.match(/-(.+)/)[1];
+	    	if (val === "- None -") val = "";
+	    	
+			toggleOption(option, val);
 	    }); 
-	  
-	  	$(document).on('click', '.filter-option-multi', function(e){
-			if ($(e.target).attr('class') == 'filter-option') {
-			return;
-			}
-			
-			var $this = $(this);
-			var $itemGroup = $this.children('.filter-option-group');
-			   
-			if ($this.hasClass('filter-option-multi-closed')) {
-			   $itemGroup.slideDown(300, function(){
-			        $this.addClass(('filter-option-multi-open'));
-			   });
-			   $this.removeClass('filter-option-multi-closed');
-			} else {
-			   $itemGroup.slideUp(300, function(){
-			        $this.addClass('filter-option-multi-closed');
-			   });
-			   $this.removeClass('filter-option-multi-open');
-			}
-		});
      
-    	 $(document).on('click', '.panel-heading', function(){
-			var $this = $(this);
-			var $panelBody = $this.siblings('.panel-body');
-			var $glyph = $this.children('.glyphicon');
-			
-			if ($this.hasClass('panel-open')) {
-			   $panelBody.slideUp(300, function(){
-			        $glyph.removeClass('glyphicon-minus');
-			        $glyph.addClass('glyphicon-plus');
-			        $this.addClass('panel-closed');
-			   });
-			   $this.removeClass('panel-open');
-			} else if ($this.hasClass('panel-closed')) {
-			   $panelBody.slideDown(300, function(){
-			         $glyph.removeClass('glyphicon-plus');
-			        $glyph.addClass('glyphicon-minus');
-			        $this.addClass('panel-open');
-			   });
-			   $this.removeClass('panel-closed');
-			}
+    	 $(document).on('click', '.filter-item', function(){
+    	 	var $this = $(this);
+   		
+	   		if ($this.hasClass('active')) {
+	   			$this.siblings('.filter-option-container').slideUp(300, function() {
+	   				$this.removeClass('active');
+	   				$this.find('i').removeClass('fa-angle-double-down').addClass('fa-angle-double-right');
+	   			});
+	   		} else {
+	   			$this.addClass('active');
+	   				$this.find('i').removeClass('fa-angle-double-right').addClass('fa-angle-double-down');
+	   			$this.siblings('.filter-option-container').slideDown(300);
+	   		}
 		});
 		
 		/*
 		* Start Events
 		*/
-		$('.filter-option-multi').trigger('click');
-		$('.panel-heading').trigger('click');
         
+    }
+    
+    this.getText = function(property) {
+    	var prop = _.findWhere(filterItems, {property: property});
+    	
+    	if (typeof prop !== 'undefined') {
+    		return prop.text;
+    	} else {
+    		return undefined;
+    	}
+    }
+    
+    /*
+    * Returns the filter count
+    */
+    this.getCount = function() {
+    	var count = 0;
+    	
+    	var filterArrays = _.values(filters);
+    	_.each(filterArrays, function(filterArray) { count = count + filterArray.length})
+    	return count;
     }
     
     /*
     * Trigger update of the filter
     */
-    this.filter = function(arr, generateFilters) {
-    	if (generateFilters) generateAllFilters(arr);
+    this.filter = function(arr) {
+    	generateAllFilters(arr);
     	return filterList(arr);
     }
     
@@ -2964,15 +3490,26 @@ var ZumpFilter = function(opt) {
 	    	
 	    	if ($filterItem.length) {
 	    		if (!_.contains(filters[property], value)) {
-	    			var $filterOption = $filterItem.find('div.filter-option[filteron="' + value + '"]');
+	    			var $filterOption = $filterItem.find('li.filter-option[filteron="' + value + '"]');
 	    		
 		    		if ($filterOption.length) {
 		    			$filterOption.trigger('click');
 		    		}
+		    		
+		    		pushFilterOrder(property);
 	    		}
 	    	} else {
 	    		if (!_.contains(filters[property], value)) {
 		    		filters[property].push(value);
+		    		
+		    		updateCurrentFilters({
+						option: property,
+						val: value,
+						fn: 'add'
+					});
+		    		
+		    		pushFilterOrder(property);
+		    		
 		    		if (isDef(filterChangeEvent)) filterChangeEvent();
 	    		}
 	    	}
@@ -2993,19 +3530,17 @@ var ZumpFilter = function(opt) {
     * Clear filter
     */
     this.clearFilter = function(property) {
-    	if (isDef(filters[property])) {
-    		filters[property] = [];
-    		if (isDef(filterChangeEvent)) filterChangeEvent();
-    	}
+    	clearFilterItems(property);
+    	
+    	if (isDef(filterChangeEvent)) filterChangeEvent();
     }
     
     /*
     * Clear all filters
     */
     this.clearFilters = function() {
-    	for (var filterProp in filters) {
-    		filters[filterProp] = [];
-    	}
+    	clearAllFilters();
+    	updateCurrentFilters({fn: 'removeall', val: ''});
     	if (isDef(filterChangeEvent)) filterChangeEvent();
     }
     
@@ -3014,58 +3549,85 @@ var ZumpFilter = function(opt) {
     // Private Functions
     //----------------------/
     
+    var pushFilterOrder = function(property) {
+    	if (!_.contains(filterOrder, property)) filterOrder.push(property);
+    }
+    
+    var clearFilterOrder = function (property) {
+    	filterOrder = _.without(filterOrder, property);
+    }
+    
+    var toggleOption = function(option, val) {
+    	var $option = $('#filter-' + option).find('.filter-option[filterOn="' + val + '"]');
+    	
+		if (!_.contains(filters[option], val)) {
+			filters[option].push(val);
+			pushFilterOrder(option);
+			updateCurrentFilters({
+				option: option,
+				val: val,
+				fn: 'add'
+			});
+		} else {
+			filters[option] = _.without(filters[option], val);
+			
+			if (!filters[option].length) clearFilterOrder(option);
+			
+			updateCurrentFilters({
+				option: option,
+				val: val,
+				fn: 'remove'
+			});
+		}
+		
+		if (isDef(filterChangeEvent)) filterChangeEvent();
+    }
+    
     var updateCurrentFilters = function(args) {
     	if (!args.val.length || args.val === 'undefined') args.val = "- None -";
-    	var $currentFilterItemContainer = $('.current-filter-item-container');
-    	var $currentFilterOptionVal = $('.current-filter-item[curFilterId="current-filter-' + args.option + '-' + args.val + '"]');
+    	
+    	var filterHeading = args.option ? _.findWhere(filterItems, {property: args.option}).text : '';
+    	
     	if (args.fn === 'add') {
-    		if ($currentFilterContainer.is(':hidden')) {
-    			var $addFilterItemHtml = $('<div class="current-filter-item" curFilterId="current-filter-' + args.option + '-' + args.val + '">' +
-					                                '<span class="current-filter-item-text pull-left"><b>' + args.filterHeading + ':</b> ' + args.val + '</span>' +
-					                                '<span class="pull-right"><i class="fa fa-times current-filter-item-remove"></i></span>' +
-					                                '<div class="clearfix"></div>' +
-				                            	'</div>');
-				$currentFilterItemContainer.append($addFilterItemHtml);
-				$('.filter-title').removeClass('current-filter-hidden').addClass('current-filter-shown');
-				$currentFilterContainer.slideDown(300);
-			} else {
-				var $addFilterItemHtml = $('<div class="current-filter-item" curFilterId="current-filter-' + args.option + '-' + args.val + '">' +
-					                                '<span class="current-filter-item-text pull-left"><b>' + args.filterHeading + ':</b> ' + args.val + '</span>' +
-					                                '<span class="pull-right"><i class="fa fa-times current-filter-item-remove"></i></span>' +
-					                                '<div class="clearfix"></div>' +
-				                            	'</div>').hide();
-    			$currentFilterItemContainer.append($addFilterItemHtml);
-    			$addFilterItemHtml.slideDown(300);
-			}
+    		var $curFilterItem = $('<li class="current-filter-item" curFilterId="current-filter-' + 
+    			args.option + '-' + args.val + '" style="display: none;"><span class="pull-right"><i class="fa fa-times remove-filter-item"></i></span><b>' + filterHeading + ':</b> ' + 
+    			args.val + '</li>');
+    		$currentFilterContainer.append($curFilterItem);
+    		setAllFilter(true);
+    		$curFilterItem.slideDown(300, function() {
+    		});
     	} else if (args.fn === 'remove') {
-    		if (($currentFilterOptionVal.length == 1) && ($currentFilterOptionVal.siblings('.current-filter-item').length == 0)) {
-    			$currentFilterContainer.slideUp(300, function() {
-    				$('.filter-title').removeClass('current-filter-shown').addClass('current-filter-hidden');
-    				$currentFilterOptionVal.remove();
-    			});
-    		} else {
-    			$currentFilterOptionVal.slideUp(300, function() {
-    				$currentFilterOptionVal.remove();
-    			});
+    		var $currentFilterOptionVal = $('.current-filter-item[curFilterId="current-filter-' + args.option + '-' + args.val + '"]');
+    		if ($currentFilterOptionVal.length) {
+		   		$currentFilterOptionVal.css('text-decoration', 'line-through').fadeOut(300, function() {
+		   			$currentFilterOptionVal.remove();
+		   		});
+    			setAllFilter($('.current-filter-item').length - 1);
     		}
+    	} else if (args.fn === 'removeall') {
+    		$('.current-filter-item').css('text-decoration', 'line-through').fadeOut(300, function() { $(this).remove(); });
+    		setAllFilter(false);
     	}
     }
     
-    var triggerClick = function(curFilterId) {
-    	var optionVal = curFilterId.substring(15);
-    	var option = optionVal.match(/([a-zA-z])+/)[0];
-    	var val = optionVal.match(/-(.+)/)[1];
-    	if (val === "- None -") val = "";
-    	$('#filter-content').find('#filter-' + option).find('.filter-option[filteron="' + val + '"]').trigger('click');
+    var setAllFilter = function(show) {
+    	var $allFilters = $('.clear-all-filters');
+    	if (show) {
+    		if ($allFilters.is(':hidden')) $('.clear-all-filters').slideDown(300);
+    	} else {
+    		$('.clear-all-filters').slideUp(300);
+    	}
+    }
+    
+    var clearAllFilters = function() {
+    	for (var filterProp in filters) {
+    		clearFilterItems(filterProp);
+    	}
     }
     
     var clearFilterItems = function(property) {
-    	var $filterItem = $('#filter-' + property);
-    	if ($filterItem.length) {
-    		$filterItem.find('div.filter-option .glyphicon').remove();
-    	}
-    	
     	filters[property] = [];
+    	clearFilterOrder(property);
     }
     
     
@@ -3073,18 +3635,16 @@ var ZumpFilter = function(opt) {
     * Create Filter Panel
     */
     var createFilterPanel = function(property, text, isGroup) {
-        var emptyItem = '<div class="filter-option filter-option-static">' +
+        var emptyItem = '<li class="filter-option-static">' +
                                 'No Items' +
-                            '</div>';
-        var $filterPanel  = $('<div class="panel panel-default filter-item"></div>');
+                            '</li>';
+        var $filterPanel  = $('<li class="filter-item-container"></li>');
         
         $filterPanel.attr('id', 'filter-container-' + property);
-        $filterPanel.html('<div class="panel-heading panel-open">' + text + 
-                            '<span class="glyphicon glyphicon-minus pull-right" aria-hidden="true"></span>' +
-                        '</div>' +
-                        '<div class="panel-body' + (!isGroup ? ' filter-item-parent" id="filter-' + property + '"' : '"' ) + '>' +
+        $filterPanel.html('<div class="filter-item"><span class="pull-right"><i class="fa fa-angle-double-right"></i></span>' + text + '</div>' +
+                        '<ul class="filter-option-container' + (!isGroup ? ' filter-item-parent" id="filter-' + property + '"' : '"' ) + ' style="display: none;">' +
                             (!isGroup ? emptyItem : '') + 
-                        '</div>');
+                        '</ul>');
                         
         return $filterPanel;
     }
@@ -3112,7 +3672,7 @@ var ZumpFilter = function(opt) {
                 isGroup);
         }
         
-        var $panelBody = $($filterPanel).find('.panel-body');
+        var $panelBody = $($filterPanel).find('.filter-option-container');
         
         if (isGroup) {
             $panelBody.append('<div class="filter-option-multi filter-option-multi-open">' +
@@ -3132,15 +3692,27 @@ var ZumpFilter = function(opt) {
     * Generates the filter items within each filter
     */
     var generateAllFilters = function(arr) {
-        for (var filterProp in filters) {
-            generateFilters(filterProp, arr);
-        }
+    	var arrList = arr;
+	    var newFilters = {};
+	    
+	    for (var i = 0; i < filterOrder.length; i++) {
+	        var prop = filterOrder[i];
+	        generateFilters(prop, arrList, arr);
+	        newFilters[prop] = filters[prop];
+	        arrList = filterList(arrList, newFilters);
+	    }
+	    
+	    for (var prop in filters) {
+	        if (!_.has(newFilters, prop)) {
+	    		generateFilters(prop, arrList, arr);
+	        }
+	    }
     }
     
     /*
     * Generates the filter items within a filter
     */
-    var generateFilters = function(property, arr) {
+    var generateFilters = function(property, arr, fullArr) {
         var items = getProperties(property, arr);
         var $filterBody = $('#filter-' + property);
         
@@ -3159,23 +3731,24 @@ var ZumpFilter = function(opt) {
     		return i;
     	});
     	
-    	$filterBody.find('div.filter-option:not(".filter-option-static")').remove();
+    	$filterBody.find('li.filter-option').remove();
     	if (items.length > 0) {
-    		$filterBody.find('div.filter-option-static').hide();
+    		$filterBody.find('li.filter-option-static').hide();
     		_.each(items, function(item) {
-    			$filterBody.append(generateFilterOption(item));
+    			var $filterOption = $(generateFilterOption(item)); 
+    			if (_.contains(filters[property], item)) {
+    				setFilterOption($filterOption, true);
+    			}
+    			$filterBody.append($filterOption);
     		});
     	} else {
-    		$filterBody.find('div.filter-option-static').show();
+    		$filterBody.find('li.filter-option-static').show();
     	}
     	
     	var toRemove = [];
     	_.each(filters[property], function(item) {
-    		var $filter = $filterBody.find('div.filter-option[filterOn="' + item + '"]');
-    		if ($filter.length > 0) {
-    			$filter.append('<span class="glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>');
-    		} else {
-    			toRemove.push(item);
+    		if (!_.contains(getProperties(property, fullArr), item)) {
+    				toRemove.push(item);
     		}
     	});
     	
@@ -3183,6 +3756,22 @@ var ZumpFilter = function(opt) {
     			return _.contains(toRemove, item);
     	});
     	
+    }
+    
+    /*
+    * Programmatically check a filter option
+    */
+    var setFilterOption = function($filterOption, checked) {
+    	if (!$filterOption.length) return;
+    	var $icon = $filterOption.find('i.fa');
+    	
+    	if (!checked) {
+    		$icon.removeClass('fa-dot-circle-o').addClass('fa-circle-o');
+    		$filterOption.removeClass('active');
+    	} else {
+    		$icon.removeClass('fa-circle-o').addClass('fa-dot-circle-o');
+    		$filterOption.addClass('active');
+    	}
     }
     
     /*
@@ -3195,21 +3784,24 @@ var ZumpFilter = function(opt) {
     		optionText = '- None -';
     	}
     	
-    	return '<div class="filter-option" filterOn="' + option + '">' + optionText + '</div>';
+    	return '<li class="filter-option" filterOn="' + option + '"><span class="pull-right"><i class="fa fa-circle-o"></i></span>' + optionText + '</li>'
     }
     
     /*
     * Filters the provided array based on the defined filters
     */
-    var filterList = function(arr) {
+    var filterList = function(arr, arrFilters) {
+    	
+    	if (typeof (arrFilters) === 'undefined') arrFilters = filters;
+    	
     	return _.filter(arr, function(obj) {
-    		for (var property in filters) {
-    			if (filters[property].length > 0) {
+    		for (var property in arrFilters) {
+    			if (arrFilters[property].length > 0) {
     				if (_.has(obj, property)) {
     					if (_.isArray(obj[property])) {
     						var hasProp = false;
     						_.each(obj[property], function(propVal) {
-    							if (_.contains(filters[property], String(propVal))) {
+    							if (_.contains(arrFilters[property], String(propVal))) {
     								hasProp = true;
     							}	
     						});
@@ -3217,12 +3809,12 @@ var ZumpFilter = function(opt) {
     							return false;
     						}
     					} else {
-    						if (!(_.contains(filters[property], String(obj[property])))) {
+    						if (!(_.contains(arrFilters[property], String(obj[property])))) {
     							return false;
     						}
     					}
     				} else {
-    					if (!_.contains(filters[property], 'undefined')) {
+    					if (!_.contains(arrFilters[property], 'undefined')) {
     						return false;
     					}
     				}
@@ -3332,7 +3924,7 @@ var ZumpTextAssist = function(opt) {
         * Resize result container dropdown on resize of page
         */
         $(document).on('resize', function(){
-           resizeResultContainer(); 
+           resizeResultContainer();
         });
         
         /*
@@ -3414,7 +4006,7 @@ var ZumpTextAssist = function(opt) {
 			 * All other keys
 			 */
 			 else {
-			     updateInput($input.val());
+			     setInput($input.val());
 			 }
 			 
 	    })
@@ -3424,7 +4016,7 @@ var ZumpTextAssist = function(opt) {
 	    */
 	    .on('click', function(e){
 	    	e.preventDefault();
-	    	updateInput($input.val());
+	    	setInput($input.val());
 	    	return false;
 	    })
 	    
@@ -3504,9 +4096,18 @@ var ZumpTextAssist = function(opt) {
     var updateInput = function(newVal, hideAlways) {
     	if (isDef(newVal)) {
     		$input.val(newVal);
-			currentSearch = $input.val();
     	}
     	
+    	setInput(newVal, hideAlways);
+    }
+    
+    /*
+    * Set Input
+    */
+    var setInput = function(newVal, hideAlways) {
+    	if (isDef(newVal)) {
+			currentSearch = $input.val();
+    	}
     	setResultsVisibility(updateResults() && !hideAlways);
     }
     
@@ -3586,12 +4187,15 @@ var ZumpTextAssist = function(opt) {
         var results = getProperties(resultList());
         
     	var filtered = _.filter(results, function(item) {
+    		if (typeof item === 'undefined') {
+    			return false;
+    		}
+    		
     		if (_.isNumber(item)) {
     			curItem = String(item);
     		} else {
     			curItem = item;
     		}
-    		
     		return curItem.toLowerCase().indexOf(val.toLowerCase()) >= 0;	
     	});
     	
@@ -3616,5 +4220,342 @@ var ZumpTextAssist = function(opt) {
     }
     
     
+    this.init(opt);
+}
+
+
+/*
+* Name: ZumpColorPicker
+* Date: 05/13/2015
+*/
+var ZumpColorPicker = function(opt) {
+    
+    //----------------------\
+    // Javascript Objects
+    //----------------------/
+    var zumpColorPicker;
+    var baseColors = [];
+    var colorIds = {};
+    var colorIdCount = 1000;
+    
+    var rowCount = 7;
+    var span = 0.6;
+    var height, width;
+    var showBottom, showRight;
+    var dispTop, dispLeft;
+    
+    var callback;
+    
+    //----------------------\
+    //JQuery Objects
+    //----------------------/
+    var $sortToggle;
+    var $colorPicker;
+    var $backdrop;
+    var $curSelector;
+    
+    //----------------------\
+    // Prototype Functions
+    //----------------------/
+    
+    /*
+    * Initialization based on options
+    */
+    this.init = function(opt) {
+        
+        zumpColorPicker = this;
+        
+        // Set base color array
+        if (isDef(opt.baseColors)) {
+            baseColors = opt.baseColors;
+        }
+        
+        // Initialize color picker
+        generateColorPicker();
+        initListeners();
+    }
+    
+    /*
+    * Starts a get color selection which opens the color picker and 
+    * sets a callback for a selection event
+    */
+    this.getColor = function($selector, colorCb) {
+        
+        // Check if a current selection should be closed
+        if (typeof $curSelector !== 'undefined' && $curSelector[0] == $selector[0]) {
+            endCurrentSelection();
+            return;
+        }
+        
+        // Check if an old selection should be closed and a new one initialized
+        if (typeof callback !== 'undefined') {
+            if (callback) callback(false);
+            hideColorPicker(function() {
+                callback = undefined;
+                zumpColorPicker.getColor($selector, colorCb);
+            });
+            return;
+        }
+        
+        // Set selector and callback
+        $curSelector = $selector;
+        callback = colorCb;
+        
+        // Caclulate location and show picker
+        calculatePosition();
+        showColorPicker();
+    }
+    
+    //----------------------\
+    // Private Functions
+    //----------------------/
+    
+    /*
+    * Sets up document events for color picker objects
+    */
+    var initListeners = function() {
+        
+        // Event to handle color click
+        $(document).on('click', '.color-container', function(e) {
+            e.preventDefault();
+            var colorId = $(this).attr('colorid');
+            var color = colorIds[colorId];
+            
+            hideColorPicker();
+            
+            if (typeof color === 'undefined') {
+               if (callback) callback(false);
+            } else {
+               if (callback) callback(true, color);
+            }
+            
+            callback = undefined;
+            $curSelector = undefined;
+        });
+        
+        // Event to handle window resize
+        $(window).resize(function() {
+           if (typeof $curSelector !== 'undefined') {
+               calculatePosition();
+               $colorPicker.css({
+                    left: showRight ? dispLeft + 'px' : (dispLeft - width) + 'px',
+                    top: showBottom ? dispTop + 'px' : (dispTop - height) + 'px'
+               });
+               $backdrop.css({
+                   width: $(window).outerWidth(),
+                   height: $(window).outerHeight()
+               });
+           }
+        });
+        
+        // Event to handle backdrop click
+        $(document).on('click', '.color-picker-backdrop', function() {
+            endCurrentSelection();
+        });
+    }
+    
+    /*
+    * Resets the color picker selection
+    */
+    var endCurrentSelection = function() {
+        $curSelector = undefined;
+        callback = undefined;
+        hideColorPicker();
+        if (callback) callback(false);
+    }
+    
+    /*
+    * Calculates the location to be used in the color picker show event
+    */
+    var calculatePosition = function() {
+        var offset = $curSelector.offset();
+        var sWidth = $curSelector.outerWidth();
+        var sHeight = $curSelector.outerHeight();
+        
+        var okTop = ((offset.top - height) > 0);
+        var okBot = ((offset.top + sHeight + height) < $(document).outerHeight());
+        var okLeft = ((offset.left - height) > 0);
+        var okRight = ((offset.left + sWidth + width) < $(document).outerWidth());
+        
+        showBottom = !(okTop && !okBot);
+        showRight = !(okLeft && !okRight);
+        
+        dispTop = showBottom ? (offset.top + sHeight) : (offset.top);
+        dispLeft = showRight ? (offset.left + sWidth) : (offset.left);
+    }
+    
+    /*
+    * Generates the HTML code for the color picker
+    */
+    var generateColorPicker = function() {
+        $backdrop = $('<div class="color-picker-backdrop"></div>');
+        $colorPicker = $('<div class="color-picker" style="display: none;"></div>');
+        $colorPicker.append('<div class="pick-arrow"></div>');
+        
+        var $colorTable = $('<div class="color-table"></div>');
+        
+        // Loop through base colors and calculate shades
+        _.each(baseColors, function(baseColor) {
+            var $row = $('<div class="pick-row"></div>');
+            var hslValue = convertToHSL(baseColor);
+            
+            for (var i = rowCount; i > 0 ; i--) {
+                var factor = i * (span / rowCount) + ((1 - span)/2);
+                
+                var rgb = convertToRGB(hslValue.h, hslValue.s, factor);
+                var color = 'rgb(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ')';
+                $row.append('<div class="color-container" style="background-color:' + color + '" colorid="' + colorIdCount + '"></div>');
+                colorIds[colorIdCount.toString()] = color;
+                colorIdCount++;
+            }
+            
+            $colorTable.append($row);
+        });
+        
+        
+        $colorPicker.append($colorTable);
+        
+        // Setup width and height of color picker
+        width = rowCount * 20 + (rowCount - 1) * 5 + 20;
+        height = baseColors.length * 20 + (baseColors.length - 1) * 5 + 20;
+    }
+    
+    /*
+    * Shows the color picker at the location of the selector
+    */
+    var showColorPicker = function() {
+        var $arrow = $colorPicker.find('.pick-arrow');
+    
+        var arrowBorderColor = '15px solid rgb(0, 142, 221)';
+        var arrowBorderTrans = '15px solid transparent';
+        var arrowBorderNone = '0px';
+        
+        $arrow.css({
+            'border-top': showBottom ? arrowBorderColor : arrowBorderNone,
+            'border-right': showRight ? arrowBorderTrans : arrowBorderNone,
+            'border-bottom': !showBottom ? arrowBorderColor : arrowBorderNone,
+            'border-left': !showRight ? arrowBorderTrans : arrowBorderNone,
+            'top': showBottom ? '0' : 'auto',
+            'right': showRight ? 'auto' : '0',
+            'bottom': showBottom ? 'auto' : '0',
+            'left': showRight ? '0' : 'auto'
+        });
+        
+        $colorPicker.css({
+            'border-radius': (showBottom && showRight ? '0' : '5') + 'px '
+                                + (showBottom && !showRight ? '0' : '5') + 'px ' + 
+                                + (!showBottom && !showRight ? '0' : '5') + 'px ' + 
+                                + (!showBottom && showRight ? '0' : '5') + 'px'
+        });
+        
+        var shadow = (showRight ? '2px' : '-2px') + ' ' + (showBottom ? '2px' : '-2px');
+        
+        $colorPicker.css({
+            top: dispTop + 'px',
+            left: dispLeft + 'px',
+            width: '0px',
+            height: '0px',
+            '-webkit-box-shadow': shadow + ' 20px 0px rgba(0, 0, 0, 0.64)',
+            '-moz-box-shadow': shadow + ' 20px 0px rgba(0, 0, 0, 0.64)',
+            'box-shadow': shadow + ' 20px 0px rgba(0, 0, 0, 0.64)'
+        });
+        
+        $backdrop.css({
+           width: $(window).outerWidth(),
+           height: $(window).outerHeight()
+        });
+        
+        $('body').append($backdrop);
+        $('body').append($colorPicker);
+        
+        $colorPicker.show(0, function() {
+            $colorPicker.animate({
+                width: width,
+                height: height,
+                left: showRight ? dispLeft + 'px' : (dispLeft - width) + 'px',
+                top: showBottom ? dispTop + 'px' : (dispTop - height) + 'px'
+            }, 100, 'linear');
+        });
+    }
+    
+    /*
+    * Hides the current color picker
+    */
+    var hideColorPicker = function(complete) {
+        var $colorTable = $colorPicker.find('.color-table');
+        
+        $colorPicker.animate({
+                width: '0px',
+                height: '0px',
+                left: dispLeft + 'px',
+                top: dispTop + 'px'
+            }, 100, 'linear', function() {
+                $colorPicker.hide(0, function() {
+                    $colorPicker.remove();
+                    $backdrop.remove();
+                    if (complete) complete();
+                });
+            });
+        
+    }
+    
+    /*
+    * COnverts an RGB object to an HSL object
+    * Derived from: http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
+    */
+    var convertToHSL = function(rgbColor) {
+        var r = rgbColor.r / 255;
+        var g = rgbColor.g / 255;
+        var b = rgbColor.b / 255;
+        var max = Math.max(r, g, b)
+        var min = Math.min(r, g, b);
+        var h, s, l = (max + min) / 2;
+        
+        if (max == min) {
+            h = s = 0;
+        } else {
+            var span = max - min;
+            s = l > 0.5 ? span / (2 - span) : span / (max + min);
+            switch(max){
+                case r: h = (g - b) / span + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / span + 2; break;
+                case b: h = (r - g) / span + 4; break;
+            }
+            h /= 6;
+        }
+        
+        return {h: h, s: s, l: l};
+    }
+    
+    /*
+    * COnverts HSL colors to an RGB object
+    * Derived from: http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
+    */
+    var convertToRGB = function (h, s, l){
+         var r, g, b;
+
+        if (s == 0) {
+            r = g = b = l;
+        } else {
+            function hue2rgb(p, q, t){
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1/6) return p + (q - p) * 6 * t;
+                if (t < 1/2) return q;
+                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            }
+    
+            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            var p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
+        }
+    
+        return {r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255)};
+    }
+    
+    // Initialize
     this.init(opt);
 }

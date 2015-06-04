@@ -2,14 +2,14 @@
 <html>
 {{#section 'head'}}
 <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# testdisczumpfb: http://ogp.me/ns/fb/testdisczumpfb#">
-    <title>DiscZump - Disc View</title>
+    <title>DiscZump - Public View</title>
     <link rel="stylesheet" href="/static/css/viewdisc.css">
     <link rel="stylesheet" href="/static/css/jquery-ui.min.css">
     <meta property="og:url"                content="https://disczumpserver-mgagliardo.c9.io/disc/{{disc._id}}" />
     <meta property="fb:app_id"             content="1433417853616595" />
     <meta property="og:type"               content="disczumpfb:disc" />
     <meta property="og:title"              content="{{disc.brand}} {{disc.name}}" />
-    <meta property="og:description"        content="[Condition: Good] | [Material: {{disc.material}}] | [Weight: {{disc.weight}}]" />
+    <meta property="og:description"        content="Condition: {{#if disc.condition}}{{disc.condition}}/10{{else}}<No Entry>{{/if}} | Material: {{#if disc.material}}{{disc.material}}{{else}}<No Entry>{{/if}} | Weight: {{#if disc.weight}}{{disc.weight}}{{else}}<No Entry>{{/if}}" />
     <meta property="og:image"              content="https://disczumpserver-mgagliardo.c9.io/files/{{disc.retPrimaryImage.fileId}}/600" />
 </head>
 {{/section}}
@@ -26,11 +26,13 @@
     <div class="container public-disc-view" id="{{disc._id}}">
         <div class=row>
             <div class="public-disc-title-area">
-                <span class="public-disc-name">{{disc.brand}} {{disc.name}}</span> by <a href="/" class="public-user-link">{{alias.display}}
+                <span class="public-disc-name">{{disc.brand}} {{disc.name}}</span> by <a href="/" class="public-user-link">{{alias.display}}</a>
                 {{#if alias.image}}
                 <img class="public-user-image" src="{{alias.image}}" />
-                {{/if}}</a>
+                {{/if}}
+                {{#if disc.visible}}
                 <div class="fb-share-button" data-href="https://disczumpserver-mgagliardo.c9.io/disc/{{disc._id}}" data-layout="button"></div>
+                {{/if}}
             </div>
         </div>
         <div class="row">
@@ -62,18 +64,20 @@
                     </div>
                 </div>
             </div>
-            <div class="hidden-xs col-sm-5 col-md-6 col-lg-6 public-col-pd">
+            <div class="col-xs-12 col-sm-5 col-md-6 col-lg-6 public-col-pd">
                 <div class="public-disc-data-container">
                     <div class="row public-disc-data">
-                        <div class="col-sm-12 col-md-12 col-lg-6 public-col-pd public-disc-data-left">
+                        <div class="col-xs-6 col-sm-12 col-md-12 col-lg-6 public-col-pd public-disc-data-left">
                             <div class="public-disc-data-list-container">
                                 <div class="public-disc-data-list-item">
                                     <span class="public-disc-label lj-label">Material:</span>
                                     <span class="public-disc-list-text">{{disc.material}}</span>
+                                    <div class="clearfix"></div>
                                 </div>
                                 <div class="public-disc-data-list-item">
                                     <span class="public-disc-label lj-label">Color:</span>
                                     <span class="public-disc-list-text">{{disc.color}}</span>
+                                    <div class="clearfix"></div>
                                 </div>
                                 <div class="public-disc-data-list-item">
                                     <span class="public-disc-label lj-label">Weight:</span>
@@ -82,14 +86,20 @@
                                     {{else}}
                                     <span class="public-disc-list-text"></span>
                                     {{/if}}
+                                    <div class="clearfix"></div>
                                 </div>
                                 <div class="public-disc-data-list-item">
                                     <span class="public-disc-label lj-label">Condition:</span>
-                                    <span class="public-disc-list-text">8/10</span>
+                                    {{#if disc.condition}}
+                                    <span class="public-disc-list-text">{{disc.condition}}/10</span>
+                                    {{else}}
+                                    <span class="public-disc-list-text"></span>
+                                    {{/if}}
+                                    <div class="clearfix"></div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-sm-12 col-md-12 col-lg-6 public-col-pd public-disc-data-right">
+                        <div class="col-xs-6 col-sm-12 col-md-12 col-lg-6 public-col-pd public-disc-data-right">
                             <span class="flight-number-table-title public-disc-label">{{disc.type}}</span>
                             <div class="flight-number-table-container">
                                 <table class="flight-number-table">
@@ -151,8 +161,8 @@
                 <span>Other discs in {{alias.display}}'s inventory:</span>
             </div>
             <div class="row public-user-discs-list no-select">
-                <div class="scroll-btn float-left"><i class="fa fa-chevron-left fa-3x scroll-chevron scroll-left hidden"></i></div>
-                <div class="scroll-btn float-right"><i class="fa fa-chevron-right fa-3x scroll-chevron scroll-right hidden"></i></div>
+                <div class="scroll-btn float-left"><i class="fa fa-chevron-left fa-3x scroll-chevron scroll-left"></i></div>
+                <div class="scroll-btn float-right"><i class="fa fa-chevron-right fa-3x scroll-chevron scroll-right"></i></div>
                 <div class="public-user-discs-table-wrapper">
                     <div class="public-user-discs-table">
                     </div>
@@ -160,6 +170,7 @@
                 <div class="clearfix"></div>
             </div>
         </div>
+        <div class="clearfix"></div>
     </div>
 
     <script src="/static/js/jquery-ui.min.js"></script>

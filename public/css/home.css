@@ -1,7 +1,6 @@
 html, body {
     margin: 0;
     padding: 0 !important;
-    height: 100%;
     width: 100%;
     position: relative;
 }
@@ -42,12 +41,17 @@ html, body {
 #main-background {
     position: relative;
     background-image: url('../logo/logo_banner_caption.svg');
-    background-position: 50% 50%;
     background-repeat: no-repeat;
-    background-attachment: fixed;
+    background-attachment: fixed !important;
+    background-origin: content-box !important;
     background-size: 100% auto;
-    height: 100%;
-    z-index: -1;
+    -webkit-background-size: 100% auto;
+    -moz-background-size: 100% auto;
+    -o-background-size: 100% auto;
+    height: 100vh;
+    background-position-x: 50%;
+    background-position-y: 50%;
+    background-position: center !important;
 }
 
 .link-container {
@@ -141,7 +145,7 @@ html, body {
     }
     
     
-    .section-inner > .section-graphic {
+    .section-inner > .section-icons {
         font-size: 150px;
     }
 }
@@ -167,7 +171,7 @@ html, body {
         font-size: 1.5em;
     }
     
-    .section-inner > .section-graphic {
+    .section-inner > .section-icons {
         font-size: 200px;
     }
 }
@@ -276,6 +280,10 @@ html, body {
 
 .section-info {
     position: relative;
+}
+
+.section-info.wpad {
+    padding: 40px 20px;
 }
 
 .carousel, .carousel-inner, .carousel-inner > .item {
@@ -423,7 +431,10 @@ html, body {
 
 #section-platform {
     background-color: rgb(238, 238, 238);
-    padding: 40px 20px;
+}
+
+#section-beta {
+    background-color: #fff;
 }
 
 .section-inner {
@@ -443,10 +454,25 @@ html, body {
 
 .section-details {
     text-align: center;
-    max-width: 600px;
+    max-width: 800px;
     margin: auto;
     font-size: 1.5em;
     font-family: 'Play', sans-serif;
+}
+
+.section-input {
+    max-width: 400px;
+    margin: auto;
+    margin-top: 20px;
+}
+
+.section-input button {
+    font-weight: bold;
+}
+
+.section-graphic {
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 
 .section-inner > .section-graphic > .fa-desktop {
@@ -465,12 +491,16 @@ html, body {
     font-size: 40%;
 }
 
+.section-inner .logo-block {
+    height: 200px;
+}
+
 #section-footer {
-    background-color: #fff;
+    background-color: #ff9070;
 }
 
 .footer-bar {
-    max-width: 600px;
+    max-width: 300px;
     margin: auto;
     color: black;
     padding-top: 10px;
@@ -483,21 +513,4 @@ html, body {
 
 .footer-links > a {
     color: black;
-}
-
-
-/*===================================================================*/
-/*                                                                   */
-/*                            Tutorial                               */
-/*                                                                   */
-/*===================================================================*/
-
-#tutorial {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 3000;
-    /*background-color: rgba(128, 128, 128, 0.5);*/
-    width: 100%;
-    height: 100%;
 }

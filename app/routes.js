@@ -1,5 +1,7 @@
 var Disc = require('./controllers/disc');
 var UserController = require('./controllers/user');
+var EventController = require('./controllers/event');
+var DataItemController = require('./controllers/dataItem');
 var Recover = require('./utils/recover');
 var Confirm = require('./utils/confirm');
 var Mailer = require('./utils/mailer.js');
@@ -12,15 +14,52 @@ var fbGraph = require('fbgraph');
 module.exports = function(app, passport, gridFs) {
 
     // Site
-    app.get('/facebook', function(req, res) {
-       return res.render('facebook'); 
+    
+    app.get('/', function(req, res) {
+       res.render('home', {
+           isIndex: true
+       });
     });
     
-    app.get('/', isLoggedIn, function(req, res) {
-        res.redirect('/dashboard');
+    app.post('/beta', function(req, res) {
+        if (req.body.email) {
+            DataItemController.createDataItem(req.body.email, function(err, email) {
+                if (err) {
+                    return res.render('notification', {
+                        notify: {
+                            pageHeader: err.error.type,
+                            header: err.error.type,
+                            strong: err.error.message,
+                            text: 'When we enter beta, you will receive instructions on how to create' + 
+                                ' your personalized account.',
+                            buttonIcon: 'fa-home',
+                            buttonText: 'Return Home',
+                            buttonLink: '/'
+                        }
+                       
+                    });
+                } else {
+                    return res.render('notification', {
+                        notify : {
+                            pageHeader: 'Join Successful',
+                            header: 'Join Successful',
+                            strong: 'Your email has been successfully submitted to DiscZump!',
+                            text: 'When we enter beta, you will receive instructions on how to create' + 
+                                ' your personalized account.',
+                            buttonIcon: 'fa-home',
+                            buttonText: 'Return Home',
+                            buttonLink: '/'
+                        }
+                    });
+                }
+            });
+        } else {
+            return res.redirect('/');
+        }
     });
 
     app.get('/dashboard', isLoggedIn, function(req, res) {
+        UserController.updateActivity(req.user._id);
         if (req.device.isMobile) {
             return res.render('mobile/dashboard', {
                 user : req.user,
@@ -31,7 +70,7 @@ module.exports = function(app, passport, gridFs) {
             return res.render('dashboard', {
                 user : req.user,
                 isDashboard : true,
-                isLinked : typeof(req.user.facebook.token) !== 'undefined',
+                isLinked : typeof(req.user.facebook.id) !== 'undefined',
                 info: {
                     title: req.flash('infoTitle'),
                     text: req.flash('infoText')
@@ -62,27 +101,52 @@ module.exports = function(app, passport, gridFs) {
     });
     
     app.get('/test', function(req, res) {
-       res.render('test'); 
+       res.render('test', {
+           isIndex: true
+       });
     });
     
     app.get('/disc/:discid', function(req, res) {
         var userId = undefined;
         if (req.user) userId = req.user._id;
     
-       Disc.getDisc(userId, req.params.discid, function(err, disc) {
-           if (err)
-                return res.send(err);
+        Disc.getDisc(userId, req.params.discid, function(err, disc) {
+            if (err) {
+               return res.render('notification', {
+                   notify : {
+                       pageHeader: err.error.type,
+                       header: err.error.type,
+                       strong: err.error.message,
+                       text: 'The owner of this disc has not yet made it visible to the public.',
+                       buttonIcon: 'fa-home',
+                       buttonText: 'Return Home',
+                       buttonLink: '/'
+                   }
+               });
+            }
             
             UserController.getAlias(disc.userId, function(err, alias){
-               if (err)
-                    return res.send(err);
-                    
+                if (err) {
+                    return res.render('notification', {
+                       notify : {
+                           pageHeader: err.error.type,
+                           header: err.error.type,
+                           strong: err.error.message,
+                           text: 'The owner of this disc has not yet made it visible to the public.',
+                           buttonIcon: 'fa-home',
+                           buttonText: 'Return Home',
+                           buttonLink: '/'
+                       }
+                   });
+                }
+
                 return res.render('viewdisc', {
                     disc: disc,
-                    alias: alias
+                    alias: alias,
+                    isPublicPage: true
                 });
             });
-       }) ;
+        }) ;
     });
     
     app.get('/' + configRoutes.confirmAccount + '/:authorizationId', function(req, res){
@@ -118,11 +182,19 @@ module.exports = function(app, passport, gridFs) {
                         return res.send(err);
                         
                     return res.render('notification', {
-                        notify : {
+                       notify : {
                             pageHeader: 'Confirm Account',
                             header: 'Account Confirmation',
-                            text: 'A confirmation email has been sent with a link to confirm your account.'
-                        }
+                            strong: 'You\'re almost there!',
+                            text: 'An email has been sent to your address' + 
+                                ' with a link to confirm your account.',
+                            strong2: 'Why do we require email confirmation? ',
+                            text2: 'We know you value your collection and by giving us a valid email, ' + 
+                                'we can ensure that you never lose access in the future.',
+                           buttonIcon: 'fa-home',
+                           buttonText: 'Return Home',
+                           buttonLink: '/'
+                       }
                     });
                 });
             });
@@ -157,10 +229,18 @@ module.exports = function(app, passport, gridFs) {
                         
                     return res.render('notification', {
                         notify : {
-                            pageHeader: 'Recover Account',
-                            header: 'Account Recovery',
-                            text: 'An email has been set with instructions on how to recover your account.'
-                        }
+                           pageHeader: 'Recover Account',
+                           header: 'Account Recovery',
+                           strong: 'You\'re almost there!',
+                           text: 'An email has been sent to your address' + 
+                                ' with instructions on how to recover your account.',
+                            strong2: 'Why? ',
+                            text2: 'We value your privacy and use email as another step to ensure ' + 
+                                'your collection remains with you.',
+                           buttonIcon: 'fa-home',
+                           buttonText: 'Return Home',
+                           buttonLink: '/'
+                       }
                     });
                 });
             });
@@ -251,15 +331,17 @@ module.exports = function(app, passport, gridFs) {
     });
     
     // show the signup form
-    app.get('/signup', function(req, res, nex) {
+    app.get('/signup', function(req, res) {
 
         // render the page and pass in any flash data if it exists
         res.render('signup', {
             username: req.flash('username'),
-            password: req.flash('password'),
+            zipCode: req.flash('zipCode'),
+            alias: req.flash('alias'),
+            pdgaNumber: req.flash('pdgaNumber'),
             route: {
                 url: 'login',
-                text: 'Log In'
+                text: 'Sign In'
             },
             message: {
                 error: req.flash('error'),
@@ -277,18 +359,25 @@ module.exports = function(app, passport, gridFs) {
             if (!req.body.passcode || (req.body.passcode != development.passcode)) {
                 req.flash('error', 'Invalid passcode. Please try again.');
                 req.flash('username', req.body.username);
-                req.flash('password', req.body.password);
+                req.flash('zipCode', req.body.zipCode);
+                req.flash('alias', req.body.alias);
+                req.flash('pdgaNumber', req.body.pdgaNumber);
                 return res.redirect('/signup');
             }
         }
         
         passport.authenticate('local-signup', function(err, user, info) {
+            req.flash('username', req.body.username);
+            req.flash('zipCode', req.body.zipCode);
+            req.flash('alias', req.body.alias);
+            req.flash('pdgaNumber', req.body.pdgaNumber);
+            
             if (err)
                 return next(err);
                 
-            if (!user)
+            if (!user) {
                 return res.redirect('/signup');
-            else
+            } else
                 return res.redirect('/' + configRoutes.confirmAccount + '/user/' + user._id);
         })(req, res, next);
     });
@@ -298,9 +387,6 @@ module.exports = function(app, passport, gridFs) {
         res.redirect('/login');
     });
 
-    // =====================================
-    // FACEBOOK ROUTES =====================
-    // =====================================
     app.get('/account/link', isLoggedIn, function(req, res) {
         if (req.user.facebook.token) {
             res.render('linkfacebook', {
@@ -323,37 +409,34 @@ module.exports = function(app, passport, gridFs) {
     app.get('/account/unlink/facebook', isLoggedIn, function(req, res) {
         var user = req.user;
         user.facebook.token = undefined;
+        user.facebook.id = undefined;
+        user.local.image = undefined;
         user.save(function(err) {
+            EventController.createEvent(user._id, EventController.types.AccountUnlink);
             req.flash('infoTitle', 'Unlink Successful');
             req.flash('infoText', 'Your Facebook account is no longer linked.');
             res.redirect('/dashboard');
         });
     });
     
-    // route for facebook authentication and login
     app.get('/auth/facebook', passport.authenticate('facebook', { scope : ['email', 'user_photos'] }));
 
-    // handle the callback after facebook has authenticated the user
     app.get('/auth/facebook/callback',
         passport.authenticate('facebook', {
             successRedirect : '/dashboard',
             failureRedirect : '/login'
         }));
 
-    // route for logging out
     app.get('/logout', function(req, res) {
         req.logout();
         res.redirect('/');
     });
 };
 
-// route middleware to make sure a user is logged in
 function isLoggedIn(req, res, next) {
 
-    // if user is authenticated in the session, carry on 
     if (req.isAuthenticated())
         return next();
-    
-    // if they aren't redirect them to the home page
-    res.redirect('/login');
+        
+    res.redirect('/');
 }

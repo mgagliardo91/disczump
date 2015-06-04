@@ -6,34 +6,43 @@
     <link rel="stylesheet" href="/static/css/signup.css">
 </head>
 <body>
-    <div class="signup-form-container">
-        <div class="signup-form-cell">
-            <div class="signup-form-center">
-                <form action="/recover" method="post">
-                    <h1 class="signup-title">Recover your damn password</h1>
-                    {{#if message.error}}
-                    <div class="alert alert-danger" role="alert">
-                        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                        <strong>Error: </strong>{{message.error}}
-                    </div>
-                    {{/if}}
-                    {{#if message.info}}
-                    <div class="alert alert-info" role="alert">
-                        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                        <strong>Note: </strong>{{message.info}}
-                    </div>
-                    {{/if}}
-                    <div class="signup-form-stacked">
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
-                            <input class="form-control" id="username" type="email" name="username" placeholder="Email">
+    <div class="page-container container">
+        <div class="page-header">
+            <img src="/static/logo/logo_small_round.svg">
+            <h1>Recover Your Password</h1>
+        </div>
+        <div>
+            Enter your account email address and we will send you a link to reset your password.
+        </div>
+        <div class="signup-form-container">
+            <div class="signup-form-cell">
+                <div class="signup-form-center">
+                    <form action="/recover" method="post" id="recover-form" autocomplete="off">
+                        {{#if message.error}}
+                        <div class="alert alert-danger" role="alert">
+                            <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <strong>Error: </strong>{{message.error}}
                         </div>
-                        <button id="submit" class="btn btn-submit btn-block" type="submit" disabled>Recover</button>
-                    </div>
-                </form>
+                        {{/if}}
+                        {{#if message.info}}
+                        <div class="alert alert-info" role="alert">
+                            <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <strong>Note: </strong>{{message.info}}
+                        </div>
+                        {{/if}}
+                        <div class="signup-form-stacked">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
+                                <input class="form-control" id="recover-username" type="email" name="username" placeholder="Email">
+                            </div>
+                            <button id="submit" class="btn btn-submit btn-block" type="submit">Recover</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
+    <script src="/static/js/access.js"></script>
     <script src="/static/js/validation.js"></script>
 </body>
 </html>

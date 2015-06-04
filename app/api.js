@@ -14,6 +14,24 @@ module.exports = function(app, passport, gridFs) {
     
     gfs = gridFs;
     
+    app.route('/account')
+        .get(hasAccess, function(req, res) {
+           UserController.getAccount(req.user._id, function(err, user) {
+               if (err)
+                    return res.json(err);
+                    
+                return res.json(user);
+           })
+        })
+        .put(hasAccess, function(req, res) {
+            UserController.updateAccount(req.user._id, req.body, function (err, user) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json(user);
+            });
+        });
+    
     app.route('/account/preferences')
         .get(hasAccess, function(req, res) {
             UserController.getPreferences(req.user._id, function(err, user) {
@@ -23,6 +41,14 @@ module.exports = function(app, passport, gridFs) {
                 return res.json(user);
             })
         })
+        .post(hasAccess, function(req, res) {
+            UserController.restorePreferences(req.user._id, function (err, user) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json(user);
+            });
+        })
         .put(hasAccess, function(req, res) {
             UserController.updatePreferences(req.user._id, req.body, function (err, user) {
                 if (err)
@@ -30,6 +56,18 @@ module.exports = function(app, passport, gridFs) {
                 
                 return res.json(user);
             });
+        });
+        
+    app.route('/account/reset')
+        .put(hasAccess, function(req,res) {
+            UserController.tryResetPassword(req.user._id, req.body.currentPw, 
+                req.body.newPw, function(err, user) {
+                if (err)
+                    return res.json(err);
+                
+                user.addEvent('User authenticated password reset.');
+                return res.json(user.accountToString());
+            })
         });
     
     app.route('/users/:userId/discs')

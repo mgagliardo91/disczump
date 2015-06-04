@@ -2,26 +2,34 @@
 <html>
 <head>
     <title>DiscZump - {{notify.pageHeader}}</title>
-    <style type="text/css">
-        .jumbotron h1 {
-            font-size: 50px;
-        }
-    </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row-fluid">
-            <div class="col-md-6 col-md-offset-3">
-                <div class="jumbotron">
-                    <div class="page-header">
-                      <h1>DiscZump <small>{{notify.header}}</small></h1>
-                    </div>
-                    <p>{{notify.text}}</p>
-                    <br />
-                    <p><a class="btn btn-primary btn-lg pull-right" href="/" role="button">Return Home</a></p>
-                    <div class="clearfix" />
-                </div>
-            </div>
+    <div class="page-container container">
+        <div class="page-header">
+            <img src="/static/logo/logo_small_round.svg">
+            <h1>{{notify.header}}</h1>
+        </div>
+        <div class="page-body">
+            {{#if notify.strong}}
+            <strong>{{notify.strong}}</strong>
+            <br />
+            <br />
+            {{/if}}
+            {{#if notify.text}}
+            {{notify.text}}
+            {{/if}}
+            {{#if notify.text2}}
+            <br />
+            <br />
+            <strong>{{#if notify.strong2}}{{notify.strong2}}{{/if}}</strong>
+            <br />
+            <br />
+            {{notify.text2}}
+            {{/if}}
+        </div>
+        <div style="text-align: right">
+            <a class="btn btn-wide btn-primary" href="{{notify.buttonLink}}">
+                {{#if notify.buttonIcon}}<i class="fa {{notify.buttonIcon}} pull-left"></i> {{/if}}{{notify.buttonText}}</a>
         </div>
     </div>
 </body>

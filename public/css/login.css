@@ -11,7 +11,7 @@
 
 .login-form-cell {
      width: 100%;
-     padding-top: 100px;
+     padding: 20px 0px;
      display: table-cell;
      text-align: center;
      vertical-align: middle;
@@ -39,10 +39,4 @@
 
 .login-form-stacked {
      margin-bottom: 10px;
-}
-
-@media screen and (max-height: 700px) {
-     .login-form-cell {
-          padding-top: 100px !important;
-     }
 }
