@@ -388,7 +388,7 @@ module.exports = function(app, passport, gridFs) {
     });
 
     app.get('/account/link', isLoggedIn, function(req, res) {
-        if (req.user.facebook.token) {
+        if (req.user.facebook.id) {
             res.render('linkfacebook', {
                unlink: true
            });
