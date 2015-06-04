@@ -431,6 +431,10 @@ module.exports = function(app, passport, gridFs) {
         req.logout();
         res.redirect('/');
     });
+    
+    app.get('*', function(req, res){
+       res.redirect('/'); 
+    });
 };
 
 function isLoggedIn(req, res, next) {
