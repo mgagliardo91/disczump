@@ -13,7 +13,7 @@ $(document).ready(function(){
     stepValue = 1.0 / (popValue);
     
     $('#inventory-carousel').carousel({
-        interval: 5000
+        interval: 8000
     });
     
     $(window).scroll(function() {

@@ -4,6 +4,7 @@
     <title>DiscZump - Dashboard</title>
     <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
     <link rel="stylesheet" href="/static/css/mobile/dashboard.css">
+    <link rel="stylesheet" href="/static/css/dropzone.css">
     <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 </head>
 <body>
@@ -17,7 +18,8 @@
                         <a class="list-group-item panel-link-item clickable" id="settings-colorize" panel-href="#colorize-container">Colorize <i class="fa fa-adjust fa-fw pull-right"></i></a>
                     </ul>
                 </div>
-                <div class="panel-btn" id="add-disc-btn">Add Disc</div>
+                {{!--<div class="panel-btn" id="add-disc-btn">Add Disc</div>--}}
+                <a class="panel-btn" href="#add-disc-page" data-role="button" data-inline="true" data-transition="fade">Add Disc</a>
             </div>
             <div class="panel settings-panel panel-dark" id="filter-container">
                 <div class="panel-heading"><i class="btn-back fa fa-arrow-left fa-fw pull-left" panel-href="#settings-container"></i>Filter</div>
@@ -34,6 +36,42 @@
     <div data-role="page" id="disc-inventory">
         <div data-role="content">
             <div class="disc-inventory-list" id="disc-inventory-container">
+            </div>
+        </div>
+    </div>
+    <div data-role="page" id="add-disc-page">
+        <div  data-role="header" class="add-disc-header">
+            <a href="#disc-inventory" class="ui-btn ui-icon-delete ui-btn-icon-notext ui-corner-all">No text</a>
+            <h1>Add Disc</h1>
+        </div>
+        <div data-role="content">
+            <div class="mobile-add-disc-container">
+                <div class="mobile-form-horizontal">
+                    <div class="ui-field-contain">
+                        <label for="brand" class="ui-hidden-accessible">Brand</label>
+                        <input type="text" data-clear-btn="true" name="brand" value="" placeholder="Brand">
+                        <label for="name" class="ui-hidden-accessible">Name</label>
+                        <input type="text" data-clear-btn="true" name="name" value="" placeholder="Name">
+                        <div class="image-list dropzone-area">
+                            <div class="image-list-container" id="dropzone-container">
+                                <div class="image-list-table" id="dropzone-previews">
+                                    <div class="image-item-container image-add" id="dropzone-trigger">
+                                        <div class="image-item">
+                                            <div class="image-entity">
+                                                <span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{!--<div class="ui-field-contain">--}}
+                    {{!--    <label for="textarea-14">Textarea:</label>--}}
+                    {{!--    <textarea data-mini="true" cols="40" rows="8" name="textarea-14" id="textarea-14"></textarea>--}}
+                    {{!--</div>--}}
+                    <button class="ui-btn ui-shadow">Save</button>
+                </div>
             </div>
         </div>
     </div>

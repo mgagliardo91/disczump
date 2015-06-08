@@ -1239,6 +1239,7 @@ function generateModal(opt) {
      
      // Setup events
      if (isDef(opt.fns)) {
+     	
      	_.each(opt.fns, function(fn) {
      		if (fn.name && fn.function) {
      			$modal.find('[fn-title="' + fn.name +'"]').on('click', function() {
@@ -1636,7 +1637,7 @@ function generateDiscInputForm(disc) {
 		    	delay: { "show": 200, "hide": 100 },
 		    	placement: 'top',
 		    	trigger: 'hover',
-		    	title: 'Condition based on Sleepy Scale. Must be integer with 1 optional decimal place.',
+		    	title: 'Condition based on Sleepy Scale. Must be an integer with 1 optional decimal place.',
 		    	template: '<div class="tooltip" role="tooltip" style="width: 150px;">' +
 		    				'<div class="tooltip-arrow"></div>' +
 		    				'<div class="tooltip-inner"></div>' +

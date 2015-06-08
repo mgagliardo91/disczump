@@ -9,6 +9,7 @@ var zumpFilter;
 var zumpPaginate;
 var zumpAPI;
 
+var dropzones = [];
 var userPrefs;
 
 $(document).on("pagecreate", "#disc-inventory", function () { 
@@ -38,10 +39,6 @@ $(document).on("pagecreate", "#disc-inventory", function () {
         $sidePanel.off("touchmove");
         $('.panel').hide();
         $('.panel-main').show();
-    });
-    
-    $('#add-disc-btn').on('vclick', function() {
-        //open add disc panel
     });
     
     $(document).on('swiperight', '#disc-inventory > .ui-panel-wrapper', function(e) {
@@ -78,7 +75,7 @@ $(document).on("pagecreate", "#disc-inventory", function () {
            if (success) {
                updateInventory(true);
            } else {
-               console.log('Unable to get disc list from sever.');
+               console.log('Unable to get disc list from server.');
            }
        }
     });
@@ -132,6 +129,7 @@ $(document).on("pagecreate", "#disc-inventory", function () {
     zumpAPI.getPreferences(function(success, prefs) {
        if (success) {
            userPrefs = prefs;
+           console.log(userPrefs);
            userPrefs.colorize = zumpColorize.updateScheme(userPrefs.colorize);
            updatePreferences();
        } else {
@@ -140,6 +138,11 @@ $(document).on("pagecreate", "#disc-inventory", function () {
     });
     zumpAPI.start();
     
+});
+
+$(document).on("pagecreate", "#add-disc-page", function () {
+    
+    createDropZone($('#add-disc-page').find('.dropzone-area'));
 });
 
 function updatePreferences() {
@@ -193,6 +196,67 @@ function showDiscs(discList) {
 		zumpInventory.appendItem(disc);
 		zumpAPI.getDiscImageById(disc._id, disc.primaryImage, zumpInventory.updateDiscImage);
 	});
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*                           Dropzone JQuery                         */
+/*                                                                   */
+/*===================================================================*/
+
+/*
+* Creates a dropzone area for image upload
+*/
+function createDropZone($div) {
+	var template = '<div class="image-item-container">' +
+                        '<div class="image-item">' +
+                            '<div class="image-entity">' +
+                                '<img data-dz-thumbnail />' +
+                            '</div>' +
+                            '<div class="image-progress" data-dz-uploadprogress></div>' +
+                            '<div class="image-overlay">' +
+                                '<span class="image-remove" data-dz-remove><i class="fa fa-times fa-lg"></i></span>' +
+                                '<div class="image-title"><span data-dz-name></span></div>' +
+                                '<div class="image-size" data-dz-size></div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+    
+    var $imageAdd = $div.find('.image-add');
+    var $container = $div.find('.image-list-container');
+    var $table = $div.find('.image-list-table');
+	var myDropzone = new Dropzone('#' + $container.attr('id'), {
+		url: "/api/discs",
+		method: "POST",
+		thumbnailWidth: 100,
+		thumbnailHeight: 100,
+		parallelUploads: 10,
+		maxFiles: 10,
+		paramName: 'discImage',
+		previewTemplate: template,
+		acceptedFiles: "image/*",
+		autoProcessQueue: false,
+		previewsContainer: '#' + $table.attr('id'),
+		clickable: '#' + $imageAdd.attr('id'),
+		accept: function(file, done) {
+			done();
+		},
+		init: function() {
+			this.on("addedfile", function() {
+				if (this.files[10] != null){
+					this.removeFile(this.files[10]);
+				} else {
+					$imageAdd.insertAfter('#dropzone-previews > .image-item-container:last-child');
+					$container.animate({scrollLeft: $table.innerWidth()}, 2000);
+				}
+			}).on('success', function(file, response){
+				
+			});
+		}
+	});
+	
+	dropzones.push(myDropzone);
+	$div.attr('dropzoneId', dropzones.length - 1);
 }
 
 var ZumpInventory = function(opt) {
@@ -1135,7 +1199,7 @@ var ZumpAPI = function(opt) {
     * Initializes the discs
     */
     this.start = function() {
-         getAllDiscs(onDataReady);
+        getAllDiscs(onDataReady);
     }
     
     /*
@@ -1179,7 +1243,7 @@ var ZumpAPI = function(opt) {
     				callback(success, prefs);
     			}
     		}
-         });
+        });
     }
     
     /*

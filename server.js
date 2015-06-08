@@ -79,6 +79,9 @@ var testRouter = express.Router();
 require('./app/files.js')(testRouter, gridFs);
 app.use('/files', testRouter);
 
+app.get('*', function(req, res){
+  res.redirect('/'); 
+});
 
 // launch ======================================================================
 app.listen(port);

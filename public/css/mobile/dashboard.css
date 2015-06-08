@@ -40,6 +40,8 @@ body {
     font-weight: bold;
     text-align: center;
     margin: 10px 0px 0px 0px;
+    text-decoration: none;
+    display: block;
 }
 
 .item-active {
@@ -315,4 +317,22 @@ a.panel-link-item {
     line-height: 1.1em;
     font-variant: small-caps;
     text-overflow: ellipsis;
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*                            Add Disc Page                          */
+/*                                                                   */
+/*===================================================================*/
+
+form label {
+    font-weight: bold;
+}
+
+.mobile-add-disc-container {
+    padding: 10px;
+}
+
+.mobile-form-horizontal div[class^='ui-input'] {
+    margin: 3px 0px;
 }
