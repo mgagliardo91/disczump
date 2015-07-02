@@ -17,7 +17,8 @@ module.exports = function(app, passport, gridFs) {
     
     app.get('/', function(req, res) {
        res.render('home', {
-           isIndex: true
+           isIndex: true,
+           reqScroll: req.device.isMobile
        });
     });
     
@@ -26,6 +27,7 @@ module.exports = function(app, passport, gridFs) {
             DataItemController.createDataItem(req.body.email, function(err, email) {
                 if (err) {
                     return res.render('notification', {
+                        isMobile: req.device.isMobile,
                         notify: {
                             pageHeader: err.error.message.type,
                             header: err.error.message.type,
@@ -40,6 +42,7 @@ module.exports = function(app, passport, gridFs) {
                     });
                 } else {
                     return res.render('notification', {
+                        isMobile: req.device.isMobile,
                         notify : {
                             pageHeader: 'Join Successful',
                             header: 'Join Successful',
@@ -67,8 +70,19 @@ module.exports = function(app, passport, gridFs) {
                 isMobile: true
             });
         } else {
+            var firstUse = false;
+            
+            if (typeof req.user.local.accessCount !== 'undefined') {
+                firstUse = req.user.local.accessCount.desktop <= 1;
+                if (firstUse) {
+                    UserController.updateAccessCount(req.user._id, 'desktop');
+                }
+            }
+            
+            
             return res.render('dashboard', {
                 user : req.user,
+                firstUse: firstUse,
                 isDashboard : true,
                 isLinked : typeof(req.user.facebook.id) !== 'undefined',
                 info: {
@@ -81,18 +95,11 @@ module.exports = function(app, passport, gridFs) {
         
     });
     
-    app.get('/profile', isLoggedIn, function(req, res) {
-        return res.render('profile', {
-           user: req.user,
-           isProfile : true
-        });
-    });
-    
     app.get('/profile/delete', isLoggedIn, function(req, res) {
         UserController.deleteUser(req.user._id, gridFs, function(err, user) {
             if (err) {
                 console.log(err);
-                return res.redirect('/profile');
+                return res.redirect('/');
             }
             
             req.logout();
@@ -113,6 +120,7 @@ module.exports = function(app, passport, gridFs) {
         Disc.getDisc(userId, req.params.discid, function(err, disc) {
             if (err) {
                return res.render('notification', {
+                    isMobile: req.device.isMobile,
                    notify : {
                        pageHeader: err.error.message.type,
                        header: err.error.message.type,
@@ -128,6 +136,7 @@ module.exports = function(app, passport, gridFs) {
             UserController.getAlias(disc.userId, function(err, alias){
                 if (err) {
                     return res.render('notification', {
+                        isMobile: req.device.isMobile,
                        notify : {
                            pageHeader: err.error.message.type,
                            header: err.error.message.type,
@@ -139,12 +148,22 @@ module.exports = function(app, passport, gridFs) {
                        }
                    });
                 }
-
-                return res.render('viewdisc', {
-                    disc: disc,
-                    alias: alias,
-                    isPublicPage: true
-                });
+                
+                if (req.device.isMobile) {
+                    return res.render('mobile/viewdisc', {
+                        disc: disc,
+                        alias: alias,
+                        isPublicPage: true,
+                        isMobile: true
+                    });
+                } else {
+                    return res.render('viewdisc', {
+                        disc: disc,
+                        alias: alias,
+                        isPublicPage: true
+                    });
+                }
+                
             });
         }) ;
     });
@@ -156,15 +175,13 @@ module.exports = function(app, passport, gridFs) {
                     return res.redirect('/login');
                 } else {
                     
-                    if (user.local.passcode) {
-                        DevController.createDiscData(gridFs, user._id);
-                    }
+                    DevController.createDiscData(gridFs, user._id);
                     
                     req.login(user, function(err) {
                         if (err) {
                             req.flash('error', err);
                             return res.redirect('/login');
-                        } 
+                        }
                         
                         return res.redirect('/account/link');
                     });
@@ -182,6 +199,7 @@ module.exports = function(app, passport, gridFs) {
                         return res.send(err);
                         
                     return res.render('notification', {
+                        isMobile: req.device.isMobile,
                        notify : {
                             pageHeader: 'Confirm Account',
                             header: 'Account Confirmation',
@@ -203,6 +221,7 @@ module.exports = function(app, passport, gridFs) {
     app.route('/' + configRoutes.resetPassword)
         .get(function(req,res) {
             return res.render('recover', {
+                    isMobile: req.device.isMobile,
                     message: {
                         error: req.flash('error'),
                         info: req.flash('info'),
@@ -228,6 +247,7 @@ module.exports = function(app, passport, gridFs) {
                     }
                         
                     return res.render('notification', {
+                        isMobile: req.device.isMobile,
                         notify : {
                            pageHeader: 'Recover Account',
                            header: 'Account Recovery',
@@ -255,6 +275,7 @@ module.exports = function(app, passport, gridFs) {
                 }
                     
                 return res.render('reset', {
+                    isMobile: req.device.isMobile,
                     recover: recover,
                     message: {
                         error: req.flash('error')
@@ -323,6 +344,8 @@ module.exports = function(app, passport, gridFs) {
                           return res.redirect('/login');
                       }
                       
+                      UserController.updateAccessCount(req.user._id, (req.device.isMobile ? 'mobile' : 'desktop'));
+                      
                       return res.redirect('/dashboard');
                     });
                 }
@@ -335,6 +358,7 @@ module.exports = function(app, passport, gridFs) {
 
         // render the page and pass in any flash data if it exists
         res.render('signup', {
+            isMobile: req.device.isMobile,
             username: req.flash('username'),
             zipCode: req.flash('zipCode'),
             alias: req.flash('alias'),
@@ -390,10 +414,13 @@ module.exports = function(app, passport, gridFs) {
     app.get('/account/link', isLoggedIn, function(req, res) {
         if (req.user.facebook.id) {
             res.render('linkfacebook', {
+                isMobile: req.device.isMobile,
                unlink: true
            });
         } else {
-            res.render('linkfacebook');
+            res.render('linkfacebook', {
+                isMobile: req.device.isMobile
+            });
         }
     });
     

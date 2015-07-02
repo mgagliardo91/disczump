@@ -24,6 +24,14 @@ function isDef(obj) {
 	return typeof obj !== 'undefined';
 }
 
+/*
+* Checks to see if an element has an attribute
+*/
+function hasAttr($elem, attribute) {
+	var attr = $elem.attr(attribute);
+	return (typeof attr !== typeof undefined && attr !== false);
+}
+
 function getCityState(zipcode, callback) {
 	var success = false;
 	var retData;
@@ -80,6 +88,32 @@ function resetPassword(currentPw, newPw, callback) {
 		   }
 		}
 	});
+}
+
+function getAccount(callback) {
+	var success = false;
+	var retData;
+    $.ajax({
+		type: "GET",
+		dataType: "json",
+		url: url + '/account',
+		contentType: "application/json",
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, retData);
+			}
+		}
+     });
 }
 
 function putAccount(account, callback) {

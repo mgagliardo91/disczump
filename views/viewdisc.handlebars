@@ -5,12 +5,12 @@
     <title>DiscZump - Public View</title>
     <link rel="stylesheet" href="/static/css/viewdisc.css">
     <link rel="stylesheet" href="/static/css/jquery-ui.min.css">
-    <meta property="og:url"                content="https://disczumpserver-mgagliardo.c9.io/disc/{{disc._id}}" />
+    <meta property="og:url"                content="disczump.com/disc/{{disc._id}}" />
     <meta property="fb:app_id"             content="1433417853616595" />
     <meta property="og:type"               content="disczumpfb:disc" />
     <meta property="og:title"              content="{{disc.brand}} {{disc.name}}" />
     <meta property="og:description"        content="Condition: {{#if disc.condition}}{{disc.condition}}/10{{else}}<No Entry>{{/if}} | Material: {{#if disc.material}}{{disc.material}}{{else}}<No Entry>{{/if}} | Weight: {{#if disc.weight}}{{disc.weight}}{{else}}<No Entry>{{/if}}" />
-    <meta property="og:image"              content="https://disczumpserver-mgagliardo.c9.io/files/{{disc.retPrimaryImage.fileId}}/600" />
+    <meta property="og:image"              content="disczump.com/files/{{disc.retPrimaryImage.fileId}}/600" />
 </head>
 {{/section}}
 <body>
@@ -31,7 +31,7 @@
                 <img class="public-user-image" src="{{alias.image}}" />
                 {{/if}}
                 {{#if disc.visible}}
-                <div class="fb-share-button" data-href="https://disczumpserver-mgagliardo.c9.io/disc/{{disc._id}}" data-layout="button"></div>
+                <div class="fb-share-button" data-href="disczump.com/disc/{{disc._id}}" data-layout="button"></div>
                 {{/if}}
             </div>
         </div>

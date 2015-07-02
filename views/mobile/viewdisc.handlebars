@@ -1,0 +1,158 @@
+<!doctype html>
+<html>
+<head>
+    <title>DiscZump - View Disc</title>
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <link href='https://fonts.googleapis.com/css?family=Orbitron:400,900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/static/css/mobile/viewdisc.css">
+    <script src="/static/js/mobile/viewdisc.js"></script>
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+</head>
+<body>
+    <div data-role="page" id="disc-view" discid="{{disc._id}}">
+        <div data-role="content">
+            <div class="dz-page" id="disc-view-container">
+                <div class="disc-title">
+                    <span class="brand">{{disc.brand}}</span>
+                    <span class="name">{{disc.name}}</span>
+                </div>
+                <div class="disc-gallery">
+                    <div>
+                        <div class="disc-gallery-list">
+                            {{#if disc.retPrimaryImage.fileId}}
+                            <div class="disc-gallery-item">
+                                <img src="/files/{{disc.retPrimaryImage.fileId}}" />
+                            </div>
+                            {{else}}
+                            <div class="disc-gallery-item">
+                                <img src="/static/logo/logo_small_faded.svg" />
+                            </div>
+                            {{/if}}
+                        </div>
+                    </div>
+                </div>
+                {{#unless disc.visible}}
+                <div class="disc-alert">
+                    <span><i class="fa fa-eye-slash"></i> This disc is private.</span>
+                </div>
+                {{/unless}}
+                <div class="disc-details-container">
+                    <div class="disc-data-set">
+                        <div class="data-label">Type:</div>
+                        {{#if disc.type}}
+                        <div class="data-value">{{disc.type}}</div>
+                        {{else}}
+                        <div class="data-value"></div>
+                        {{/if}}
+                    </div>
+                    <div class="disc-data-set">
+                        <div class="data-label">Material:</div>
+                        {{#if disc.material}}
+                        <div class="data-value">{{disc.material}}</div>
+                        {{else}}
+                        <div class="data-value"></div>
+                        {{/if}}
+                    </div>
+                    <div class="disc-data-set">
+                        <div class="data-label">Color:</div>
+                        {{#if disc.color}}
+                        <div class="data-value">{{disc.color}}</div>
+                        {{else}}
+                        <div class="data-value"></div>
+                        {{/if}}
+                    </div>
+                    <div class="disc-data-set">
+                        <div class="data-label">Weight:</div>
+                        {{#if disc.weight}}
+                        <div class="data-value">{{disc.weight}} g</div>
+                        {{else}}
+                        <div class="data-value"></div>
+                        {{/if}}
+                    </div>
+                    <div class="disc-data-set">
+                        <div class="data-label">Condition:</div>
+                        {{#if disc.condition}}
+                        <div class="data-value">{{disc.condition}} <b>/ 10</b></div>
+                        {{else}}
+                        <div class="data-value"></div>
+                        {{/if}}
+                    </div>
+                </div>
+                <div class="disc-flight-numbers">
+                    <div class="flight-row">
+                        <div class="flight-cell">
+                            <span class="flight-cell-title">Speed</span>
+                            {{#if disc.speed}}
+                            <div>{{disc.speed}}</div>
+                            {{else}}
+                            <div>-</div>
+                            {{/if}}
+                        </div>
+                        <div class="flight-cell">
+                            <span class="flight-cell-title">Glide</span>
+                            {{#if disc.glide}}
+                            <div>{{disc.glide}}</div>
+                            {{else}}
+                            <div>-</div>
+                            {{/if}}
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="flight-row">
+                        <div class="flight-cell">
+                            <span class="flight-cell-title">Turn</span>
+                            {{#if disc.turn}}
+                            <div>{{disc.turn}}</div>
+                            {{else}}
+                            <div>-</div>
+                            {{/if}}
+                        </div>
+                        <div class="flight-cell">
+                            <span class="flight-cell-title">Fade</span>
+                            {{#if disc.fade}}
+                            <div>{{disc.fade}}</div>
+                            {{else}}
+                            <div>-</div>
+                            {{/if}}
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+                <div class="disc-notes">
+                    <div class="disc-notes-title">Notes:</div>
+                    <div class="disc-notes-content">
+                        {{#if disc.notes}}
+                        {{disc.notes}}
+                        {{else}}
+                        - None -
+                        {{/if}}
+                    </div>
+                </div>
+                <div class="disc-notes">
+                    <div class="disc-notes-title">Tags:</div>
+                    <div class="disc-notes-content">
+                    {{#each disc.tagList}}
+                    <code class="disc-tag">{{this}}</code>
+                    {{/each}}
+                    </div>
+                </div>
+            </div>
+            <div class="dz-page" id="more-discs">
+                <div data-role="header" class="fixed">
+                    <div class="dz-header"><span class="header-left"><i class="fa fa-close dz-page-back"></i></span><div class="header-title"><span class="main">{{alias.display}}</span> | Public Discs</div></div>
+                </div>
+                <div id="public-disc-list">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="disc-footer" data-tap-toggle="false" data-position="fixed">
+        {{#if disc.visible}}
+        <span class="disc-btn" id="view-more" data-role="button" id="view-more"><i class="fa fa-th-list"></i> View More</span>
+        <span class="disc-btn" id="share-disc" data-role="button" id="share-disc" discid="{{disc._id}}"><i class="fa fa-facebook-square"></i> Share</span>
+        {{else}}
+        <span class="disc-btn" id="view-more" data-role="button" id="view-more" style="width: 100% !important"><i class="fa fa-th-list"></i> View More</span>
+        {{/if}}
+        <div class="clearfix"></div>
+    </div>
+</body>

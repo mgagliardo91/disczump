@@ -2,30 +2,70 @@ var $navSettings;
 var $sidePanel;
 var $discInventory;
 var $discInventoryList;
+var $addDisc;
+var $addDiscImage;
+var $navUser;
+var $optionsPanel;
 
 var zumpColorize;
 var zumpInventory;
 var zumpFilter;
 var zumpPaginate;
 var zumpAPI;
+var addDiscValidate;
 
-var dropzones = [];
 var userPrefs;
+
+var viewport = {
+    width  : $(window).width(),
+    height : $(window).height()
+};
+
+var addImageSize = 150;
+var addImageSpacing;
+var dropzone;
+var navState = [];
 
 $(document).on("pagecreate", "#disc-inventory", function () { 
     
     $discInventory = $('#disc-inventory');
     $discInventoryList = $('#disc-inventory-container');
+    $addDisc = $('#add-disc');
+    $addDiscImage = $('#add-disc-image');
     $navSettings = $('#nav-settings');
     $sidePanel = $('#side-panel');
+    $navUser = $('#nav-user');
+    $optionsPanel = $('#options-panel');
     
+     $(document).on('vclick', '#nav-user', function(e) {
+        e.stopPropagation();
+        $optionsPanel.panel('toggle');
+        return false;
+    });
     
     $navSettings.on('vclick', function(e){
-        console.log('clicked');
         e.stopPropagation();
         $sidePanel.panel('toggle');
         return false;
     });
+    
+     $optionsPanel.on("panelopen", function (event, ui) { 
+        $discInventoryList.css('overflow', 'hidden');
+        $navUser.addClass('active');
+        $optionsPanel.on("touchmove", function() {
+            return false;
+        });
+    }).on("panelclose", function (event, ui) {
+        $discInventoryList.css('overflow', 'auto');
+        $navUser.removeClass('active');
+        $optionsPanel.off("touchmove");
+    });
+    
+    $(document).on('vmousedown', '.options-menu li', function() {
+        $(this).addClass('active');
+    }).on('vmouseup', '.options-menu li', function() {
+        $(this).removeClass('active');
+    })
     
     $sidePanel.on("panelopen", function (event, ui) { 
         $discInventoryList.css('overflow', 'hidden');
@@ -39,6 +79,70 @@ $(document).on("pagecreate", "#disc-inventory", function () {
         $sidePanel.off("touchmove");
         $('.panel').hide();
         $('.panel-main').show();
+    });
+    
+    $(document).on('vclick', '.disc-option-edit', function(e) {
+        e.stopPropagation();
+        
+        generatePopup({
+            container: '#disc-inventory-container',
+	        message: 'Currently disc data can only be edited in the desktop version.',
+		    id: 'edit-popup',
+		    btnText: 'OK'
+	    });
+	    $('#edit-popup').popup('open');
+        
+    //     var discId = $(this).closest('.disc-item-container').find('.disc-item').attr('discid');
+    //     var disc = zumpAPI.getLocalDisc(discId);
+    //     $('#add-disc .mobile-form-horizontal input[type="text"]').each(function() {
+    //         var param = $(this).attr('param');
+    //         $(this).val(getSafe(disc[param], ''));
+    //     });
+    //     zumpAPI.getAllDiscImages(discId, function(success, images) {
+    //         if (success) {
+    //             if (typeof dropzone == 'undefined') {
+    //                 createDropZone($('#add-disc-image').find('.dropzone-area'));
+    //             }
+				// _.each(images, function(image) {
+				//     $('#dropzone-previews').append(generateImageItem(image));
+    // 			    styleDropzoneImage();
+				// });
+				// $('#dropzone-previews').append($('.image-add'));
+				// $('#file-count').text(getFileCount());
+    //         }
+    //     });
+    //     $('#add-disc').attr('type', 'edit').attr('discid', discId);
+    //     $('#add-disc').find('.header-title').text('Edit Disc');
+    //     showPage('add-disc');
+        return false;
+    });
+    
+    $(document).on('vclick', '.disc-option-delete', function(e) {
+        e.stopPropagation();
+        var discId = $(this).closest('.disc-item-container').find('.disc-item').attr('discid');
+        generatePopup({
+            title: 'WARNING!',
+            container: '.disc-inventory-list',
+	        message: 'Are you sure you want to delete this disc and all of its data?',
+		    id: 'confirm-delete-popup',
+		    btnText: 'Delete',
+		    cancel: true,
+		    discId: discId
+	    });
+	    $('#confirm-delete-popup').popup('open');
+        return false;
+    });
+    
+    $(document).on('vclick', '#confirm-delete-popup a[action="Delete"]', function(e) {
+        e.stopPropagation();
+        var discId = $(this).attr('discid');
+        zumpAPI.deleteDisc(discId, function(success) {
+			if (success) {
+				updateInventory(true);
+			} else {
+				// error logic
+			}
+		});
     });
     
     $(document).on('swiperight', '#disc-inventory > .ui-panel-wrapper', function(e) {
@@ -64,9 +168,135 @@ $(document).on("pagecreate", "#disc-inventory", function () {
         $(this).removeClass('item-active');
     });
     
+    $(document).on('vclick', '#add-disc-btn', function(e) {
+        e.stopPropagation();
+        $('#add-disc').attr('type', 'add');
+        $('#add-disc').find('.header-title').text('Add Disc');
+        showPage('add-disc');
+        $sidePanel.panel('close');
+        return false;
+    });
+    
+    $(document).on('vclick', '#add-disc-images', function(e) {
+        e.stopPropagation();
+        if (typeof dropzone == 'undefined') {
+            createDropZone($('#add-disc-image').find('.dropzone-area'));
+        }
+        showPage('add-disc-image');
+        return false;
+    });
+    
+    $(document).on('vclick', '#add-disc-image .dz-page-back', function(e) {
+        $('#file-count').text(getFileCount());
+    });
+    
+    $(document).on('vclick', '#add-disc-image-edit', function(e) {
+        e.stopPropagation();
+        toggleImageoverlays();
+        return false;
+    });
+    
+    $(document).on('vclick', '#add-disc-submit', function(e) {
+        e.stopPropagation();
+        if (addDiscValidate.isAllValid()) {
+            showBackdrop(true, true);
+            var disc = createDisc($('.mobile-add-disc-container'));
+            zumpAPI.postDisc(disc, function(success, retData) {
+				if (success) {
+					var $dropzone = $('#add-disc-image').find('.dropzone-area');
+					if (dropzone && dropzone.getAcceptedFiles().length > 0) {
+                        $('.total-upload-progress').css('width', '0px');
+                        $('.total-upload-progress').show();
+						dropzone.options.url = '/api/discs/' + retData._id + '/images';
+						dropzone.on('queuecomplete', function() {
+						    showBackdrop(false, false);
+							generatePopup({
+                                container: '.mobile-add-disc-container',
+                		        message: retData.brand + ' ' + retData.name + ' was successfully added.',
+                			    id: 'success-popup',
+                			    btnText: 'OK'
+                		    });
+                		    $('#success-popup').popup('open');
+                		    zumpAPI.refreshDisc(retData._id, function() {
+                		        updateInventory(true);
+                		    });
+						})
+						dropzone.processQueue();
+					} else {
+					    showBackdrop(false, false);
+					    generatePopup({
+                            container: '.mobile-add-disc-container',
+            		        message: retData.brand + ' ' + retData.name + ' was successfully added.',
+            			    id: 'success-popup',
+            			    btnText: 'OK'
+            		    });
+            		    $('#success-popup').popup('open');
+						zumpAPI.refreshDisc(retData._id, function() {
+            		        updateInventory(true);
+            		    });
+					}
+				} else {
+				    showBackdrop(false, false);
+				    generatePopup({
+                        container: '.mobile-add-disc-container',
+        		        message: retData.message,
+        			    id: 'error-popup',
+        			    title: 'ERROR!',
+        			    btnText: 'OK'
+        		    });
+        		    $('#error-popup').popup('open');
+				}
+			});
+        } else {
+            showBackdrop(false, false);
+            generatePopup({
+                container: '.mobile-add-disc-container',
+		        message: "'Brand' and 'Name' are required.",
+			    id: 'error-popup',
+			    title: 'ERROR!',
+			    btnText: 'OK'
+		    });
+		    $('#error-popup').popup('open');
+        }
+        return false;
+    });
+    
+    $(document).on('popupafterclose', '#success-popup', function() {
+        if ($('#add-disc').attr('type') == 'add') {
+            resetAddDiscForm();
+        }
+        $('#success-popup').remove();
+    });
+    
+    $(document).on('popupafterclose', '#error-popup', function() {
+        $('#error-popup').remove();
+    });
+    
+    $(document).on('popupafterclose', '#confirm-delete-popup', function() {
+        $('#confirm-delete-popup').remove();
+    });
+    
+    $(document).on('popupafterclose', '#edit-popup', function() {
+        $('#edit-popup').remove();
+    });
+    
+    $(document).on('vclick', '#add-disc .dz-page-back', function() {
+        resetAddDiscForm();
+        $('#add-disc').removeAttr('type').removeAttr('discid');
+    });
+    
+    $(document).on('vclick', '.dz-page-back', function() {
+        prevPage();
+    });
+    
+    $(document).on('orientationchange', function() {
+        resizeViewport();
+    });
 
     $('body').show();
-    resizeInventory();
+    showPage('disc-inventory-container');
+    resizeViewport();
+    $optionsPanel.panel();
     $sidePanel.panel();
     $('.panel').not(':first-child').hide();
     
@@ -87,6 +317,13 @@ $(document).on("pagecreate", "#disc-inventory", function () {
            updatePreferences();
            updateDiscs();
        }
+    });
+    
+    addDiscValidate = new ZumpValidate({
+        items: [
+            {id:'add-disc-brand', type: 'text', min: 1},
+            {id:'add-disc-name', type:'text', min: 1}
+        ]
     });
     
     zumpInventory = new ZumpInventory({
@@ -129,21 +366,142 @@ $(document).on("pagecreate", "#disc-inventory", function () {
     zumpAPI.getPreferences(function(success, prefs) {
        if (success) {
            userPrefs = prefs;
-           console.log(userPrefs);
            userPrefs.colorize = zumpColorize.updateScheme(userPrefs.colorize);
            updatePreferences();
        } else {
            console.log('Unable to load user preferences.');
        }
     });
-    zumpAPI.start();
     
+    zumpAPI.start();
 });
 
-$(document).on("pagecreate", "#add-disc-page", function () {
+function prevPage(done) {
+    if (navState.length) {
+        navPage(navState.pop(), false, done);
+    }
+}
+
+function showPage(page, done) {
+    navPage($('#' + page), true, done);
+}
+
+function navPage($nextPage, forward, done) {
+    var $currentPage = $('.dz-page.active');
     
-    createDropZone($('#add-disc-page').find('.dropzone-area'));
-});
+    if ($nextPage.length) {
+            
+        if (!$currentPage.length) {
+            $nextPage.addClass('active').show(done);
+            navState.push($nextPage);
+        } else {
+            $currentPage.removeClass('active').fadeOut(300, function() {
+                onPageHide($currentPage);
+                $nextPage.addClass('active').fadeIn(300, done);
+                onPageShow($nextPage);
+            });
+            
+            if (forward) {
+                navState.push($currentPage);
+            }
+        }
+    }
+}
+
+function onPageHide($page) {
+    
+    if ($page == $addDisc) {
+        
+    }
+}
+
+function onPageShow($page) {
+    
+    if ($page[0] == $discInventoryList[0]) {
+        toggleNavbar({
+            shouldHide: false,
+            portion: 'left'
+        });
+    } else if ($page[0] == $addDisc[0]) {
+        toggleNavbar({
+            shouldHide: true,
+            portion: 'left'
+        });
+    } else if ($page[0] == $addDiscImage[0]) {
+        if ($('#add-disc-image-edit').hasClass('active')) {
+	        toggleImageoverlays();
+	    }
+    }
+}
+
+function createDisc($container, disc) {
+	if (!isDef(disc)) {
+		disc = {};
+	}
+	var $fields = $container.find('input');
+	
+	$.each($fields, function(index) {
+		var $field = $(this);
+
+		if (hasAttr($field, 'param')) {
+			disc[$field.attr('param')] = $field.val();
+		}
+	});
+	
+	return disc;
+}
+
+function generatePopup(options) {
+    if (isDef(options.title)) {
+        var headerHTML = '<div data-role="header" class="ui-corner-top ui-header ui-bar-a" role="banner">' +
+                    		'<h1 class="ui-title" role="heading" aria-level="1">' + options.title + '</h1>' +
+                    	'</div>';
+    }
+    
+    var bodyHMTL = '<div data-role="popup" id="' + options.id + '" class="ui-corner-all ui-popup ui-body-a ui-overlay-shadow">' +
+                        (isDef(options.title) ? headerHTML : '') +
+                		'<div role="main" class="ui-corner-bottom popup-main">' +
+                			'<p>' + options.message + '</p>' +
+                			'<a href="#" action="' + (isDef(options.btnText) ? options.btnText : 'OK') + '" discid="' + (isDef(options.discId) ? options.discId : '') + '" data-role="button" data-rel="back" data-theme="b" class="ui-link ui-btn ui-btn-b ui-shadow ui-corner-all" role="button">' + (isDef(options.btnText) ? options.btnText : 'OK') + '</a>' +
+                			(isDef(options.cancel) ? '<a href="#" data-role="button" data-rel="back" data-theme="a" class="ui-link ui-btn ui-btn-a ui-shadow ui-corner-all" role="button">Cancel</a>' : '' ) +
+                		'</div>' +
+                    '</div>';
+                    
+    $(options.container).append(bodyHMTL);
+    $('#' + options.id + '').popup();
+}
+
+function resizeViewport() {
+    viewport.width = $(window).width();
+    viewport.height = $(window).height();
+    $('#add-disc').css('height', viewport.height - 50 + 'px');
+    $('.loading-container').css('margin-top', (viewport.height / 2) - 55 + 'px');
+    var panelPadding = parseInt($('#filter-list').closest('.ui-panel-inner').css('padding'), 10);
+    var navbarHeight = $('nav.zump-navbar').height();
+    $('#filter-list').css('max-height', viewport.height - (panelPadding * 2) - navbarHeight - $('#filter-list').siblings('.panel-heading').outerHeight() + 'px');
+    $('#colorize-list').css('max-height', viewport.height - (panelPadding * 2) - navbarHeight - $('#colorize-list').siblings('.panel-heading').outerHeight() + 'px');
+    resizeInventory();
+    resizeDropzoneImage();
+}
+
+function resizeDropzoneImage() {
+    var addImageCount = Math.floor(viewport.width / addImageSize);
+    addImageSpacing = (Math.floor(((viewport.width % addImageSize) / (addImageCount + 1) / 2) / 1) - 1);
+    styleDropzoneImage();
+}
+
+function styleDropzoneImage() {
+    $('.image-list').css({
+        width: viewport.width,
+        padding: addImageSpacing 
+    });
+    
+    $('.image-item').css({
+        width: addImageSize,
+        height: addImageSize,
+        margin: addImageSpacing
+    });
+}
 
 function updatePreferences() {
     zumpAPI.updatePreferences(userPrefs, function(success, prefs) {
@@ -181,7 +539,7 @@ function navPanel($this, moveForward) {
 }
 
 function resizeInventory() {
-    var height = $(window).height() - $('nav.navbar').height();
+    var height = viewport.height - $('nav.zump-navbar').height();
     $discInventoryList.css('maxHeight', height + 'px');
 }
 
@@ -194,69 +552,133 @@ function updateInventory(generateFilters) {
 function showDiscs(discList) {
 	_.each(discList, function(disc) {
 		zumpInventory.appendItem(disc);
-		zumpAPI.getDiscImageById(disc._id, disc.primaryImage, zumpInventory.updateDiscImage);
+		if (!zumpAPI.isCached(disc)) {
+		    zumpAPI.getDiscImageById(disc._id, disc.primaryImage, zumpInventory.updateDiscImage);
+		}
 	});
 }
-
-/*===================================================================*/
-/*                                                                   */
-/*                           Dropzone JQuery                         */
-/*                                                                   */
-/*===================================================================*/
 
 /*
 * Creates a dropzone area for image upload
 */
 function createDropZone($div) {
-	var template = '<div class="image-item-container">' +
+	var template = '<div class="image-item-container float-left">' +
                         '<div class="image-item">' +
                             '<div class="image-entity">' +
                                 '<img data-dz-thumbnail />' +
                             '</div>' +
                             '<div class="image-progress" data-dz-uploadprogress></div>' +
                             '<div class="image-overlay">' +
-                                '<span class="image-remove" data-dz-remove><i class="fa fa-times fa-lg"></i></span>' +
+                                '<div class="image-remove"><span><i class="fa fa-times fa-5x" data-dz-remove></i></span></div>' +
                                 '<div class="image-title"><span data-dz-name></span></div>' +
-                                '<div class="image-size" data-dz-size></div>' +
                             '</div>' +
                         '</div>' +
                     '</div>';
     
     var $imageAdd = $div.find('.image-add');
-    var $container = $div.find('.image-list-container');
-    var $table = $div.find('.image-list-table');
-	var myDropzone = new Dropzone('#' + $container.attr('id'), {
+    var $previews = $div.find('.image-list-container');
+	dropzone = new Dropzone('#' + $div.attr('id'), {
 		url: "/api/discs",
 		method: "POST",
-		thumbnailWidth: 100,
-		thumbnailHeight: 100,
+		thumbnailWidth: 150,
+		thumbnailHeight: 150,
 		parallelUploads: 10,
 		maxFiles: 10,
 		paramName: 'discImage',
 		previewTemplate: template,
 		acceptedFiles: "image/*",
 		autoProcessQueue: false,
-		previewsContainer: '#' + $table.attr('id'),
+		previewsContainer: '#' + $previews.attr('id'),
 		clickable: '#' + $imageAdd.attr('id'),
 		accept: function(file, done) {
 			done();
 		},
 		init: function() {
 			this.on("addedfile", function() {
-				if (this.files[10] != null){
-					this.removeFile(this.files[10]);
-				} else {
-					$imageAdd.insertAfter('#dropzone-previews > .image-item-container:last-child');
-					$container.animate({scrollLeft: $table.innerWidth()}, 2000);
-				}
-			}).on('success', function(file, response){
-				
+			    if ($('#add-disc-image-edit').hasClass('active')) {
+			        toggleImageoverlays();
+			    }
+			    styleDropzoneImage();
+			    $previews.append($imageAdd);
+			}).on('maxfilesreached', function() {
+			    $imageAdd.hide();
+			}).on('removedfile', function() {
+			    $imageAdd.show();
+			}).on('totaluploadprogress', function(uploadProgress, totalBytes, totalBytesSent) {
+			    $('.total-upload-progress').css('width', uploadProgress + '%');
 			});
 		}
 	});
-	
-	dropzones.push(myDropzone);
-	$div.attr('dropzoneId', dropzones.length - 1);
+}
+
+function toggleImageoverlays() {
+    if ($('#add-disc-image-edit').hasClass('active')) {
+        $('#dropzone-container').find('.image-overlay').hide();
+        $('#add-disc-image-edit').removeClass('active');
+    } else {
+        $('#dropzone-container').find('.image-overlay').show();
+        $('#add-disc-image-edit').addClass('active');
+    }
+}
+
+function resetAddDiscForm() {
+    $('#add-disc').find('.ui-input-clear').trigger('click');
+    $('#file-count').text('0');
+    $('.total-upload-progress').hide();
+    if (typeof dropzone !== 'undefined') {
+        dropzone.removeAllFiles();
+    }
+}
+
+function generateImageItem(image) {
+    return '<div class="image-item-container float-left">' +
+                '<div class="image-item">' +
+                    '<div class="image-entity">' +
+                        '<img data-dz-thumbnail src="/files/' + image.thumbnailId +'"/>' +
+                    '</div>' +
+                    '<div class="image-progress" data-dz-uploadprogress></div>' +
+                    '<div class="image-overlay">' +
+                        '<div class="image-remove"><span><i class="fa fa-times fa-5x" data-dz-remove></i></span></div>' +
+                        '<div class="image-title"><span data-dz-name></span></div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+}
+
+function getFileCount() {
+    return dropzone.getAcceptedFiles().length;
+}
+
+/*
+* Hides/shows portions of the navbar.
+* options.portion must be 'left', 'right', 'center'
+*/
+function toggleNavbar(options) {
+    if (isDef(options.shouldHide)) {
+        //hides navbar icons
+        if (options.shouldHide) {
+            $('.navbar-' + options.portion).children().hide();
+        } else {
+            $('.navbar-' + options.portion).children().show();
+        }
+    }
+}
+
+function showBackdrop(show, isLoading) {
+    
+    if (show) {
+        $('.dim-overlay').show();
+        $('body').addClass('no-scroll');
+    } else {
+        $('.dim-overlay').hide();
+        $('body').removeClass('no-scroll');
+    }
+    
+    if (isLoading) {
+        $('.loading-container').show();
+    } else {
+        $('.loading-container').hide();
+    }
 }
 
 var ZumpInventory = function(opt) {
@@ -303,52 +725,25 @@ var ZumpInventory = function(opt) {
                 if (!open) {
                     $(this).removeClass('item-open').css('margin-left', '0px', 'fast').css('width', '100%');
                 } else {
-                    $(this).addClass('item-open').css('margin-left', '-150px', 'fast');
+                    $(this).addClass('item-open').css('margin-left', '-150px', 'fast').css('width', '100%');
                 }
             }
         });
         
         // Event Handlers
-        $(document).on('vmousedown', '.disc-type-wrapper', function(e) {
-                xCoord = e.pageX;
-                yCoord = e.pageY;
-                $(this).css('width', $(this).outerWidth());
+        $(document).on('swipeleft', '.disc-type-wrapper', function(e) {
+            if (!$(this).hasClass('item-open')) {
+                $(this).swipeDisc(true);
                 $.each($('.disc-type-wrapper').not(this), function(){
                     $(this).swipeDisc(false);
-                });
-        }).on('vmousemove', '.disc-type-wrapper', function(e) {
-            if ($(this).hasClass('item-open')) return;
-            
-            var moved = e.pageX - xCoord;
-            if (e.pageX <= xCoord) {
-                if (isSwipe) {
-                    $(this).css('margin-left', Math.max(-150, (e.pageX - xCoord)) + 'px');
-                }
+                })
             }
-            
-            isSwipe = ((e.pageY <= yCoord + 5 && e.pageY >= yCoord - 5) && Math.abs(moved) > swipeThreshold) || isSwipe;
-        }).on('vmouseup', '.disc-type-wrapper', function(e) {
-            e.stopPropagation();
-            var moved = e.pageX - xCoord;
+        }).on('swiperight', '.disc-type-wrapper', function(e) {
             if ($(this).hasClass('item-open')) {
-                if (moved >= 0) {
-                    $(this).swipeDisc(false);
-                }
+                $(this).swipeDisc(false);
             } else {
-                if (moved < 0 && isSwipe) {
-                    if (moved > -125) {
-                        $(this).swipeDisc(false);
-                    } else {
-                        $(this).swipeDisc(true);
-                    }
-                } else {
-                    if (moved > 50 && isSwipe) {
-                        $sidePanel.panel('open');
-                    }
-                }
+                 $sidePanel.panel('open');
             }
-            
-            isSwipe = false;
         });
         
         $(document).on('vmousedown', '.disc-options > div', function() {
@@ -359,8 +754,7 @@ var ZumpInventory = function(opt) {
         
         $(document).on('vclick', '.disc-item', function() {
            var id = $(this).attr('discid');
-           
-           location.href = '/disc/' + id;
+           window.open('disczump.com/disc/' + id);
         });
     }
     
@@ -390,7 +784,7 @@ var ZumpInventory = function(opt) {
                             '<div class="disc-item" discid="' + disc._id + '">' +
                                 '<div class="disc-content-image-container">' +
                                     '<div class="disc-content-image">' +
-                                        '<img src="https://placehold.it/90x90">' +
+                                        '<img src=' + (disc.primaryImageCache ? '"/files/"' + disc.primaryImageCache : '"/static/logo/logo_small_faded.svg"') + '>' +
                                         '<i class="fa fa-spinner fa-spin"></i>' +
                                     '</div>' +
                                 '</div>' +
@@ -444,6 +838,11 @@ var ZumpInventory = function(opt) {
             if (isDef(color)) {
                 $discItem.find('.disc-type-wrapper').css('background-color', color);
             }
+        }
+        
+        if (isDef(disc.primaryImageCache)) {
+            $discItem.find('.disc-content-image').find('i.fa-spinner').remove();
+    	    $discItem.find('.disc-content-image').find('img').show();
         }
     }
     
@@ -1174,6 +1573,7 @@ var ZumpAPI = function(opt) {
     var discs = [];
     var url = "/api/";
     var onDataReady;
+    var zumpAPI;
     
     //----------------------\
     // Prototype Functions
@@ -1183,6 +1583,9 @@ var ZumpAPI = function(opt) {
     * Initialization based on options
     */
     this.init = function(opt) {
+        
+        zumpAPI = this;
+        
         /*
         * Option configuration
         */
@@ -1209,11 +1612,21 @@ var ZumpAPI = function(opt) {
         return _.first(_.where(discs, {'_id' : discId}));
     }
     
+    this.refreshDisc = function(discId, callback) {
+        this.getDiscById(discId, function(success, disc) {
+            callback();
+        });
+    }
+    
     /*
     * Returns disc list
     */
     this.discList = function() {
         return discs;
+    }
+    
+    this.isCached = function(disc) {
+        return typeof disc.primaryImageCache !== 'undefined';
     }
     
     /*
@@ -1490,11 +1903,21 @@ var ZumpAPI = function(opt) {
     			console.log(errorThrown);
     		},
     		complete: function(){
+    		    zumpAPI.cacheImage(success, image);
     			if (callback) {
     				callback(success, image);
     			}
     		}
          });
+    }
+    
+    this.cacheImage = function(success, image) {
+        if (success) {
+            var disc = this.getLocalDisc(image.discId);
+            if (isDef(disc)) {
+                disc.primaryImageCache = image.thubmnailId;
+            }
+        }
     }
     
     //----------------------\

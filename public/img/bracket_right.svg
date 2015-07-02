@@ -9,9 +9,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="54.534882"
-   height="200"
-   viewBox="0 0 54.534884 200"
+   width="54.534847"
+   height="199.99998"
+   viewBox="0 0 54.53485 199.99998"
    id="svg4375"
    version="1.1"
    inkscape:version="0.91 r13725"
@@ -26,14 +26,14 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
-     inkscape:cx="88.583579"
-     inkscape:cy="34.92904"
+     inkscape:cx="-63.144035"
+     inkscape:cy="34.929043"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="3200"
-     inkscape:window-height="1711"
-     inkscape:window-x="-11"
+     inkscape:window-width="1920"
+     inkscape:window-height="1047"
+     inkscape:window-x="3189"
      inkscape:window-y="-11"
      inkscape:window-maximized="1"
      fit-margin-top="0"
@@ -57,7 +57,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(1008.4251,140.13702)">
+     transform="translate(1000.9832,140.13701)">
     <flowRoot
        xml:space="preserve"
        id="flowRoot4923"
@@ -68,16 +68,13 @@
            height="448.57144"
            x="-788.57141"
            y="52.362206" /></flowRegion><flowPara
-         id="flowPara4929"></flowPara></flowRoot>    <text
-       xml:space="preserve"
+         id="flowPara4929" /></flowRoot>    <g
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:238.13954163px;line-height:125%;font-family:Aharoni;-inkscape-font-specification:'Aharoni Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="-1034.5879"
-       y="24.165308"
-       id="text4931"
-       sodipodi:linespacing="125%"><tspan
-         sodipodi:role="line"
-         id="tspan4933"
-         x="-1034.5879"
-         y="24.165308">}</tspan></text>
+       id="text4931">
+      <path
+         d="m -946.44835,-40.137019 q -11.86047,1.860465 -16.16279,13.488372 -2.67442,7.441861 -2.67442,22.209303 0,4.30232573 0.34883,13.9534888 0.34884,9.1860472 0.34884,13.9534892 -0.11628,17.325581 -5.23256,25.581396 -6.6279,10.813953 -23.13953,10.813953 -3.72093,0 -8.02322,-0.697674 19.99996,-5.232558 20.23252,-35.232559 0,-5.465117 -0.5814,-16.1627913 -0.58139,-10.8139538 -0.58139,-15.6976749 0,-14.3023258 3.25581,-21.5116288 4.30233,-9.186046 15.23256,-10.697674 -10.93023,-1.511628 -15.23256,-10.697675 -3.25581,-7.093024 -3.25581,-21.39535 0,-4.883721 0.58139,-15.930233 0.5814,-10.581395 0.5814,-16.046513 -0.23256,-30 -20.23252,-35.23256 4.30229,-0.69767 8.02322,-0.69767 16.51163,0 23.13953,10.81395 5.11628,8.25582 5.23256,25.5814 0,4.76744 -0.34884,13.953486 -0.34883,9.651163 -0.34883,13.953489 0,14.767442 2.67442,22.209303 4.30232,11.627907 16.16279,13.488373 z"
+         id="path4940"
+         inkscape:connector-curvature="0" />
+    </g>
   </g>
 </svg>

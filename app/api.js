@@ -124,6 +124,8 @@ module.exports = function(app, passport, gridFs) {
         })
         
         .put(hasAccess, function(req, res) {
+            console.log(req.user);
+            console.log(req.user._id);
             DiscController.putDisc(req.user._id, req.params.discId, req.body, function(err, disc) {
                 if (err)
                   return res.json(err);

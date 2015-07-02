@@ -11,6 +11,11 @@ var pageSettings = {
 	tableMode: true	
 }
 
+var sidebarSettings = {
+	collapsed: false,
+	locked: false
+}
+
 var mySort;
 var myFilter;
 var myGallery;
@@ -67,6 +72,33 @@ $(document).ready(function(){
 	}); 
    	
    	/* Event Listeners */
+   	$('#menu-tutorial').click(function(e) {
+   	    e.stopImmediatePropagation();
+   	    
+   	    var zumpTutorial = new ZumpTutorial({
+        	screens: ['dashboard', 'account', 'discview', 'sort', 'filter', 'add', 'tutorial']
+        });
+        
+        zumpTutorial.showTutorial();
+   	    
+   	    return false;
+   	});
+   	
+   	$('#menu-feedback').click(function(e) {
+   		e.stopImmediatePropagation();
+   		generateFeedbackModal('Feedback Form', 'Submit', function() {
+   			if ($('#feedback-textarea').val().length < 1) {
+   				console.log('not valid');
+   				return $('.modal-body').prepend(generateError('You must enter information into the text box before submitting the form.', 'ERROR'));
+   			} else {
+   				console.log('valid');
+   				$('.modal-body').find('.alert').remove();
+   				//submit form and close modal
+   			}
+   		});
+   		return false;
+   	});
+   	
 	$('.sidebar-nav-select').click(function(e) {
 		e.stopPropagation();
     	var $this = $(this);
@@ -236,7 +268,7 @@ $(document).ready(function(){
 		var disc = getDisc($(this).parents('.disc-item').attr('discid'));
 		var winTop = ($(window).height() / 2) - (300 / 2);
 		var winLeft = ($(window).width() / 2) - (600 / 2);
-        window.open('http://www.facebook.com/sharer/sharer.php?app_id=1433417853616595&u=https://disczumpserver-mgagliardo.c9.io/disc/' + disc._id + 
+        window.open('http://www.facebook.com/sharer/sharer.php?app_id=1433417853616595&u=http://www.disczump.com/disc/' + disc._id + 
         	'&display=popup&ref=plugin&src=share_button', 'sharer', 'top=' + winTop + ',left=' + winLeft + ',toolbar=0,status=0,width=' + 600 + ',height=' + 300);
 	});
 	 
@@ -258,6 +290,7 @@ $(document).ready(function(){
 	 
 	$(document).on('click', '.disc-info-tag', function() {
 		myFilter.pushFilterItem('tagList', $(this).text());
+		$('.sidebar-nav-select[nav-select="#sidebar-filter"]').trigger('click');
 	});
 	 
 	$(document).on('click', '.disc-content-image', function(e) {
@@ -596,11 +629,165 @@ $(document).ready(function(){
     setTimeout(function() {
         initializePage();
     }, 200);
-    
-    $('#tutorial').hide();
-    //createOverlay($('#section-views'));
  
 });
+
+
+var ZumpTutorial = function(opt) {
+	
+	this.screens = [];
+	var $tutorial;
+	
+	this.init = function(opt) {
+		
+		if (isDef(opt.screens)) {
+			this.screens = opt.screens;
+		}
+		
+		$(document).on('click', '.tutorial-close', function() {
+		   if ($tutorial.length) {
+		       $tutorial.fadeOut(500, function() {
+		          $tutorial.remove(); 
+				  $('body').append($tutorial).css('overflow', 'auto');
+		       });
+		   } 
+		});
+	}
+	
+	this.showTutorial = function() {
+		$('#tutorial').remove();
+		
+		$tutorial = $('<div id="tutorial"></div>');
+		
+		var $tutorialCont = $('<div class="tutorial-container"></div>');
+		$tutorialCont.append('<div class="tutorial-title"><div>Tutorial<span><i class="fa fa-times-circle tutorial-close"></i></span></div></div>');
+		
+		var $content = $('<div class="tutorial-content"></div>');
+		var $indicators = $('<div></div>');
+		
+		_.each(this.screens, function(screen) {
+			$content.append($('<div class="tutorial-screen" style="background-image: url(\'/static/img/tutorial/tut_' + screen +  '.svg\')"></div>'));
+			$indicators.append('<i class="fa fa-square-o"></i>');
+		});
+		
+		
+		// add screens
+		
+		$tutorialCont.append($content);
+		
+		$tutorialCont.append('<div class="tutorial-footer">' + 
+				'<div>' + 
+					'<button type="button" class="btn btn-default tutorial-button back">Back</button>' + 
+					'<button type="button" class="btn btn-default tutorial-button forward">Next</button>' + 
+					'<div class="tutorial-indicators"><span>' + $indicators.html() + '</span></div>' + 
+					'<div class="clearfix"></div>' + 
+				'</div>' + 
+			'</div>');
+			
+		$tutorial.append($tutorialCont);
+		
+    	setActive(0);
+		$content.children('.tutorial-screen:first-child').show();
+		
+		// Listeners
+		bindListeners();
+		
+		$('body').append($tutorial).css('overflow', 'hidden');
+		$tutorial.css({
+			top: $(window).scrollTop()
+		});
+		
+		$tutorial.fadeIn(500);
+	}
+	
+	var setActive = function(index) {
+		var $screen = $tutorial.find('.tutorial-screen').eq(index);
+		
+		if ($screen.length) {
+			$screen.addClass('active').siblings().removeClass('active');
+			
+			var $indicator = $tutorial.find('.tutorial-indicators i').eq(index);
+			$indicator.siblings().removeClass('fa-square').addClass('fa-square-o');
+			$indicator.removeClass('fa-square-o').addClass('fa-square');
+		}
+	}
+	
+	var transition = function(forward) {
+		var $activeScreen = $tutorial.find('.tutorial-screen.active');
+		var $nextScreen;
+		
+		if (forward) {
+			$nextScreen = $activeScreen.next();
+			
+			if ($nextScreen.length) {
+			    unbindListeners();
+			    $nextScreen.css('margin-top','-' + $activeScreen.height()*2 + 'px').show();
+		    
+    		    $activeScreen.animate({marginTop: $activeScreen.height() + 'px'}, 500, function() {
+    		        $nextScreen.css('margin-top', '0px');
+    		        $activeScreen.hide();
+    		        setActive($nextScreen.index());
+    		        updateButtons();
+    		    });
+			} else {
+			    $tutorial.fadeOut(500, function() {
+		          $tutorial.remove(); 
+				  $('body').append($tutorial).css('overflow', 'auto');
+		       });
+			}
+			
+		} else {
+		    $nextScreen = $activeScreen.prev();
+		    
+		    if ($nextScreen.length) {
+		        unbindListeners();
+			    $nextScreen.css('margin-top', $activeScreen.height() + 'px').show();
+			    $activeScreen.css('margin-top','-' + 2*$activeScreen.height() + 'px').show();
+                
+                $nextScreen.animate({marginTop: '0px'}, 500, function() {
+    		        $activeScreen.hide();
+    		        setActive($nextScreen.index());
+    		        updateButtons();
+    		    });
+			}
+		}
+	}
+	
+	var bindListeners = function() {
+		$(document).on('click', '.tutorial-button.back', function(e) {
+			transition(false);
+		});
+		
+		$(document).on('click', '.tutorial-button.forward', function(e) {
+			transition(true);
+		});
+	}
+	
+	var unbindListeners = function() {
+	    $(document).off('click', '.tutorial-button.back');
+	    $(document).off('click', '.tutorial-button.forward');
+	}
+	
+	var updateButtons = function() {
+	    var $nextScreen = $('.tutorial-screen.active');
+	    
+	    if ($nextScreen.is(':last-child')) {
+			$('.tutorial-button.forward').text('Finish!').addClass('finish');
+			$('.tutorial-button.back').css('visibility', 'visible');
+		} else if ($nextScreen.is(':first-child')) {
+			$('.tutorial-button.forward').text('Next').removeClass('finish');
+			$('.tutorial-button.back').css('visibility', 'hidden');
+		} else {
+			$('.tutorial-button.forward').text('Next').removeClass('finish');
+			$('.tutorial-button.back').css('visibility', 'visible');
+		}
+		
+		bindListeners();
+	}
+	
+	
+	this.init(opt);
+}
 
 
 /*
@@ -662,6 +849,13 @@ function loadUserPrefs() {
 	$('#paginate-display-count').trigger('change');
 	myGallery.updateGalleryCount(userPrefs.galleryCount);
 	
+	
+	var $tutorialMenu = $('#menu-tutorial');
+	
+	if ($tutorialMenu.hasClass('prog-click')) {
+			$('#menu-tutorial').trigger('click');
+	}
+	
 }
 
 function initializeTooltips() {
@@ -713,7 +907,7 @@ function zumpLibraryInit() {
     zipValidation = new ZumpValidate({
     	items: [
     		{id: 'accountZipCode', type:'zipcode', output: 'accountCityState'},
-            {id:'accountAlias'}
+            {id: 'accountAlias'}
     	]
     });
     
@@ -784,27 +978,60 @@ function zumpLibraryInit() {
 function resizeSidebar() {
 	if ($('.sidebar').width() < 109) {
 		$('.sidebar').addClass('collapsed');
-		$('#sidebar-filter').on('mouseenter', collapsedFilterMouseenter);
-       	$('#sidebar-filter').on('mouseleave', collapsedFilterMouseleave);
-       	$('#sidebar-search').on('mouseenter', collapsedFilterMouseenter);
-       	$('#sidebar-search').on('mouseleave', collapsedFilterMouseleave);
+		sidebarSettings.collapsed = true;
+		$('#sidebar-filter').on('mouseenter', function() {
+			sidebarControl('open');
+		});
+       	$('#sidebar-filter').on('mouseleave', function() {
+       		sidebarControl('close');
+       	});
+       	$('#sidebar-search').on('mouseenter', function() {
+			sidebarControl('open');
+		});
+       	$('#sidebar-search').on('mouseleave', function() {
+       		sidebarControl('close');
+       	});
+       	$('#search-all').on('focusin', function() {
+			expandSidebar();
+			sidebarSettings.locked = true;
+		});
+       	$('#search-all').on('focusout', function() {
+       		collapseSidebar();
+			sidebarSettings.locked = false;
+       	});
 	} else {
 		$('.sidebar').removeClass('collapsed');
+		sidebarSettings.collapsed = false;
+		sidebarSettings.locked = false;
 		$('.sidebar').css('width', '');
-		$('#sidebar-filter').off('mouseenter', collapsedFilterMouseenter);
-		$('#sidebar-filter').off('mouseleave', collapsedFilterMouseleave);
-       	$('#sidebar-search').off('mouseenter', collapsedFilterMouseenter);
-       	$('#sidebar-search').off('mouseleave', collapsedFilterMouseleave);
+		$('#sidebar-filter').off('mouseenter');
+		$('#sidebar-filter').off('mouseleave');
+       	$('#sidebar-search').off('mouseenter');
+       	$('#sidebar-search').off('mouseleave');
+       	$('#search-all').off('focusin');
+       	$('#search-all').off('focusout');
 	}
 }
 
 /*
-* Handles expanding filter when sidebar is collapsed
+* Handles expanding/contracting filter when sidebar is collapsed
 */
-function collapsedFilterMouseenter() {
+function sidebarControl(direction) {
+	
+	if (!sidebarSettings.locked) {
+		if (direction == "open") {
+			expandSidebar();
+		} else if (direction == "close") {
+			collapseSidebar();
+		}
+	}
+}
+
+function expandSidebar() {
 	$('.sidebar').stop().animate({width:'250px'}, 300);
 }
-function collapsedFilterMouseleave() {
+
+function collapseSidebar() {
 	$('.sidebar').stop().animate({width:'109px'}, 300, function() {
 		$('.sidebar').css('width', '');
 	});
@@ -980,9 +1207,6 @@ function updateDiscImage(success, discImage) {
 */
 function updateHeader(count) {
 	$('#results-header-count').text('Results: ' + count);
-	
-	console.log('Current page: ' + paginateOptions.currentPage);
-	console.log('Last page: ' + paginateOptions.lastPage);
 	
 	var $paginate = $('#paginate-nav');
 	var $pageInsert = $('#page-back');
@@ -1194,6 +1418,42 @@ function paginate(toPaginate) {
 	var start = (paginateOptions.currentPage - 1) * paginateOptions.displayCount;
 	var end = paginateOptions.displayCount > -1 ? Math.min(toPaginate.length, start + paginateOptions.displayCount) : toPaginate.length;
 	return toPaginate.slice(start, end);
+}
+
+/*
+* Generates a modal popup for users to submit feedback
+*/
+function generateFeedbackModal(title, btnText, submitFn) {
+	var header = '<h4 class="modal-title">' + title + '</h4>';
+          
+	var body =  '<p><b>We would love to hear from you!</b></p>' +
+				'<br />' +
+				'<p>Use the form below to submit questions, suggestions, or complaints and we will address them as soon as possible.</p>' +
+				'<br />' +
+				'<textarea id="feedback-textarea" placeholder="Enter feedback here..."></textarea>';
+			
+	var footer = '<button type="button" class="btn btn-default" fn-title="cancel">Cancel</button>' +
+				'<button type="button" class="btn btn-primary" fn-title="submit"><span><i class="fa fa-reply-all fa-tools"></i></span>' + btnText + '</button>';
+		
+	var fns = [
+				{
+					name: 'cancel',
+					function: function($btn, $inner, done) {
+						done();
+					}
+				},
+				{
+					name: 'submit',
+					function: submitFn
+				}
+		];
+		
+	generateModal({
+		header: header, 
+		body: body, 
+		footer: footer, 
+		fns: fns
+	});
 }
 
 /*
@@ -1709,6 +1969,7 @@ function getEditParams() {
 						
 						if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
 							$inner.prepend(generateError('Brand and Name are required.', 'ERROR'));
+							fnLock = false;
 					    } else if ($('.has-error').length > 0) {
 					    	var errorText = '';
 					    	var errorLength = $('.has-error').length;
@@ -1723,6 +1984,7 @@ function getEditParams() {
 					    	});
 					    	
 					    	$inner.prepend(generateError('Invalid data in ' + ($('.has-error').length > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
+							fnLock = false;
 					    	
 					    } else if ($inner.find('div.alert').length == 0) {
 							putDisc(disc, function(success, retData) {
@@ -1765,6 +2027,7 @@ function getEditParams() {
 									}
 								} else {
 									$inner.prepend(generateError(retData.message, 'ERROR'));
+									fnLock = false;
 								}
 							});
 					    }
@@ -1854,8 +2117,8 @@ function getEditParams() {
 				if (success) {
 					var primaryImage = disc.primaryImage;
 					_.each(images, function(image) {
-						$imageContainer.append(generateImageItem(primaryImage, image, true));
-					})
+						$imageContainer.append(generateImageItem(primaryImage, image));
+					});
 				}	
 			});
 		},
@@ -1865,7 +2128,7 @@ function getEditParams() {
 		onClose: function($inner) {
 			fnLock = false;
 		}
-	}
+	};
 }
 
 /*
@@ -1916,7 +2179,6 @@ function getCreateParams() {
 					function: function($btn, $inner, done) {
 						$inner.find('div.alert').remove();
 						var disc = createDisc($inner);
-						console.log(disc.notes);
 						if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
 							$inner.prepend(generateError('Brand and Name are required.', 'ERROR'));
 					    } else if ($('.has-error').length > 0) {
@@ -2028,7 +2290,6 @@ function createDisc($form, disc) {
 	disc['tagList'] = _.unique(tags);
 	
 	return disc;
-	
 }
 
 /*
@@ -2058,27 +2319,27 @@ function generateTagItem(item) {
 }
 
 /*
-* Generates an image item for a 
+* Generates an image item for a disc
 */
 function generateImageItem(primaryImage, image) {
 	return '<div class="image-item-container" imageid="' + image._id + '">' +
-					'<div class="image-item">' +
-						'<div class="image-entity">' +
-							'<img src="/files/' + image.thumbnailId +'" class="fit-parent">' +
-						'</div>' +
-						(primaryImage == image._id ? 
-						'<div class="image-overlay">' +
-							'<span class="image-remove"><i class="fa fa-times fa-lg"></i></span>' +
-                        '</div>' +
-                        '<div class="image-overlay-static">' +
-							'<div class="primary-image-banner-static"><i class="fa fa-star fa-lg"></i></div>' +
-                        '</div>' :
-						'<div class="image-overlay">' +
-							'<span class="image-remove"><i class="fa fa-times fa-lg"></i></span>' +
-							'<div class="image-make-primary" title="Make Primary"><i class="fa fa-star-o fa-lg"></i></div>' +
-						'</div>') +
+				'<div class="image-item">' +
+					'<div class="image-entity">' +
+						'<img src="/files/' + image.thumbnailId +'" class="fit-parent">' +
 					'</div>' +
-				'</div>'; 
+					(primaryImage == image._id ? 
+					'<div class="image-overlay">' +
+						'<span class="image-remove"><i class="fa fa-times fa-lg"></i></span>' +
+                    '</div>' +
+                    '<div class="image-overlay-static">' +
+						'<div class="primary-image-banner-static"><i class="fa fa-star fa-lg"></i></div>' +
+                    '</div>' :
+					'<div class="image-overlay">' +
+						'<span class="image-remove"><i class="fa fa-times fa-lg"></i></span>' +
+						'<div class="image-make-primary" title="Make Primary"><i class="fa fa-star-o fa-lg"></i></div>' +
+					'</div>') +
+				'</div>' +
+			'</div>'; 
 }
 
 /*
@@ -2170,14 +2431,6 @@ var delay = (function(){
     timer = setTimeout(callback, ms);
   };
 })();
-
-/*
-* Checks to see if an element has an attribute
-*/
-function hasAttr($elem, attribute) {
-	var attr = $elem.attr(attribute);
-	return (typeof attr !== typeof undefined && attr !== false);
-}
 
 /*
 * Returns a list of properties for the given disc list
@@ -2402,7 +2655,6 @@ var ZumpGallery = function(opt) {
 	var objCount = 0;
 	var itemsPerRow;
 	var objList = [];
-	var hasShown = false;
 	
     //----------------------\
     // JQuery Objects

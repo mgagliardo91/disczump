@@ -20,7 +20,6 @@
 .signup-form-center {
      display: inline-block;
      text-align: center;
-     width: 500px;
 }
 
 .input-group {
@@ -60,4 +59,16 @@
 #citystate {
   line-height: 34px;
   font-weight: bold;
+}
+
+@media (min-width: 600px) {
+     .signup-form-center {
+          width: 500px;
+     }
+}
+
+@media (max-width: 600px) {
+     .signup-form-center {
+          width: 300px;
+     }
 }

@@ -16,7 +16,11 @@ var userSchema = mongoose.Schema({
         image        : String,
         alias        : String,
         zipCode      : String,
-        pdgaNumber   : String
+        pdgaNumber   : String,
+        accessCount     : {
+            desktop : {type: Number, default: 0},
+            mobile : {type: Number, default: 0},
+        }
     },
     facebook         : {
         id           : String,
@@ -73,7 +77,10 @@ userSchema.methods.accountToString = function() {
 	
 	if (typeof(this.local.pdgaNumber) !== 'undefined') {
 		account.pdgaNumber = this.local.pdgaNumber;
-	    
+	}
+	
+	if (typeof(this.local.accessCount) !== 'undefined') {
+		account.firstUse = this.local.accessCount.desktop <= 1;
 	}
 	
 	return account;

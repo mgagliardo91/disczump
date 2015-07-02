@@ -2,6 +2,7 @@ var $dzNav;
 var $dzLogo;
 var popValue;
 var stepValue;
+var cycle = true;
 
 var emailValidate;
 
@@ -13,7 +14,27 @@ $(document).ready(function(){
     stepValue = 1.0 / (popValue);
     
     $('#inventory-carousel').carousel({
-        interval: 8000
+        interval: 5000
+    });
+    
+    $('#inventory-carousel').on('slid.bs.carousel', function() {
+        var index = $('#inventory-carousel .active').index('#inventory-carousel .item');
+        $('.dz-carousel-indicators').find('.fa-circle').removeClass('fa-circle').addClass('fa-circle-o');
+        $('.dz-carousel-indicators > span[data-slide-to=' + index + '] > i').removeClass('fa-circle-o').addClass('fa-circle');
+    });
+    
+    $('.carousel-action').click(function() {
+        
+        if (cycle) {
+            $('#inventory-carousel').carousel('pause');
+            $(this).children('i').removeClass('fa-pause').addClass('fa-play');
+        } else {
+            $('#inventory-carousel').carousel('cycle').carousel('next');
+            $(this).children('i').removeClass('fa-play').addClass('fa-pause');
+        }
+        
+        cycle = !cycle;
+        
     });
     
     $(window).scroll(function() {

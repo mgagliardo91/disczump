@@ -6,14 +6,26 @@ $(document).ready(function(){
             {id:'password', type: 'text', min: 6, hint: 'Password must be at least 6 characters in length.'},
             {id:'verify-password', type:'compare', refId:'password'},
             {id:'zipCode', type:'zipcode', output: 'citystate'},
-            {id:'alias', type:'none', hint: 'This will be how your name is publicly displayed.'},
-            {id:'passcode', type:'none', hint: 'Enter your beta passcode.'}
+            {id:'alias', type:'none', hint: 'This will be how your name is publicly displayed.'}
         ],
         feedbackOnInit: true
     });
     
     $('#signup-form').submit(function() {
         if (!signUpValidate.isAllValid()) {
+            return false;
+        } 
+    });
+    
+    var loginValidate = new ZumpValidate({
+        items: [
+            {id:'login-username', type:'email'},
+            {id:'login-password', type: 'text', min: 6}
+        ]
+    });
+    
+    $('#login-form').submit(function() {
+        if (!loginValidate.isAllValid()) {
             return false;
         } 
     });

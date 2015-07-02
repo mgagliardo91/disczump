@@ -28,17 +28,28 @@
                             <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
                             <input class="form-control" id="username" type="email" name="username" placeholder="Email" value="{{username}}">
                         </div>
-                        <div class="input-group-inline">
-                            <div class="input-group inline">
-                                <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                                <input class="form-control" id="password" type="password" name="password" placeholder="Password">
-                            </div>
-                            <div class="input-group inline">
-                                <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                                <input class="form-control" id="verify-password" type="password" placeholder="Verify Password">
-                            </div>
-                            <div class="clearfix"></div>
+                        {{#if isMobile}}
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                            <input class="form-control" id="password" type="password" name="password" placeholder="Password">
                         </div>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                            <input class="form-control" id="verify-password" type="password" placeholder="Verify Password">
+                        </div>
+                        {{else}}
+                            <div class="input-group-inline">
+                                <div class="input-group inline">
+                                    <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                                    <input class="form-control" id="password" type="password" name="password" placeholder="Password">
+                                </div>
+                                <div class="input-group inline">
+                                    <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                                    <input class="form-control" id="verify-password" type="password" placeholder="Verify Password">
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                        {{/if}}
                         <div class="input-group-inline">
                             <div class="input-group inline">
                                 <span class="input-group-addon"><i class="fa fa-location-arrow fa-fw"></i></span>
@@ -48,6 +59,16 @@
                             </div>
                             <div class="clearfix"></div>
                         </div>
+                        {{#if isMobile}}
+                        <div class="input-group inline">
+                            <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
+                            <input class="form-control" id="alias" type="text" name="alias" placeholder="Alias - Optional" value="{{alias}}">
+                        </div>
+                        <div class="input-group inline">
+                            <span class="input-group-addon"><i class="fa fa-trophy fa-fw"></i></span>
+                            <input class="form-control" id="pdgaNumber" type="text" name="pdgaNumber" placeholder="PDGA Number - Optional" value="{{pdgaNumber}}">
+                        </div>
+                        {{else}}
                         <div class="input-group-inline">
                             <div class="input-group inline">
                                 <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
@@ -58,11 +79,6 @@
                                 <input class="form-control" id="pdgaNumber" type="text" name="pdgaNumber" placeholder="PDGA Number - Optional" value="{{pdgaNumber}}">
                             </div>
                             <div class="clearfix"></div>
-                        </div>
-                        {{#if beta}}
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-info fa-fw"></i></span>
-                            <input class="form-control" id="passcode" type="text" name="passcode" placeholder="Passcode">
                         </div>
                         {{/if}}
                         <button id="submit" class="btn btn-submit btn-block" type="submit">Sign up</button>

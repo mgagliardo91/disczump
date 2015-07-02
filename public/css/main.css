@@ -5,6 +5,10 @@
     user-select: none;
 }
 
+.no-scroll {
+	overflow: hidden;
+}
+
 /*Overrides Bootstrap tooltip max-width*/
 .tooltip-inner {
 	max-width: 300px;
@@ -42,11 +46,12 @@
 
 .zump-nav {
 	margin: 0px;
+	padding: 0px;
 	list-style: none;
 }
 
 .zump-nav > li {
-	float: left;
+	float: right;
 	position: relative;
 	display: block;
 }
@@ -55,7 +60,6 @@
 .zump-nav > li > a {
 	position: relative;
 	display: block;
-	padding: 10px 15px;
 	color: #999;
 	text-decoration: none;
 }
@@ -85,13 +89,19 @@
 	vertical-align: middle;
 }
 
-.navbar-btn-list a {
-	color: rgb(134, 134, 134);
+.navbar-btn-list > a, .navbar-btn-list > span {
+	color: rgb(134, 134, 134) !important;
+	font-weight: normal !important;
+	text-shadow: none !important;
 }
 
-.navbar-btn-list a:hover {
+.navbar-btn-list > a:hover {
 	text-decoration: none;
 	color: rgb(0, 142, 221);
+}
+
+.mobile-btn.active {
+    color: #FFF !important;
 }
 
 .nav-btn {
@@ -99,6 +109,21 @@
 	border-radius: 5px;
 	padding: 8px 10px;
 	margin: 0px 5px;
+}
+
+.navbar-btn-list .mobile-btn {
+	width: 30px;
+	height: 30px;
+	display: table;
+	color: rgb(134, 134, 134);
+	font-weight: normal;
+	text-shadow: none;
+	text-align: center;
+}
+
+.mobile-btn > div {
+	display: table-cell;
+	vertical-align: middle;
 }
 
 .navbar-btn-list a:hover .nav-btn {
@@ -119,10 +144,6 @@
     float: right;
 }
 
-/*.navbar-center .navbar-brand {*/
-/*    float: none;*/
-/*    cursor: pointer;*/
-/*}*/
 
 .navbar-logo {
 	font-size: 1.4em;
@@ -166,19 +187,22 @@
     margin-top: 10px;
 }
 
+.nav-logo.small {
+	margin-top: 0px;
+}
+
 .main-logo {
 	width: 200px;
 	margin-bottom: 40px;
 }
 
+.navbar-left, .navbar-right {
+	width: 25%;
+}
+
 .navbar-center {
-	position: absolute;
-	width: 100%;
-	left: 0;
-	top: 0;
+	width: 50%;
 	text-align: center;
-	margin: auto;
-	height:100%;
 }
 
 .btn-inverse {
@@ -258,24 +282,89 @@ a.btn-facebook:hover {
 	color: #fff;
 }
 
+@media (min-width: 767px) {
+	.page-header > h1{
+		line-height: 50px;
+		margin-left: 70px;
+	}
+}
+
 @media (max-width: 767px) {
+	.page-container {
+		max-width: 300px !important;
+	}
+	
+	.page-container .btn {
+  		margin-bottom: 10px;
+	}
+	
+	.page-header {
+		margin: 0px;
+	}
+	
+	.page-header > h1{
+		line-height: 0px;
+		margin-left: 0px;
+		font-size: 2em;
+	}
+	
 	.btn-inverse {
 		border: 1px solid transparent !important;
 		border-radius: 4px !important;
 		border-color: #333 !important;
 		margin-left: 15px !important;
 	}
+
 	
 	#nav-filter.active {
 		border-color: #fff !important;
     }
 }
 
-.page-header > h1{
-  line-height: 50px;
-  margin-left: 70px;
-}
-
 .page-header > img {
 	float: left;
+}
+
+/* Moble */
+#side-panel {
+    background-color: #ccc;
+}
+
+.options-menu {
+    list-style: none;
+    padding: 0px;
+    margin: 0px;
+}
+
+.options-menu li {
+    font-size: 1em;
+    line-height: 1.3em;
+    background-color: rgb(249, 249, 249);
+    border-bottom: 1px solid rgb(165, 165, 165);
+}
+
+.options-menu li.active {
+    background-color: rgb(0, 142, 221);
+}
+
+.options-menu li span {
+    float: right;
+    font-size: 1.3em;
+}
+
+.options-menu a {
+    color: black;
+    padding: 10px 20px;
+    text-decoration: none;
+    display: block;
+}
+
+.options-menu li.active a {
+    color: white;
+    font-weight: bold;
+}
+
+.panel {
+    margin: 0px;
+    background-color: transparent;
 }

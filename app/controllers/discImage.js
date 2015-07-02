@@ -96,7 +96,7 @@ function getDiscImage(userId, imageId, callback) {
 		if (image) 
 			return callback(null, image);
 		else
-			return callback(null, {});
+			return callback(Error.createError('Invalid disc image identifier.', Error.invalidDataError));
 	});	
 }
 
@@ -154,7 +154,7 @@ function deleteDiscImage(userId, imageId, gfs, callback) {
 						if (!err && !nextImage) {
 							disc.primaryImage = nextImage._id;
 						} else {
-							disc.primaryImage = null;
+							disc.primaryImage = undefined;
 						}
 						
 						disc.save();

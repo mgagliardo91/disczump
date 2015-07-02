@@ -59,6 +59,8 @@ module.exports = function(passport) {
                             }
                         });
                         
+                        UserController.updateAccessCount(user._id, (req.device.isMobile ? 'mobile' : 'desktop'));
+                        
                         if (!user.facebook.token) {
                             user.facebook.token = token;
                             user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;

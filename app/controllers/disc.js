@@ -44,14 +44,23 @@ function getDisc(userId, discId, callback) {
         if (disc.visible || (userId && userId == disc.userId)) {
             if (disc.primaryImage) {
                 DiscImageController.getDiscImage(userId, disc.primaryImage, function(err, image) {
-                    if (err)
-                        return callback(Error.createError(err, Error.internalError));
-                    
-                    if (image) {
-                        disc.retPrimaryImage = image;
+                    if (err) {
+                        if (err.error.type == Error.invalidDataError) {
+                            disc.primaryImage = undefined;
+                            
+                            disc.save(function() {
+                                return callback(null, disc);
+                            });
+                        } else {
+                            return callback(Error.createError(err.error.message, Error.internalError));
+                        }
+                    } else {
+                        if (image) {
+                            disc.retPrimaryImage = image;
+                        }
+                        
+                        return callback(null, disc);
                     }
-                    
-                    return callback(null, disc);
                 });
             } else {
                 return callback(null, disc);

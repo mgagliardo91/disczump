@@ -189,7 +189,7 @@ $(document).ready(function(){
 	 	var disc = getDisc($(this).parents('.disc-item').attr('discid'));
 	 	var winTop = ($(window).height() / 2) - (300 / 2);
         var winLeft = ($(window).width() / 2) - (600 / 2);
-        window.open('http://www.facebook.com/sharer/sharer.php?app_id=1433417853616595&u=https://disczumpserver-mgagliardo.c9.io/disc/' + disc._id + 
+        window.open('http://www.facebook.com/sharer/sharer.php?app_id=1433417853616595&u=disczump.com/disc/' + disc._id + 
         	'&display=popup&ref=plugin&src=share_button', 'sharer', 'top=' + winTop + ',left=' + winLeft + ',toolbar=0,status=0,width=' + 600 + ',height=' + 300);
 	 });
 	 

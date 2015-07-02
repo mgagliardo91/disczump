@@ -15,7 +15,45 @@
     padding: 0px;
 }
 
+#side-panel > .ui-panel-inner {
+    padding: 15px;
+}
+
 .ui-panel-inner {
+    padding: 0px;
+}
+
+.ui-popup-screen {
+    z-index: 2199;
+}
+
+.ui-popup-container {
+    z-index: 2200;
+}
+
+.dz-header {
+    width: 100%;
+    margin: 0px;
+    padding: 10px 20px;
+    font-size: 1.1em;
+    text-align: center;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.dz-header > span {
+    position: absolute;
+    font-size: 24px;
+    top: 6px;
+}
+
+.dz-header > .header-left {
+    left: 15px;
+}
+
+.dz-header > .header-right {
+    right: 15px;
 }
 
 /* Mobile CSS */
@@ -27,9 +65,39 @@ body {
     color: #FFF;
 }
 
+div[data-role="popup"] {
+    max-width: 400px;
+}
+
+div[data-role="popup"] p {
+    padding: 10px 0px;
+}
+
+div[data-role="header"] > h1 {
+    font-weight: bold;
+}
+
+.dz-page {
+    display: none;
+    width: 100%;
+    overflow: auto;
+    -moz-webkit-overflow-scrolling: touch;
+    -ms-webkit-overflow-scrolling: touch;
+    -o-webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch;
+}
+
+.popup-main {
+    padding: 10px 15px;
+}
+
 .panel {
     margin: 0px;
     background-color: transparent;
+}
+
+.panel > ul {
+    overflow: auto;
 }
 
 .panel-btn {
@@ -60,8 +128,14 @@ body {
     background-color: #ccc;
 }
 
-.filter-item-parent {
+.btn-bottom {
+    position: absolute;
+    bottom: 0;
+    padding: 0px 20px;
+    width: 100%;
 }
+
+#filter-list
 
 .filter-item-parent .panel-heading {
     background-color: #ccc;
@@ -183,14 +257,14 @@ a.panel-link-item {
     box-shadow: 0px 2px #515151 inset;
 }
 
-.disc-inventory-list {
-    width: 100%;
-    overflow: auto;
-    -moz-webkit-overflow-scrolling: touch;
-    -ms-webkit-overflow-scrolling: touch;
-    -o-webkit-overflow-scrolling: touch;
-    -webkit-overflow-scrolling: touch;
-}
+/*.disc-inventory-list {*/
+/*    width: 100%;*/
+/*    overflow: auto;*/
+/*    -moz-webkit-overflow-scrolling: touch;*/
+/*    -ms-webkit-overflow-scrolling: touch;*/
+/*    -o-webkit-overflow-scrolling: touch;*/
+/*    -webkit-overflow-scrolling: touch;*/
+/*}*/
 
 .disc-item-container {
     position: relative;
@@ -321,6 +395,37 @@ a.panel-link-item {
 
 /*===================================================================*/
 /*                                                                   */
+/*                      Loading Overlay Page                         */
+/*                                                                   */
+/*===================================================================*/
+
+.dim-overlay {
+    position: fixed;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 2100;
+    display: none;
+    overflow: hidden;
+}
+
+.loading-container {
+    color: #FFF;
+    text-align: center;
+    display: none;
+}
+
+.loading-info {
+    font-size: 2em;
+    font-weight: bold;
+    font-family: 'Orbitron', sans-serif;
+    padding: 10px;
+}
+
+/*===================================================================*/
+/*                                                                   */
 /*                            Add Disc Page                          */
 /*                                                                   */
 /*===================================================================*/
@@ -330,9 +435,106 @@ form label {
 }
 
 .mobile-add-disc-container {
-    padding: 10px;
+    padding: 10px 20px;
 }
 
 .mobile-form-horizontal div[class^='ui-input'] {
-    margin: 3px 0px;
+    margin: 10px 0px;
+}
+
+#add-disc-images {
+    width: 150px;
+    margin: 20px auto;
+}
+
+#add-disc-images i{
+    padding: 10px;
+}
+
+.total-upload-progress {
+    display: none;
+    width: 0px;
+    height: 10px;
+    background-color: rgb(0, 142, 221);
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*                     Add Disc Images Page                          */
+/*                                                                   */
+/*===================================================================*/
+
+#add-disc-image-edit.active {
+    color: rgb(255, 190, 73);
+}
+
+.image-list {
+    position: relative;
+}
+
+.image-list-container {
+    display: table;
+}
+
+.image-item-container {
+    display: table-cell;
+}
+
+.image-item {
+    display: inline-table;
+    position: relative;
+}
+
+.image-item.image-default {
+    border: 3px dashed #000;
+    border-radius: 5px;
+}
+
+.image-entity {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.image-progress {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 99;
+    height: 100%;
+    background-color: rgba(150, 51, 0, 0.71);
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 100;
+    width: 100%;
+    height: 100%;
+    color: #fff;
+    background-color: rgba(60, 60, 60, 0.5);
+    display: none;
+}
+
+.image-remove {
+    position: relative;
+    text-align: center;
+    z-index: 101;
+    color: rgba(200, 200, 200, 0.75);
+    top: 50%;
+    margin-top: -50px;
+}
+
+.image-remove > i {
+    display: block;
+}
+
+.image-title { 
+    position: absolute;
+    bottom: 0px;
+    padding: 5px;
+    width: 100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }

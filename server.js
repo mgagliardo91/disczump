@@ -41,8 +41,7 @@ app.use(passport.session());
 app.use(flash());
 
 app.use(function (req, res, next) {
-  req.device.isMobile = req.device.type == 'phone' 
-    || req.device.type == 'tablet';
+  req.device.isMobile = req.device.type == 'phone';
   next();
 });
 
@@ -54,6 +53,14 @@ var hbs = exphbs.create({
         if(!this._sections) this._sections = {};
         this._sections[name] = options.fn(this);
         return null;
+      },
+      or2: function(in1, in2, options){
+        if (in1 || in2) return options.fn(this);
+        return options.inverse(this);
+      },
+      or3: function(in1, in2, in3, options){
+        if (in1 || in2 || in3) return options.fn(this);
+        return options.inverse(this);
       }
     }
 });

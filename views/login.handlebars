@@ -5,10 +5,10 @@
     <link rel="stylesheet" href="/static/css/login.css">
 </head>
 <body>
-    <div class="login-form-container">
+    <div data-role="page" class="login-form-container">
         <div class="login-form-cell">
             <div class="login-form-center">
-                <form action="/login" method="post">
+                <form action="/login" method="post" id="login-form">
                     <img src="/static/logo/logo_small.svg" class="main-logo" />
                     {{#if message.error}}
                     <div class="alert alert-danger" role="alert">
@@ -33,11 +33,11 @@
                     <div class="login-form-stacked">
                         <div class="input-group">
                             <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
-                            <input class="form-control" id="username" type="email" name="username" placeholder="Email">
+                            <input class="form-control" id="login-username" type="email" name="username" placeholder="Email">
                         </div>
                         <div class="input-group">
                             <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                            <input class="form-control" id="password" type="password" name="password" placeholder="Password">
+                            <input class="form-control" id="login-password" type="password" name="password" placeholder="Password">
                         </div>
                         <button id="submit" class="btn btn-submit btn-block" type="submit">Sign in</button>
                         <a href="/auth/facebook" class="btn btn-primary btn-block" role="button">Sign in with Facebook</a>
@@ -47,6 +47,9 @@
             </div>
         </div>
     </div>
+    {{#if isMobile}}
+    {{!--<script src="/static/js/mobile/mobile.js"></script>--}}
+    {{/if}}
     <script src="/static/js/access.js"></script>
     <script src="/static/js/validation.js"></script>
 </body>

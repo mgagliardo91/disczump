@@ -42,7 +42,7 @@ html, body {
     position: relative;
     background-image: url('../logo/logo_banner_caption.svg');
     background-repeat: no-repeat;
-    background-attachment: fixed !important;
+    background-attachment: fixed;
     background-origin: content-box !important;
     background-size: 100% auto;
     -webkit-background-size: 100% auto;
@@ -148,6 +148,10 @@ html, body {
     .section-inner > .section-icons {
         font-size: 150px;
     }
+    
+    .carousel-title > div {
+        vertical-align: bottom;
+    }
 }
 
 @media (min-width: 700px) {    .define-main {
@@ -200,17 +204,53 @@ html, body {
     #section-inventory {
         height: 700px;
     }
+    
+    .carousel-title {
+        height: 100px;
+    }
+    
+    .carousel-inner, .carousel-inner > .item {
+        height: 660px;
+    }
+    
+    .carousel-item {
+        max-height: 560px;
+    }
 }
 
 @media (max-height: 700px) and (max-width: 1000px) {
     #section-inventory {
         height: 450px;
     }
+    
+    .carousel-title {
+        height: 100px;
+    }
+    
+    .carousel-inner, .carousel-inner > .item {
+        height: 410px;
+    }
+    
+    .carousel-item {
+        max-height: 310px;
+    }
 }
 
 @media (max-height: 700px) and (min-width: 1000px) {
     #section-inventory {
         height: 500px;
+    }
+    
+    .carousel-title {
+        height: 100px;
+    }
+    
+    .carousel-inner, .carousel-inner > .item {
+        height: 460px;
+    }
+    
+    .carousel-item {
+        max-height: 360px;
     }
 }
 
@@ -286,8 +326,36 @@ html, body {
     padding: 40px 20px;
 }
 
-.carousel, .carousel-inner, .carousel-inner > .item {
+.carousel-action {
+    padding: 0px 5px;
+    color: #FFF;
+}
+
+.carousel-action:hover {
+    cursor: pointer;
+    color: rgb(0, 142, 221);
+}
+
+.carousel {
     height: 100%;
+}
+    
+.carousel-controller {
+    height: 40px;
+    max-width: 1200px;
+    width: 70%;
+    margin: auto;
+}
+
+.dz-carousel-indicators {
+    margin: 0px;
+    padding: 0px;
+    text-align: center;
+}
+
+.dz-carousel-indicators span {
+    color: #FFF;
+    cursor: pointer;
 }
 
 .carousel-direction {
@@ -358,11 +426,13 @@ html, body {
     z-index: 5px;
 }
 
+.carousel-inner {
+    max-width: 1200px;
+    width: 70%;
+    margin: auto;
+}
+
 .carousel-title {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100px;
     display: table;
     width: 100%;
     text-align: center;
@@ -375,35 +445,33 @@ html, body {
     font-weight: bold;
 }
 
-.carousel-image {
-    display: table;
+.carousel-item {
     height: 100%;
-    max-height: 100%;
-    max-width: 1200px;
-    width: 70%;
-    margin: auto;
-    padding-top: 100px;
-    padding-bottom: 100px;
+    text-align: center;
+    background-repeat: no-repeat;
+    background-size: 90% auto;
+    background-position: center center;
 }
 
-.carousel-image > .image-container {
-    display: table-cell;
-    vertical-align: middle;
-    position: relative;
+#carousel-interface {
+    background-image: url('/static/img/ss_dashboard.png');
 }
 
-.carousel-image > .image-container img {
-    width: 100%;
-    height: 100%;
-    max-width: 100%;
-    position: absolute;
-    left: 0;
-    top: 0;
+#carousel-views {
+    background-image: url('/static/img/ss_gallery.png');
+}
+
+#carousel-features {
+    background-image: url('/static/img/ss_stats.png');
+}
+
+#carousel-share {
+    background-image: url('/static/img/ss_sharing.png');
 }
 
 .carousel-content {
     position: absolute;
-    bottom: 10%;
+    bottom: 5%;
     left: 50%;
     background-color: rgba(215, 148, 148, 0.95);
     padding: 20px;

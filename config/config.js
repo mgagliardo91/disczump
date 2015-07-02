@@ -18,7 +18,7 @@ module.exports = {
         'thumbnailSize': 150
     },
     'development': {
-        'beta': true,
+        'beta': false,
         'passcode': '2015BETADZ',
     },
     'user': {

@@ -1,0 +1,451 @@
+/* Overrides for Jquery Mobile */
+.ui-overlay-a, .ui-page-theme-a, .ui-page-theme-a .ui-panel-wrapper, .ui-body-a {
+    text-shadow: none;
+}
+
+.ui-page, .ui-panel {
+    padding-top: 50px;
+}
+
+.ui-panel.ui-panel-open {
+    position:fixed;
+}
+
+.ui-panel-inner {
+    padding: 0px;
+}
+    
+.ui-content {
+    padding: 0px;
+}
+
+.ui-title.dz-header {
+    width: 100%;
+    margin: 0px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.ui-title.dz-header > span {
+    position: absolute;
+    font-size: 24px;
+    top: 6px;
+}
+
+.ui-title.dz-header > .header-left {
+    left: 15px;
+}
+
+.ui-title.dz-header > .header-right {
+    right: 15px;
+}
+
+.ui-panel-inner {
+}
+
+/* Mobile CSS */
+body {
+    display: none;
+}
+
+div[data-role="popup"] {
+    max-width: 400px;
+}
+
+div[data-role="popup"] p {
+    padding: 10px 0px;
+}
+
+div[data-role="header"] > h1 {
+    font-weight: bold;
+}
+
+div.fixed[data-role="header"] {
+    position: fixed;
+    width: 100%;
+}
+
+.dz-page {
+    display: none;
+    width: 100%;
+    overflow: auto;
+    -moz-webkit-overflow-scrolling: touch;
+    -ms-webkit-overflow-scrolling: touch;
+    -o-webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch;
+}
+
+.dz-header {
+    width: 100%;
+    margin: 0px;
+    padding: 10px 40px;
+    font-size: 1.1em;
+    text-align: center;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    height: 45px;
+}
+
+.dz-header span.main {
+    color: rgb(0, 142, 221);
+}
+
+.dz-header > span {
+    position: absolute;
+    font-size: 24px;
+    top: 6px;
+}
+
+.dz-header > .header-left {
+    left: 15px;
+}
+
+.dz-header > .header-right {
+    right: 15px;
+}
+
+.disc-title {
+    text-align: center;
+    padding: 20px 0px 10px 0px;
+    font-size: 1.5em;
+    font-family: 'Orbitron', sans-serif;
+    margin-left: -20px;
+}
+
+.disc-title .brand {
+    font-size: 1.6em;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+#disc-view-container {
+    margin-bottom: 40px;
+}
+
+.disc-image-container {
+    padding: 10px 0px;
+    width: 100%;
+    overflow: auto;
+    text-align: center;
+    display: table;
+}
+
+.disc-image {
+    width: 80%;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.disc-image > img {
+    width: 80%;
+    max-width: 100%;
+}
+
+.disc-details-container {
+    border: 1px solid black;
+    border-radius: 5px;
+    margin: 10px 10%;
+}
+
+.disc-data-set {
+    font-size: 1.1em;
+    border-bottom: 1px solid black;
+    overflow: hidden;
+}
+
+.disc-data-set div {
+    padding: 5px 0px;
+}
+
+.disc-data-set:last-child {
+    border-bottom: none;
+}
+
+.disc-data-set .data-label {
+    font-weight: bold;
+    float: left;
+    width: 40%;
+    margin-right: 10px;
+    text-align: right;
+    background-color: rgb(0, 142, 221);
+    padding-right: 10px;
+    color: white;
+    border-right: 1px solid black;
+}
+
+.disc-flight-numbers {
+    margin: 20px auto;
+    width: 200px;
+    border: 1px solid black;
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: rgb(208, 204, 204);
+}
+
+.flight-row {
+    text-align: center;
+}
+
+.flight-row:first-child {
+    border-bottom: 1px solid black;
+}
+
+.flight-cell {
+    float: left;
+    width: 50%;
+    height: 100px;
+    display: table;
+    position: relative;
+}
+
+.flight-cell:first-child {
+    border-right: 1px solid black;
+}
+
+.flight-cell > div {
+    display: table-cell;
+    vertical-align: middle;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.8em;
+    width: 100%;
+}
+
+.flight-cell-title {
+    position: absolute;
+    width: 100%;
+    top: 1px;
+    font-size: .9em;
+    font-weight: bold;
+}
+
+#view-more {
+    background-color: #C5C5C5;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#C5C5C5), to(#848484));
+    background-image: -webkit-linear-gradient(top, #C5C5C5, #848484);
+    background-image: -moz-linear-gradient(top, #C5C5C5, #848484);
+    background-image: -ms-linear-gradient(top, #C5C5C5, #848484);
+    background-image: -o-linear-gradient(top, #C5C5C5, #848484);
+    background-image: linear-gradient(to bottom, #C5C5C5, #848484);
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#C5C5C5, endColorstr=#848484);
+    color: black;
+}
+
+#view-more.active {
+    background-color: #848484;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#848484), to(#969696));
+    background-image: -webkit-linear-gradient(top, #848484, #969696);
+    background-image: -moz-linear-gradient(top, #848484, #969696);
+    background-image: -ms-linear-gradient(top, #848484, #969696);
+    background-image: -o-linear-gradient(top, #848484, #969696);
+    background-image: linear-gradient(to bottom, #848484, #969696);
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#848484, endColorstr=#969696);
+}
+
+#share-disc {
+    background-color: #008EDD;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#008EDD), to(#005584));
+    background-image: -webkit-linear-gradient(top, #008EDD, #005584);
+    background-image: -moz-linear-gradient(top, #008EDD, #005584);
+    background-image: -ms-linear-gradient(top, #008EDD, #005584);
+    background-image: -o-linear-gradient(top, #008EDD, #005584);
+    background-image: linear-gradient(to bottom, #008EDD, #005584);
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#008EDD, endColorstr=#005584);
+}
+
+#share-disc.active {
+    background-color: #005584;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#005584), to(#0071B0));
+    background-image: -webkit-linear-gradient(top, #005584, #0071B0);
+    background-image: -moz-linear-gradient(top, #005584, #0071B0);
+    background-image: -ms-linear-gradient(top, #005584, #0071B0);
+    background-image: -o-linear-gradient(top, #005584, #0071B0);
+    background-image: linear-gradient(to bottom, #005584, #0071B0);
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#005584, endColorstr=#0071B0);
+}
+
+.disc-footer {
+    position: fixed;
+    bottom: 0px;
+    width: 100%;
+    -webkit-box-shadow: 0px -2px 5px 0px rgba(124, 124, 124, 0.88);
+    -moz-box-shadow: 0px -2px 5px 0px rgba(124, 124, 124, 0.88);
+    box-shadow: 0px -2px 5px 0px rgba(124, 124, 124, 0.88);
+    background-color: rgb(34, 34, 34);
+    height: 40px;
+    z-index: 1000;
+}
+
+.disc-btn i {
+    margin-right: 5px;
+}
+
+.disc-btn {
+    width: 50%;
+    float: left;
+    background-color: rgb(0, 142, 221);
+    color: #FFF;
+    padding: 10px 15px;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+
+#disc-view-container {
+  background-color: rgb(240, 240, 240);
+}
+
+.disc-alert {
+  margin: 10px 10%;
+  background-color: rgba(255, 23, 23, 0.27);
+  text-align: center;
+  padding: 3px 20px;
+}
+
+.disc-alert > span > i {
+    float: left;
+}
+
+.disc-gallery {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    padding: 10px 0px;
+    margin: auto;
+}
+
+.disc-gallery > div {
+    display: table;
+    table-layout: fixed;
+    position: relative;
+}
+
+.disc-gallery-list {
+    display: table-cell;
+    position: relative;
+    vertical-align: middle;
+}
+
+.disc-gallery-item {
+    width: 250px;
+    position: relative;
+    height: 250px;
+    display: table-cell;
+    vertical-align: middle;
+    opacity: .5;
+}
+
+.disc-gallery-item.active {
+    opacity: 1;
+}
+
+.disc-gallery-item > img {
+    width: 250px;
+}
+
+.disc-notes {
+    width: 80%;
+    margin: auto;
+    margin-bottom: 20px;
+}
+
+.disc-notes-title {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.disc-notes-content {
+    background-color: rgb(221, 221, 221);
+    padding: 5px;
+    font-size: .85em;
+    max-height: 200px;
+    overflow: auto;
+}
+
+#public-disc-list {
+    margin-top: 45px;
+}
+
+.disc-info-wrapper {
+    width: 100%;
+    background-color: white;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #999;
+}
+
+.item-active {
+    background-color: #E0E0E0 !important;
+}
+
+.list-group-item.item-active {
+    background-color: #E0E0E0;
+}
+
+.disc-item {
+    display: block;
+    height: 100px;
+    padding: 5px;
+}
+
+.disc-content-image-container {
+    float: left;
+    display: table;
+    padding-left: 10px;
+}
+
+.disc-content-image {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+    width: 90px;
+    height: 90px;
+}
+
+.disc-content-image > img {
+    display: none;
+    max-height: 90px;
+    max-width: 90px;
+}
+
+.disc-content-image > i {
+    font-size: 2em;
+}
+
+.disc-content-info-container {
+    display: table;
+    width: auto;
+    height: 100%;
+    margin-left: 100px;
+    padding: 0px 0px 0px 20px;
+}
+
+.disc-content-info-container > div {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.disc-info-brand {
+    font-family: Cambria, Georgia, serif;
+    color: #666666;
+    font-style: italic;
+    font-variant: small-caps;
+    text-overflow: ellipsis;
+    font-size: 1.3em;
+}
+
+.disc-info-name {
+    font-family: Rockwell, "Courier Bold", Courier, Georgia, Times, "Times New Roman", serif;
+    text-shadow: 1px 2px 1px rgba(161, 161, 161, 0.81);
+    font-size: 1.9em;
+    line-height: 1.1em;
+    font-variant: small-caps;
+    text-overflow: ellipsis;
+}
+
+code.disc-tag {
+    font-weight: bold;
+    color: rgb(181, 0, 0);
+}

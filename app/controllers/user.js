@@ -8,6 +8,7 @@ var UserConfig = require('../../config/config.js').user.preferences;
 
 module.exports = {
 	updateActivity: updateActivity,
+	updateAccessCount: updateAccessCount,
     checkPassword: checkPassword,
     getAccount: getAccount,
     getPreferences: getPreferences,
@@ -37,6 +38,15 @@ function getAlias(userId, callback) {
 		
 		return callback(null, {display: alias, image: user.local.image});
 	});
+}
+
+function updateAccessCount(userId, platform) {
+	User.findById(userId, function(err, user) {
+        if (!err && user) {
+			user.local.accessCount[platform] += 1;
+			user.save();
+        }
+    });
 }
 
 function updateActivity(userId) {
