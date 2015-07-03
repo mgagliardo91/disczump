@@ -24,7 +24,7 @@ module.exports = function(app, passport, gridFs) {
     
     app.post('/beta', function(req, res) {
         if (req.body.email) {
-            DataItemController.createDataItem(req.body.email, function(err, email) {
+            DataItemController.createDataItem(req.body.email, 'BetaEmail', function(err, email) {
                 if (err) {
                     return res.render('notification', {
                         isMobile: req.device.isMobile,
