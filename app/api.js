@@ -14,6 +14,16 @@ module.exports = function(app, passport, gridFs) {
     
     gfs = gridFs;
     
+    app.route('/feedback')
+        .post(hasAccess, function(req,res) {
+        	     DataItemController.createGeneric(req.user._id, req.body.data, 'Feedback', function(err, dataItem) {
+        	          if (err)
+                    return res.json(err);
+                    
+                return res.json(dataItem);
+        	     });
+        });
+    
     app.route('/account')
         .get(hasAccess, function(req, res) {
            UserController.getAccount(req.user._id, function(err, user) {
