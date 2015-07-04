@@ -1,11 +1,11 @@
 <body>
-    <p>Hello, <strong>{{email}}</strong>!</p>
-    <br />
+    <p>Hello, <strong>{{#if alias}}{{alias}}{{else}}{{email}}{{/if}}</strong>!</p>
     <p>We are happy to inform you that DiscZump is now live! Click on the following 
-    link to create a new (and completely free) account. Once you sign up, you will  be
-    asked to confirm your email address. To get you started, your new account will 
-    come with sime demo discs to examplify the features of the DiscZump user interface.
-    </p>
+    link to create a new (and completely free) account. To complete the account creation 
+    process, you will receive an email containing a confirmation link. Once your email is 
+    confirmed, your new account will be populated with a small collection of demo discs 
+    to examplify the features of the DiscZump user interface. Please feel free to directly
+    email ben@disczump.com or mike@disczump.com with any questions or concerns.</p>
     <p><a href="{{serverURL}}/signup">DiscZump Sign Up</a></a>
     <br />
     <p>Happy Zumping!</p>

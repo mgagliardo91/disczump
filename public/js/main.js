@@ -408,7 +408,7 @@ function deleteDisc(discId, callback) {
 	$.ajax({
 		type: "DELETE",
 		dataType: "json",
-		url: url + 'discs/' + discId,
+		url: url + 'disc/' + discId,
 		contentType: "application/json",
 		success: function (data) {
 			var retVal = validateServerData(data);
@@ -452,6 +452,34 @@ function deleteImage(imageId, callback) {
 		   }
 		}
 	});
+}
+
+function postFeedback(feedback, callback) {
+	var success = false;
+	var retData;
+    $.ajax({
+		type: "POST",
+		dataType: "json",
+		url: url + 'feedback',
+		contentType: "application/json",
+		data: JSON.stringify({data: feedback}),
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, retData);
+		   	}
+		}
+     });
 }
 
 function validateServerData(data) {

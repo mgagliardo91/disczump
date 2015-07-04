@@ -2,6 +2,7 @@ var Error = require('./utils/error');
 var UserController = require('./controllers/user');
 var DiscController = require('./controllers/disc');
 var DiscImageController = require('./controllers/discImage');
+var DataItemController = require('./controllers/dataItem');
 var passport = require('passport');
 var logger = require('../config/logger.js').logger;
 var config = require('../config/config.js');

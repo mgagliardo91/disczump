@@ -88,12 +88,17 @@ $(document).ready(function(){
    		e.stopImmediatePropagation();
    		generateFeedbackModal('Feedback Form', 'Submit', function() {
    			if ($('#feedback-textarea').val().length < 1) {
-   				console.log('not valid');
    				return $('.modal-body').prepend(generateError('You must enter information into the text box before submitting the form.', 'ERROR'));
    			} else {
-   				console.log('valid');
    				$('.modal-body').find('.alert').remove();
-   				//submit form and close modal
+   				var text = $('#feedback-textarea').val();
+   				postFeedback(text, function(success, retData) {
+   					if (success) {
+   						$('.custom-modal').modal('hide');
+   					} else {
+   						console.log('Error submitting feedback.');
+   					}
+   				});
    			}
    		});
    		return false;
@@ -1953,7 +1958,6 @@ function getEditParams() {
 					name: 'close',
 					function: function($btn, $inner, done) {
 						if (fnLock) return;
-						
 						done();
 					}
 				},
