@@ -1,5 +1,5 @@
 <body>
-    <p>Hello, <strong>{{user.local.email}}</strong>!</p>
+    <p>Hello, <strong>{{#if user.local.alias}}{{user.local.alias}}{{else}}{{user.local.email}}{{/if}}</strong>!</p>
     <br />
     <p>Welcome to DiscZump{{#if user.local.passcode}} Beta{{/if}}! Please go to 
     <a href="{{serverURL}}/confirm/{{confirm.authorizationId}}">Confirm Account</a>
