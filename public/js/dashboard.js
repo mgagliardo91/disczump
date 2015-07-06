@@ -250,6 +250,7 @@ $(document).ready(function(){
 		var discId = $(this).parents('.disc-item').attr('discid');
 		var text = 'Are you sure you want to delete this disc and all of its data?';
 		generateConfirmationModal('WARNING!', text, 'Delete', function($btn, $inner, done) {
+			console.log('clicked delete');
 			deleteDisc(discId, function(success, data) {
 				if (success) {
 					discs = _.filter(discs, function(disc){
@@ -911,8 +912,7 @@ function zumpLibraryInit() {
 	
     zipValidation = new ZumpValidate({
     	items: [
-    		{id: 'accountZipCode', type:'zipcode', output: 'accountCityState'},
-            {id: 'accountAlias'}
+    		{id: 'accountZipCode', type:'zipcode', output: 'accountCityState'}
     	]
     });
     

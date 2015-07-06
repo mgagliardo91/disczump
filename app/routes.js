@@ -106,11 +106,11 @@ module.exports = function(app, passport, gridFs) {
         });
     });
     
-    app.get('/test', function(req, res) {
-       res.render('test', {
-           isIndex: true
-       });
-    });
+    // app.get('/test', function(req, res) {
+    //   res.render('test', {
+    //       isIndex: true
+    //   });
+    // });
     
     app.get('/disc/:discid', function(req, res) {
         var userId = undefined;

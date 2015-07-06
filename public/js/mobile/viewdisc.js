@@ -87,9 +87,9 @@ $(document).on("pagecreate", "#disc-view", function () {
     });
     
     $(document).on('vclick', '.disc-item', function() {
-           var id = $(this).attr('discid');
-            location.href = 'disczump.com/disc/' + id;
-        });
+        var id = $(this).attr('discid');
+        location.href = '/disc/' + id;
+    });
     
     $optionsPanel.panel();
     $('body').show();

@@ -408,7 +408,7 @@ function deleteDisc(discId, callback) {
 	$.ajax({
 		type: "DELETE",
 		dataType: "json",
-		url: url + 'disc/' + discId,
+		url: url + 'discs/' + discId,
 		contentType: "application/json",
 		success: function (data) {
 			var retVal = validateServerData(data);
