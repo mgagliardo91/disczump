@@ -754,7 +754,7 @@ var ZumpInventory = function(opt) {
         
         $(document).on('vclick', '.disc-item', function() {
            var id = $(this).attr('discid');
-           window.open('disczump.com/disc/' + id);
+           window.open('www.disczump.com/disc/' + id);
         });
     }
     

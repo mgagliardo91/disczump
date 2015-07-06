@@ -17,7 +17,7 @@ function createDiscData(gridfs, userId) {
     async.eachSeries(dev.data, function(discObj, devCallback) {
         DiscController.postDisc(userId, discObj.disc, function(err, disc) {
             if (err) {
-                return console.log(err);
+                return console.log(err); 
             }
             
             async.eachSeries(discObj.images, function(image, callback) {

@@ -29,9 +29,9 @@ module.exports = function(app, passport, gridFs) {
                     return res.render('notification', {
                         isMobile: req.device.isMobile,
                         notify: {
-                            pageHeader: err.error.message.type,
-                            header: err.error.message.type,
-                            strong: err.error.message.message,
+                            pageHeader: err.error.type,
+                            header: err.error.type,
+                            strong: err.error.message,
                             text: 'When we enter beta, you will receive instructions on how to create' + 
                                 ' your personalized account.',
                             buttonIcon: 'fa-home',
@@ -79,7 +79,6 @@ module.exports = function(app, passport, gridFs) {
                 }
             }
             
-            
             return res.render('dashboard', {
                 user : req.user,
                 firstUse: firstUse,
@@ -122,10 +121,10 @@ module.exports = function(app, passport, gridFs) {
                return res.render('notification', {
                     isMobile: req.device.isMobile,
                    notify : {
-                       pageHeader: err.error.message.type,
-                       header: err.error.message.type,
-                       strong: err.error.message.message,
-                       text: 'The owner of this disc has not yet made it visible to the public.',
+                       pageHeader: err.error.type,
+                       header: err.error.type,
+                       strong: err.error.message,
+                       text: 'The owner of this disc has not made it visible to the public.',
                        buttonIcon: 'fa-home',
                        buttonText: 'Return Home',
                        buttonLink: '/'
@@ -138,10 +137,10 @@ module.exports = function(app, passport, gridFs) {
                     return res.render('notification', {
                         isMobile: req.device.isMobile,
                        notify : {
-                           pageHeader: err.error.message.type,
-                           header: err.error.message.type,
-                           strong: err.error.message.message,
-                           text: 'The owner of this disc has not yet made it visible to the public.',
+                           pageHeader: err.error.type,
+                           header: err.error.type,
+                           strong: err.error.message,
+                           text: 'The owner of this disc has not made it visible to the public.',
                            buttonIcon: 'fa-home',
                            buttonText: 'Return Home',
                            buttonLink: '/'

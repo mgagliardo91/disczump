@@ -8,16 +8,16 @@ module.exports = {
                 brand           : 'MVP',
                 name            : 'Resistor',
                 type            : 'Fairway Driver',
-                weight          : 160,
+                weight          : '160',
                 material        : 'Neutron',
                 color           : 'Orange',
-                speed           : 6,
-                glide           : 4,
-                turn            : 0,
-                fade            : 3,
+                speed           : '6',
+                glide           : '4',
+                turn            : '0',
+                fade            : '3',
                 notes           : 'Chains for Brains - 2013 Disc Nation Halloween Collection',
                 tagList         : ['Demo Disc', 'Hanger', 'Halloween Collection'],
-                condition       : 10
+                condition       : '10'
             },
             'images': [
                 {
@@ -35,16 +35,16 @@ module.exports = {
                 brand           : 'Innova',
                 name            : 'Destroyer',
                 type            : 'Distance Driver',
-                weight          : 175,
+                weight          : '175',
                 material        : 'Star',
                 color           : 'Orange',
-                speed           : 12,
-                glide           : 5,
-                turn            : -1,
-                fade            : 3,
+                speed           : '12',
+                glide           : '5',
+                turn            : '-1',
+                fade            : '3',
                 notes           : '2010 Disc Nation Halloween Collection - Bottom Stamped S/DS',
                 tagList         : ['Demo Disc', 'Hanger', 'Halloween Collection'],
-                condition       : 10
+                condition       : '10'
             },
             'images': [
                 {
@@ -62,16 +62,16 @@ module.exports = {
                 brand           : 'Discraft',
                 name            : 'Zone',
                 type            : 'Putt/Approach',
-                weight          : 174,
+                weight          : '174',
                 material        : 'ESP',
                 color           : 'DyeMax',
-                speed           : 3,
-                glide           : 3,
-                turn            : 0,
-                fade            : 3,
+                speed           : '3',
+                glide           : '3',
+                turn            : '0',
+                fade            : '3',
                 notes           : '2008 Disc Golf World Championships',
                 tagList         : ['Demo Disc', 'Hanger', 'Zone Collection'],
-                condition       : 10
+                condition       : '10'
             },
             'images': [
                 {
@@ -89,16 +89,16 @@ module.exports = {
                 brand           : 'Dynamic Discs',
                 name            : 'Felon',
                 type            : 'Fairway Driver',
-                weight          : 175,
+                weight          : '175',
                 material        : 'Fuzion',
                 color           : 'DyeMax',
-                speed           : 9,
-                glide           : 4,
-                turn            : 0,
-                fade            : 4,
+                speed           : '9',
+                glide           : '4',
+                turn            : '0',
+                fade            : '4',
                 notes           : 'Pandamonium Discs, Bandit Panda, #21/50',
                 tagList         : ['Demo Disc', 'Hanger', 'Panda Collection', 'DyeMax'],
-                condition       : 10
+                condition       : '10'
             },
             'images': [
                 {
@@ -116,16 +116,16 @@ module.exports = {
                 brand           : 'Westside',
                 name            : 'Harp',
                 type            : 'Putt/Approach',
-                weight          : 175,
+                weight          : '175',
                 material        : 'Tournament',
                 color           : 'DyeMax',
-                speed           : 4,
-                glide           : 3,
-                turn            : 0,
-                fade            : 3,
+                speed           : '4',
+                glide           : '3',
+                turn            : '0',
+                fade            : '3',
                 notes           : 'Pandamonium Discs, Panda Face, #17/50',
                 tagList         : ['Demo Disc', 'Hanger', 'Panda Collection', 'DyeMax'],
-                condition       : 10
+                condition       : '10'
             },
             'images': [
                 {
@@ -143,16 +143,16 @@ module.exports = {
                 brand           : 'Prodigy',
                 name            : 'M1',
                 type            : 'Mid-range',
-                weight          : 172,
+                weight          : '172',
                 material        : '750',
                 color           : 'Black',
-                speed           : 5,
-                glide           : 4,
-                turn            : 0,
-                fade            : 3,
+                speed           : '5',
+                glide           : '4',
+                turn            : '0',
+                fade            : '3',
                 notes           : '2014 Prodigy Gothic Halloween Stamp',
                 tagList         : ['Demo Disc', 'Hanger', 'Halloween Collection'],
-                condition       : 10
+                condition       : '10'
             },
             'images': [
                 {
@@ -174,16 +174,16 @@ module.exports = {
                 brand           : 'Axiom',
                 name            : 'Crave',
                 type            : 'Fairway Driver',
-                weight          : 164,
+                weight          : '164',
                 material        : 'Neutron',
                 color           : 'Black',
-                speed           : 6,
-                glide           : 5,
-                turn            : -1,
-                fade            : 1,
+                speed           : '6',
+                glide           : '5',
+                turn            : '-1',
+                fade            : '1',
                 notes           : '2014 Axiom Halloween Edition',
                 tagList         : ['Demo Disc', 'Hanger', 'Halloween Collection'],
-                condition       : 10
+                condition       : '10'
             },
             'images': [
                 {

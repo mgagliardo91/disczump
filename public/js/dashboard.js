@@ -1300,10 +1300,10 @@ function generateDiscData(disc) {
 	
 	var color = getColorize(disc.type);
 	
-	if (isDef(disc.notes) && disc.notes != '') {
+	if (isDef(disc.notes) && disc.notes != '') { 
 		notesHTML = '<span><i class="fa fa-file-text fa-lg fa-dim fa-disc-notes" data-toggle="tooltip" tt="notes"></i></span>';
 	}
-	
+
 	if ((typeof disc.speed != 'undefined') || (typeof disc.glide != 'undefined') || (typeof disc.turn != 'undefined') || (typeof disc.fade != 'undefined')) {
 		flightNumbersHTML = ((typeof disc.speed != 'undefined') ? disc.speed : '??') + ' | ' +
 	                        ((typeof disc.glide != 'undefined') ? disc.glide : '??') +' | ' +
