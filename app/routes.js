@@ -206,7 +206,7 @@ module.exports = function(app, passport, gridFs) {
                             text: 'An email has been sent to your address' + 
                                 ' with a link to confirm your account.',
                             strong2: 'Why do we require email confirmation? ',
-                            text2: 'We know you value your collection and by giving us a valid email, ' + 
+                            text2: 'We know you value your collection and by giving us a valid email address, ' + 
                                 'we can ensure that you never lose access in the future.',
                            buttonIcon: 'fa-home',
                            buttonText: 'Return Home',

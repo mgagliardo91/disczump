@@ -1968,17 +1968,16 @@ function getEditParams() {
 						
 						fnLock = true;
 						$inner.find('div.alert').remove();
-						
 						var disc = createDisc($inner, changeObject.curDisc);
-						
+						var errorCount = $inner.find('.has-error').length;
 						if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
 							$inner.prepend(generateError('Brand and Name are required.', 'ERROR'));
 							fnLock = false;
-					    } else if ($('.has-error').length > 0) {
+					    } else if (errorCount > 0) {
 					    	var errorText = '';
-					    	var errorLength = $('.has-error').length;
+					    	var errorLength = errorCount;
 					    	
-					    	_.each($('.has-error'), function(element) {
+					    	_.each($inner.find('.has-error'), function(element) {
 					    		if (errorLength > 1) {
 					    			errorText = errorText + $(element).prev().text() + ', ';
 					    		} else {
@@ -1987,7 +1986,7 @@ function getEditParams() {
 					    		errorLength = errorLength - 1;
 					    	});
 					    	
-					    	$inner.prepend(generateError('Invalid data in ' + ($('.has-error').length > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
+					    	$inner.prepend(generateError('Invalid data in ' + (errorCount > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
 							fnLock = false;
 					    	
 					    } else if ($inner.find('div.alert').length == 0) {
@@ -2183,13 +2182,14 @@ function getCreateParams() {
 					function: function($btn, $inner, done) {
 						$inner.find('div.alert').remove();
 						var disc = createDisc($inner);
+						var errorCount = $inner.find('.has-error').length;
 						if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
 							$inner.prepend(generateError('Brand and Name are required.', 'ERROR'));
-					    } else if ($('.has-error').length > 0) {
+					    } else if (errorCount > 0) {
 					    	var errorText = '';
-					    	var errorLength = $('.has-error').length;
+					    	var errorLength = errorCount;
 					    	
-					    	_.each($('.has-error'), function(element) {
+					    	_.each($inner.find('.has-error'), function(element) {
 					    		if (errorLength > 1) {
 					    			errorText = errorText + $(element).prev().text() + ', ';
 					    		} else {
@@ -2198,7 +2198,7 @@ function getCreateParams() {
 					    		errorLength = errorLength - 1;
 					    	});
 					    	
-					    	$inner.prepend(generateError('Invalid data in ' + ($('.has-error').length > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
+					    	$inner.prepend(generateError('Invalid data in ' + (errorCount > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
 					    	
 					    } else if ($inner.find('div.alert').length == 0) {
 					    	postDisc(disc, function(success, retData) {

@@ -5,12 +5,13 @@
     <title>DiscZump - Public View</title>
     <link rel="stylesheet" href="/static/css/viewdisc.css">
     <link rel="stylesheet" href="/static/css/jquery-ui.min.css">
-    <meta property="og:url"                content="http://www.disczump.com/disc/{{disc._id}}" />
-    <meta property="fb:app_id"             content="1433417853616595" />
-    <meta property="og:type"               content="disczumpfb:disc" />
-    <meta property="og:title"              content="{{disc.brand}} {{disc.name}}" />
-    <meta property="og:description"        content="Condition: {{#if disc.condition}}{{disc.condition}}/10{{else}}<No Entry>{{/if}} | Material: {{#if disc.material}}{{disc.material}}{{else}}<No Entry>{{/if}} | Weight: {{#if disc.weight}}{{disc.weight}}{{else}}<No Entry>{{/if}}" />
-    <meta property="og:image"              content="http://www.disczump.com/files/{{disc.retPrimaryImage.fileId}}/600" />
+    <meta property="og:site_name"           content="DiscZump">
+    <meta property="og:title"               content="{{disc.brand}} {{disc.name}}" />
+    <meta property="og:url"                 content="http://www.disczump.com/disc/{{disc._id}}" />
+    <meta property="og:type"                content="product" />
+    <meta property="og:description"         content="Condition: {{#if disc.condition}}{{disc.condition}}/10{{else}}<No Entry>{{/if}} | Material: {{#if disc.material}}{{disc.material}}{{else}}<No Entry>{{/if}} | Weight: {{#if disc.weight}}{{disc.weight}}g{{else}}<No Entry>{{/if}}" />
+    <meta property="fb:app_id"              content="1433417853616595" />
+    <meta property="og:image"               content="http://www.disczump.com/files/{{disc.retPrimaryImage.fileId}}/600" />
 </head>
 {{/section}}
 <body>

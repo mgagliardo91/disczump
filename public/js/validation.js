@@ -161,7 +161,7 @@ var ZumpValidate = function(opt) {
             $input.parent().removeClass((isValid ? 'has-error' : 'has-success'))
                 .addClass((isValid ? 'has-success' : 'has-error'));
         } else {
-            $input.parent().removeClass('has-success').removeClass('has-error');
+            $input.parent().removeClass('has-success').addClass('has-error');
         }
     }
     
