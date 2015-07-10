@@ -15,10 +15,12 @@ DataItem.find({'label': 'Feedback'}, function(err, dataItems) {
    	      return;
    	  }
    	  
-   	  var file = "date|userId|comment\r\n";
+   	  var file = "Feedback:\r\n\r\n";
    	  _.each(dataItems, function(comment) {
-   	  	   file += comment.createDate + "|" + comment.userId + "|" + comment.data + "\r\n"
-   	  });
+   	  	   file += "Date: " + comment.createDate + "\r\n";
+   	  	   file += "User: " + comment.userId + "\r\n";
+   	  	   file += "Comment: " + comment.data + "\r\n\r\n";
+   	  	});
    	  
      fs.writeFile("/admin/feedback.txt", file, function(err) {
         if(err) {
