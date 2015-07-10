@@ -6,12 +6,10 @@ var _ = require('underscore');
 var localConfig = require('../config/localConfig');
 var Mailer = require('../app/utils/mailer.js');
 
-var conn = mongoose.createConnection('mongodb://' + configDB.database.host + ':' + 
+mongoose.connect('mongodb://' + configDB.database.host + ':' + 
     configDB.database.port + '/' + configDB.database.db);
     
-conn.once('open', function() {
-   
-   DataItem.find({label: 'Feedback'}, function(err, dataItems) {
+DataItem.find({'label': 'Feedback'}, function(err, dataItems) {
    	  if (err) {
    	      console.log(err);
    	      return;
@@ -35,4 +33,3 @@ conn.once('open', function() {
            mongoose.disconnect();
         });
   });
-});
