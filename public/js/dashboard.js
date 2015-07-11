@@ -2062,7 +2062,7 @@ function getEditParams() {
 			$('#disc-notes').val(getSafe(disc.notes, ''));
 			$('#disc-condition').val(getSafe(disc.condition, ''));
 			
-			$('#disc-visibility').bootstrapSwitch('state', getSafe(disc.visible, false));
+			$('#disc-visibility').bootstrapSwitch('state', getSafe(disc.visible, true));
 			
 			$inner.find('.current-images-label').click(function(e) {
 		        var $chevron = $(this).find('.fa');
@@ -2242,7 +2242,7 @@ function getCreateParams() {
 				}
 		],
 		onCreate : function($inner) {
-			$('#disc-visibility').bootstrapSwitch('state', false);
+			$('#disc-visibility').bootstrapSwitch('state', true);
 		},
 		onShow : function($inner) {
 			
