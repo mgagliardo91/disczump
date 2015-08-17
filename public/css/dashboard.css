@@ -1287,13 +1287,18 @@ img.fit-parent {
     cursor: pointer;
 }
 
-.add-images-accordion-container {
+.accordion-container {
     margin-top: 10px;
 }
 
-.image-accordion-area label:hover {
+.accordion-header label:hover {
     cursor: pointer;
     text-decoration: underline;
+}
+
+.advanced-area {
+    width: 80%;
+    margin: auto;
 }
 
 .image-make-primary {
