@@ -20,9 +20,9 @@
         <div class="row">
             <div class="sidebar">
                 <div class="sidebar-nav-toolbar">
-                    <span class="sidebar-nav-select active pull-left" nav-select="#sidebar-home"><i class="fa fa-home fa-toolbar-icon"></i></span>
-                    <span class="sidebar-nav-select pull-left" nav-select="#sidebar-filter"><i class="fa fa-filter fa-toolbar-icon"></i><span id="filter-count"></span></span>
-                    <span class="toolbar-icon" id="create-disc-modal"><i class="fa fa-plus fa-toolbar-icon"></i></span>
+                    <span class="sidebar-icon sidebar-nav-select active pull-left" nav-select="#sidebar-home"><i class="fa fa-home fa-toolbar-icon"></i></span>
+                    <span class="sidebar-icon sidebar-nav-select pull-left" nav-select="#sidebar-inbox"><i class="fa fa-envelope fa-toolbar-icon"></i><span id="message-count"></span></span>
+                    <span class="sidebar-icon sidebar-nav-select pull-left" nav-select="#sidebar-profile"><i class="fa fa-users fa-toolbar-icon"></i></span>
                     <span class="toolbar-border"></span>
                     <div class="clearfix"></div>
                 </div>
@@ -30,13 +30,15 @@
                 <ul class="nav-sidebar no-select" id="sidebar-home">
                     <h5 class="sidebar-section-header"><span>Views</span><hr /><div class="clearfix"></div></h5>
                     <section id="section-views">
-                    <li class="sidebar-select" pg-select="#pg-dashboard"><span class="float-left fa-tools"><i class="fa fa-tachometer fa-sidebar-icon"></i></span><span class="sidebar-select-text">Dashboard</span></li>
-                    <li class="sidebar-select" pg-select="#pg-gallery"><span class="float-left fa-tools"><i class="fa fa-film fa-sidebar-icon"></i></span><span class="sidebar-select-text">Gallery</span></li>
-                    <li class="sidebar-select" pg-select="#pg-statistics"><span class="float-left fa-tools"><i class="fa fa-pie-chart fa-sidebar-icon"></i></span><span class="sidebar-select-text">Statistics</span></li>
+                    <li class="sidebar-select nav" pg-select="#pg-dashboard"><span class="float-left fa-tools"><i class="fa fa-tachometer fa-sidebar-icon"></i></span><span class="sidebar-select-text">Dashboard</span></li>
+                    <li class="sidebar-select nav" pg-select="#pg-gallery"><span class="float-left fa-tools"><i class="fa fa-film fa-sidebar-icon"></i></span><span class="sidebar-select-text">Gallery</span></li>
+                    <li class="sidebar-select nav" pg-select="#pg-statistics"><span class="float-left fa-tools"><i class="fa fa-pie-chart fa-sidebar-icon"></i></span><span class="sidebar-select-text">Statistics</span></li>
                     </section>
+                    <h5 class="sidebar-section-header"><span>Actions</span><hr /><div class="clearfix"></div></h5>
+                    <li class="sidebar-select" id="create-disc-modal"><span class="float-left fa-tools"><i class="fa fa-plus fa-sidebar-icon"></i></span><span class="sidebar-select-text">Add Disc</span></li>
                     <h5 class="sidebar-section-header"><span>Settings</span><hr /><div class="clearfix"></div></h5>
-                    <li class="sidebar-select" pg-select="#pg-settings"><span class="float-left fa-tools"><i class="fa fa-user fa-sidebar-icon"></i></span><span class="sidebar-select-text">Account</span></li>
-                    <li class="sidebar-select" pg-select="#pg-preferences"><span class="float-left fa-tools"><i class="fa fa-cogs fa-sidebar-icon"></i></span><span class="sidebar-select-text">Preferences</span></li>
+                    <li class="sidebar-select nav" pg-select="#pg-settings"><span class="float-left fa-tools"><i class="fa fa-user fa-sidebar-icon"></i></span><span class="sidebar-select-text">Account</span></li>
+                    <li class="sidebar-select nav" pg-select="#pg-preferences"><span class="float-left fa-tools"><i class="fa fa-cogs fa-sidebar-icon"></i></span><span class="sidebar-select-text">Preferences</span></li>
                 </ul>
                 <ul class="nav-sidebar" id="sidebar-search" style="display: none;">
                     <div id="search-results-container">
@@ -66,60 +68,209 @@
                     <h5 class="sidebar-section-header"><span>Filter</span><hr /></h5><div class="clearfix"></div>
                     <div id="filter-container"></div>
                 </ul>
+                <ul class="nav-sidebar" id="sidebar-profile" style="display: none;">
+                    <h5 class="sidebar-section-header"><span>Profiles</span><hr /></h5><div class="clearfix"></div>
+                    <ul class="" id="profile-list">
+                        <li class="profile-item hover-active" userId="">
+                            {{!--<div class="profile-item-image" style="background-image:url({{user.local.image}});"></div>--}}
+                            <div class="profile-item-image">
+                                <span>
+                                    <i class="fa fa-user"></i>
+                                </span>
+                            </div>
+                            <div class="profile-item-details">
+                                <div class="profile-item-details-inner">
+                                    <div class="profile-item-label">Ben</div>
+                                    <div class="profile-item-text">#68700</div>
+                                    <div class="profile-item-text">Raleigh, NC</div>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                        </li>
+                    </ul>
+                    {{!--<div class="row profile-title-container">--}}
+                    {{!--    <div id="profile-alias">Ben</div>--}}
+                    {{!--    <div id="profile-pdga">#68700</div>--}}
+                    {{!--</div>--}}
+                    {{!--<div class="row profile-picture-container">--}}
+                    {{!--    {{#if user.local.image}}--}}
+                    {{!--    <img src="{{user.local.image}}">--}}
+                    {{!--    {{else}}--}}
+                    {{!--    <span><i class="fa fa-user"></i></span>--}}
+                    {{!--    {{/if}}--}}
+                    {{!--</div>--}}
+                    {{!--<div class="row profile-action-container">--}}
+                    {{!--    <button id="send-message" class="btn btn-primary">--}}
+                    {{!--        <span><i class="fa fa-envelope fa-tools"></i>Send Message</span>--}}
+                    {{!--    </button>--}}
+                    {{!--</div>--}}
+                    {{!--<div class="row profile-data-container">--}}
+                    {{!--    <div class="profile-data-row">--}}
+                    {{!--        <span id="profile-location">Raleigh, NC</span>--}}
+                    {{!--    </div>--}}
+                    {{!--    <div class="profile-data-row">--}}
+                    {{!--        <span>Member Since <span id="profile-join-date">12/31/2015</span></span>--}}
+                    {{!--    </div>--}}
+                    {{!--    <div class="profile-data-row">--}}
+                    {{!--        <span><span id="profile-disc-count">36</span> Public Discs</span>--}}
+                    {{!--    </div>--}}
+                    {{!--</div>--}}
+                </ul>
+                <ul class="nav-sidebar" id="sidebar-inbox" style="display: none;">
+                    <h5 class="sidebar-section-header"><span>Inbox</span><hr /></h5><div class="clearfix"></div>
+                    <ul class="thread-container-list" id="inbox-list">
+                    </ul>
+                </ul>
             </div>
             <div class="page-view">
+                <div class="page" id="pg-inbox">
+                    <div class="row">
+                        <div class="page-title">Thread: <span id="thread-title"></span><hr></div>
+                    </div>
+                    <div id="message-container">
+                        <div class="thread-message message-incoming">
+                            <div class="thread-message-area">
+                                <div class="message-user"></div>
+                                <div class="message-content">
+                                    <div class="message-date">08/20/15 04:23 PM</div>
+                                    <div class="message-bubble">
+                                        This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="thread-message message-incoming">
+                            <div class="thread-message-area">
+                                <div class="message-user"></div>
+                                <div class="message-content">
+                                    <div class="message-date">08/20/15 04:23 PM</div>
+                                    <div class="message-bubble">
+                                        This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="thread-message message-outgoing">
+                            <div class="thread-message-area">
+                                <div class="message-user"></div>
+                                <div class="message-content">
+                                    <div class="message-date">08/20/15 04:23 PM</div>
+                                    <div class="message-bubble">
+                                        This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="thread-message message-incoming">
+                            <div class="thread-message-area">
+                                <div class="message-user"></div>
+                                <div class="message-content">
+                                    <div class="message-date">08/20/15 04:23 PM</div>
+                                    <div class="message-bubble">
+                                        This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="thread-message message-incoming">
+                            <div class="thread-message-area">
+                                <div class="message-user"></div>
+                                <div class="message-content">
+                                    <div class="message-date">08/20/15 04:23 PM</div>
+                                    <div class="message-bubble">
+                                        This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="thread-message message-outgoing">
+                            <div class="thread-message-area">
+                                <div class="message-user"></div>
+                                <div class="message-content">
+                                    <div class="message-date">08/20/15 04:23 PM</div>
+                                    <div class="message-bubble">
+                                        This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                    </div>
+                    <div id="add-message-container">
+                        <div class="send-container">
+                            <span class="send-container-inner">
+                                <div id="send-message-btn" class="hover-active"><span>Send <i class="fa fa-spinner fa-pulse" style="display: none;"></i></span></div>
+                                {{!--<button id="send-message-btn" class="btn btn-default">Send</button>--}}
+                                {{!--<button id="send-message-btn" class="btn btn-default"><span><i class="fa fa-spinner fa-pulse"></i></span></button>--}}
+                            </span>
+                        </div>
+                        <div class="add-message-text">
+                            <textarea placeholder="Enter Message..." id="new-message"></textarea>
+                        </div>
+                        
+                        <div class="clearfix"></div>
+                        <div class="create-message-option no-select"><span id="message-on-enter"><i class="fa fa-square-o"></i> Send Message on Enter</span></div>
+                    </div>
+                </div>
                 <div class="page" id="pg-dashboard">
                     <div class="row">
                         <div class="page-title">Dashboard<hr></div>
                     </div>
                     <div class="row">
-                    <div class="disc-inventory-header" id="inventory-header">
-                        <div class="header-static header-row">
-                            <div class="div-inline float-left" style="width: 30%">
-                                <p class="form-control-static header-text">Display:</p>
-                                <select class="header-select" id="paginate-display-count">
-                                    <option value="20">20</option>
-                                    <option value="40">40</option>
-                                    <option value="60">60</option>
-                                    <option value="80">80</option>
-                                    <option value="100">100</option>
-                                    <option value="All">All</option>
-                                </select>
-                            </div>
-                            <div class="div-inline float-left text-center" style="width: 40%">
-                                <ul class="list-inline form-control-static" id="paginate-nav">
-                                    <li class="page-static" id="page-back"><span class="glyphicon glyphicon-chevron-left"></span></li>
-                                    <li class="page-static" id="page-forward"><span class="glyphicon glyphicon-chevron-right"></span></li>
-                                </ul>
-                            </div>
-                            <div class="div-inline float-left" style="width: 30%">
-                                <div class="div-inline float-left header-text text-left" style="width: 40%">
+                        <div class="disc-inventory-header" id="inventory-header">
+                            <div class="header-static header-row no-select">
+                                <div class="div-inline float-left" style="width: 40%">
+                                    <p class="form-control-static header-text">Display:</p>
+                                    <select class="header-select" id="paginate-display-count">
+                                        <option value="20">20</option>
+                                        <option value="40">40</option>
+                                        <option value="60">60</option>
+                                        <option value="80">80</option>
+                                        <option value="100">100</option>
+                                        <option value="All">All</option>
+                                    </select>
                                     <span id="results-header-sort">
                                         <i class="fa fa-sort"></i> Sort
                                     </span>
+                                    <span id="results-header-filter">
+                                        <i class="fa fa-filter"></i> Filter
+                                        <span id="filter-count"></span>
+                                    </span>
                                 </div>
-                                <div class="div-inline float-left header-text text-right" style="width: 60%" id="results-header-count">
-                                    Results: 0
+                                <div class="div-inline float-left text-center" style="width: 20%">
+                                    <ul class="list-inline form-control-static" id="paginate-nav">
+                                        <li class="page-static" id="page-back"><span class="glyphicon glyphicon-chevron-left"></span></li>
+                                        <li class="page-static" id="page-forward"><span class="glyphicon glyphicon-chevron-right"></span></li>
+                                    </ul>
+                                </div>
+                                <div class="div-inline float-left" style="width: 40%">
+                                    <div class="div-inline float-right header-text text-right" id="results-header-count">
+                                        Results: 0
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="header-dynamic header-row" id="disc-inventory-header-dynamic">
+                                <div class="header-sort-container">
+                                    <div class="current-sort-container">
+                                    </div>
+                                    <div class="add-sort-container no-select">
+                                        <div class="text-center"><span><i class="fa fa-plus-circle"></i></span> Add Field</div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="clearfix"></div>
                         </div>
-                        <div class="header-dynamic header-row" id="disc-inventory-header-dynamic">
-                            <div class="header-sort-container">
-                                <div class="current-sort-container">
-                                </div>
-                                <div class="add-sort-container no-select">
-                                    <div class="text-center"><span><i class="fa fa-plus-circle"></i></span> Add Field</div>
-                                </div>
+                        <div class="disc-inventory-container">
+                            <div class="disc-inventory-body" id="filter-results">
                             </div>
                         </div>
-                        <div class="clearfix"></div>
                     </div>
-                    <div class="disc-inventory-container">
-                        <div class="disc-inventory-body" id="filter-results">
-                        </div>
-                    </div>
-                </div>
                 </div>
                 <div class="page" id="pg-gallery">
                     <div class="row">

@@ -9,6 +9,10 @@
 	overflow: hidden;
 }
 
+.btn:focus {
+	outline: none !important;
+}
+
 /*Overrides Bootstrap tooltip max-width*/
 .tooltip-inner {
 	max-width: 300px;
@@ -233,6 +237,18 @@
 	z-index: 1000;
 	margin-top: 4px !important;
 	margin-bottom: 0px !important;
+}
+
+.page-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8em;
+    font-weight: bold;
+}
+
+.page-title > hr {
+    margin-top: 5px;
+    margin-bottom: 0;
+    border-top: 1px solid #D2D2D2;
 }
 
 .page-alert {

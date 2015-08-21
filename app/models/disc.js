@@ -19,7 +19,8 @@ var discSchema = mongoose.Schema({
     primaryImage    : String,
     tagList         : [String],
     visible         : {type:Boolean, default: false},
-    condition       : String
+    condition       : String,
+    createDate      : {type: Date, default: Date.now}
     
 });
 

@@ -7,7 +7,7 @@ var dataItem = mongoose.Schema({
     data            : {type: String},
     label           : {type: String},
     userId          : {type: String},
-    createDate      : {type: Date, default: Date.now()}
+    createDate      : {type: Date, default: Date.now}
     
 });
 

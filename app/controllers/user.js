@@ -7,6 +7,7 @@ var async = require('async');
 var UserConfig = require('../../config/config.js').user.preferences;
 
 module.exports = {
+	getUser: getUser,
 	updateActivity: updateActivity,
 	updateAccessCount: updateAccessCount,
     checkPassword: checkPassword,
@@ -21,6 +22,33 @@ module.exports = {
     getAlias: getAlias
 }
 
+function getUserInfo(userId, callback) {
+	var userInfo = {};
+	
+	User.findById(userId, function(err, user) {
+       if (err) 
+			return callback(Error.createError(err, Error.internalError));
+			
+		if (!user) return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
+		
+		userInfo._id = user._id;
+		userInfo.alias = user.getAlias();
+		
+		return callback(null, user);	
+	});
+}
+
+function getUser(userId, callback) {
+	User.findById(userId, function(err, user) {
+       if (err) 
+			return callback(Error.createError(err, Error.internalError));
+			
+		if (!user) return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
+		
+		return callback(null, user);	
+	});
+}
+
 function getAlias(userId, callback) {
 	User.findById(userId, function(err, user) {
        if (err) 
@@ -30,7 +58,7 @@ function getAlias(userId, callback) {
 		if (!user)
 	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
 	   		
-	   	var alias = user.local.email;
+	   	var alias = 'User_' + user._id;
 	   	
 	   	if (!(typeof user.local.alias === 'undefined')) {
 	   		alias = user.local.alias;

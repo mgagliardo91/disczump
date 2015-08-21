@@ -20,6 +20,7 @@ var mySort;
 var myFilter;
 var myGallery;
 var myZumpColorPicker;
+var myMessenger;
 var zipValidation;
 
 var discList = [];
@@ -36,6 +37,7 @@ var isFixed = false, isHidden = false;
 var imgArray = new Array();
 
 var userPrefs;
+var userAccount;
 var pageEvents = {};
 
 var chartProp;
@@ -111,6 +113,14 @@ $(document).ready(function(){
        	var $nav = $(nav);
        	var $curNav = $('.nav-sidebar:visible');
        	
+       	if ($('#sidebar-filter').is(':visible')) {
+       		$('#results-header-filter').css({
+      			'background-color' : 'initial',
+      			'color' : '#000',
+      			'border-color' : 'rgb(134, 134, 134)'
+      		});
+       	}
+       	
        	if ($nav.length && !$nav.is(':visible')) {
        		activePage = nav;
        		$curNav.fadeOut(100, function() {
@@ -120,43 +130,11 @@ $(document).ready(function(){
        	}
 	});
 	
-   	$('.nav-sidebar li.sidebar-select').click(function(e){
+   	$('.nav-sidebar li.sidebar-select.nav').click(function(e){
     	e.stopPropagation();
        	var $this = $(this);
-       	var nav = $(this).attr('pg-select');
-       	var $page = $(nav);
-       	var $curPage = $('.page:visible');
-       	
-       	if (!$curPage.length) {
-           	if (isDef(pageEvents[$curPage.attr('id')])) {
-            	pageEvents[$curPage.attr('id')](false);
-           	}
-            $page.fadeIn(100, function() {
-            	$this.addClass('active');
-                if (isDef(pageEvents[$page.attr('id')])) {
-                	pageEvents[$page.attr('id')](true);
-               	}
-            });
-            return;
-       	}
-       
-       	if ($page.length && !$page.is(':visible')) {
-           	$curPage.fadeOut(100, function() {
-               	if (isDef(pageEvents[$curPage.attr('id')])) {
-                	pageEvents[$curPage.attr('id')](false);
-               	}
-               	$('.nav-sidebar li.sidebar-select').removeClass('active');
-                $page.fadeIn(100, function() {
-                    $this.addClass('active');
-                    if (isDef(pageEvents[$page.attr('id')])) {
-                		pageEvents[$page.attr('id')](true);
-                   	}
-                });
-           	});
-       	} else {
-           	$this.addClass('active').siblings().removeClass('active');
-       	}
-       	
+       	var nav = $this.attr('pg-select');
+       	changePage(nav);
       	return false;
    	});
    	
@@ -191,6 +169,12 @@ $(document).ready(function(){
 			}	
      	});
     });
+    
+	$(document).on('mouseenter', '.hover-active', function() {
+		$(this).addClass('active');
+	}).on('mouseleave', '.hover-active', function() {
+		$(this).removeClass('active');
+	});
 
 	//--------------Search Bar--------------//
 
@@ -245,7 +229,7 @@ $(document).ready(function(){
 		$searchResults.hide();
 		$(activePage).show();
 	});
-	 
+	
 	$(document).on('click', '.fa-delete-disc-item', function() {
 		var discId = $(this).parents('.disc-item').attr('discid');
 		var text = 'Are you sure you want to delete this disc and all of its data?';
@@ -608,27 +592,41 @@ $(document).ready(function(){
 			resizeTagLists();
     	}
     }
+    pageEvents['pg-inbox'] = function(showing) {
+    	if (!showing) {
+    		myMessenger.threadLeft();
+    	} else {
+    		myMessenger.initPage();
+    	}
+    }
     resizeSidebar();
     resizeResultHeader();
     resizeTagLists();
     $searchResults.hide();
-    getUserPreferences(function(success, prefs) {
+    getAccount(function(success, account) {
     	if (success) {
-    		userPrefs = prefs;
-    		setUserPrefs();
-    		initializeTooltips();
-    		zumpLibraryInit();
-    		loadUserPrefs();
-    		getAllDiscs(function(success, discsFromServer){
-				if (success) {
-					discs = discsFromServer;
-					initialize();
-				} else {
-					alert('Unable to intialize');
-				}
-			});
-     	}
+    		userAccount = account;
+    		console.log(account);
+    		getUserPreferences(function(success, prefs) {
+		    	if (success) {
+		    		userPrefs = prefs;
+		    		setUserPrefs();
+		    		initializeTooltips();
+		    		zumpLibraryInit();
+		    		loadUserPrefs();
+		    		getAllDiscs(function(success, discsFromServer){
+						if (success) {
+							discs = discsFromServer;
+							initialize();
+						} else {
+							alert('Unable to intialize');
+						}
+					});
+		     	}
+		    });
+    	}	
     });
+    
     
     $('.page-alert').slideDown(300);
     
@@ -795,6 +793,50 @@ var ZumpTutorial = function(opt) {
 	this.init(opt);
 }
 
+/*
+* Changes the current dashboard page
+*/
+function changePage(page) {
+   	var $page = $(page);
+   	var $curPage = $('.page:visible');
+   	var $navItem = $('.nav-sidebar li.sidebar-select[pg-select="' + page + '"]');
+   	
+   	if (!$curPage.length) {
+       	if (isDef(pageEvents[$curPage.attr('id')])) {
+        	pageEvents[$curPage.attr('id')](false);
+       	}
+        $page.fadeIn(100, function() {
+			if ($navItem.length) {
+			   	$navItem.addClass('active');
+			}
+            if (isDef(pageEvents[$page.attr('id')])) {
+            	pageEvents[$page.attr('id')](true);
+           	}
+        });
+        return;
+   	}
+   
+   	if ($page.length && !$page.is(':visible')) {
+       	$curPage.fadeOut(100, function() {
+           	if (isDef(pageEvents[$curPage.attr('id')])) {
+            	pageEvents[$curPage.attr('id')](false);
+           	}
+           	$('.nav-sidebar li.sidebar-select').removeClass('active');
+            $page.fadeIn(100, function() {
+                if ($navItem.length) {
+				   	$navItem.addClass('active');
+				}
+                if (isDef(pageEvents[$page.attr('id')])) {
+            		pageEvents[$page.attr('id')](true);
+               	}
+            });
+       	});
+   	} else {
+   		if ($navItem.length) {
+       		$navItem.addClass('active').siblings().removeClass('active');
+   		}
+   	}
+}
 
 /*
 * Initialize based on search params
@@ -949,6 +991,7 @@ function zumpLibraryInit() {
 	});
 	
 	myFilter = new ZumpFilter({
+		filterToggle: '#results-header-filter',
 		currentFilterContainer: '#current-filter-container',
 	    filterContainer: '#filter-container',
 	    items: [
@@ -972,6 +1015,20 @@ function zumpLibraryInit() {
 	myGallery = new ZumpGallery({
 		galleryContainer: '#gallery-container'
 	});
+	
+	myMessenger = new ZumpMessenger({
+		threadTitle: '#thread-title',
+		inboxList: '#inbox-list',
+		addMessageContainer: '#add-message-container',
+		messageContainer: '#message-container',
+		messageCount: '#message-count',
+		sendMessageBtn: '#send-message-btn',
+		newMessage: '#new-message',
+		sendOnEnter: '#message-on-enter',
+		activateThread: function() {
+			changePage('#pg-inbox');
+		}
+	});
 }
 
 /*===================================================================*/
@@ -981,7 +1038,7 @@ function zumpLibraryInit() {
 /*===================================================================*/
 
 function resizeSidebar() {
-	if ($('.sidebar').width() < 109) {
+	if ($('.sidebar').width() < 161) {
 		$('.sidebar').addClass('collapsed');
 		sidebarSettings.collapsed = true;
 		$('#sidebar-filter').on('mouseenter', function() {
@@ -1037,7 +1094,7 @@ function expandSidebar() {
 }
 
 function collapseSidebar() {
-	$('.sidebar').stop().animate({width:'109px'}, 300, function() {
+	$('.sidebar').stop().animate({width:'161px'}, 300, function() {
 		$('.sidebar').css('width', '');
 	});
 }
@@ -2646,6 +2703,288 @@ function getChartData(type, propName, isSingleCol, isSingleUnit) {
 /*===================================================================*/
 
 /*
+* Name: ZumpMessenger
+* Date: 08/19/2015
+*/
+var ZumpMessenger = function(opt) {
+	
+	//----------------------\
+    // Javascript Objects
+    //----------------------/
+    
+	var zumpMessenger = this;
+	var threads = [];
+	var messageList = [];
+	var userPhotoCache = {};
+	var newMessageCount = 0;
+	var activeThread;
+	var activateThread;
+	var sendOnEnter = false;
+	var enterLock = true;
+	
+    //----------------------\
+    // JQuery Objects
+    //----------------------/
+    
+    var $inboxList;
+    var $messageContainer;
+    var $addMessageContainer;
+    var $messageCount;
+    var $threadTitle;
+    var $sendMessageBtn;
+    var $newMessage;
+    var $sendOnEnter;
+    
+    //----------------------\
+    // Prototype Functions
+    //----------------------/
+    
+    /*
+    * Initialize with options
+    */
+	this.init = function(opt) {
+		
+		if (isDef(opt.messageCount)) {
+			$messageCount = $(opt.messageCount);
+		}
+		
+		if (isDef(opt.threadTitle)) {
+			$threadTitle = $(opt.threadTitle);
+		}
+		
+		if (isDef(opt.activateThread)) {
+			activateThread = opt.activateThread;
+		}
+		
+		if (isDef(opt.addMessageContainer)) {
+			$addMessageContainer = $(opt.addMessageContainer);
+		}
+		
+		if (isDef(opt.messageContainer)) {
+			$messageContainer = $(opt.messageContainer);
+		}
+		
+		if (isDef(opt.sendMessageBtn)) {
+			$sendMessageBtn = $(opt.sendMessageBtn);
+		}
+		
+		if (isDef(opt.newMessage)) {
+			$newMessage = $(opt.newMessage);
+		}
+		
+		if (isDef(opt.sendOnEnter)) {
+			$sendOnEnter = $(opt.sendOnEnter);
+		}
+		
+		if (isDef(opt.inboxList)) {
+			$inboxList = $(opt.inboxList);
+		}
+		
+		initializeInboxList();
+		setupListeners();
+	}
+	
+	this.threadLeft = function() {
+		$('.thread-container').removeClass('thread-open');
+		activeThread = undefined;
+	}
+	
+	this.initPage = function() {
+		resizeMessageArea();
+	}
+	
+	//----------------------\
+    // Private Functions
+    //----------------------/
+    
+    var resizeMessageArea = function() {
+    	var height = $(window).height() - $messageContainer.offset().top - $addMessageContainer.outerHeight() - 20;
+    	$messageContainer.css({
+    		height: height + 'px',
+    		maxHeight: height + 'px'
+    	})
+	    $messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 500);
+    }
+    
+    var setupListeners = function() {
+    	
+		$(document).on('click', '.thread-container', function() {
+			showThread($(this).attr('threadid'));
+		});
+		
+		$sendMessageBtn.click(function(e) {
+			sendMessage();
+		});
+		
+		$sendOnEnter.click(function(e) {
+			if (sendOnEnter) {
+				$sendOnEnter.find('i').removeClass('fa-check-square').addClass('fa-square-o');
+				$newMessage.off('keydown');
+			} else {
+				$sendOnEnter.find('i').removeClass('fa-square-o').addClass('fa-check-square');
+				$newMessage.on('keydown', onKeyDown);
+			}
+			
+			sendOnEnter = !sendOnEnter;
+		});
+    }
+    
+    var sendMessage = function() {
+    	var body = $newMessage.val();
+		if (body == '') return true;
+		
+    	var content = {content: body};
+		$sendMessageBtn.find('i').show();
+		postMessage(activeThread.threadId, content, function(success, message) {
+			$sendMessageBtn.find('i').hide();
+			if (success) {
+				$newMessage.val('');
+				appendMessage(message);
+	        	$messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 500);
+			}
+		});
+    }
+    
+    var onKeyDown = function(event) {
+		if ( event.which == 13 && enterLock) {
+			if (event.shiftKey) {
+				enterLock = false;
+				var e = jQuery.Event('keypress');
+				e.which = 13;
+				e.keyCode = 13;
+				$newMessage.trigger(e);
+			} else {
+				event.preventDefault();
+				sendMessage();
+			}
+		}
+		
+		enterLock = true;
+    }
+    
+    var showThread = function(threadId) {
+    	if (typeof(activeThread) !== 'undefined' && activeThread.threadId == threadId) return false;
+    	
+    	var thread = getThread(threadId);
+		if (!thread) return;
+		
+		activeThread = thread;
+		
+		$('.thread-container[threadId="' + threadId + '"]').addClass('thread-open').siblings().removeClass('thread-open');
+		$threadTitle.text(thread.threadTag);
+		
+		activateThread();
+		updateThread(thread);
+    }
+    
+    var updateThread = function(thread) {
+    	getMessages(thread.threadId, function(success, messages) {
+    		if (success) {
+    			messageList = messages;
+    			$messageContainer.empty();
+    			// Handle paged list
+    			
+    			_.each(messages, function(message) {
+    				appendMessage(message);
+    			});
+    			
+		        $messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 500);
+    		}
+    	});
+    }
+    
+    var appendMessage = function(message) {
+    	var incoming = message.userId != userAccount._id;
+    	var date = new Date(message.createDate);
+    	var $message = $('<div class="thread-message message-' + (incoming ? 'incoming' : 'outgoing') + '" messageId="' + message._id +  '"></div>');
+    	$message.append('<div class="thread-message-area">' +
+                                '<div class="message-user"></div>' +
+                                '<div class="message-content">' +
+                                    '<div class="message-date">' + date.toLocaleString() + '</div>' +
+                                    '<div class="message-bubble">' +
+                                        message.body.replace(/\n/g, '<br>') + 
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="clearfix"></div>');
+        
+        var userPhoto = userPhotoCache[message.userId];
+        if (typeof(userPhoto) !== 'undefined') {
+        	$message.find('.message-user').css('background-image', 'url("' + userPhoto + '")');
+        } else {
+        	getUser(message.userId, function(success, user) {
+        		if (success) {
+        			userPhotoCache[user._id] = user.image;
+        			$messageContainer.find('.thread-message[messageId="' + message._id + '"]').find('.message-user').css('background-image', 'url("' + user.image + '")');
+        		}
+        	})
+        }
+        
+        $messageContainer.append($message)
+    }
+    
+    /*
+    * Sets up the inbox list
+    */
+    var initializeInboxList = function() {
+    	getThreads(function(success, threadList) {
+    		if (success) {
+    			threads = threadList;
+    			newMessageCount = 0;
+    			_.each(threads, function(thread) {
+    				appendThread(thread);
+    			});
+    			
+    			updateMessageCount();
+    		}
+    	});
+    }
+    
+    var getThread = function(id) {
+		return _.first(_.where(threads, {'_id' : id}));
+    }
+    
+    var appendThread = function(thread) {
+    	var isNew = thread.currentMessageCount > thread.messageCount;
+    	var $threadContainer = $('<li class="thread-container hover-active' + (isNew ? ' thread-new' : '') + '" threadId="' + thread._id + '">');
+    	
+    	var hasPhoto = typeof(thread.threadPhoto) !== 'undefined';
+    	var date = new Date(thread.modifiedDate);
+    	
+    	$threadContainer.append('<div class="thread-image"' + (hasPhoto ? ' style="background-image:url(' + "'" + thread.threadPhoto + "'" + ');"' : '') + '>' +
+    							(!hasPhoto ? '<span><i class="fa fa-user"></i></span>' : '') +
+                            '</div>' +
+                            '<div class="thread-icon">' +
+                                '<span><i class="fa fa-square' + (isNew ? '' : '-o') + '"></i></span>' +
+                            '</div>' +
+                            '<div class="thread-details-container">' +
+                                '<div class="thread-details">' +
+                                    '<div class="thread-details-inner">' +
+                                        '<div class="thread-tag-label">' + thread.threadTag + '</div>' +
+                                        '<div class="thread-date">' + date.toLocaleString() + '</div>' +
+                                   '</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="clearfix"></div>');
+                            
+        if (thread.currentMessageCount > thread.messageCount) {
+        	$threadContainer.addClass('thread-new');
+        }
+        
+        $inboxList.append($threadContainer);
+        
+        newMessageCount += (thread.currentMessageCount - thread.messageCount);
+    }
+    
+    var updateMessageCount = function() {
+    	$messageCount.text(newMessageCount > 0 ? newMessageCount : '');
+    }
+	
+	this.init(opt);
+}
+
+
+/*
 * Name: ZumpGallery
 * Date: 04/07/2015
 */
@@ -3595,12 +3934,15 @@ var ZumpFilter = function(opt) {
     var filterOrder = [];
     var filterChangeEvent;
     var zumpFilter = this;
+    var lastNav;
     
     //----------------------\
     //JQuery Objects
     //----------------------/
+    var $filterToggle;
     var $filterContainer;
     var $currentFilterContainer;
+    var $lastSidebar;
     
     //----------------------\
     // Prototype Functions
@@ -3627,6 +3969,11 @@ var ZumpFilter = function(opt) {
             $filterContainer = $(opt.filterContainer);
         }
         
+        // Set filter toggle
+        if (isDef(opt.filterToggle)) {
+            $filterToggle = $(opt.filterToggle);
+        }
+        
         // Set filter array
         if (isDef(opt.items)) {
         	filterItems = opt.items;
@@ -3649,6 +3996,32 @@ var ZumpFilter = function(opt) {
         /*
         * Listeners/Events
         */
+        
+        // Toggle Filter Container
+        $filterToggle.click(function(){
+	      	if ($('#sidebar-filter').is(':visible')) {
+		    	$(lastNav).show();
+	      		$lastSidebar.addClass('active');
+	            $('#sidebar-filter').hide();
+	            $filterToggle.css({
+	      			'background-color' : 'initial',
+	      			'color' : '#000',
+	      			'border-color' : 'rgb(134, 134, 134)'
+	      		});
+	      	} else {
+	      		$lastSidebar = $('.sidebar-nav-toolbar').find('.active')
+	      		lastNav = $lastSidebar.attr('nav-select');
+	          	$('#sidebar-filter').show();
+	            $(lastNav).hide();
+	            $lastSidebar.removeClass('active');
+	          	$filterToggle.css({
+	      			'background-color' : 'rgb(0, 142, 221)',
+	      			'color' : '#FFF',
+	      			'border-color' : '#000'
+	      		});
+	      	}
+	    });
+        
         $(document).on('click', '.filter-option', function(e){
 			e.stopPropagation();
 			
@@ -4510,7 +4883,6 @@ var ZumpColorPicker = function(opt) {
     //----------------------\
     //JQuery Objects
     //----------------------/
-    var $sortToggle;
     var $colorPicker;
     var $backdrop;
     var $curSelector;

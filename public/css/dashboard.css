@@ -37,11 +37,6 @@
     cursor: pointer;
 }
 
-.toolbar-icon {
-    border-left: 1px solid rgb(137, 135, 135);
-    float: right;
-}
-
 .sidebar-nav-select.active {
     color: rgb(0, 142, 221);
     cursor: default;  
@@ -55,7 +50,7 @@
     background-color: rgb(238, 238, 238);
 }
 
-.toolbar-icon:hover, .sidebar-nav-select:hover {
+.sidebar-nav-select:hover {
     background-color: rgb(150, 150, 150);
     cursor: pointer;
 }
@@ -82,6 +77,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+
+.sidebar-icon {
+    width: 40px;
+    text-align: center;
 }
 
 .nav-sidebar li.sidebar-select:hover {
@@ -125,19 +126,13 @@
     width: 100%;
     margin: auto;
     overflow-x: auto;
-    min-width: 750px;
+    min-width: 785px;
     max-width: 1500px;
 }
 
 .page > .row {
     margin: 0px;
     margin-bottom: 30px;
-}
-
-.page-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.8em;
-    font-weight: bold;
 }
 
 .page-title > a {
@@ -151,12 +146,6 @@
 .page-title > a:hover {
     text-decoration: none;
     color: #000;
-}
-
-.page-title > hr {
-    margin-top: 5px;
-    margin-bottom: 0;
-    border-top: 1px solid #D2D2D2;
 }
 
 .profile-image {
@@ -397,10 +386,6 @@
 /*===================================================================*/
 
 #filter-count {
-    position: absolute;
-    z-index: 100;
-    right: 3px;
-    bottom: 1px;
     color: red;
     font-weight: bold;
 }
@@ -492,6 +477,556 @@
 
 /*===================================================================*/
 /*                                                                   */
+/*                           Messaging                               */
+/*                                                                   */
+/*===================================================================*/
+.thread-container-list {
+    padding-left: 0px;
+}
+
+.thread-container {
+    height: 100px;
+    display: block;
+    margin-bottom: 0px !important;
+    border-top: 1px solid black;
+    padding: 0px !important;
+    background-color: white;
+}
+
+.thread-container.active {
+    cursor: pointer;
+    background-color: rgba(0, 142, 221, 0.25);
+}
+
+.thread-container:last-child {
+    border-bottom: 1px solid black;
+}
+
+.thread-image {
+    float: left;
+    height: 100%;
+    width: 100px;
+    text-align: center;
+    background-color: #ffffff;
+    border-right: 1px solid #D4D4D4;
+    background-position: center center;
+    background-size: cover;
+    display: table;
+}
+
+.thread-image > span {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.thread-image > span > i {
+    font-size: 5em;
+}
+
+.thread-details-container {
+    height: 100%;
+    padding-left: 105px;
+    padding-right: 40px;
+}
+
+.thread-details {
+    display: table;
+    width: 100%;
+    height: 100%;
+}
+
+.thread-details-inner {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.thread-icon {
+    float: right;
+    width: 40px;
+    text-align: center;
+    display: table;
+    height: 100%;
+}
+
+.thread-container.thread-new .thread-icon {
+    color: rgb(0, 142, 221);
+}
+
+.thread-container.thread-new .thread-tag-label {
+    font-weight: bold;
+}
+
+.thread-container.thread-open { 
+    background-color: rgba(0, 142, 221, 0.25);
+    cursor: default;
+}
+
+.thread-icon > span {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.thread-date {
+    color: #828282;
+    font-style: italic;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.thread-tag {
+    width: 100%;
+    font-size: 1.2em;
+    font-weight: normal;
+}
+
+.thread-tag-label {
+    width: 100%;
+    font-size: 1.2em;
+    font-weight: normal;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 5px;
+}
+
+.thread-tag-count {
+    width: 20px;
+}
+
+#message-count {
+    position: absolute;
+    z-index: 100;
+    right: 3px;
+    bottom: 1px;
+    color: red;
+    font-weight: bold;
+}
+
+@media (max-width: 1500px) and (min-width: 1151px) {
+    .thread-tag-label {
+        max-width: 135px;
+        font-size: 1em;
+    }
+    
+    .thread-date {
+        max-width: 135px;
+        font-size: 0.8em;
+    }
+    
+    .thread-container {
+        height: 75px;
+    }
+    
+    .thread-image {
+        width: 75px;
+    }
+    
+    .thread-details-container {
+        padding-left: 80px;
+    }
+    
+    .thread-image > span > i {
+        font-size: 3em;
+    }
+}
+
+@media (max-width: 1150px) {
+    .thread-tag-label {
+        max-width: 70px;
+        font-size: 0.8em;
+    }
+    
+    .thread-date {
+        max-width: 70px;
+        font-size: 0.6em;
+    }
+    
+    .thread-container {
+        height: 50px;
+    }
+    
+    .thread-image {
+        width: 50px;
+    }
+    
+    .thread-details-container {
+        padding-left: 55px;
+    }
+    
+    .thread-image > span > i {
+        font-size: 2em;
+    }
+}
+
+#add-message-container {
+    max-width: 70%;
+    margin: auto auto;
+    width: 70%;
+    height: 100px;
+    border-top: 1px solid #D2D2D2;
+    padding: 10px;
+}
+
+.add-message-text {
+    height: 70px;
+    width: 100%;
+    padding-right: 100px;
+}
+
+.add-message-text > textarea {
+    height: 100%;
+    width: 100%;
+    padding: 0px 10px;
+    resize: none;
+    border: none;
+}
+
+.send-container {
+    height: 70px;
+    width: 100px;
+    display: table;
+    float: right;
+}
+
+.send-container-inner {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.send-container-inner > div {
+    color: #D2D2D2;
+    border: 1px solid #D2D2D2;
+    border-radius: 20px;
+    padding: 10px;
+    width: 80%;
+    margin: auto;
+    text-align: center;
+}
+
+.send-container-inner > div.active {
+    cursor: pointer;
+    border: 2px solid rgb(0, 142, 221);
+    font-weight: bold;
+    color: rgb(0, 142, 221);
+}
+
+.create-message-option {
+    height: 10px;
+    width: 100%;
+    font-size: 0.9em;
+}
+
+.create-message-option > span {
+    float: right;
+    cursor: pointer;
+    color: #B1B1B1;
+}
+
+.create-message-option > span:hover {
+    color: #000;
+}
+
+#message-container {
+    max-width: 70%;
+    margin: 10px auto;
+    width: 70%;
+    overflow: auto;
+    padding: 0px 10px;
+}
+
+#message-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+ 
+#message-container::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    border-radius: 10px;
+}
+ 
+#message-container::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+}
+
+.thread-message {
+    display: block;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.thread-message-area {
+    min-width: 200px;
+    max-width: 80%;
+    display: inline-block;
+}
+
+.thread-message.message-outgoing .thread-message-area {
+    float: right;
+}
+
+.message-user {
+    height: 50px;
+    width: 50px;
+    border-radius: 25px;
+    margin: auto;
+    background-position: center center;
+    background-size: cover;
+}
+
+.thread-message.message-incoming .message-user {
+    float: left;
+}
+
+.thread-message.message-outgoing .message-user {
+    float: right;
+}
+
+.thread-message.message-incoming .message-content {
+    padding-left: 60px;
+}
+
+.thread-message.message-outgoing .message-content {
+    padding-right: 60px;
+}
+
+.message-content {
+    position: relative;
+    padding-bottom: 15px;
+}
+
+.message-bubble {
+    background-color: #C7D2D8;
+    width: 100%;
+    border-radius: 5px;
+    border: 1px solid #ADADAD;
+    padding: 5px 10px;
+    font-size: 0.9em;
+    line-height: 130%;
+}
+
+.message-date {
+    font-size: 10px;
+    position: absolute;
+    bottom: 0;
+}
+
+.thread-message.message-incoming .message-date {
+    right: 0;
+}
+
+.thread-message.message-outgoing .message-date {
+    left: 0;
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*                          Profile Page                             */
+/*                                                                   */
+/*===================================================================*/
+
+#profile-list {
+    padding: 0px;
+}
+
+.profile-item {
+    height: 100px;
+    display: block;
+    margin-bottom: 0px !important;
+    border-top: 1px solid black;
+    padding: 0px !important;
+    background-color: white;
+}
+
+.profile-item:last-child {
+    border-bottom: 1px solid black;
+}
+
+.profile-item.active {
+    cursor: pointer;
+    background-color: rgba(0, 142, 221, 0.25);
+}
+
+.profile-item-image {
+    float: left;
+    height: 100%;
+    width: 100px;
+    text-align: center;
+    background-color: #ffffff;
+    border-right: 1px solid #D4D4D4;
+    background-position: center center;
+    background-size: cover;
+    display: table;
+}
+
+.profile-item-image > span {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.profile-item-image > span > i {
+    font-size: 5em;
+}
+
+.profile-item-details {
+    height: 100%;
+    display: table;
+}
+
+.profile-item-details-inner {
+    display: table-cell;
+    vertical-align: middle;
+    padding: 10px;
+}
+
+.profile-item-label {
+    width: 100%;
+    font-size: 1.2em;
+    font-weight: bold;
+    max-width: 229px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 5px;
+}
+
+.profile-item-text {
+    width: 100%;
+    color: #828282;
+    font-style: italic;
+    max-width: 229px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-sidebar > .row {
+    margin: 15px 0px;
+}
+
+.profile-title-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+#profile-alias {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5em;
+}
+
+#profile-pdga {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1em;
+}
+
+.profile-title-container > div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 350px;
+}
+
+.profile-picture-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+}
+
+.profile-picture-container > img, .profile-picture-container > span {
+    max-width: 250px;
+    max-height: 250px;
+    display: table-cell;
+    vertical-align: middle;
+    border: 1px solid rgb(163, 163, 163);
+    border-radius: 100px;
+    margin: auto;
+}
+
+.profile-data-container {
+    width: auto;
+}
+
+.profile-action-container > button {
+    width: 175px;
+    display: table;
+    margin: auto;
+}
+
+.profile-data-row {
+    font-size: 1.1em;
+    margin: 10px 0px;
+    text-align: center;
+    font-weight: bold;
+}
+
+@media (max-width: 1500px) and (min-width: 1151px) {
+    .profile-item-label {
+        max-width: 154px;
+        font-size: 1em;
+    }
+    
+    .profile-item-text {
+        max-width: 154px;
+        font-size: 0.8em;
+    }
+    
+    .profile-item {
+        height: 75px;
+    }
+    
+    .profile-item-image {
+        width: 75px;
+    }
+    
+    .profile-item-image > span > i {
+        font-size: 3em;
+    }
+    
+    .profile-title-container > div {
+        width: 250px;
+    }
+    
+    .profile-picture-container > img, .profile-picture-container > span {
+        max-width: 200px;
+        max-height: 200px;
+    }
+}
+
+@media (max-width: 1150px) {
+    .profile-item-label {
+        max-width: 104px;
+        font-size: 0.8em;
+    }
+    
+    .profile-item-text {
+        max-width: 104px;
+        font-size: 0.6em;
+    }
+    
+    .profile-item {
+        height: 50px;
+    }
+    
+    .profile-item-image {
+        width: 50px;
+    }
+    
+    .profile-item-image > span > i {
+        font-size: 2em;
+    }
+    
+    .profile-item-details-inner {
+        padding: 3px;
+    }
+}
+
+/*===================================================================*/
+/*                                                                   */
 /*                          Search Area                              */
 /*                                                                   */
 /*===================================================================*/
@@ -538,14 +1073,15 @@
 /*                                                                   */
 /*===================================================================*/
 
-#results-header-sort {
+#results-header-sort, #results-header-filter {
     cursor: pointer;
     padding: 6px 12px;
     border: 1px solid rgb(134, 134, 134);
     border-radius: 5px;
+    margin: 0px 5px;
 }
 
-#results-header-sort:hover, .page-dynamic:hover, .page-static:hover {
+#results-header-filter:hover, #results-header-sort:hover, .page-dynamic:hover, .page-static:hover {
     color: rgb(0, 142, 221);
     border-color: rgb(0, 142, 221);
 }
@@ -1863,16 +2399,11 @@ img.fit-parent {
 
 @media (max-width: 1150px) {
     .sidebar {
-        width: 109px;
+        width: 161px;
     }
 
     .page-view {
-        margin-left: 109px;
-    }
-    
-    .toolbar-icon {
-        border: none;
-        float: left;
+        margin-left: 161px;
     }
     
     /*#search-all {*/

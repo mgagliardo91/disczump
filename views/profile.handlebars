@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+    <title>DiscZump - {{userAlias}}</title>
+    <link href="https://fonts.googleapis.com/css?family=Orbitron:400,900" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="/static/css/profile.css">
+</head>
+<body>
+    <div class="container profile-container" user-id="{{targetUser._id}}" zip="{{targetUser.local.zipCode}}">
+        <div class="row">
+            <div class="page-title">{{userAlias}}
+                {{#if targetUser.local.pdgaNumber}}
+                <span class="float-right">#{{targetUser.local.pdgaNumber}}</span>
+                {{/if}}
+            <hr></div>
+        </div>
+        <div class="row">
+            <div class="profile-left">
+                <div class="row profile-picture-container">
+                    {{#if targetUser.local.image}}
+                    <img src="{{targetUser.local.image}}">
+                    {{else}}
+                    <span><i class="fa fa-user"></i></span>
+                    {{/if}}
+                </div>
+                <div class="row profile-data-container">
+                    <button id="send-message" class="btn btn-primary">
+                        <span><i class="fa fa-envelope fa-tools"></i>Send Message</span>
+                    </button>
+                    <button id="view-dashboard" class="btn btn-default">
+                        <span><i class="fa fa-tachometer fa-tools"></i>View Dashboard</span>
+                    </button>
+                    <div class="profile-data-row">
+                        <span class="profile-data-label">Location: </span>
+                        <span class="profile-data-value">Raleigh, NC</span>
+                    </div>
+                    <div class="profile-data-row">
+                        <span class="profile-data-label">Member Since: </span>
+                        <span class="profile-data-value">12/31/2015</span>
+                    </div>
+                    <div class="profile-data-row">
+                        <span class="profile-data-label">Public Discs: </span>
+                        <span class="profile-data-value">36</span>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-right">
+                <div class="profile-disc-container">
+                    <div class="profile-disc-item">
+                        <div class="disc-image-container">
+                            <div class="disc-image">
+                                <img src="/static/logo/logo_small_faded.svg">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-disc-item">
+                        
+                    </div>
+                    <div class="profile-disc-item">
+                        
+                    </div>
+                    <div class="profile-disc-item">
+                        
+                    </div>
+                    <div class="profile-disc-item">
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+
+    <script src="/static/js/profile.js"></script>
+</body>
+</html>

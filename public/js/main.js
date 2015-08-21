@@ -90,6 +90,33 @@ function resetPassword(currentPw, newPw, callback) {
 	});
 }
 
+function getUser(userId, callback) {
+	var success = false;
+	var retData;
+    $.ajax({
+		type: "GET",
+		dataType: "json",
+		url: url + '/users/' + userId,
+		contentType: "application/json",
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, retData);
+			}
+		}
+     });
+}
+
 function getAccount(callback) {
 	var success = false;
 	var retData;
@@ -142,6 +169,143 @@ function putAccount(account, callback) {
 		   }
 		}
 	});
+}
+
+function getThreads(callback) {
+	var success = false;
+	var retData;
+    $.ajax({
+		type: "GET",
+		dataType: "json",
+		url: url + '/threads',
+		contentType: "application/json",
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, retData);
+			}
+		}
+     });
+}
+
+function postThread(thread, callback) {
+	var success = false;
+	var retData;
+    $.ajax({
+		type: "POST",
+		dataType: "json",
+		url: url + 'threads/',
+		contentType: "application/json",
+		data: JSON.stringify(thread),
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, retData);
+		   	}
+		}
+     });
+}
+
+function getThreadState(threadId, callback) {
+	var success = false;
+	var retData;
+    $.ajax({
+		type: "GET",
+		dataType: "json",
+		url: url + '/threads/' + threadId,
+		contentType: "application/json",
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, retData);
+			}
+		}
+     });
+}
+
+function getMessages(threadId, callback) {
+	var success = false;
+	var retData;
+    $.ajax({
+		type: "GET",
+		dataType: "json",
+		url: url + '/threads/' + threadId + '/messages',
+		contentType: "application/json",
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, retData);
+			}
+		}
+     });
+}
+
+function postMessage(threadId, message, callback) {
+	var success = false;
+	var retData;
+    $.ajax({
+		type: "POST",
+		dataType: "json",
+		url: url + 'threads/' + threadId + '/messages',
+		contentType: "application/json",
+		data: JSON.stringify(message),
+		success: function (data) {
+			var retVal = validateServerData(data);
+			success = retVal.success;
+			retData = retVal.retData;
+		},
+		error: function (request, textStatus, errorThrown) {
+			console.log(request.responseText);
+			console.log(textStatus);
+			console.log(errorThrown);
+			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
+		},
+		complete: function(){
+			if (callback) {
+				callback(success, retData);
+		   	}
+		}
+     });
 }
 
 function getAllDiscImages(discId, callback) {

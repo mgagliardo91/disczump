@@ -9,8 +9,8 @@ var userSchema = mongoose.Schema({
     local            : {
         email        : String,
         password     : String,
-        date_joined  : {type: Date, default: Date.now()},
-        last_access  : {type: Date, default: Date.now()},
+        dateJoined  : {type: Date, default: Date.now},
+        lastAccess  : {type: Date, default: Date.now},
         active       : {type: Boolean, default: false},
         passcode     : String,
         image        : String,
@@ -62,17 +62,29 @@ userSchema.methods.addEvent = function(event) {
     
 }
 
+userSchema.methods.getAlias = function() {
+    var alias = 'User_' + this._id;
+	   	
+   	if (!(typeof this.local.alias === 'undefined')) {
+   		alias = this.local.alias;
+   	}
+   	
+   	return alias;
+}
+
 userSchema.methods.accountToString = function() {
     var account = {};
+    
+    account._id = this._id;
+    account.dateJoined = this.dateJoined;
+    account.alias = this.getAlias();
 	
-	if (typeof(this.local.alias) !== 'undefined') {
-		account.alias = this.local.alias;
-	    
+	if (typeof(this.local.image) !== 'undefined') {
+		account.image = this.local.image;
 	}
 	
 	if (typeof(this.local.zipCode) !== 'undefined') {
 		account.zipCode = this.local.zipCode;
-	    
 	}
 	
 	if (typeof(this.local.pdgaNumber) !== 'undefined') {

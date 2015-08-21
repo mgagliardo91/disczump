@@ -1,5 +1,6 @@
 var Error = require('./utils/error');
 var UserController = require('./controllers/user');
+var MessageController = require('./controllers/message');
 var DiscController = require('./controllers/disc');
 var DiscImageController = require('./controllers/discImage');
 var DataItemController = require('./controllers/dataItem');
@@ -9,11 +10,86 @@ var config = require('../config/config.js');
 var Busboy = require('busboy');
 var gfs;
 var gm = require('gm').subClass({ imageMagick: true });
+var async = require('async');
 
 // app/api.js
 module.exports = function(app, passport, gridFs) {
     
     gfs = gridFs;
+    
+    app.route('/threads')
+        .get(hasAccess, function(req, res) {
+           MessageController.getPrivateThreads(req.user._id, function(err, localThreads) {
+               if (err)
+                    return res.json(err);
+                    
+                return res.json(localThreads);
+           });
+        })
+        .post(hasAccess, function(req, res) {
+            
+            async.series([
+                    function(cb) {
+                        UserController.getUser(req.body.receivingUser, function(err, user) {
+                            if (err) {
+                                res.json(Error.createError('Invalid receiving user identifier.', Error.invalidDataError));
+                                cb(err);
+                            } else {
+                                cb();
+                            }
+                        });
+                    },
+                    function(cb) {
+                        MessageController.createPrivateThread(req.user._id, req.body.receivingUser, function (err, localThread) {
+                            if (err) {
+                                res.json(err);
+                            } else {
+                                res.json(localThread);
+                            }
+                            
+                            cb();
+                        });
+                    }
+                ],
+                function(err, results) {
+                    
+                });
+            
+            
+        });
+    
+    app.route('/threads/:threadId')
+        .get(hasAccess, function(req, res) {
+            MessageController.getThreadState(req.user._id, req.params.threadId, function(err, threadState) {
+                if (err)
+                    return res.json(err);
+                    
+                return res.json(threadState);
+            });
+        });
+        
+    app.route('/threads/:threadId/messages')
+        .get(hasAccess, function(req, res) {
+            MessageController.getMessages(req.user._id, req.params.threadId, function(err, messages) {
+                if (err)
+                    return res.json(err);
+                    
+                return res.json(messages);
+           });
+        })
+        .post(hasAccess, function(req, res) {
+            
+            if (typeof(req.body.content) === 'undefined') {
+                return res.json(Error.createError('Post must contain a content property.'));
+            }
+            
+            MessageController.sendMessage(req.user._id, req.params.threadId, req.body, function(err, message) {
+                if (err)
+                    return res.json(err);
+                    
+                return res.json(message);
+            });
+        });
     
     app.route('/feedback')
         .post(hasAccess, function(req,res) {
@@ -79,6 +155,16 @@ module.exports = function(app, passport, gridFs) {
                 user.addEvent('User authenticated password reset.');
                 return res.json(user.accountToString());
             })
+        });
+        
+    app.route('/users/:userId')
+        .get(hasAccess, function(req, res) {
+            UserController.getAccount(req.params.userId, function(err, user) {
+               if (err)
+                    return res.json(err);
+                    
+                return res.json(user);
+           })
         });
     
     app.route('/users/:userId/discs')

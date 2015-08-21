@@ -216,6 +216,31 @@ module.exports = function(app, passport, gridFs) {
                 });
             });
         });
+        
+    app.get('/users/:userId', function(req, res){
+        UserController.getUser(req.params.userId, function(err, user) {
+            if (err) {
+                return res.render('notification', {
+                    isMobile: req.device.isMobile,
+                   notify : {
+                       pageHeader: err.error.type,
+                       header: err.error.type,
+                       strong: err.error.message,
+                       buttonIcon: 'fa-home',
+                       buttonText: 'Return Home',
+                       buttonLink: '/'
+                   }
+               });
+            }
+            
+            res.render('profile', {
+                isMobile: req.device.isMobile,
+                targetUser: user,
+                userAlias: user.getAlias()
+            });
+        });
+        
+    });
     
     app.route('/' + configRoutes.resetPassword)
         .get(function(req,res) {

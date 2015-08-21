@@ -6,7 +6,7 @@ var eventSchema = mongoose.Schema({
 
     userId          : {type: String},
     message           : {type: String},
-    createDate      : {type: Date, default: Date.now()}
+    createDate      : {type: Date, default: Date.now}
     
 });
 
