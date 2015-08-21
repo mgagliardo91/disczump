@@ -1783,64 +1783,71 @@ function generateDiscInputForm(disc) {
 	                    '<input type="text" id="disc-color" class="form-control text-assist" param="color">' +
 	                '</div>' +
 	            '</div>' +
-	            '<div class="form-group">' +
-	                '<label class="col-sm-2 control-label">Speed</label>' +
-	                '<div class="col-sm-4">' +
-	                    '<input type="text" id="disc-speed" class="form-control text-assist weight-number-validate" param="speed">' +
+	            '<div class="accordion-container">' +
+	            	'<div class="accordion-header">' +
+	                    '<label class="no-select" param="advanced" aria-controls="collapseAdvanced"><span><i class="fa fa-chevron-right fa-tools"></i></span>Advanced</label>' +
 	                '</div>' +
-	                '<label class="col-sm-2 control-label">Glide</label>' +
-	                '<div class="col-sm-4">' +
-	                    '<input type="text" id="disc-glide" class="form-control text-assist number-validate" param="glide">' +
-	                '</div>' +
-	            '</div>' +
-	            '<div class="form-group">' +
-	                '<label class="col-sm-2 control-label">Turn</label>' +
-	                '<div class="col-sm-4">' +
-	                    '<input type="text" id="disc-turn" class="form-control text-assist number-validate" param="turn">' +
-	                '</div>' +
-	                '<label class="col-sm-2 control-label">Fade</label>' +
-	                '<div class="col-sm-4">' +
-	                    '<input type="text" id="disc-fade" class="form-control text-assist number-validate" param="fade">' +
-	                '</div>' +
-	            '</div>' +
-	            '<div class="form-group tag-input-group">' +
-	                '<label class="col-sm-2 control-label">Tags</label>' +
-	                '<div class="col-sm-10">' +
-	                    '<div style="position:relative">' +
-	                        '<div class="input-group add-disc-tag-container">' +
-	                            '<input type="text" class="form-control add-disc-tag">' +
-	                            '<span class="input-group-btn">' +
-	                                '<button class="btn btn-default add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>' +
-	                            '</span>' +
-	                        '</div>' +
-	                    '</div>' +
-	                '</div>' +
-	                '<div class="col-sm-10 col-sm-offset-2">' +
-	                    '<div class="tag-list-container">' +
-	                    '</div>' +
-	                '</div>' +
-	            '</div>' +
-	            '<div class="form-group">' +
-	                '<label class="col-sm-2 control-label">Notes</label>' +
-	                '<div class="col-sm-10">' +
-	                    '<textarea id="disc-notes" class="form-control create-disc-textarea" rows="3" param="notes"></textarea>' +
-	                '</div>' +
-	            '</div>' +
-	            '<div class="form-group">' +
-	                '<label class="col-sm-2 control-label">Public</label>' +
-	                '<div class="col-sm-4">' +
-	                    '<input type="checkbox" name="visible" param="visible" id="disc-visibility">' +
-	                '</div>' +
-	                '<label class="col-sm-2 control-label allow-icon">Condition<i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="condition"></i></label>' +
-	                '<div class="col-sm-4">' +
-	                    '<input type="text" id="disc-condition" class="form-control text-assist condition-number-validate" param="condition">' +
+	                '<div class="advanced-area collapse" id="collapseAdvanced">' +
+			            '<div class="form-group">' +
+			                '<label class="col-sm-3 control-label">Speed</label>' +
+			                '<div class="col-sm-3">' +
+			                    '<input type="text" id="disc-speed" class="form-control text-assist weight-number-validate" param="speed">' +
+			                '</div>' +
+			                '<label class="col-sm-3 control-label">Glide</label>' +
+			                '<div class="col-sm-3">' +
+			                    '<input type="text" id="disc-glide" class="form-control text-assist number-validate" param="glide">' +
+			                '</div>' +
+			            '</div>' +
+			            '<div class="form-group">' +
+			                '<label class="col-sm-3 control-label">Turn</label>' +
+			                '<div class="col-sm-3">' +
+			                    '<input type="text" id="disc-turn" class="form-control text-assist number-validate" param="turn">' +
+			                '</div>' +
+			                '<label class="col-sm-3 control-label">Fade</label>' +
+			                '<div class="col-sm-3">' +
+			                    '<input type="text" id="disc-fade" class="form-control text-assist number-validate" param="fade">' +
+			                '</div>' +
+			            '</div>' +
+			            '<div class="form-group tag-input-group">' +
+			                '<label class="col-sm-2 control-label">Tags</label>' +
+			                '<div class="col-sm-10">' +
+			                    '<div style="position:relative">' +
+			                        '<div class="input-group add-disc-tag-container">' +
+			                            '<input type="text" class="form-control add-disc-tag">' +
+			                            '<span class="input-group-btn">' +
+			                                '<button class="btn btn-default add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>' +
+			                            '</span>' +
+			                        '</div>' +
+			                    '</div>' +
+			                '</div>' +
+			                '<div class="col-sm-10 col-sm-offset-2">' +
+			                    '<div class="tag-list-container">' +
+			                    '</div>' +
+			                '</div>' +
+			            '</div>' +
+			            '<div class="form-group">' +
+			                '<label class="col-sm-2 control-label">Notes</label>' +
+			                '<div class="col-sm-10">' +
+			                    '<textarea id="disc-notes" class="form-control create-disc-textarea" rows="3" param="notes"></textarea>' +
+			                '</div>' +
+			            '</div>' +
+			            '<div class="form-group">' +
+			                '<label class="col-sm-2 control-label">Public</label>' +
+			                '<div class="col-sm-4">' +
+			                    '<input type="checkbox" name="visible" param="visible" id="disc-visibility">' +
+			                '</div>' +
+			                '<label class="col-sm-3 control-label allow-icon">Condition<i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="condition"></i></label>' +
+			                '<div class="col-sm-3">' +
+			                    '<input type="text" id="disc-condition" class="form-control text-assist condition-number-validate" param="condition">' +
+			                '</div>' +
+			            '</div>' +
 	                '</div>' +
 	            '</div>' +
 	            '<div class="image-accordion-area">' +
 	            	(isEdit ? 
-		            '<div class="current-images-accordion-container">' +
-		                '<div class="current-images-accordion-header">' +
-		                    '<label class="current-images-label no-select" aria-expanded="true" aria-controls="collapseCurrentImages"><span><i class="fa fa-chevron-right fa-tools"></i></span>Current Pictures</label>' +
+		            '<div class="accordion-container">' +
+		                '<div class="accordion-header">' +
+		                    '<label class="current-images-label no-select" param="current-images" aria-expanded="true" aria-controls="collapseCurrentImages"><span><i class="fa fa-chevron-right fa-tools"></i></span>Current Pictures</label>' +
 		            	'</div>' +
 		            	'<div class="current-images-panel-collapse collapse" id="collapseCurrentImages">' +
 				            '<div class="image-list">' +
@@ -1851,9 +1858,9 @@ function generateDiscInputForm(disc) {
 				            '</div>' +
 				        '</div>' +
 			        '</div>' : '') +
-		            '<div class="add-images-accordion-container">' +
-		                '<div class="add-images-accordion-header">' +
-		                    '<label class="add-images-label no-select" aria-controls="collapseDropzone"><span><i class="fa fa-chevron-right fa-tools"></i></span>Add Pictures</label>' +
+		            '<div class="accordion-container">' +
+		                '<div class="accordion-header">' +
+		                    '<label class="add-images-label no-select" param="dropzone" aria-controls="collapseDropzone"><span><i class="fa fa-chevron-right fa-tools"></i></span>Add Pictures</label>' +
 		                '</div>' +
 		                '<div class="dropzone-panel-collapse collapse" id="collapseDropzone">' +
 		                    '<div class="image-list dropzone-area">' +
@@ -1884,14 +1891,21 @@ function generateDiscInputForm(disc) {
 		onCreate: function($inner) {
 		    createDropZone($inner.find('.dropzone-area'));
 		    
-			$inner.find('.add-images-label').click(function(e) {
+			$inner.find('.accordion-container label').click(function(e) {
+				var param = $(this).attr('param');
 		        var $chevron = $(this).find('.fa');
 		        if ($chevron.hasClass('fa-chevron-right')) {
 		            $chevron.removeClass('fa-chevron-right').addClass('fa-chevron-down');
 		        } else {
 		            $chevron.removeClass('fa-chevron-down').addClass('fa-chevron-right');
 		        }
-		        $('#collapseDropzone').collapse('toggle');
+		        if (param == 'dropzone') {
+		        	$('#collapseDropzone').collapse('toggle');
+		        } else if (param == 'current-images') {
+		        	$('#collapseCurrentImages').collapse('toggle');
+		        } else if (param == 'advanced') {
+		        	$('#collapseAdvanced').collapse('toggle');
+		        }
 		    });
 			
 			modalParams.onCreate($inner);
