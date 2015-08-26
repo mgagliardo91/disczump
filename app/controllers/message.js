@@ -2,12 +2,15 @@ var Error = require('../utils/error');
 var UserController = require('./user');
 var Message = require('../models/message');
 var Thread = require('../models/thread');
+var Socket = require('../../config/socket.js');
 var ThreadLocal = require('../models/threadLocal');
 var _ = require('underscore');
 var async = require('async');
+var socketManager = require('../objects/socketCache.js');
 
 module.exports = {
     getThreadState: getThreadState,
+    putThreadState: putThreadState,
     getMessages: getMessages,
     sendMessage: sendMessage,
     getPrivateThreads: getPrivateThreads,
@@ -52,6 +55,40 @@ function getThreadState(userId, threadId, callback) {
     });
 }
 
+function putThreadState(userId, threadId, threadState, callback) {
+    var messageCount;
+    
+    if (typeof(threadState.messageCount) === 'undefined') {
+        return callback(Error.createError('The object is missing messageCount.', Error.invalidDataError));
+    }
+    
+    messageCount = parseInt(threadState.messageCount);
+    if (_.isNaN(messageCount)) {
+        return callback(Error.createError('The messageCount parameter must be an integer.', Error.invalidDataError));
+    }
+    
+    getLocalThread(userId, threadId, function(err, localThread) {
+        if (err) return callback(err);
+        
+        getLocalThreadObj(localThread, function(err, localThreadObj) {
+            if (err) return callback(err);
+        
+            if (messageCount < localThreadObj.messageCount || messageCount > localThreadObj.currentMessageCount) {
+                return callback(null, localThreadObj);
+            } else {
+                localThread.messageCount = messageCount;
+                localThread.save(function(err) {
+                    if (err) return callback(Error.createError(err, Error.internalError));
+                    
+                    localThreadObj.messageCount = localThread.messageCount;
+                    
+                    return callback(null, localThreadObj);
+                });
+            }
+        });
+    });
+}
+
 function getMessages(userId, threadId, callback) {
      getLocalThread(userId, threadId, function(err, localThread) {
         if (err) return callback(err);
@@ -79,14 +116,30 @@ function sendMessage(userId, threadId, messageObj, callback) {
         message.save(function(err) {
             if (err)
                 return callback(Error.createError(err, Error.internalError));
-                
+            
+            notifyUsers(message, userId);
+            
             Thread.findById(localThread.threadId, function(err, thread) {
                 thread.modifiedDate = message.createDate;
                 thread.messageCount = thread.messageCount + 1;
+                localThread.messageCount = thread.messageCount;
                 thread.save();
+                localThread.save();
             });
             
             return callback(null, message);
+        });
+    });
+}
+
+function notifyUsers(message, userId) {
+    ThreadLocal.find({threadId: message.threadId, userId: {$ne: userId}}, 'userId', function(err, localThreads) {
+        _.each(localThreads, function(localThread) {
+            var socket = socketManager.getSocket(localThread.userId);
+            
+            if (typeof(socket) !== 'undefined') {
+                Socket.sendNotification(socket, Socket.TypeMsg, message);
+            }
         });
     });
 }

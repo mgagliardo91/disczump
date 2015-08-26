@@ -293,9 +293,20 @@
 
 /*===================================================================*/
 /*                                                                   */
-/*                            Modal CSS                              */
+/*                         Add/Edit Disc Page                        */
 /*                                                                   */
 /*===================================================================*/
+
+#disc-action-container {
+    max-width: 60%;
+    margin: 10px auto;
+    width: 60%;
+}
+
+.modify-button-container {
+    padding: 20px 0px;
+    text-align: right;
+}
 
 .fa-pad-left {
     padding: 0px 0px 0px 5px;
@@ -309,6 +320,40 @@
 .required-field {
     color: #FF0000;
 }
+
+.upload-img {
+    width: 15em;
+    height: 15em;
+    display: table;
+    border: 1px solid #000;
+    padding-top: 2.5em;
+    position: relative;
+}
+
+.upload-img > div, .upload-img > span {
+    display: table-cell;
+    text-align: center;
+}
+
+.upload-img i {
+    font-size: 10em;
+}
+
+.upload-img-click {
+    z-index: 1000;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    padding-top: 2.5em;
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*                             Modal CSS                             */
+/*                                                                   */
+/*===================================================================*/
 
 .modal-dialog {
     z-index: 2000;
@@ -343,34 +388,6 @@
 .allow-icon {
     padding-left: 0px;
     padding-right: 0px;
-}
-
-.upload-img {
-    width: 15em;
-    height: 15em;
-    display: table;
-    border: 1px solid #000;
-    padding-top: 2.5em;
-    position: relative;
-}
-
-.upload-img > div, .upload-img > span {
-    display: table-cell;
-    text-align: center;
-}
-
-.upload-img i {
-    font-size: 10em;
-}
-
-.upload-img-click {
-    z-index: 1000;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    padding-top: 2.5em;
 }
 
 #feedback-textarea {
@@ -804,6 +821,8 @@
     padding: 5px 10px;
     font-size: 0.9em;
     line-height: 130%;
+    word-break: break-word;
+    overflow: hidden;
 }
 
 .message-date {

@@ -35,7 +35,8 @@
                     <li class="sidebar-select nav" pg-select="#pg-statistics"><span class="float-left fa-tools"><i class="fa fa-pie-chart fa-sidebar-icon"></i></span><span class="sidebar-select-text">Statistics</span></li>
                     </section>
                     <h5 class="sidebar-section-header"><span>Actions</span><hr /><div class="clearfix"></div></h5>
-                    <li class="sidebar-select" id="create-disc-modal"><span class="float-left fa-tools"><i class="fa fa-plus fa-sidebar-icon"></i></span><span class="sidebar-select-text">Add Disc</span></li>
+                    {{!--<li class="sidebar-select" id="create-disc-modal"><span class="float-left fa-tools"><i class="fa fa-plus fa-sidebar-icon"></i></span><span class="sidebar-select-text">Add Disc</span></li>--}}
+                    <li class="sidebar-select nav" pg-select="#pg-modify-disc"><span class="float-left fa-tools"><i class="fa fa-plus fa-sidebar-icon"></i></span><span class="sidebar-select-text">Add Disc</span></li>
                     <h5 class="sidebar-section-header"><span>Settings</span><hr /><div class="clearfix"></div></h5>
                     <li class="sidebar-select nav" pg-select="#pg-settings"><span class="float-left fa-tools"><i class="fa fa-user fa-sidebar-icon"></i></span><span class="sidebar-select-text">Account</span></li>
                     <li class="sidebar-select nav" pg-select="#pg-preferences"><span class="float-left fa-tools"><i class="fa fa-cogs fa-sidebar-icon"></i></span><span class="sidebar-select-text">Preferences</span></li>
@@ -133,90 +134,163 @@
                 </ul>
             </div>
             <div class="page-view">
+                <div class="page" id="pg-modify-disc">
+                    <div class="row">
+                        <div class="page-title"><span></span> Disc
+                            <a href="#" id="clear-modify-disc-form">Clear Form</a>
+                        <hr></div>
+                    </div>
+                    <div id="disc-action-container">
+                        <form class="form-horizontal" id="modify-disc-form" role="form" discId="" autocomplete="off">
+            				<div class="form-group">
+            	                <label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>
+            	                <div class="col-sm-4">
+            	                    <input type="text" id="disc-brand" class="form-control text-assist" param="brand">
+            	                </div>
+            	                <label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>
+            	                <div class="col-sm-4">
+            	                    <input type="text" id="disc-name" class="form-control text-assist" param="name">
+            	                </div>
+            	            </div>
+            	             <div class="form-group">
+            	                <label class="col-sm-2 control-label">Type</label>
+            	                <div class="col-sm-4">
+            	                    <select id="disc-type" class="form-control" param="type">
+            	                        <option value=""' + (isEdit ? '' : 'selected') + '></option>
+            	                        {{!--<option value=""' + (isEdit ? '' : 'selected') + '></option>--}}
+            	                        <option value="Distance Driver">Distance Driver</option>
+            	                        <option value="Fairway Driver">Fairway Driver</option>
+            	                        <option value="Mid-range">Mid-range</option>
+            	                        <option value="Putt/Approach">Putt/Approach</option>
+            	                        <option value="Mini">Mini</option>
+            	                     </select>
+            	                </div>
+            	                <label class="col-sm-2 control-label">Material</label>
+            	                <div class="col-sm-4">
+            	                    <input type="text" id="disc-material" class="form-control text-assist" param="material">
+            	                </div>
+            	            </div>
+            	            <div class="form-group">
+            	                <label class="col-sm-2 control-label">Weight</label>
+            	                <div class="col-sm-4">
+            	                    <input type="text" id="disc-weight" class="form-control text-assist number-validate" param="weight">
+            	                </div>
+            	                <label class="col-sm-2 control-label">Color</label>
+            	                <div class="col-sm-4">
+            	                    <input type="text" id="disc-color" class="form-control text-assist" param="color">
+            	                </div>
+            	            </div>
+            	            <div class="accordion-container">
+            	            	<div class="accordion-header">
+            	                    <label class="no-select" param="advanced"><span><i class="fa fa-chevron-right fa-tools"></i></span>Advanced</label>
+            	                </div>
+            	                <div class="advanced-area collapse" id="collapseAdvanced">
+            			            <div class="form-group">
+            			                <label class="col-sm-3 control-label">Speed</label>
+            			                <div class="col-sm-3">
+            			                    <input type="text" id="disc-speed" class="form-control text-assist weight-number-validate" param="speed">
+            			                </div>
+            			                <label class="col-sm-3 control-label">Glide</label>
+            			                <div class="col-sm-3">
+            			                    <input type="text" id="disc-glide" class="form-control text-assist number-validate" param="glide">
+            			                </div>
+            			            </div>
+            			            <div class="form-group">
+            			                <label class="col-sm-3 control-label">Turn</label>
+            			                <div class="col-sm-3">
+            			                    <input type="text" id="disc-turn" class="form-control text-assist number-validate" param="turn">
+            			                </div>
+            			                <label class="col-sm-3 control-label">Fade</label>
+            			                <div class="col-sm-3">
+            			                    <input type="text" id="disc-fade" class="form-control text-assist number-validate" param="fade">
+            			                </div>
+            			            </div>
+            			            <div class="form-group tag-input-group">
+            			                <label class="col-sm-2 control-label">Tags</label>
+            			                <div class="col-sm-10">
+            			                    <div style="position:relative">
+            			                        <div class="input-group add-disc-tag-container">
+            			                            <input type="text" class="form-control add-disc-tag">
+            			                            <span class="input-group-btn">
+            			                                <button class="btn btn-default add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>
+            			                            </span>
+            			                        </div>
+            			                    </div>
+            			                </div>
+            			                <div class="col-sm-10 col-sm-offset-2">
+            			                    <div class="tag-list-container">
+            			                    </div>
+            			                </div>
+            			            </div>
+            			            <div class="form-group">
+            			                <label class="col-sm-2 control-label">Notes</label>
+            			                <div class="col-sm-10">
+            			                    <textarea id="disc-notes" class="form-control create-disc-textarea" rows="3" param="notes"></textarea>
+            			                </div>
+            			            </div>
+            			            <div class="form-group">
+            			                <label class="col-sm-2 control-label">Public</label>
+            			                <div class="col-sm-4">
+            			                    <input type="checkbox" name="visible" param="visible" id="disc-visibility">
+            			                </div>
+            			                <label class="col-sm-3 control-label allow-icon">Condition<i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="condition"></i></label>
+            			                <div class="col-sm-3">
+            			                    <input type="text" id="disc-condition" class="form-control text-assist condition-number-validate" param="condition">
+            			                </div>
+            			            </div>
+            	                </div>
+            	            </div>
+            	            <div class="image-accordion-area">
+            		            <div class="accordion-container">
+            		                <div class="accordion-header">
+            		                    <label class="current-images-label no-select" param="current-images"><span><i class="fa fa-chevron-right fa-tools"></i></span>Current Pictures</label>
+            		            	</div>
+            		            	<div class="current-images-panel-collapse collapse" id="collapseCurrentImages">
+            				            <div class="image-list">
+            				                <div class="image-list-container image-list-container-simple">
+            				                    <div class="image-list-table" id="existing-image-list">
+            				                    </div>
+            				                </div>
+            				            </div>
+            				        </div>
+            			        </div>
+            		            <div class="accordion-container">
+            		                <div class="accordion-header">
+            		                    <label class="add-images-label no-select" param="dropzone"><span><i class="fa fa-chevron-right fa-tools"></i></span>Add Pictures</label>
+            		                </div>
+            		                <div class="dropzone-panel-collapse collapse" id="collapseDropzone">
+            		                    <div class="image-list dropzone-area">
+            		                        <div class="image-list-container" id="dropzone-container">
+            		                            <div class="image-list-table" id="dropzone-previews">
+            		                                <div class="image-item-container image-add" id="dropzone-trigger">
+            		                                    <div class="image-item">
+            		                                        <div class="image-entity">
+            		                                            <span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>
+            		                                        </div>
+            		                                    </div>
+            		                                </div>
+            		                            </div>
+            		                        </div>
+            		                    </div>
+            		                </div>
+            		            </div>
+            	            </div>
+            	            <div class="modify-button-container">
+    		                    <button type="button" class="btn btn-primary" fn-title="save" discId=''><span><i class="fa fa-save fa-tools"></i></span>Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
                 <div class="page" id="pg-inbox">
                     <div class="row">
                         <div class="page-title">Thread: <span id="thread-title"></span><hr></div>
                     </div>
                     <div id="message-container">
-                        <div class="thread-message message-incoming">
-                            <div class="thread-message-area">
-                                <div class="message-user"></div>
-                                <div class="message-content">
-                                    <div class="message-date">08/20/15 04:23 PM</div>
-                                    <div class="message-bubble">
-                                        This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit.
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="thread-message message-incoming">
-                            <div class="thread-message-area">
-                                <div class="message-user"></div>
-                                <div class="message-content">
-                                    <div class="message-date">08/20/15 04:23 PM</div>
-                                    <div class="message-bubble">
-                                        This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit.
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="thread-message message-outgoing">
-                            <div class="thread-message-area">
-                                <div class="message-user"></div>
-                                <div class="message-content">
-                                    <div class="message-date">08/20/15 04:23 PM</div>
-                                    <div class="message-bubble">
-                                        This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit.
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="thread-message message-incoming">
-                            <div class="thread-message-area">
-                                <div class="message-user"></div>
-                                <div class="message-content">
-                                    <div class="message-date">08/20/15 04:23 PM</div>
-                                    <div class="message-bubble">
-                                        This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit.
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="thread-message message-incoming">
-                            <div class="thread-message-area">
-                                <div class="message-user"></div>
-                                <div class="message-content">
-                                    <div class="message-date">08/20/15 04:23 PM</div>
-                                    <div class="message-bubble">
-                                        This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit.
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="thread-message message-outgoing">
-                            <div class="thread-message-area">
-                                <div class="message-user"></div>
-                                <div class="message-content">
-                                    <div class="message-date">08/20/15 04:23 PM</div>
-                                    <div class="message-bubble">
-                                        This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit. This is a test message with shit.
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="clearfix"></div>
-                        </div>
                     </div>
                     <div id="add-message-container">
                         <div class="send-container">
                             <span class="send-container-inner">
                                 <div id="send-message-btn" class="hover-active"><span>Send <i class="fa fa-spinner fa-pulse" style="display: none;"></i></span></div>
-                                {{!--<button id="send-message-btn" class="btn btn-default">Send</button>--}}
-                                {{!--<button id="send-message-btn" class="btn btn-default"><span><i class="fa fa-spinner fa-pulse"></i></span></button>--}}
                             </span>
                         </div>
                         <div class="add-message-text">
@@ -224,7 +298,7 @@
                         </div>
                         
                         <div class="clearfix"></div>
-                        <div class="create-message-option no-select"><span id="message-on-enter"><i class="fa fa-square-o"></i> Send Message on Enter</span></div>
+                        <div class="create-message-option no-select"><span id="message-on-enter"><i class="fa fa-check-square"></i> Send Message on Enter</span></div>
                     </div>
                 </div>
                 <div class="page" id="pg-dashboard">
@@ -644,7 +718,7 @@
             </div>
         </div>
     </div>
-    
+    <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
     <script src="/static/js/jquery.canvasjs.min.js"></script>
     <script src="https://rawgit.com/enyo/dropzone/master/dist/dropzone.js"></script>
     <script src="/static/js/bootstrap-switch.min.js"></script>

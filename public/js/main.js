@@ -1,4 +1,4 @@
-var url = "/api/";
+var url = "/api";
 
 function preloadImage() {
     var image = new Image();
@@ -61,16 +61,15 @@ function getCityState(zipcode, callback) {
 	});
 }
 
-function resetPassword(currentPw, newPw, callback) {
+function doAjax(param) {
 	var success = false;
 	var retData;
-	var reset = {'currentPw': currentPw, 'newPw': newPw};
 	$.ajax({
-		type: "PUT",
+		type: param.type,
 		dataType: "json",
-		url: url + '/account/reset',
+		url: (param.url ? param.url : url) + param.path,
 		contentType: "application/json",
-		data: JSON.stringify(reset),
+		data: JSON.stringify(param.data),
 		success: function (data) {
 			var retVal = validateServerData(data);
 			success = retVal.success;
@@ -83,255 +82,113 @@ function resetPassword(currentPw, newPw, callback) {
 		   retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
 		},
 		complete: function(){
-		   if (callback) {
-				callback(success, retData);
+		   if (param.callback) {
+				param.callback(success, retData);
 		   }
 		}
+	});
+}
+
+function resetPassword(currentPw, newPw, callback) {
+	doAjax({
+		path: '/account/reset', 
+		type: 'PUT', 
+		data: {'currentPw': currentPw, 'newPw': newPw}, 
+		callback: callback
 	});
 }
 
 function getUser(userId, callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + '/users/' + userId,
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-			}
-		}
-     });
+	doAjax({
+		path: '/users/' + userId, 
+		type: 'GET',
+		callback: callback
+	});
+}
+
+function getSession(callback) {
+	doAjax({
+		path: '/initialize', 
+		type: 'GET',
+		url: '/connect',
+		callback: callback
+	});
 }
 
 function getAccount(callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + '/account',
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-			}
-		}
-     });
+	doAjax({
+		path: '/account', 
+		type: 'GET',
+		callback: callback
+	});
 }
 
 function putAccount(account, callback) {
-	var success = false;
-	var retData;
-	$.ajax({
-		type: "PUT",
-		dataType: "json",
-		url: url + '/account',
-		contentType: "application/json",
-		data: JSON.stringify(account),
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-		   console.log(request.responseText);
-		   console.log(textStatus);
-		   console.log(errorThrown);
-		   retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
-		},
-		complete: function(){
-		   if (callback) {
-				callback(success, retData);
-		   }
-		}
+	doAjax({
+		path: '/account', 
+		type: 'PUT',
+		data: account,
+		callback: callback
 	});
 }
 
 function getThreads(callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + '/threads',
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-			}
-		}
-     });
+	doAjax({
+		path: '/threads', 
+		type: 'GET',
+		callback: callback
+	});
 }
 
 function postThread(thread, callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "POST",
-		dataType: "json",
-		url: url + 'threads/',
-		contentType: "application/json",
-		data: JSON.stringify(thread),
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-		   	}
-		}
-     });
+	doAjax({
+		path: '/threads', 
+		type: 'POST',
+		data: thread,
+		callback: callback
+	});
 }
 
 function getThreadState(threadId, callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + '/threads/' + threadId,
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-			}
-		}
-     });
+	doAjax({
+		path: '/threads/' + threadId, 
+		type: 'GET',
+		callback: callback
+	});
+}
+
+function putThreadState(threadId, threadState, callback) {
+	doAjax({
+		path: '/threads/' + threadId, 
+		type: 'PUT',
+		data: threadState,
+		callback: callback
+	});
 }
 
 function getMessages(threadId, callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + '/threads/' + threadId + '/messages',
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-			}
-		}
-     });
+	doAjax({
+		path: '/threads/' + threadId + '/messages', 
+		type: 'GET',
+		callback: callback
+	});
 }
 
 function postMessage(threadId, message, callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "POST",
-		dataType: "json",
-		url: url + 'threads/' + threadId + '/messages',
-		contentType: "application/json",
-		data: JSON.stringify(message),
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-		   	}
-		}
-     });
+	doAjax({
+		path: '/threads/' + threadId + '/messages',
+		type: 'POST',
+		data: message,
+		callback: callback
+	});
 }
 
 function getAllDiscImages(discId, callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + 'discs/' + discId + '/images',
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-			}
-		}
-     });
+	doAjax({
+		path: '/discs/' + discId + '/images',
+		type: 'GET',
+		callback: callback
+	});
 }
 
 function getPrimaryDiscImage(imageId, callback) {
@@ -339,311 +196,100 @@ function getPrimaryDiscImage(imageId, callback) {
 		return callback(false);
 	}
 	
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + 'images/' + imageId,
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-			}
-		}
-     });
+	doAjax({
+		path: '/images/' + imageId,
+		type: 'GET',
+		callback: callback
+	});
 }
 
 function getAllDiscs(callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + 'discs/',
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-			}
-		}
-     });
+	doAjax({
+		path: '/discs/',
+		type: 'GET',
+		callback: callback
+	});
 }
 
 function getAllPublicDiscsByUser(userId, callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + 'users/' + userId + '/discs',
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-			}
-		}
-     });
+	doAjax({
+		path: '/users/' + userId + '/discs',
+		type: 'GET',
+		callback: callback
+	});
 }
 
 function getDiscById(discId, callback) {
-	var success = false;
-	var retData = {};
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + 'discs/' + discId,
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-			}
-		}
-     });
+	doAjax({
+		path: '/discs/' + discId,
+		type: 'GET',
+		callback: callback
+	});
 }
 
 
 function getUserPreferences(callback) {
-	var success = false;
-	var retData = {};
-    $.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url + 'account/preferences',
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-			}
-		}
-     });
+	doAjax({
+		path: '/account/preferences',
+		type: 'GET',
+		callback: callback
+	});
 }
 
 function updatePreferences(prefs, callback) {
         var success = false;
         var type = typeof prefs === 'undefined' ? 
         	'POST' : 'PUT';
-    	var retData = {};
-        $.ajax({
-    		type: type,
-    		dataType: "json",
-    		data: JSON.stringify(prefs),
-    		url: url + 'account/preferences',
-    		contentType: "application/json",
-    		success: function (data) {
-    		   	retData = {'error' : {message : 'Unable to process request.', type : 'Unknown Error'}};
-    			
-    			if (!data) {
-    				success = false;
-    				return;
-    			}
-    			
-    			if (data.error) {
-    				retData = data.error;
-    				success = false;
-    				return;
-    			}
-    			
-    			retData = data;
-    			success = true;
-    		},
-    		error: function (request, textStatus, errorThrown) {
-    			console.log(request.responseText);
-    			console.log(textStatus);
-    			console.log(errorThrown);
-    		},
-    		complete: function(){
-    			if (callback) {
-    				callback(success, retData);
-    			}
-    		}
-         });
+        
+	    doAjax({
+			path: '/account/preferences',
+			type: type,
+			data: prefs,
+			callback: callback
+		});
     }
 
 function postDisc(disc, callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "POST",
-		dataType: "json",
-		url: url + 'discs/',
-		contentType: "application/json",
-		data: JSON.stringify(disc),
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-		   	}
-		}
-     });
+	doAjax({
+		path: '/discs',
+		type: 'POST',
+		data: disc,
+		callback: callback
+	});
 }
 
 function putDisc(disc, callback) {
-	var success = false;
-	var retData;
-	$.ajax({
-		type: "PUT",
-		dataType: "json",
-		url: url + 'discs/' + disc._id,
-		contentType: "application/json",
-		data: JSON.stringify(disc),
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-		   console.log(request.responseText);
-		   console.log(textStatus);
-		   console.log(errorThrown);
-		   retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
-		},
-		complete: function(){
-		   if (callback) {
-			callback(success, retData);
-		   }
-		}
+	doAjax({
+		path: '/discs/' + disc._id,
+		type: 'PUT',
+		data: disc,
+		callback: callback
 	});
 }
 
 function deleteDisc(discId, callback) {
-	var success = false;
-	var retData;
-	$.ajax({
-		type: "DELETE",
-		dataType: "json",
-		url: url + 'discs/' + discId,
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-		   console.log(request.responseText);
-		   console.log(textStatus);
-		   console.log(errorThrown);
-		},
-		complete: function(){
-		   if (callback) {
-			callback(success, retData);
-		   }
-		}
+	doAjax({
+		path: '/discs/' + discId,
+		type: 'DELETE',
+		callback: callback
 	});
 }
 
 function deleteImage(imageId, callback) {
-	var success = false;
-	var retData;
-	$.ajax({
-		type: "DELETE",
-		dataType: "json",
-		url: url + 'images/' + imageId,
-		contentType: "application/json",
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-		   console.log(request.responseText);
-		   console.log(textStatus);
-		   console.log(errorThrown);
-		},
-		complete: function(){
-		   if (callback) {
-			callback(success, retData);
-		   }
-		}
+	doAjax({
+		path: '/images/' + imageId,
+		type: 'DELETE',
+		callback: callback
 	});
 }
 
 function postFeedback(feedback, callback) {
-	var success = false;
-	var retData;
-    $.ajax({
-		type: "POST",
-		dataType: "json",
-		url: url + 'feedback',
-		contentType: "application/json",
-		data: JSON.stringify({data: feedback}),
-		success: function (data) {
-			var retVal = validateServerData(data);
-			success = retVal.success;
-			retData = retVal.retData;
-		},
-		error: function (request, textStatus, errorThrown) {
-			console.log(request.responseText);
-			console.log(textStatus);
-			console.log(errorThrown);
-			retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
-		},
-		complete: function(){
-			if (callback) {
-				callback(success, retData);
-		   	}
-		}
-     });
+	doAjax({
+		path: '/feedback',
+		type: 'POST',
+		data: {data: feedback},
+		callback: callback
+	});
 }
 
 function validateServerData(data) {

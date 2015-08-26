@@ -66,6 +66,14 @@ module.exports = function(app, passport, gridFs) {
                     
                 return res.json(threadState);
             });
+        })
+        .put(hasAccess, function(req, res) {
+            MessageController.putThreadState(req.user._id, req.params.threadId, req.body, function(err, threadState) {
+                if (err)
+                    return res.json(err);
+                    
+                return res.json(threadState);
+            });
         });
         
     app.route('/threads/:threadId/messages')
@@ -156,6 +164,8 @@ module.exports = function(app, passport, gridFs) {
                 return res.json(user.accountToString());
             })
         });
+    
+    app.route('/users')
         
     app.route('/users/:userId')
         .get(hasAccess, function(req, res) {
@@ -221,8 +231,6 @@ module.exports = function(app, passport, gridFs) {
         })
         
         .put(hasAccess, function(req, res) {
-            console.log(req.user);
-            console.log(req.user._id);
             DiscController.putDisc(req.user._id, req.params.discId, req.body, function(err, disc) {
                 if (err)
                   return res.json(err);

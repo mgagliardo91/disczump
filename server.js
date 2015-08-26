@@ -14,6 +14,7 @@ var session      = require('express-session');
 var exphbs = require('express-handlebars');
 var config = require('./config/config.js');
 var oauth2 = require('./config/oauth2.js');
+var socketCache = require('./app/objects/socketCache.js');
 var logger = require('./config/logger.js').logger;
 var localServer = require('./config/localConfig.js');
 var Grid = require('gridfs-stream');
@@ -86,10 +87,21 @@ var testRouter = express.Router();
 require('./app/files.js')(testRouter, gridFs);
 app.use('/files', testRouter);
 
+var connectRouter = express.Router();
+require('./app/connect.js')(connectRouter, passport, socketCache);
+app.use('/connect', connectRouter);
+
 app.get('*', function(req, res){
   res.redirect('/'); 
 });
 
 // launch ======================================================================
-app.listen(port);
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
+
+require('./config/socket.js').init(io, socketCache, logger);
+
+server.listen(port);
+
 logger.info('[' + localServer.serverIdentity + '] Server running at %s:%s', process.env.IP, port);
+logger.info('[' + localServer.serverIdentity + '] Websocket server started.');

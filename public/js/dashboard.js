@@ -6,15 +6,14 @@ var $galleryContainer;
 var $inventoryHeader;
 var $inventoryContainer;
 var $dynamicHeader;
+var $modifyDiscForm;
 
-var pageSettings = {
-	tableMode: true	
-}
-
-var sidebarSettings = {
-	collapsed: false,
-	locked: false
-}
+var pageSettings = {tableMode: true, activePage: undefined};
+var sidebarSettings = {collapsed: false, locked: false};
+var paginateOptions = {displayCount: 20, currentPage: 1, lastPage: 1};
+var pageEvents = {};
+var chartData = {};
+var modifyHandler = {type: 'Add', discId: undefined};
 
 var mySort;
 var myFilter;
@@ -23,10 +22,11 @@ var myZumpColorPicker;
 var myMessenger;
 var zipValidation;
 
+var socket;
 var discList = [];
 var discs = [];
-var paginateOptions = {displayCount: 20, currentPage: 1, lastPage: 1};
 var dropzones = [];
+var textAssistArr = [];
 var changeObject = {};
 var fnLock = false;
 
@@ -38,11 +38,6 @@ var imgArray = new Array();
 
 var userPrefs;
 var userAccount;
-var pageEvents = {};
-
-var chartProp;
-var chartPropName;
-var chartType;
 
 activePage = $('.sidebar-nav-toolbar').find('.sidebar-nav-select.active').attr('nav-select');
 
@@ -58,6 +53,7 @@ $(document).ready(function(){
 	$inventoryHeader = $('#inventory-header');
     $inventoryContainer = $('.disc-inventory-container');
     $dynamicHeader = $('#disc-inventory-header-dynamic');
+    $modifyDiscForm = $('#modify-disc-form');
    	
     /* Initial Commands */
    	$('.page').hide();
@@ -250,8 +246,11 @@ $(document).ready(function(){
 	});
 	
 	$(document).on('click', '.fa-edit-disc-item', function() {
-	var disc = getDisc($(this).parents('.disc-item').attr('discid'));
-		generateDiscInputForm(disc);
+		var discId = $(this).parents('.disc-item').attr('discid');
+		var nav = '#pg-modify-disc';
+		modifyHandler.type = "Edit";
+		modifyHandler.discId = discId;
+		changePage(nav);
 	});
 	 
 	$(document).on('click', '.fa-share-disc-item', function() {
@@ -344,9 +343,9 @@ $(document).ready(function(){
 		exportList();
 	});
 	
-	$(document).on('click', '#create-disc-modal', function() {
-		generateDiscInputForm();
-	});
+	// $(document).on('click', '#create-disc-modal', function() {
+	// 	generateDiscInputForm();
+	// });
 	
 	$(document).on('click', '.image-preview:not(.active)', function() {
 		var src = $(this).children('img').attr('src');
@@ -369,6 +368,90 @@ $(document).ready(function(){
 	
     $('#search-request').click(function() {
     	$searchBar.focus();
+    });
+    
+    /*===================================================================*/
+	/*                                                                   */
+	/*                    	Modify Disc Listeners                        */
+	/*                                                                   */
+	/*===================================================================*/
+	
+	var $tagContainer = $('#modify-disc-form').find('.tag-list-container');
+	
+    $('#clear-modify-disc-form').click(function() {
+    	clearModifyDiscForm();
+    });
+		    
+	$('#modify-disc-form').find('.accordion-header > label').click(function(e) {
+		var param = $(this).attr('param');
+        var $chevron = $(this).find('.fa');
+        if ($chevron.hasClass('fa-chevron-right')) {
+            $chevron.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+        } else {
+            $chevron.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+        }
+        if (param == 'dropzone') {
+        	$('#collapseDropzone').collapse('toggle');
+        } else if (param == 'current-images') {
+        	$('#collapseCurrentImages').collapse('toggle');
+        } else if (param == 'advanced') {
+        	$('#collapseAdvanced').collapse('toggle');
+        }
+    });
+	
+	$('input[type=text]').focus(function(){
+	    $(this).one('mouseup', function(event){
+	        event.preventDefault;
+	    }).select();
+	});
+	
+	$('#modify-disc-form').on('click', '.tag-item-remove', function(){
+		var $parent = $(this).parents('.tag-item');
+		$parent.remove();
+		
+		if ($tagContainer.is(':empty')){
+			$tagContainer.empty();
+		}
+	});
+	
+	$('#modify-disc-form').find('.number-validate').on('focusin', function(e){
+		$(this).parent().removeClass('has-error');
+    });
+	
+	$('#modify-disc-form').find('.number-validate').on('focusout', function(e){
+		var val = $(this).val();
+		if (val != '' && !(/^-?\d+(\.\d+)?$/.test(val))) {
+			$(this).parent().addClass('has-error');
+		} else {
+			$(this).parent().removeClass('has-error');
+		}
+    });
+    
+    $('#modify-disc-form').find('.weight-number-validate').on('focusout', function(e){
+		var val = $(this).val();
+		if (val != '' && !(/^\d+(\.\d+)?$/.test(val))) {
+			$(this).parent().addClass('has-error');
+		} else {
+			$(this).parent().removeClass('has-error');
+		}
+    });
+    
+    $('#modify-disc-form').find('.condition-number-validate').on('focusout', function(e){
+		var val = $(this).val();
+		if (val != '' && !(/^\d\d?(\.\d)?$/.test(val))) {
+			$(this).parent().addClass('has-error');
+		} else {
+			$(this).parent().removeClass('has-error');
+		}
+    });
+    
+    $('#modify-disc-form').find('button[fn-title="save"]').click(function() {
+    	console.log(modifyHandler.type);
+    	if (modifyHandler.type == "Add") {
+    		saveNewDisc();
+    	} else if (modifyHandler.type == "Edit") {
+    		saveExistingDisc();
+    	}
     });
     
     /*===================================================================*/
@@ -578,35 +661,83 @@ $(document).ready(function(){
 	/*                                                                   */
 	/*===================================================================*/
 
-    pageEvents['pg-gallery'] = function(showing) {
-        if (showing) {
-    		pageSettings.tableMode = false;
+	pageEvents['pg-gallery'] = {
+		onShow: function() {
+			pageSettings.tableMode = false;
     	    showDiscGallery();
-        } else {
-     		pageSettings.tableMode = true;
-        }
-    }
-    pageEvents['pg-dashboard'] = function(showing) {
-    	if (showing) {
+		},
+		onHide: function() {
+			pageSettings.tableMode = true;
+		},
+		isShowing: function() {
+			
+		}
+	}
+	
+	pageEvents['pg-dashboard'] = {
+		onShow: function() {
 			resizeResultHeader();
 			resizeTagLists();
-    	}
-    }
-    pageEvents['pg-inbox'] = function(showing) {
-    	if (!showing) {
-    		myMessenger.threadLeft();
-    	} else {
-    		myMessenger.initPage();
-    	}
-    }
+		},
+		onHide: function() {
+			
+		},
+		isShowing: function() {
+			
+		}
+	}
+	
+	pageEvents['pg-inbox'] = {
+		onShow: function() {
+			myMessenger.initPage();
+		},
+		onHide: function() {
+			myMessenger.threadLeft();
+		},
+		isShowing: function() {
+			
+		}
+	}
+	
+	pageEvents['pg-modify-disc'] = {
+		onShow: function() {
+			_.each(textAssistArr, function(textAssist) {
+    			textAssist.triggerResize();
+    		});
+    		
+    		stageModifyDiscPage(modifyHandler.type, modifyHandler.discId);
+    		
+		},
+		onHide: function() {
+			if (modifyHandler.type == "Edit") {
+				modifyHandler.type = "Add";
+				modifyHandler.discId = undefined;
+				clearModifyDiscForm();
+			}
+    		fnLock = false;
+		},
+		isShowing: function() {
+			modifyHandler.type = "Add";
+			modifyHandler.discId = undefined;
+			clearModifyDiscForm();
+			stageModifyDiscPage(modifyHandler.type, modifyHandler.discId);
+		}
+	}
+    
     resizeSidebar();
     resizeResultHeader();
     resizeTagLists();
     $searchResults.hide();
+    
+    getSession(function(success, data) {
+    	if (success) {
+    		initSocket(data.sessionId);
+    	}
+    });
+    
     getAccount(function(success, account) {
     	if (success) {
     		userAccount = account;
-    		console.log(account);
     		getUserPreferences(function(success, prefs) {
 		    	if (success) {
 		    		userPrefs = prefs;
@@ -614,6 +745,7 @@ $(document).ready(function(){
 		    		initializeTooltips();
 		    		zumpLibraryInit();
 		    		loadUserPrefs();
+		    		initModifyDiscPage();
 		    		getAllDiscs(function(success, discsFromServer){
 						if (success) {
 							discs = discsFromServer;
@@ -794,6 +926,23 @@ var ZumpTutorial = function(opt) {
 }
 
 /*
+*
+*/
+function initSocket(sessionId) {
+	var socket = io.connect('https://disczumpserver-mgagliardo.c9.io');
+	socket.on('notification', function (notification) {
+	    parseNotification(notification);
+	});
+	socket.emit('initialize', {sessionId: sessionId});
+}
+
+function parseNotification(notification) {
+	if (notification.type == 'MessageNotification') {
+		myMessenger.handleMessage(notification.data)
+	}
+}
+
+/*
 * Changes the current dashboard page
 */
 function changePage(page) {
@@ -803,34 +952,47 @@ function changePage(page) {
    	
    	if (!$curPage.length) {
        	if (isDef(pageEvents[$curPage.attr('id')])) {
-        	pageEvents[$curPage.attr('id')](false);
+        	pageEvents[$curPage.attr('id')].onHide();
        	}
         $page.fadeIn(100, function() {
 			if ($navItem.length) {
 			   	$navItem.addClass('active');
 			}
+			
             if (isDef(pageEvents[$page.attr('id')])) {
-            	pageEvents[$page.attr('id')](true);
+            	pageEvents[$page.attr('id')].onShow();
            	}
+           	
+           	pageSettings.activePage = page;
         });
         return;
    	}
    
-   	if ($page.length && !$page.is(':visible')) {
-       	$curPage.fadeOut(100, function() {
-           	if (isDef(pageEvents[$curPage.attr('id')])) {
-            	pageEvents[$curPage.attr('id')](false);
-           	}
-           	$('.nav-sidebar li.sidebar-select').removeClass('active');
-            $page.fadeIn(100, function() {
-                if ($navItem.length) {
-				   	$navItem.addClass('active');
-				}
-                if (isDef(pageEvents[$page.attr('id')])) {
-            		pageEvents[$page.attr('id')](true);
-               	}
-            });
-       	});
+   	if ($page.length) {
+   		if ($page.is(':visible')) {
+   			pageEvents[$page.attr('id')].isShowing();
+   			if ($navItem.length) {
+            	$navItem.addClass('active');
+			}
+   		} else {
+   			$curPage.fadeOut(100, function() {
+	           	if (isDef(pageEvents[$curPage.attr('id')])) {
+	            	pageEvents[$curPage.attr('id')].onHide();
+	           	}
+	           	$('.nav-sidebar li.sidebar-select').removeClass('active');
+	            $page.fadeIn(100, function() {
+	                if ($navItem.length) {
+	                	$navItem.addClass('active');
+					}
+					
+	                if (isDef(pageEvents[$page.attr('id')])) {
+	            		pageEvents[$page.attr('id')].onShow();
+	               	}
+	               	
+		           	pageSettings.activePage = page;
+	            });
+	       	});
+   		}
    	} else {
    		if ($navItem.length) {
        		$navItem.addClass('active').siblings().removeClass('active');
@@ -1734,476 +1896,830 @@ function generateConfirmationModal(title, bodyText, btnText, deleteFn) {
 }
 
 /*
-* Generates the modal containing the form to either edit/create a disc
+* Initializes the modify disc page
 */
-function generateDiscInputForm(disc) {
-	var isEdit = isDef(disc);
-	var discId = isEdit ? disc._id : '';
+function initModifyDiscPage() {
+	var $tagInput = $('#modify-disc-form').find('.add-disc-tag');
+	var $tagContainer = $('#modify-disc-form').find('.tag-list-container');
 	
-	var header = '<h4 class="modal-title">' + (isEdit ? 'Edit' : 'Create') + ' Disc</h4>';
-          
-    var footer = '<button type="button" class="btn btn-default" fn-title="close">Close</button>' +
-		'<button type="button" class="btn btn-primary" fn-title="save" discId=' + discId + '><span><i class="fa fa-save fa-tools"></i></span>Save</button>';
-		
-	var form = '<form class="form-horizontal" role="form" discId="' + discId + '" autocomplete="off">' +
-				'<div class="form-group">' +
-	                '<label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>' +
-	                '<div class="col-sm-4">' +
-	                    '<input type="text" id="disc-brand" class="form-control text-assist" param="brand">' +
-	                '</div>' +
-	                '<label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>' +
-	                '<div class="col-sm-4">' +
-	                    '<input type="text" id="disc-name" class="form-control text-assist" param="name">' +
-	                '</div>' +
-	            '</div>' +
-	            '<div class="form-group">' +
-	                '<label class="col-sm-2 control-label">Type</label>' +
-	                '<div class="col-sm-4">' +
-	                    '<select id="disc-type" class="form-control" param="type">' +
-	                        '<option value=""' + (isEdit ? '' : 'selected') + '></option>' +
-	                        '<option value="Distance Driver">Distance Driver</option>' +
-	                        '<option value="Fairway Driver">Fairway Driver</option>' +
-	                        '<option value="Mid-range">Mid-range</option>' +
-	                        '<option value="Putt/Approach">Putt/Approach</option>' +
-	                        '<option value="Mini">Mini</option>' +
-	                     '</select>' +
-	                '</div>' +
-	                '<label class="col-sm-2 control-label">Material</label>' +
-	                '<div class="col-sm-4">' +
-	                    '<input type="text" id="disc-material" class="form-control text-assist" param="material">' +
-	                '</div>' +
-	            '</div>' +
-	            '<div class="form-group">' +
-	                '<label class="col-sm-2 control-label">Weight</label>' +
-	                '<div class="col-sm-4">' +
-	                    '<input type="text" id="disc-weight" class="form-control text-assist number-validate" param="weight">' +
-	                '</div>' +
-	                '<label class="col-sm-2 control-label">Color</label>' +
-	                '<div class="col-sm-4">' +
-	                    '<input type="text" id="disc-color" class="form-control text-assist" param="color">' +
-	                '</div>' +
-	            '</div>' +
-	            '<div class="accordion-container">' +
-	            	'<div class="accordion-header">' +
-	                    '<label class="no-select" param="advanced" aria-controls="collapseAdvanced"><span><i class="fa fa-chevron-right fa-tools"></i></span>Advanced</label>' +
-	                '</div>' +
-	                '<div class="advanced-area collapse" id="collapseAdvanced">' +
-			            '<div class="form-group">' +
-			                '<label class="col-sm-3 control-label">Speed</label>' +
-			                '<div class="col-sm-3">' +
-			                    '<input type="text" id="disc-speed" class="form-control text-assist weight-number-validate" param="speed">' +
-			                '</div>' +
-			                '<label class="col-sm-3 control-label">Glide</label>' +
-			                '<div class="col-sm-3">' +
-			                    '<input type="text" id="disc-glide" class="form-control text-assist number-validate" param="glide">' +
-			                '</div>' +
-			            '</div>' +
-			            '<div class="form-group">' +
-			                '<label class="col-sm-3 control-label">Turn</label>' +
-			                '<div class="col-sm-3">' +
-			                    '<input type="text" id="disc-turn" class="form-control text-assist number-validate" param="turn">' +
-			                '</div>' +
-			                '<label class="col-sm-3 control-label">Fade</label>' +
-			                '<div class="col-sm-3">' +
-			                    '<input type="text" id="disc-fade" class="form-control text-assist number-validate" param="fade">' +
-			                '</div>' +
-			            '</div>' +
-			            '<div class="form-group tag-input-group">' +
-			                '<label class="col-sm-2 control-label">Tags</label>' +
-			                '<div class="col-sm-10">' +
-			                    '<div style="position:relative">' +
-			                        '<div class="input-group add-disc-tag-container">' +
-			                            '<input type="text" class="form-control add-disc-tag">' +
-			                            '<span class="input-group-btn">' +
-			                                '<button class="btn btn-default add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>' +
-			                            '</span>' +
-			                        '</div>' +
-			                    '</div>' +
-			                '</div>' +
-			                '<div class="col-sm-10 col-sm-offset-2">' +
-			                    '<div class="tag-list-container">' +
-			                    '</div>' +
-			                '</div>' +
-			            '</div>' +
-			            '<div class="form-group">' +
-			                '<label class="col-sm-2 control-label">Notes</label>' +
-			                '<div class="col-sm-10">' +
-			                    '<textarea id="disc-notes" class="form-control create-disc-textarea" rows="3" param="notes"></textarea>' +
-			                '</div>' +
-			            '</div>' +
-			            '<div class="form-group">' +
-			                '<label class="col-sm-2 control-label">Public</label>' +
-			                '<div class="col-sm-4">' +
-			                    '<input type="checkbox" name="visible" param="visible" id="disc-visibility">' +
-			                '</div>' +
-			                '<label class="col-sm-3 control-label allow-icon">Condition<i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="condition"></i></label>' +
-			                '<div class="col-sm-3">' +
-			                    '<input type="text" id="disc-condition" class="form-control text-assist condition-number-validate" param="condition">' +
-			                '</div>' +
-			            '</div>' +
-	                '</div>' +
-	            '</div>' +
-	            '<div class="image-accordion-area">' +
-	            	(isEdit ? 
-		            '<div class="accordion-container">' +
-		                '<div class="accordion-header">' +
-		                    '<label class="current-images-label no-select" param="current-images" aria-expanded="true" aria-controls="collapseCurrentImages"><span><i class="fa fa-chevron-right fa-tools"></i></span>Current Pictures</label>' +
-		            	'</div>' +
-		            	'<div class="current-images-panel-collapse collapse" id="collapseCurrentImages">' +
-				            '<div class="image-list">' +
-				                '<div class="image-list-container image-list-container-simple">' +
-				                    '<div class="image-list-table" id="existing-image-list">' +
-				                    '</div>' +
-				                '</div>' +
-				            '</div>' +
-				        '</div>' +
-			        '</div>' : '') +
-		            '<div class="accordion-container">' +
-		                '<div class="accordion-header">' +
-		                    '<label class="add-images-label no-select" param="dropzone" aria-controls="collapseDropzone"><span><i class="fa fa-chevron-right fa-tools"></i></span>Add Pictures</label>' +
-		                '</div>' +
-		                '<div class="dropzone-panel-collapse collapse" id="collapseDropzone">' +
-		                    '<div class="image-list dropzone-area">' +
-		                        '<div class="image-list-container" id="dropzone-container">' +
-		                            '<div class="image-list-table" id="dropzone-previews">' +
-		                                '<div class="image-item-container image-add" id="dropzone-trigger">' +
-		                                    '<div class="image-item">' +
-		                                        '<div class="image-entity">' +
-		                                            '<span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>' +
-		                                        '</div>' +
-		                                    '</div>' +
-		                                '</div>' +
-		                            '</div>' +
-		                        '</div>' +
-		                    '</div>' +
-		                '</div>' +
-		            '</div>' +
-	            '</div>' +
-			'</form>';
+	$('#pg-modify-disc').find('.page-title > span').text(modifyHandler.type);
+	$('#disc-visibility').bootstrapSwitch('state', true);
+	createDropZone($('#modify-disc-form').find('.dropzone-area'));
+	initAddDiscListeners();
+    initEditDiscListeners();
+    setAccordions($modifyDiscForm);
 	
-	var modalParams = (isEdit ? getEditParams() : getCreateParams());
+	$('#modify-disc-form').find('.text-assist').each(function(index) {
+		var textAssist = new ZumpTextAssist({
+	        inputElement: $(this),
+	        searchProp: $(this).attr('param'),
+	        items: function() { return discs; }, 
+	        onSelection: function(item) {
+	        }
+	    });
+	    
+	    textAssistArr.push(textAssist);
+	});
 	
-	generateModal({
-		header: header,
-		body: form,
-		footer: footer,
-		fns: modalParams.fns,
-		onCreate: function($inner) {
-		    createDropZone($inner.find('.dropzone-area'));
-		    
-			$inner.find('.accordion-container label').click(function(e) {
-				var param = $(this).attr('param');
-		        var $chevron = $(this).find('.fa');
-		        if ($chevron.hasClass('fa-chevron-right')) {
-		            $chevron.removeClass('fa-chevron-right').addClass('fa-chevron-down');
-		        } else {
-		            $chevron.removeClass('fa-chevron-down').addClass('fa-chevron-right');
-		        }
-		        if (param == 'dropzone') {
-		        	$('#collapseDropzone').collapse('toggle');
-		        } else if (param == 'current-images') {
-		        	$('#collapseCurrentImages').collapse('toggle');
-		        } else if (param == 'advanced') {
-		        	$('#collapseAdvanced').collapse('toggle');
-		        }
-		    });
-			
-			modalParams.onCreate($inner);
-		},
-		onShow: function($inner) {
-			var $tagInput = $inner.find('.add-disc-tag');
-			var $addCustomTag = $inner.find('.add-custom-tag');
-			var $tagContainer = $inner.find('.tag-list-container');
-			var tagTextAssist;
-			
-		    $addCustomTag.click(function(){
-		    	if ($tagInput.val().length > 0) {
-					$tagContainer.append(generateTagItem($tagInput.val()));
-		    		$tagInput.val('');
-		    	}
-		    });
-			
-			$('input[type=text]').focus(function(){
-			    $(this).one('mouseup', function(event){
-			        event.preventDefault;
-			    }).select();
-			});
-			
-			$inner.on('click', '.tag-item-remove', function(){
-				var $parent = $(this).parents('.tag-item');
-				$parent.remove();
-				
-				if ($tagContainer.is(':empty')){
-					$tagContainer.empty();
-				}
-			});
-			
-			$inner.find('.number-validate').on('focusin', function(e){
-				$(this).parent().removeClass('has-error');
-		    });
-			
-			$inner.find('.number-validate').on('focusout', function(e){
-				var val = $(this).val();
-				if (val != '' && !(/^-?\d+(\.\d+)?$/.test(val))) {
-					$(this).parent().addClass('has-error');
-				} else {
-					$(this).parent().removeClass('has-error');
-				}
-		    });
-		    
-		    $inner.find('.weight-number-validate').on('focusout', function(e){
-				var val = $(this).val();
-				if (val != '' && !(/^\d+(\.\d+)?$/.test(val))) {
-					$(this).parent().addClass('has-error');
-				} else {
-					$(this).parent().removeClass('has-error');
-				}
-		    });
-		    
-		    $inner.find('.condition-number-validate').on('focusout', function(e){
-				var val = $(this).val();
-				if (val != '' && !(/^\d\d?(\.\d)?$/.test(val))) {
-					$(this).parent().addClass('has-error');
-				} else {
-					$(this).parent().removeClass('has-error');
-				}
-		    });
-		    
-		    $inner.find('[tt="condition"]').tooltip({
-		    	delay: { "show": 200, "hide": 100 },
-		    	placement: 'top',
-		    	trigger: 'hover',
-		    	title: 'Condition based on Sleepy Scale. Must be an integer with 1 optional decimal place.',
-		    	template: '<div class="tooltip" role="tooltip" style="width: 150px;">' +
-		    				'<div class="tooltip-arrow"></div>' +
-		    				'<div class="tooltip-inner"></div>' +
-		    				'</div>'
-		    });
-			
-			/*
-			* Setup Autocomplete Handlers
-			*/
-			
-			$inner.find('.text-assist').each(function(index) {
-				new ZumpTextAssist({
-			        inputElement: $(this),
-			        searchProp: $(this).attr('param'),
-			        items: function() { return discs; }, 
-			        onSelection: function(item) {
-			        }
-			    });
-			});
-			
-			tagTextAssist = new ZumpTextAssist({
-				inputElement: $tagInput,
-				searchProp: 'tagList',
-				items: function() { return discs; }, 
-		        onSelection: function(item, reset) {
-		       		if (item.length > 0) {
-		        		$tagContainer.append(generateTagItem(item));
-		    			reset();
-		        	}
-		        }
-			});
-			
-			modalParams.onShow($inner);
-		},
-		onClose: function($inner) {
-			
-			var $dropzone = $inner.find('.dropzone-area');
-			var id = $dropzone.attr('dropzoneid');
-			var dropzone = dropzones.splice(id, 1)[0];
-			
-			modalParams.onClose($inner);
-		}
+	var tagTextAssist = new ZumpTextAssist({
+		inputElement: $tagInput,
+		searchProp: 'tagList',
+		items: function() { return discs; }, 
+        onSelection: function(item, reset) {
+       		if (item.length > 0) {
+        		$tagContainer.append(generateTagItem(item));
+    			reset();
+        	}
+        }
+	});
+	
+	textAssistArr.push(tagTextAssist);
+	
+	$('#modify-disc-form').find('[tt="condition"]').tooltip({
+    	delay: { "show": 200, "hide": 100 },
+    	placement: 'top',
+    	trigger: 'hover',
+    	title: 'Condition based on Sleepy Scale. Must be an integer with 1 optional decimal place.',
+    	template: '<div class="tooltip" role="tooltip" style="width: 150px;">' +
+    				'<div class="tooltip-arrow"></div>' +
+    				'<div class="tooltip-inner"></div>' +
+    				'</div>'
+    });
+	
+}
+
+/*
+* Setup for the modify disc page each time it's opened
+*/
+function stageModifyDiscPage(action, discId) {
+	
+	$('#pg-modify-disc').find('.page-title > span').text(action);
+	
+	if (action == 'Add') {
+		$('#modify-disc-form').attr('discId', '');
+		$('#modify-disc-form').find('button[fn-title="save"]').attr('discId', '');
+		$('.current-images-label').hide();
+		$('#clear-modify-disc-form').show();
+	} else if (action == 'Edit') {
+		clearModifyDiscForm();
+		$('#modify-disc-form').attr('discId', discId);
+		$('#modify-disc-form').find('button[fn-title="save"]').attr('discId', discId);
+		$('.current-images-label').show();
+		$('#clear-modify-disc-form').hide();
+		$('.sidebar-select.nav.active').removeClass('active');
+		populateDiscForm();
+	}
+}
+
+/*
+* Clears and resets the modify disc form.
+*/
+function clearModifyDiscForm() {
+	var accordionIcons = $modifyDiscForm.find('.accordion-header > label .fa');
+	
+	$modifyDiscForm.trigger("reset");
+	$modifyDiscForm.find('.has-error').removeClass('has-error');
+	$modifyDiscForm.find('div.alert').remove();
+	$modifyDiscForm.find('.tag-list-container').empty();
+	$('#existing-image-list').empty();
+	$('#disc-visibility').bootstrapSwitch('state', true);
+	clearDropzone(dropzones[0]);
+	setAccordions($modifyDiscForm, 'hide');
+	_.each(accordionIcons, function(icon) {
+		changeIcon(icon, 'fa-chevron-down', 'fa-chevron-right');
 	});
 }
 
 /*
+* Initializes add disc page listeners
+*/
+function initAddDiscListeners() {
+	var $tagInput = $('#modify-disc-form').find('.add-disc-tag');
+	var $addCustomTag = $('#modify-disc-form').find('.add-custom-tag');
+	var $tagContainer = $('#modify-disc-form').find('.tag-list-container');
+	
+	$addCustomTag.click(function(){
+    	if ($tagInput.val().length > 0) {
+			$tagContainer.append(generateTagItem($tagInput.val()));
+    		$tagInput.val('');
+    	}
+    });
+}
+
+/*
+* Initializes edit disc page listeners
+*/
+function initEditDiscListeners() {
+	var $imageContainer = $('#existing-image-list');
+    
+    $imageContainer.on('click', '.image-remove', function() {
+    	var $parent = $(this).parents('.image-item-container');
+    	var imageId = $parent.attr('imageid');
+    	var disc = changeObject.curDisc;
+    	
+    	$parent.remove();
+    	
+    	if (!isDef(changeObject.imageRemovals)) {
+    		changeObject.imageRemovals = [];
+    	}
+    	
+    	if (disc.primaryImage == imageId) {
+    		var $images = $imageContainer.find('.image-item-container');
+    		if ($images.length) {
+    			var $newPrimary = $images.first();
+    			disc.primaryImage = $newPrimary.attr('imageid');
+    			updateExistingImage(disc.primaryImage);
+    		} else {
+    			disc.primaryImage = '';
+    		}
+    	}
+    	
+    	changeObject.imageRemovals.push(imageId);
+    });
+    
+    $imageContainer.on('click', '.image-make-primary', function() {
+    	var $parent = $(this).parents('.image-item-container');
+    	var imageId = $parent.attr('imageid');
+    	var disc = changeObject.curDisc;
+    	
+    	disc.primaryImage = imageId;
+    	updateExistingImage(imageId);
+    });
+}
+
+/*
+* Populate the Edit Disc form with existing disc data
+*/
+function populateDiscForm() {
+	changeObject = {};
+	
+	var discId = modifyHandler.discId;
+	changeObject.curDisc = copyDisc(discId);
+	
+	var disc = changeObject.curDisc;
+	var tagList = disc['tagList'];
+	var $tagContainer = $('#modify-disc-form').find('.tag-list-container');
+	var $imageContainer = $('#existing-image-list');
+
+	$('#disc-brand').val(getSafe(disc.brand, ''));
+	$('#disc-name').val(getSafe(disc.name, ''));
+	$('#disc-material').val(getSafe(disc.material, ''));
+	$('#disc-type').val(getSafe(disc.type, ''));
+	$('#disc-weight').val(getSafe(disc.weight, ''));
+	$('#disc-color').val(getSafe(disc.color, ''));
+	$('#disc-speed').val(getSafe(disc.speed, ''));
+	$('#disc-glide').val(getSafe(disc.glide, ''));
+	$('#disc-turn').val(getSafe(disc.turn, ''));
+	$('#disc-fade').val(getSafe(disc.fade, ''));
+	$('#disc-notes').val(getSafe(disc.notes, ''));
+	$('#disc-condition').val(getSafe(disc.condition, ''));
+	
+	$('#disc-visibility').bootstrapSwitch('state', getSafe(disc.visible, true));
+	
+	_.each(tagList, function(tag) {
+    	$tagContainer.append(generateTagItem(tag));
+    });
+	
+	getAllDiscImages(discId, function(success, images) { 
+		if (success) {
+			var primaryImage = disc.primaryImage;
+			_.each(images, function(image) {
+				$imageContainer.append(generateImageItem(primaryImage, image));
+			});
+		}	
+	});
+}
+
+/*
+* Sets all accordions (show/hide) for specified container
+*/
+function setAccordions($container, action) {
+	var accordions = $container.find('.collapse');
+	_.each(accordions, function(accordion) {
+		$(accordion).collapse(action);
+	});
+}
+
+/*
+* Sets all accordion icons to specific direction for specified conatiner
+*/
+function changeIcon(icon, remove, add) {
+	
+	$(icon).removeClass(remove).addClass(add);
+}
+
+/*
+* Clears dropzone
+*/
+function clearDropzone(dropzone) {
+	$('#dropzone-trigger').siblings().remove();
+	dropzone.disable();
+	dropzone.enable();
+}
+
+/*
+* Creating and saving a new disc
+*/
+function saveNewDisc() {
+	$('#modify-disc-form').find('div.alert').remove();
+	var disc = createDisc($('#modify-disc-form'));
+	var errorCount = $('#modify-disc-form').find('.has-error').length;
+	if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
+		$('#modify-disc-form').prepend(generateError('Brand and Name are required.', 'ERROR'));
+    } else if (errorCount > 0) {
+    	var errorText = '';
+    	var errorLength = errorCount;
+    	
+    	_.each($('#modify-disc-form').find('.has-error'), function(element) {
+    		if (errorLength > 1) {
+    			errorText = errorText + $(element).prev().text() + ', ';
+    		} else {
+    			errorText = errorText + $(element).prev().text();
+    		}
+    		errorLength = errorLength - 1;
+    	});
+    	
+    	$('#modify-disc-form').prepend(generateError('Invalid data in ' + (errorCount > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
+    	
+    } else if ($('#modify-disc-form').find('div.alert').length == 0) {
+    	postDisc(disc, function(success, retData) {
+			if (success) {
+				discs.push(retData);
+				var $dropzone = $('#modify-disc-form').find('.dropzone-area');
+				var id = $dropzone.attr('dropzoneid');
+				var dropzone = dropzones[0];
+				if (dropzone && dropzone.getAcceptedFiles().length > 0) {
+					dropzone.options.url = '/api/discs/' + retData._id + '/images';
+					dropzone.on('queuecomplete', function() {
+						$('#modify-disc-form').prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success'));
+						autoCloseAlert($('#modify-disc-form').find('.alert'), 2000);
+						getDiscById(retData._id, function(err, disc) {
+							discs = _.filter(discs, function(curDisc){
+								return curDisc._id != disc._id;
+							});
+							discs.push(disc);
+							updateFilter(true);
+						});
+						
+						clearDropzone(dropzone);
+					})
+					
+					dropzone.processQueue();
+				} else {
+					$('#modify-disc-form').prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success'));
+					autoCloseAlert($('#modify-disc-form').find('.alert'), 2000);
+					updateFilter(true);
+				}
+			} else {
+				$('#modify-disc-form').prepend(generateError(retData.message, 'ERROR'));
+			}
+		});
+    }
+}
+
+/*
+* Changing and saving an existing disc
+*/
+function saveExistingDisc() {
+	if (fnLock) return;	
+	fnLock = true;
+	$('#modify-disc-form').find('div.alert').remove();
+	var disc = createDisc($('#modify-disc-form'), changeObject.curDisc);
+	var errorCount = $('#modify-disc-form').find('.has-error').length;
+	if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
+		$('#modify-disc-form').prepend(generateError('Brand and Name are required.', 'ERROR'));
+		fnLock = false;
+    } else if (errorCount > 0) {
+    	var errorText = '';
+    	var errorLength = errorCount;
+    	
+    	_.each($('#modify-disc-form').find('.has-error'), function(element) {
+    		if (errorLength > 1) {
+    			errorText = errorText + $(element).prev().text() + ', ';
+    		} else {
+    			errorText = errorText + $(element).prev().text();
+    		}
+    		errorLength = errorLength - 1;
+    	});
+    	
+    	$('#modify-disc-form').prepend(generateError('Invalid data in ' + (errorCount > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
+		fnLock = false;
+    	
+    } else if ($('#modify-disc-form').find('div.alert').length == 0) {
+		putDisc(disc, function(success, retData) {
+			if (success) {
+				
+				var index = discs.indexOf(getDisc(retData._id));
+				discs[index] = retData;
+				
+				if (isDef(changeObject.imageRemovals)) {
+					_.each(changeObject.imageRemovals, function(imageId) {
+						deleteImage(imageId, function(success, data) {
+							if (success) {
+								//deleted disc image
+							}
+						});
+					});
+				}
+				
+				var $dropzone = $('#modify-disc-form').find('.dropzone-area');
+				var id = $dropzone.attr('dropzoneid');
+				var dropzone = dropzones[id];
+				if (dropzone && dropzone.getAcceptedFiles().length > 0) {
+					dropzone.options.url = '/api/discs/' + retData._id + '/images';
+					dropzone.on('queuecomplete', function() {
+						$('#modify-disc-form').prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success'));
+						getDiscById(retData._id, function(err, disc) {
+							discs = _.filter(discs, function(curDisc){
+								return curDisc._id != disc._id;
+							});
+							discs.push(disc);
+							updateFilter(true);
+						});
+					})
+					dropzone.processQueue();
+				} else {
+					$('#modify-disc-form').prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success'));
+					updateFilter(true);
+				}
+			} else {
+				$('#modify-disc-form').prepend(generateError(retData.message, 'ERROR'));
+				fnLock = false;
+			}
+		});
+    }
+}
+
+/*
+* Generates the modal containing the form to either edit/create a disc
+*/
+// function generateDiscInputForm(disc) {
+// 	var isEdit = isDef(disc);
+// 	var discId = isEdit ? disc._id : '';
+	
+// 	var header = '<h4 class="modal-title">' + (isEdit ? 'Edit' : 'Create') + ' Disc</h4>';
+          
+//     var footer = '<button type="button" class="btn btn-default" fn-title="close">Close</button>' +
+// 		'<button type="button" class="btn btn-primary" fn-title="save" discId=' + discId + '><span><i class="fa fa-save fa-tools"></i></span>Save</button>';
+		
+// 	var form = '<form class="form-horizontal" role="form" discId="' + discId + '" autocomplete="off">' +
+// 				'<div class="form-group">' +
+// 	                '<label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>' +
+// 	                '<div class="col-sm-4">' +
+// 	                    '<input type="text" id="disc-brand" class="form-control text-assist" param="brand">' +
+// 	                '</div>' +
+// 	                '<label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>' +
+// 	                '<div class="col-sm-4">' +
+// 	                    '<input type="text" id="disc-name" class="form-control text-assist" param="name">' +
+// 	                '</div>' +
+// 	            '</div>' +
+// 	            '<div class="form-group">' +
+// 	                '<label class="col-sm-2 control-label">Type</label>' +
+// 	                '<div class="col-sm-4">' +
+// 	                    '<select id="disc-type" class="form-control" param="type">' +
+// 	                        '<option value=""' + (isEdit ? '' : 'selected') + '></option>' +
+// 	                        '<option value="Distance Driver">Distance Driver</option>' +
+// 	                        '<option value="Fairway Driver">Fairway Driver</option>' +
+// 	                        '<option value="Mid-range">Mid-range</option>' +
+// 	                        '<option value="Putt/Approach">Putt/Approach</option>' +
+// 	                        '<option value="Mini">Mini</option>' +
+// 	                     '</select>' +
+// 	                '</div>' +
+// 	                '<label class="col-sm-2 control-label">Material</label>' +
+// 	                '<div class="col-sm-4">' +
+// 	                    '<input type="text" id="disc-material" class="form-control text-assist" param="material">' +
+// 	                '</div>' +
+// 	            '</div>' +
+// 	            '<div class="form-group">' +
+// 	                '<label class="col-sm-2 control-label">Weight</label>' +
+// 	                '<div class="col-sm-4">' +
+// 	                    '<input type="text" id="disc-weight" class="form-control text-assist number-validate" param="weight">' +
+// 	                '</div>' +
+// 	                '<label class="col-sm-2 control-label">Color</label>' +
+// 	                '<div class="col-sm-4">' +
+// 	                    '<input type="text" id="disc-color" class="form-control text-assist" param="color">' +
+// 	                '</div>' +
+// 	            '</div>' +
+// 	            '<div class="accordion-container">' +
+// 	            	'<div class="accordion-header">' +
+// 	                    '<label class="no-select" param="advanced" aria-controls="collapseAdvanced"><span><i class="fa fa-chevron-right fa-tools"></i></span>Advanced</label>' +
+// 	                '</div>' +
+// 	                '<div class="advanced-area collapse" id="collapseAdvanced">' +
+// 			            '<div class="form-group">' +
+// 			                '<label class="col-sm-3 control-label">Speed</label>' +
+// 			                '<div class="col-sm-3">' +
+// 			                    '<input type="text" id="disc-speed" class="form-control text-assist weight-number-validate" param="speed">' +
+// 			                '</div>' +
+// 			                '<label class="col-sm-3 control-label">Glide</label>' +
+// 			                '<div class="col-sm-3">' +
+// 			                    '<input type="text" id="disc-glide" class="form-control text-assist number-validate" param="glide">' +
+// 			                '</div>' +
+// 			            '</div>' +
+// 			            '<div class="form-group">' +
+// 			                '<label class="col-sm-3 control-label">Turn</label>' +
+// 			                '<div class="col-sm-3">' +
+// 			                    '<input type="text" id="disc-turn" class="form-control text-assist number-validate" param="turn">' +
+// 			                '</div>' +
+// 			                '<label class="col-sm-3 control-label">Fade</label>' +
+// 			                '<div class="col-sm-3">' +
+// 			                    '<input type="text" id="disc-fade" class="form-control text-assist number-validate" param="fade">' +
+// 			                '</div>' +
+// 			            '</div>' +
+// 			            '<div class="form-group tag-input-group">' +
+// 			                '<label class="col-sm-2 control-label">Tags</label>' +
+// 			                '<div class="col-sm-10">' +
+// 			                    '<div style="position:relative">' +
+// 			                        '<div class="input-group add-disc-tag-container">' +
+// 			                            '<input type="text" class="form-control add-disc-tag">' +
+// 			                            '<span class="input-group-btn">' +
+// 			                                '<button class="btn btn-default add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>' +
+// 			                            '</span>' +
+// 			                        '</div>' +
+// 			                    '</div>' +
+// 			                '</div>' +
+// 			                '<div class="col-sm-10 col-sm-offset-2">' +
+// 			                    '<div class="tag-list-container">' +
+// 			                    '</div>' +
+// 			                '</div>' +
+// 			            '</div>' +
+// 			            '<div class="form-group">' +
+// 			                '<label class="col-sm-2 control-label">Notes</label>' +
+// 			                '<div class="col-sm-10">' +
+// 			                    '<textarea id="disc-notes" class="form-control create-disc-textarea" rows="3" param="notes"></textarea>' +
+// 			                '</div>' +
+// 			            '</div>' +
+// 			            '<div class="form-group">' +
+// 			                '<label class="col-sm-2 control-label">Public</label>' +
+// 			                '<div class="col-sm-4">' +
+// 			                    '<input type="checkbox" name="visible" param="visible" id="disc-visibility">' +
+// 			                '</div>' +
+// 			                '<label class="col-sm-3 control-label allow-icon">Condition<i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="condition"></i></label>' +
+// 			                '<div class="col-sm-3">' +
+// 			                    '<input type="text" id="disc-condition" class="form-control text-assist condition-number-validate" param="condition">' +
+// 			                '</div>' +
+// 			            '</div>' +
+// 	                '</div>' +
+// 	            '</div>' +
+// 	            '<div class="image-accordion-area">' +
+// 	            	(isEdit ? 
+// 		            '<div class="accordion-container">' +
+// 		                '<div class="accordion-header">' +
+// 		                    '<label class="current-images-label no-select" param="current-images" aria-expanded="true" aria-controls="collapseCurrentImages"><span><i class="fa fa-chevron-right fa-tools"></i></span>Current Pictures</label>' +
+// 		            	'</div>' +
+// 		            	'<div class="current-images-panel-collapse collapse" id="collapseCurrentImages">' +
+// 				            '<div class="image-list">' +
+// 				                '<div class="image-list-container image-list-container-simple">' +
+// 				                    '<div class="image-list-table" id="existing-image-list">' +
+// 				                    '</div>' +
+// 				                '</div>' +
+// 				            '</div>' +
+// 				        '</div>' +
+// 			        '</div>' : '') +
+// 		            '<div class="accordion-container">' +
+// 		                '<div class="accordion-header">' +
+// 		                    '<label class="add-images-label no-select" param="dropzone" aria-controls="collapseDropzone"><span><i class="fa fa-chevron-right fa-tools"></i></span>Add Pictures</label>' +
+// 		                '</div>' +
+// 		                '<div class="dropzone-panel-collapse collapse" id="collapseDropzone">' +
+// 		                    '<div class="image-list dropzone-area">' +
+// 		                        '<div class="image-list-container" id="dropzone-container">' +
+// 		                            '<div class="image-list-table" id="dropzone-previews">' +
+// 		                                '<div class="image-item-container image-add" id="dropzone-trigger">' +
+// 		                                    '<div class="image-item">' +
+// 		                                        '<div class="image-entity">' +
+// 		                                            '<span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>' +
+// 		                                        '</div>' +
+// 		                                    '</div>' +
+// 		                                '</div>' +
+// 		                            '</div>' +
+// 		                        '</div>' +
+// 		                    '</div>' +
+// 		                '</div>' +
+// 		            '</div>' +
+// 	            '</div>' +
+// 			'</form>';
+	
+// 	var modalParams = (isEdit ? getEditParams() : getCreateParams());
+	
+// 	generateModal({
+// 		header: header,
+// 		body: form,
+// 		footer: footer,
+// 		fns: modalParams.fns,
+// 		onCreate: function($inner) {
+// 		    createDropZone($inner.find('.dropzone-area'));
+		    
+// 			$inner.find('.accordion-container label').click(function(e) {
+// 				var param = $(this).attr('param');
+// 		        var $chevron = $(this).find('.fa');
+// 		        if ($chevron.hasClass('fa-chevron-right')) {
+// 		            $chevron.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+// 		        } else {
+// 		            $chevron.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+// 		        }
+// 		        if (param == 'dropzone') {
+// 		        	$('#collapseDropzone').collapse('toggle');
+// 		        } else if (param == 'current-images') {
+// 		        	$('#collapseCurrentImages').collapse('toggle');
+// 		        } else if (param == 'advanced') {
+// 		        	$('#collapseAdvanced').collapse('toggle');
+// 		        }
+// 		    });
+			
+// 			modalParams.onCreate($inner);
+// 		},
+// 		onShow: function($inner) {
+// 			var $tagInput = $inner.find('.add-disc-tag');
+// 			var $addCustomTag = $inner.find('.add-custom-tag');
+// 			var $tagContainer = $inner.find('.tag-list-container');
+// 			var tagTextAssist;
+			
+// 		    $addCustomTag.click(function(){
+// 		    	if ($tagInput.val().length > 0) {
+// 					$tagContainer.append(generateTagItem($tagInput.val()));
+// 		    		$tagInput.val('');
+// 		    	}
+// 		    });
+			
+// 			$('input[type=text]').focus(function(){
+// 			    $(this).one('mouseup', function(event){
+// 			        event.preventDefault;
+// 			    }).select();
+// 			});
+			
+// 			$inner.on('click', '.tag-item-remove', function(){
+// 				var $parent = $(this).parents('.tag-item');
+// 				$parent.remove();
+				
+// 				if ($tagContainer.is(':empty')){
+// 					$tagContainer.empty();
+// 				}
+// 			});
+			
+// 			$inner.find('.number-validate').on('focusin', function(e){
+// 				$(this).parent().removeClass('has-error');
+// 		    });
+			
+// 			$inner.find('.number-validate').on('focusout', function(e){
+// 				var val = $(this).val();
+// 				if (val != '' && !(/^-?\d+(\.\d+)?$/.test(val))) {
+// 					$(this).parent().addClass('has-error');
+// 				} else {
+// 					$(this).parent().removeClass('has-error');
+// 				}
+// 		    });
+		    
+// 		    $inner.find('.weight-number-validate').on('focusout', function(e){
+// 				var val = $(this).val();
+// 				if (val != '' && !(/^\d+(\.\d+)?$/.test(val))) {
+// 					$(this).parent().addClass('has-error');
+// 				} else {
+// 					$(this).parent().removeClass('has-error');
+// 				}
+// 		    });
+		    
+// 		    $inner.find('.condition-number-validate').on('focusout', function(e){
+// 				var val = $(this).val();
+// 				if (val != '' && !(/^\d\d?(\.\d)?$/.test(val))) {
+// 					$(this).parent().addClass('has-error');
+// 				} else {
+// 					$(this).parent().removeClass('has-error');
+// 				}
+// 		    });
+		    
+// 		    $inner.find('[tt="condition"]').tooltip({
+// 		    	delay: { "show": 200, "hide": 100 },
+// 		    	placement: 'top',
+// 		    	trigger: 'hover',
+// 		    	title: 'Condition based on Sleepy Scale. Must be an integer with 1 optional decimal place.',
+// 		    	template: '<div class="tooltip" role="tooltip" style="width: 150px;">' +
+// 		    				'<div class="tooltip-arrow"></div>' +
+// 		    				'<div class="tooltip-inner"></div>' +
+// 		    				'</div>'
+// 		    });
+			
+// 			/*
+// 			* Setup Autocomplete Handlers
+// 			*/
+			
+// 			$inner.find('.text-assist').each(function(index) {
+// 				new ZumpTextAssist({
+// 			        inputElement: $(this),
+// 			        searchProp: $(this).attr('param'),
+// 			        items: function() { return discs; }, 
+// 			        onSelection: function(item) {
+// 			        }
+// 			    });
+// 			});
+			
+// 			tagTextAssist = new ZumpTextAssist({
+// 				inputElement: $tagInput,
+// 				searchProp: 'tagList',
+// 				items: function() { return discs; }, 
+// 		        onSelection: function(item, reset) {
+// 		       		if (item.length > 0) {
+// 		        		$tagContainer.append(generateTagItem(item));
+// 		    			reset();
+// 		        	}
+// 		        }
+// 			});
+			
+// 			modalParams.onShow($inner);
+// 		},
+// 		onClose: function($inner) {
+			
+// 			var $dropzone = $inner.find('.dropzone-area');
+// 			var id = $dropzone.attr('dropzoneid');
+// 			var dropzone = dropzones.splice(id, 1)[0];
+			
+// 			modalParams.onClose($inner);
+// 		}
+// 	});
+// }
+
+/*
 * Generates the object needed to issue a edit disc modal
 */
-function getEditParams() {
-	return {
-		fns: [
-				{
-					name: 'close',
-					function: function($btn, $inner, done) {
-						if (fnLock) return;
-						done();
-					}
-				},
-				{
-					name: 'save',
-					function: function($btn, $inner, done) {
-						if (fnLock) return;
+// function getEditParams() {
+// 	return {
+// 		fns: [
+// 				{
+// 					name: 'close',
+// 					function: function($btn, $inner, done) {
+// 						if (fnLock) return;
+// 						done();
+// 					}
+// 				},
+// 				{
+// 					name: 'save',
+// 					function: function($btn, $inner, done) {
+// 						if (fnLock) return;
 						
-						fnLock = true;
-						$inner.find('div.alert').remove();
-						var disc = createDisc($inner, changeObject.curDisc);
-						var errorCount = $inner.find('.has-error').length;
-						if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
-							$inner.prepend(generateError('Brand and Name are required.', 'ERROR'));
-							fnLock = false;
-					    } else if (errorCount > 0) {
-					    	var errorText = '';
-					    	var errorLength = errorCount;
+// 						fnLock = true;
+// 						$inner.find('div.alert').remove();
+// 						var disc = createDisc($inner, changeObject.curDisc);
+// 						var errorCount = $inner.find('.has-error').length;
+// 						if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
+// 							$inner.prepend(generateError('Brand and Name are required.', 'ERROR'));
+// 							fnLock = false;
+// 					    } else if (errorCount > 0) {
+// 					    	var errorText = '';
+// 					    	var errorLength = errorCount;
 					    	
-					    	_.each($inner.find('.has-error'), function(element) {
-					    		if (errorLength > 1) {
-					    			errorText = errorText + $(element).prev().text() + ', ';
-					    		} else {
-					    			errorText = errorText + $(element).prev().text();
-					    		}
-					    		errorLength = errorLength - 1;
-					    	});
+// 					    	_.each($inner.find('.has-error'), function(element) {
+// 					    		if (errorLength > 1) {
+// 					    			errorText = errorText + $(element).prev().text() + ', ';
+// 					    		} else {
+// 					    			errorText = errorText + $(element).prev().text();
+// 					    		}
+// 					    		errorLength = errorLength - 1;
+// 					    	});
 					    	
-					    	$inner.prepend(generateError('Invalid data in ' + (errorCount > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
-							fnLock = false;
+// 					    	$inner.prepend(generateError('Invalid data in ' + (errorCount > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
+// 							fnLock = false;
 					    	
-					    } else if ($inner.find('div.alert').length == 0) {
-							putDisc(disc, function(success, retData) {
-								if (success) {
+// 					    } else if ($inner.find('div.alert').length == 0) {
+// 							putDisc(disc, function(success, retData) {
+// 								if (success) {
 									
-									var index = discs.indexOf(getDisc(retData._id));
-									discs[index] = retData;
+// 									var index = discs.indexOf(getDisc(retData._id));
+// 									discs[index] = retData;
 									
-									if (isDef(changeObject.imageRemovals)) {
-										_.each(changeObject.imageRemovals, function(imageId) {
-											deleteImage(imageId, function(success, data) {
-												if (success) {
-													//deleted disc image
-												}
-											});
-										});
-									}
+// 									if (isDef(changeObject.imageRemovals)) {
+// 										_.each(changeObject.imageRemovals, function(imageId) {
+// 											deleteImage(imageId, function(success, data) {
+// 												if (success) {
+// 													//deleted disc image
+// 												}
+// 											});
+// 										});
+// 									}
 									
-									var $dropzone = $inner.find('.dropzone-area');
-									var id = $dropzone.attr('dropzoneid');
-									var dropzone = dropzones[id];
-									if (dropzone && dropzone.getAcceptedFiles().length > 0) {
-										dropzone.options.url = '/api/discs/' + retData._id + '/images';
-										dropzone.on('queuecomplete', function() {
-											getDiscById(retData._id, function(err, disc) {
-												discs = _.filter(discs, function(curDisc){
-													return curDisc._id != disc._id;
-												});
-												discs.push(disc);
-												updateFilter(true);
-											});
+// 									var $dropzone = $inner.find('.dropzone-area');
+// 									var id = $dropzone.attr('dropzoneid');
+// 									var dropzone = dropzones[id];
+// 									if (dropzone && dropzone.getAcceptedFiles().length > 0) {
+// 										dropzone.options.url = '/api/discs/' + retData._id + '/images';
+// 										dropzone.on('queuecomplete', function() {
+// 											getDiscById(retData._id, function(err, disc) {
+// 												discs = _.filter(discs, function(curDisc){
+// 													return curDisc._id != disc._id;
+// 												});
+// 												discs.push(disc);
+// 												updateFilter(true);
+// 											});
 											
-											done();
-										})
+// 											done();
+// 										})
 										
-										dropzone.processQueue();
-									} else {
-										done();
-										updateFilter(true);
-									}
-								} else {
-									$inner.prepend(generateError(retData.message, 'ERROR'));
-									fnLock = false;
-								}
-							});
-					    }
-					}
-				}
-		],
-		onCreate : function($inner) {
-			changeObject = {};
+// 										dropzone.processQueue();
+// 									} else {
+// 										done();
+// 										updateFilter(true);
+// 									}
+// 								} else {
+// 									$inner.prepend(generateError(retData.message, 'ERROR'));
+// 									fnLock = false;
+// 								}
+// 							});
+// 					    }
+// 					}
+// 				}
+// 		],
+// 		onCreate : function($inner) {
+// 			changeObject = {};
 			
-			var discId = $inner.find('form').attr('discId');
-			changeObject.curDisc = copyDisc(discId);
+// 			var discId = $inner.find('form').attr('discId');
+// 			changeObject.curDisc = copyDisc(discId);
 			
-			var disc = changeObject.curDisc;
-			var tagList = disc['tagList'];
-			var $tagContainer = $inner.find('.tag-list-container');
-			var $imageContainer = $inner.find('#existing-image-list');
-			
+// 			var disc = changeObject.curDisc;
+// 			var tagList = disc['tagList'];
+// 			var $tagContainer = $inner.find('.tag-list-container');
+// 			var $imageContainer = $inner.find('#existing-image-list');
 	
-			$('#disc-brand').val(getSafe(disc.brand, ''));
-			$('#disc-name').val(getSafe(disc.name, ''));
-			$('#disc-material').val(getSafe(disc.material, ''));
-			$('#disc-type').val(getSafe(disc.type, ''));
-			$('#disc-weight').val(getSafe(disc.weight, ''));
-			$('#disc-color').val(getSafe(disc.color, ''));
-			$('#disc-speed').val(getSafe(disc.speed, ''));
-			$('#disc-glide').val(getSafe(disc.glide, ''));
-			$('#disc-turn').val(getSafe(disc.turn, ''));
-			$('#disc-fade').val(getSafe(disc.fade, ''));
-			$('#disc-notes').val(getSafe(disc.notes, ''));
-			$('#disc-condition').val(getSafe(disc.condition, ''));
+// 			$('#disc-brand').val(getSafe(disc.brand, ''));
+// 			$('#disc-name').val(getSafe(disc.name, ''));
+// 			$('#disc-material').val(getSafe(disc.material, ''));
+// 			$('#disc-type').val(getSafe(disc.type, ''));
+// 			$('#disc-weight').val(getSafe(disc.weight, ''));
+// 			$('#disc-color').val(getSafe(disc.color, ''));
+// 			$('#disc-speed').val(getSafe(disc.speed, ''));
+// 			$('#disc-glide').val(getSafe(disc.glide, ''));
+// 			$('#disc-turn').val(getSafe(disc.turn, ''));
+// 			$('#disc-fade').val(getSafe(disc.fade, ''));
+// 			$('#disc-notes').val(getSafe(disc.notes, ''));
+// 			$('#disc-condition').val(getSafe(disc.condition, ''));
 			
-			$('#disc-visibility').bootstrapSwitch('state', getSafe(disc.visible, true));
+// 			$('#disc-visibility').bootstrapSwitch('state', getSafe(disc.visible, true));
 			
-			$inner.find('.current-images-label').click(function(e) {
-		        var $chevron = $(this).find('.fa');
-		        if ($chevron.hasClass('fa-chevron-right')) {
-		        	if ($('#collapseCurrentImages').find('.image-item-container').length > 0) {
-			            $chevron.removeClass('fa-chevron-right').addClass('fa-chevron-down');
-			        	$('#collapseCurrentImages').collapse('show');
-		        	}
-		        } else {
-		            $chevron.removeClass('fa-chevron-down').addClass('fa-chevron-right');
-		        	$('#collapseCurrentImages').collapse('hide');
-		        }
-		    });
+// 			$inner.find('.current-images-label').click(function(e) {
+// 		        var $chevron = $(this).find('.fa');
+// 		        if ($chevron.hasClass('fa-chevron-right')) {
+// 		        	if ($('#collapseCurrentImages').find('.image-item-container').length > 0) {
+// 			            $chevron.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+// 			        	$('#collapseCurrentImages').collapse('show');
+// 		        	}
+// 		        } else {
+// 		            $chevron.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+// 		        	$('#collapseCurrentImages').collapse('hide');
+// 		        }
+// 		    });
 		    
-		    $imageContainer.on('click', '.image-remove', function() {
-				var $imageContainer = $inner.find('#existing-image-list');
-		    	var $parent = $(this).parents('.image-item-container');
-		    	var imageId = $parent.attr('imageid');
-		    	var disc = changeObject.curDisc;
+// 		    $imageContainer.on('click', '.image-remove', function() {
+// 				var $imageContainer = $inner.find('#existing-image-list');
+// 		    	var $parent = $(this).parents('.image-item-container');
+// 		    	var imageId = $parent.attr('imageid');
+// 		    	var disc = changeObject.curDisc;
 		    	
-		    	$parent.remove();
+// 		    	$parent.remove();
 		    	
-		    	if (!isDef(changeObject.imageRemovals)) {
-		    		changeObject.imageRemovals = [];
-		    	}
+// 		    	if (!isDef(changeObject.imageRemovals)) {
+// 		    		changeObject.imageRemovals = [];
+// 		    	}
 		    	
-		    	if (disc.primaryImage == imageId) {
-		    		var $images = $imageContainer.find('.image-item-container');
-		    		if ($images.length) {
-		    			var $newPrimary = $images.first();
-		    			disc.primaryImage = $newPrimary.attr('imageid');
-		    			updateExistingImage(disc.primaryImage);
-		    		} else {
-		    			disc.primaryImage = '';
-		    		}
-		    	}
+// 		    	if (disc.primaryImage == imageId) {
+// 		    		var $images = $imageContainer.find('.image-item-container');
+// 		    		if ($images.length) {
+// 		    			var $newPrimary = $images.first();
+// 		    			disc.primaryImage = $newPrimary.attr('imageid');
+// 		    			updateExistingImage(disc.primaryImage);
+// 		    		} else {
+// 		    			disc.primaryImage = '';
+// 		    		}
+// 		    	}
 		    	
-		    	changeObject.imageRemovals.push(imageId);
-		    });
+// 		    	changeObject.imageRemovals.push(imageId);
+// 		    });
 		    
-		    $imageContainer.on('click', '.image-make-primary', function() {
-		    	var $parent = $(this).parents('.image-item-container');
-		    	var imageId = $parent.attr('imageid');
-		    	var disc = changeObject.curDisc;
+// 		    $imageContainer.on('click', '.image-make-primary', function() {
+// 		    	var $parent = $(this).parents('.image-item-container');
+// 		    	var imageId = $parent.attr('imageid');
+// 		    	var disc = changeObject.curDisc;
 		    	
-		    	disc.primaryImage = imageId;
-		    	updateExistingImage(imageId);
-		    });
+// 		    	disc.primaryImage = imageId;
+// 		    	updateExistingImage(imageId);
+// 		    });
 			
-		    _.each(tagList, function(tag) {
-		    	$tagContainer.append(generateTagItem(tag));
-		    });
+// 		    _.each(tagList, function(tag) {
+// 		    	$tagContainer.append(generateTagItem(tag));
+// 		    });
 			
-			getAllDiscImages(discId, function(success, images) { 
-				if (success) {
-					var primaryImage = disc.primaryImage;
-					_.each(images, function(image) {
-						$imageContainer.append(generateImageItem(primaryImage, image));
-					});
-				}	
-			});
-		},
-		onShow : function() {
+// 			getAllDiscImages(discId, function(success, images) { 
+// 				if (success) {
+// 					var primaryImage = disc.primaryImage;
+// 					_.each(images, function(image) {
+// 						$imageContainer.append(generateImageItem(primaryImage, image));
+// 					});
+// 				}	
+// 			});
+// 		},
+// 		onShow : function() {
 			
-		},
-		onClose: function($inner) {
-			fnLock = false;
-		}
-	};
-}
+// 		},
+// 		onClose: function($inner) {
+// 			fnLock = false;
+// 		}
+// 	};
+// }
 
 /*
 * Locates an image source and updates with correct file path
@@ -2229,99 +2745,99 @@ function updateExistingImage(imageId) {
 			
 		$overlay.find('.image-make-primary').remove();
 		$overlay.after('<div class="image-overlay-static">' +
-												'<div class="primary-image-banner-static">' +
-													'<i class="fa fa-star fa-lg"></i>' +
-												'</div>' +
-											'</div>');
+							'<div class="primary-image-banner-static">' +
+								'<i class="fa fa-star fa-lg"></i>' +
+							'</div>' +
+						'</div>');
 	}
 }
 
 /*
 * Generates the object needed to issue a create disc modal
 */
-function getCreateParams() {
-	return {
-		fns: [
-				{
-					name: 'close',
-					function: function($btn, $inner, done) {
-						done();
-					}
-				},
-				{
-					name: 'save',
-					function: function($btn, $inner, done) {
-						$inner.find('div.alert').remove();
-						var disc = createDisc($inner);
-						var errorCount = $inner.find('.has-error').length;
-						if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
-							$inner.prepend(generateError('Brand and Name are required.', 'ERROR'));
-					    } else if (errorCount > 0) {
-					    	var errorText = '';
-					    	var errorLength = errorCount;
+// function getCreateParams() {
+// 	return {
+// 		fns: [
+// 				{
+// 					name: 'close',
+// 					function: function($btn, $inner, done) {
+// 						done();
+// 					}
+// 				},
+// 				{
+// 					name: 'save',
+					// function: function($btn, $inner, done) {
+					// 	$inner.find('div.alert').remove();
+					// 	var disc = createDisc($inner);
+					// 	var errorCount = $inner.find('.has-error').length;
+					// 	if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
+					// 		$inner.prepend(generateError('Brand and Name are required.', 'ERROR'));
+					//     } else if (errorCount > 0) {
+					//     	var errorText = '';
+					//     	var errorLength = errorCount;
 					    	
-					    	_.each($inner.find('.has-error'), function(element) {
-					    		if (errorLength > 1) {
-					    			errorText = errorText + $(element).prev().text() + ', ';
-					    		} else {
-					    			errorText = errorText + $(element).prev().text();
-					    		}
-					    		errorLength = errorLength - 1;
-					    	});
+					//     	_.each($inner.find('.has-error'), function(element) {
+					//     		if (errorLength > 1) {
+					//     			errorText = errorText + $(element).prev().text() + ', ';
+					//     		} else {
+					//     			errorText = errorText + $(element).prev().text();
+					//     		}
+					//     		errorLength = errorLength - 1;
+					//     	});
 					    	
-					    	$inner.prepend(generateError('Invalid data in ' + (errorCount > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
+					//     	$inner.prepend(generateError('Invalid data in ' + (errorCount > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
 					    	
-					    } else if ($inner.find('div.alert').length == 0) {
-					    	postDisc(disc, function(success, retData) {
-								if (success) {
-									discs.push(retData);
-									var $dropzone = $inner.find('.dropzone-area');
-									var id = $dropzone.attr('dropzoneid');
-									var dropzone = dropzones[0];
-									if (dropzone && dropzone.getAcceptedFiles().length > 0) {
-										dropzone.options.url = '/api/discs/' + retData._id + '/images';
-										dropzone.on('queuecomplete', function() {
-											$inner.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success'));
-											autoCloseAlert($inner.find('.alert'), 2000);
-											getDiscById(retData._id, function(err, disc) {
-												discs = _.filter(discs, function(curDisc){
-													return curDisc._id != disc._id;
-												});
-												discs.push(disc);
-												updateFilter(true);
-											});
-											$inner.find('form').trigger("reset");
+					//     } else if ($inner.find('div.alert').length == 0) {
+					//     	postDisc(disc, function(success, retData) {
+					// 			if (success) {
+					// 				discs.push(retData);
+					// 				var $dropzone = $inner.find('.dropzone-area');
+					// 				var id = $dropzone.attr('dropzoneid');
+					// 				var dropzone = dropzones[0];
+					// 				if (dropzone && dropzone.getAcceptedFiles().length > 0) {
+					// 					dropzone.options.url = '/api/discs/' + retData._id + '/images';
+					// 					dropzone.on('queuecomplete', function() {
+					// 						$inner.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success'));
+					// 						autoCloseAlert($inner.find('.alert'), 2000);
+					// 						getDiscById(retData._id, function(err, disc) {
+					// 							discs = _.filter(discs, function(curDisc){
+					// 								return curDisc._id != disc._id;
+					// 							});
+					// 							discs.push(disc);
+					// 							updateFilter(true);
+					// 						});
+					// 						$inner.find('form').trigger("reset");
 											
-											$('#dropzone-trigger').siblings().remove();
-											dropzone.disable();
-											dropzone.enable();
-										})
+					// 						$('#dropzone-trigger').siblings().remove();
+					// 						dropzone.disable();
+					// 						dropzone.enable();
+					// 					})
 										
-										dropzone.processQueue();
-									} else {
-										$inner.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success'));
-										autoCloseAlert($inner.find('.alert'), 2000);
-										updateFilter(true);
-										$('#createDiscForm').trigger("reset");
-									}
-								} else {
-									$inner.prepend(generateError(retData.message, 'ERROR'));
-								}
-							});
-					    }	
-					}
-				}
-		],
-		onCreate : function($inner) {
-			$('#disc-visibility').bootstrapSwitch('state', true);
-		},
-		onShow : function($inner) {
+					// 					dropzone.processQueue();
+					// 				} else {
+					// 					$inner.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success'));
+					// 					autoCloseAlert($inner.find('.alert'), 2000);
+					// 					updateFilter(true);
+					// 					$('#createDiscForm').trigger("reset");
+					// 				}
+					// 			} else {
+					// 				$inner.prepend(generateError(retData.message, 'ERROR'));
+					// 			}
+					// 		});
+					//     }	
+					// }
+// 				}
+// 		],
+// 		onCreate : function($inner) {
+// 			$('#disc-visibility').bootstrapSwitch('state', true);
+// 		},
+// 		onShow : function($inner) {
 			
-		},
-		onClose: function($inner) {
-		}
-	}
-}
+// 		},
+// 		onClose: function($inner) {
+// 		}
+// 	}
+// }
 
 /*
 * Creates a disc based on a HTML form
@@ -2638,18 +3154,18 @@ function renderPlot() {
 function showPlot(prop, propName, type) {
 	
 	if (isDef(prop)) {
-    	chartProp = prop;
+    	chartData.chartProp = prop;
 	}
 	
 	if (isDef(propName)) {
-    	chartPropName = propName;
+    	chartData.chartPropName = propName;
 	}
 	
 	if (isDef(type)) {
-    	chartType = type;
+    	chartData.chartType = type;
 	}
    
-	var discList = _.groupBy(myFilter.filter(discs, false), chartProp);
+	var discList = _.groupBy(myFilter.filter(discs, false), chartData.chartProp);
     var data = [];
     var isSingleUnit = true;
     
@@ -2663,8 +3179,8 @@ function showPlot(prop, propName, type) {
         });
     }
     
-    var chartData = getChartData(chartType, 
-    	chartPropName, data.length == 1, isSingleUnit);
+    var chartData = getChartData(chartData.chartType, 
+    	chartData.chartPropName, data.length == 1, isSingleUnit);
     chartData.data[0].dataPoints = data;
     
    $("#statistics-plot").CanvasJSChart(chartData);
@@ -2733,7 +3249,7 @@ var ZumpMessenger = function(opt) {
 	var newMessageCount = 0;
 	var activeThread;
 	var activateThread;
-	var sendOnEnter = false;
+	var sendOnEnter = true;
 	var enterLock = true;
 	
     //----------------------\
@@ -2807,6 +3323,30 @@ var ZumpMessenger = function(opt) {
 		resizeMessageArea();
 	}
 	
+	this.handleMessage = function(message) {
+		if (pageSettings.activePage == '#pg-inbox' && activeThread.threadId == message.threadId) {
+			var thread = getThread(message.threadId);
+			thread.messageCount += 1;
+			thread.currentMessageCount += 1;
+			thread.modifiedDate = message.createDate;
+			
+			putThreadState(thread.threadId, {messageCount: thread.messageCount});
+			$inboxList.prepend($('li.thread-container[threadId="' + message.threadId + '"]'));
+			appendMessage(message);
+	    	$messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
+	    	updateThread(thread);
+	    	
+		} else {
+			var thread = getThread(message.threadId);
+			thread.currentMessageCount += 1;
+			thread.modifiedDate = message.createDate;
+			$('li.thread-container[threadId="' + thread.threadId + '"]').remove();
+			threads = _.reject(threads, function(threadObj) { return threadObj.threadId == thread.threadId; });
+			threads.unshift(thread);
+			appendThread(thread);
+		}
+	}
+	
 	//----------------------\
     // Private Functions
     //----------------------/
@@ -2816,8 +3356,9 @@ var ZumpMessenger = function(opt) {
     	$messageContainer.css({
     		height: height + 'px',
     		maxHeight: height + 'px'
-    	})
-	    $messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 500);
+    	});
+    	
+	    $messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
     }
     
     var setupListeners = function() {
@@ -2841,6 +3382,8 @@ var ZumpMessenger = function(opt) {
 			
 			sendOnEnter = !sendOnEnter;
 		});
+		
+		$newMessage.on('keydown', onKeyDown);
     }
     
     var sendMessage = function() {
@@ -2854,7 +3397,13 @@ var ZumpMessenger = function(opt) {
 			if (success) {
 				$newMessage.val('');
 				appendMessage(message);
-	        	$messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 500);
+	        	$messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
+	        	
+	        	var thread = getThread(message.threadId);
+	        	thread.messageCount += 1;
+				thread.currentMessageCount += 1;
+				thread.modifiedDate = message.createDate;
+				updateThread(thread);
 			}
 		});
     }
@@ -2883,17 +3432,23 @@ var ZumpMessenger = function(opt) {
 		if (!thread) return;
 		
 		activeThread = thread;
+		var $threadContainer = $('.thread-container[threadId="' + threadId + '"]');
 		
-		$('.thread-container[threadId="' + threadId + '"]').addClass('thread-open').siblings().removeClass('thread-open');
+		$threadContainer.addClass('thread-open').siblings().removeClass('thread-open');
 		$threadTitle.text(thread.threadTag);
 		
 		activateThread();
-		updateThread(thread);
+		
+		setThreadState($threadContainer, false);
+		setThread(thread);
     }
     
-    var updateThread = function(thread) {
+    var setThread = function(thread) {
     	getMessages(thread.threadId, function(success, messages) {
     		if (success) {
+    			thread.messageCount = messages.length;
+				updateMessageCount();
+				
     			messageList = messages;
     			$messageContainer.empty();
     			// Handle paged list
@@ -2902,9 +3457,19 @@ var ZumpMessenger = function(opt) {
     				appendMessage(message);
     			});
     			
-		        $messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 500);
+		        $messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
     		}
     	});
+    }
+    
+    var setThreadState = function($threadContainer, isNew) {
+    	if (!isNew) {
+    		$threadContainer.removeClass('thread-new');
+    		$threadContainer.find('.thread-icon i').removeClass('fa-square').addClass('fa-square-o');
+    	} else {
+    		$threadContainer.addClass('thread-new');
+    		$threadContainer.find('.thread-icon i').removeClass('fa-square-o').addClass('fa-square');
+    	}
     }
     
     var appendMessage = function(message) {
@@ -2924,12 +3489,17 @@ var ZumpMessenger = function(opt) {
         
         var userPhoto = userPhotoCache[message.userId];
         if (typeof(userPhoto) !== 'undefined') {
-        	$message.find('.message-user').css('background-image', 'url("' + userPhoto + '")');
+        	if (userPhoto != '') $message.find('.message-user').css('background-image', 'url("' + userPhoto + '")');
         } else {
+        	userPhotoCache[message.userId] = '';
         	getUser(message.userId, function(success, user) {
         		if (success) {
         			userPhotoCache[user._id] = user.image;
-        			$messageContainer.find('.thread-message[messageId="' + message._id + '"]').find('.message-user').css('background-image', 'url("' + user.image + '")');
+        			
+        			var msgByUser = _.where(messageList, {userId: user._id});
+        			_.each(msgByUser, function(msg) {
+        				$messageContainer.find('.thread-message[messageId="' + msg._id + '"]').find('.message-user').css('background-image', 'url("' + user.image + '")');
+        			});
         		}
         	})
         }
@@ -2948,19 +3518,34 @@ var ZumpMessenger = function(opt) {
     			_.each(threads, function(thread) {
     				appendThread(thread);
     			});
-    			
-    			updateMessageCount();
     		}
     	});
     }
     
     var getThread = function(id) {
-		return _.first(_.where(threads, {'_id' : id}));
+		return _.first(_.where(threads, {'threadId' : id}));
+    }
+    
+    var updateThread = function(thread) {
+    	var $thread = $('li.thread-container[threadId="' + thread.threadId + '"]');
+    	var isActive = $thread.hasClass('active');
+    	if ($thread.length) {
+    		$thread.empty();
+    		populateThreadContainer($thread, thread);
+    		if (isActive) $thread.addClass('active');
+    	}
+    	updateMessageCount();
     }
     
     var appendThread = function(thread) {
+    	var $threadContainer = $('<li class="thread-container hover-active" threadId="' + thread.threadId + '">');
+    	populateThreadContainer($threadContainer, thread);
+        $inboxList.append($threadContainer);
+    	updateMessageCount();
+    }
+    
+    var populateThreadContainer = function($threadContainer, thread) {
     	var isNew = thread.currentMessageCount > thread.messageCount;
-    	var $threadContainer = $('<li class="thread-container hover-active' + (isNew ? ' thread-new' : '') + '" threadId="' + thread._id + '">');
     	
     	var hasPhoto = typeof(thread.threadPhoto) !== 'undefined';
     	var date = new Date(thread.modifiedDate);
@@ -2969,7 +3554,7 @@ var ZumpMessenger = function(opt) {
     							(!hasPhoto ? '<span><i class="fa fa-user"></i></span>' : '') +
                             '</div>' +
                             '<div class="thread-icon">' +
-                                '<span><i class="fa fa-square' + (isNew ? '' : '-o') + '"></i></span>' +
+                                '<span><i class="fa fa-square-o"></i></span>' +
                             '</div>' +
                             '<div class="thread-details-container">' +
                                 '<div class="thread-details">' +
@@ -2980,18 +3565,22 @@ var ZumpMessenger = function(opt) {
                                 '</div>' +
                             '</div>' +
                             '<div class="clearfix"></div>');
-                            
-        if (thread.currentMessageCount > thread.messageCount) {
-        	$threadContainer.addClass('thread-new');
-        }
-        
-        $inboxList.append($threadContainer);
-        
-        newMessageCount += (thread.currentMessageCount - thread.messageCount);
+    	setThreadState($threadContainer, isNew);
     }
     
     var updateMessageCount = function() {
-    	$messageCount.text(newMessageCount > 0 ? newMessageCount : '');
+    	var messageCount = 0;
+    	
+    	_.each(threads, function(thread) {
+    		messageCount += (thread.currentMessageCount - thread.messageCount);
+    	});
+    	
+    	if (messageCount > 0) {
+			$messageCount.text(messageCount);
+    	} else {
+    		$messageCount.text('');
+    	}
+		
     }
 	
 	this.init(opt);
@@ -4571,7 +5160,7 @@ var ZumpTextAssist = function(opt) {
         /*
         * Resize result container dropdown on resize of page
         */
-        $(document).on('resize', function(){
+        $(window).on('resize', function(){
            resizeResultContainer();
         });
         
@@ -4715,6 +5304,10 @@ var ZumpTextAssist = function(opt) {
     
     this.resetInput = function() {
     	updateInput('', true);
+    }
+    
+    this.triggerResize = function() {
+    	resizeResultContainer();
     }
     
     
