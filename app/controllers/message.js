@@ -21,7 +21,7 @@ function getLocalThreadObj(localThread, callback) {
     
     var localThreadObj = localThread.toObject();
     
-    Thread.findById(localThreadObj.threadId, function(err, thread) {
+    Thread.findOne({_id: localThreadObj.threadId}, function(err, thread) {
         if (err)
             return callback(Error.createError(err, Error.internalError));
         
@@ -119,7 +119,7 @@ function sendMessage(userId, threadId, messageObj, callback) {
             
             notifyUsers(message, userId);
             
-            Thread.findById(localThread.threadId, function(err, thread) {
+            Thread.findOne({_id: localThread.threadId}, function(err, thread) {
                 thread.modifiedDate = message.createDate;
                 thread.messageCount = thread.messageCount + 1;
                 localThread.messageCount = thread.messageCount;

@@ -1,9 +1,14 @@
 // app/models/messageAccess.js
 
 var mongoose = require('mongoose');
+var shortId = require('shortid');
 
 var threadLocalSchema = mongoose.Schema({
-
+    _id: {
+	    type: String,
+	    unique: true,
+	    default: shortId.generate
+	},
     userId          : {type: String},
     isPrivate       : {type: Boolean, default: false},
     threadId        : {type: String},

@@ -26,7 +26,7 @@ module.exports = function(passport) {
     });
 
     passport.deserializeUser(function(id, done) {
-        User.findById(id, function(err, user) {
+        User.findOne({_id: id}, function(err, user) {
             done(err, user);
         });
     });
@@ -218,7 +218,7 @@ module.exports = function(passport) {
                     if (err) { return done(err); }
                     if (!token) { return done(null, false); }
         
-                    User.findById(token.userId, function(err, user) {
+                    User.findOne({_id: token.userId}, function(err, user) {
                         if (err) { return done(err); }
                         if (!user) { return done(null, false, { message: 'Unknown user' }); }
         

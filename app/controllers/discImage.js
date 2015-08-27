@@ -19,7 +19,7 @@ module.exports = {
 }
 
 function createThumbnail(gm, gfs, discImage, callback) {
-	gfs.files.find({_id:mongoose.Types.ObjectId(discImage.fileId)}).toArray(function(err, files) {
+	gfs.files.find({_id: mongoose.Types.ObjectId(discImage.fileId)}).toArray(function(err, files) {
         if(err)
             return callback(err);
         
@@ -89,7 +89,7 @@ function getDiscImages(userId, discId, callback) {
 
 /// Get Image by Id and User
 function getDiscImage(userId, imageId, callback) {
-	DiscImage.findById(imageId, function(err, image) {
+	DiscImage.findOne({_id: imageId}, function(err, image) {
 		if (err) 
 			return callback(Error.createError(err, Error.internalError));
 			
@@ -115,7 +115,7 @@ function postDiscImage(userId, discId, fileId, callback) {
 		if (err) {
 			return callback(Error.createError(err, Error.internalError));
 		} else {
-			Disc.findById(discId, function(err, disc) {
+			Disc.findOne({_id: discId}, function(err, disc) {
 				if (!err && !_.isEmpty(disc) && !disc.primaryImage) {
 					disc.primaryImage = savedDiscImage._id;
 					
@@ -147,7 +147,7 @@ function deleteDiscImage(userId, imageId, gfs, callback) {
 		if (_.isEmpty(discImage))
 			return callback(null, discImage);
 		
-		Disc.findById(discImage.discId, function(err, disc) {
+		Disc.findOne({_id: discImage.discId}, function(err, disc) {
 			if (!err && !disc && !_.isEmpty(disc)) {
 				if (disc.primaryImage == discImage._id) {
 					DiscImage.findOne({fileId : {'$ne': discImage.fileId }}, function (err, nextImage) {

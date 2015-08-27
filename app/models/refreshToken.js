@@ -1,9 +1,14 @@
 // app/models/refreshToken.js
 
 var mongoose = require('mongoose');
+var shortId = require('shortid');
 
 var refreshTokenSchema = mongoose.Schema({
-
+    _id: {
+	    type: String,
+	    unique: true,
+	    default: shortId.generate
+	},
     userId: {
         type: String,
         required: true
