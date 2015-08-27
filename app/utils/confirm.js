@@ -10,7 +10,7 @@ var Error = require('../utils/error');
 
 module.exports = {
     initializeConfirm : function(userId, callback) {
-        User.findById(userId, function(err, user) {
+        User.findOne({_id: userId}, function(err, user) {
            if (err)
 			    return callback(Error.createError(err, Error.internalError));
             
@@ -46,7 +46,7 @@ module.exports = {
             if (!confirm)
                 return callback(Error.createError('The confirmation request does not exist.', Error.objectNotFoundError));
             
-            User.findById(confirm.userId, function(err, user) {
+            User.findOne({_id: confirm.userId}, function(err, user) {
                 if (err)
 	                return callback(Error.createError(err, Error.internalError));
                     

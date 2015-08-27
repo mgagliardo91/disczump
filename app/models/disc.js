@@ -1,9 +1,14 @@
 // app/models/disc.js
 
 var mongoose = require('mongoose');
+var shortId = require('shortid');
 
 var discSchema = mongoose.Schema({
-
+    _id: {
+	    type: String,
+	    unique: true,
+	    default: shortId.generate
+	},
     userId          : String,
     brand           : String,
     name            : String,

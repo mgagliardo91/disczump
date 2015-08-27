@@ -1,9 +1,14 @@
 // app/models/client.js
 
 var mongoose = require('mongoose');
+var shortId = require('shortid');
 
 var clientSchema = mongoose.Schema({
-
+    _id: {
+	    type: String,
+	    unique: true,
+	    default: shortId.generate
+	},
     name: {
         type: String,
         unique: true,

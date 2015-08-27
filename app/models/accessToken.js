@@ -2,9 +2,14 @@
 
 var mongoose = require('mongoose');
 var TTL = require('../../config/config.js').tokenTTL;
+var shortId = require('shortid');
 
 var accessTokenSchema = mongoose.Schema({
-
+    _id: {
+	    type: String,
+	    unique: true,
+	    default: shortId.generate
+	},
     userId: {
         type: String,
         required: true

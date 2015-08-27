@@ -49,7 +49,7 @@ server.exchange(oauth2orize.exchange.refreshToken(function(client, refreshToken,
         if (!token) { return done(null, false); }
         if (!token) { return done(null, false); }
 
-        User.findById(token.userId, function(err, user) {
+        User.findOne({_id: token.userId}, function(err, user) {
             if (err) { return done(err); }
             if (!user) { return done(null, false); }
 

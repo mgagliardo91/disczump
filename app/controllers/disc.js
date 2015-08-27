@@ -34,7 +34,7 @@ function getDiscs(reqUserId, userId, callback) {
 }
 
 function getDisc(userId, discId, callback) {
-    Disc.findById(discId, function(err, disc) {
+    Disc.findOne({_id: discId}, function(err, disc) {
         if (err)
             return callback(Error.createError(err, Error.internalError));
         

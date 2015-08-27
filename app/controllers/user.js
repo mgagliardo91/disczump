@@ -25,7 +25,7 @@ module.exports = {
 function getUserInfo(userId, callback) {
 	var userInfo = {};
 	
-	User.findById(userId, function(err, user) {
+	User.findOne({_id: userId}, function(err, user) {
        if (err) 
 			return callback(Error.createError(err, Error.internalError));
 			
@@ -39,7 +39,7 @@ function getUserInfo(userId, callback) {
 }
 
 function getUser(userId, callback) {
-	User.findById(userId, function(err, user) {
+	User.findOne({_id: userId}, function(err, user) {
        if (err) 
 			return callback(Error.createError(err, Error.internalError));
 			
@@ -50,7 +50,7 @@ function getUser(userId, callback) {
 }
 
 function getAlias(userId, callback) {
-	User.findById(userId, function(err, user) {
+	User.findOne({_id: userId}, function(err, user) {
        if (err) 
 			return callback(Error.createError(err, Error.internalError));
 		
@@ -69,7 +69,7 @@ function getAlias(userId, callback) {
 }
 
 function updateAccessCount(userId, platform) {
-	User.findById(userId, function(err, user) {
+	User.findOne({_id: userId}, function(err, user) {
         if (!err && user) {
 			user.local.accessCount[platform] += 1;
 			user.save();
@@ -78,7 +78,7 @@ function updateAccessCount(userId, platform) {
 }
 
 function updateActivity(userId) {
-	User.findById(userId, function(err, user) {
+	User.findOne({_id: userId}, function(err, user) {
         if (!err && user) {
 			user.local['last_access'] = Date.now();
 			user.save();
@@ -91,7 +91,7 @@ function checkPassword(password) {
 }
 
 function getAccount(userId, callback) {
-	User.findById(userId, function(err, user) {
+	User.findOne({_id: userId}, function(err, user) {
        if (err) 
 			return callback(Error.createError(err, Error.internalError));
 		
@@ -103,7 +103,7 @@ function getAccount(userId, callback) {
 }
 
 function getPreferences(userId, callback) {
-    User.findById(userId, function(err, user) {
+    User.findOne({_id: userId}, function(err, user) {
        if (err) 
 			return callback(Error.createError(err, Error.internalError));
 		
@@ -115,7 +115,7 @@ function getPreferences(userId, callback) {
 }
 
 function restorePreferences(userId, callback) {
-	User.findById(userId, function(err, user) {
+	User.findOne({_id: userId}, function(err, user) {
        if (err) 
 			return callback(Error.createError(err, Error.internalError));
 		
@@ -134,7 +134,7 @@ function restorePreferences(userId, callback) {
 }
 
 function updatePreferences(userId, prefs, callback) {
-    User.findById(userId, function(err, user) {
+    User.findOne({_id: userId}, function(err, user) {
        if (err) 
 			return callback(Error.createError(err, Error.internalError));
 		
@@ -175,7 +175,7 @@ function updatePreferences(userId, prefs, callback) {
 }
 
 function updateAccount(userId, account, callback) {
-	User.findById(userId, function(err, user) {
+	User.findOne({_id: userId}, function(err, user) {
        if (err) 
 			return callback(Error.createError(err, Error.internalError));
 		
@@ -215,7 +215,7 @@ function resetPassword(userId, password, callback) {
 		    Error.invalidDataError));
     }
 	
-	 User.findById(userId, function(err, user) {
+	 User.findOne({_id: userId}, function(err, user) {
         if (err)
 			return callback(Error.createError(err, Error.internalError));
         
@@ -233,7 +233,7 @@ function resetPassword(userId, password, callback) {
 }
 
 function tryResetPassword(userId, currentPw, newPw, callback) {
-	 User.findById(userId, function(err, user) {
+	 User.findOne({_id: userId}, function(err, user) {
         if (err)
 			return callback(Error.createError(err, Error.internalError));
         
@@ -251,7 +251,7 @@ function tryResetPassword(userId, currentPw, newPw, callback) {
 }
 
 function deleteUser(userId, gfs, callback) {
-	User.findById(userId, function (err, user) {
+	User.findOne({_id: userId}, function (err, user) {
 		if (err)
 			return callback(Error.createError(err, Error.internalError));
 			
