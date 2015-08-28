@@ -59,7 +59,7 @@ function saveImage(gm, gfs, readStream, fileParams, callback) {
     	callback(file);
       });
       
-    gm(readStream).quality(90).size({bufferStream: true}, function(err, size) {
+    gm(readStream).autoOrient().quality(90).size({bufferStream: true}, function(err, size) {
     	if (err)
     		console.log(err);
     	

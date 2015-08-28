@@ -110,7 +110,7 @@ module.exports = function(passport) {
     }));
     
     passport.use('local-signup', new LocalStrategy({
-        usernameField : 'username',
+        usernameField : 'email',
         passwordField : 'password',
         passReqToCallback : true
     },
@@ -123,7 +123,6 @@ module.exports = function(passport) {
 
             if (user) {
                 return done(null, false, req.flash('error', 'Email already in use.'));
-                
             } else {
                 
                 if (!UserController.checkPassword(password)) {
@@ -134,34 +133,49 @@ module.exports = function(passport) {
                     return done(null, false, req.flash('error', 'A valid zip code is required to create an account.'));
                 }
                 
-                var newUser  = new User();
-                
-                newUser.local.email    = username;
-                newUser.local.password = newUser.generateHash(password);
-                newUser.local.zipCode  = req.body.zipCode;
-                
-                
-                if (!(typeof req.body.alias === 'undefined')) {
-                    newUser.local.alias = req.body.alias;
+                if (!_.has(req.body, 'username') || !UserController.checkUsername(req.body.username)) {
+                    return done(null, false, req.flash('error', 'A valid username is required to create an account.'));
                 }
                 
-                if (!(typeof req.body.pdgaNumber === 'undefined')) {
-                    newUser.local.pdgaNumber = req.body.pdgaNumber;
-                }
-                
-                if (req.body.passcode) {
-                    newUser.local.passcode = req.body.passcode;
-                }
-
-                newUser.save(function(err) {
-                    if (err)
-                        throw err;
-                        
-                    logger.info('Created new user %s.', newUser.local.email);
-                    newUser.addEvent('Account created.');
-                    EventController.createEvent(newUser._id, EventController.types.AccountCreation);
+                UserController.query('local.email', req.body.username, function(err, users) {
+                    if (err || users.length > 0) {
+                        return done(null, false, req.flash('error', 'The username [' + req.body.username + '] is already in use.'));
+                    }
                     
-                    return done(null, newUser);
+                    var newUser  = new User();
+                
+                    newUser.local.email    = username;
+                    newUser.local.password = newUser.generateHash(password);
+                    newUser.local.zipCode  = req.body.zipCode;
+                    newUser.local.username = req.body.username;
+                    
+                    
+                    if (typeof(req.body.firstName) !== 'undefined') {
+                        newUser.local.firstName = req.body.firstName;
+                    }
+                    
+                    if (typeof(req.body.lastName) !== 'undefined') {
+                        newUser.local.lastName = req.body.lastName;
+                    }
+                    
+                    if (typeof(req.body.pdgaNumber) !== 'undefined') {
+                        newUser.local.pdgaNumber = req.body.pdgaNumber;
+                    }
+                    
+                    if (req.body.passcode) {
+                        newUser.local.passcode = req.body.passcode;
+                    }
+    
+                    newUser.save(function(err) {
+                        if (err)
+                            throw err;
+                            
+                        logger.info('Created new user %s.', newUser.local.email);
+                        newUser.addEvent('Account created.');
+                        EventController.createEvent(newUser._id, EventController.types.AccountCreation);
+                        
+                        return done(null, newUser);
+                    });
                 });
             }
 
@@ -172,7 +186,7 @@ module.exports = function(passport) {
     }));
     
     passport.use('local-login', new LocalStrategy({
-        usernameField : 'username',
+        usernameField : 'email',
         passwordField : 'password',
         passReqToCallback : true
     },

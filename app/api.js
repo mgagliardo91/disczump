@@ -17,6 +17,34 @@ module.exports = function(app, passport, gridFs) {
     
     gfs = gridFs;
     
+    app.route('/validate/username')
+        .get(function(req, res) {
+            if (typeof(req.query.q) === 'undefined') {
+                return res.json({});
+            }
+            
+            UserController.query('local.username', req.query.q, function(err, users) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json({query: req.query.q, count: users.length});
+            });
+        });
+    
+    app.route('/validate/email')
+        .get(function(req, res) {
+            if (typeof(req.query.q) === 'undefined') {
+                return res.json({});
+            }
+            
+            UserController.query('local.email', req.query.q, function(err, users) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json({query: req.query.q, count: users.length});
+            });
+        });
+    
     app.route('/threads')
         .get(hasAccess, function(req, res) {
            MessageController.getPrivateThreads(req.user._id, function(err, localThreads) {
@@ -166,6 +194,18 @@ module.exports = function(app, passport, gridFs) {
         });
     
     app.route('/users')
+        .get(hasAccess, function(req, res) {
+            if (typeof(req.query.q) === 'undefined') {
+                return res.json([]);
+            }
+            
+            UserController.queryUsers(req.query.q, function(err, users) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json(users);
+            });
+        });
         
     app.route('/users/:userId')
         .get(hasAccess, function(req, res) {

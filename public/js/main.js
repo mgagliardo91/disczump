@@ -89,6 +89,14 @@ function doAjax(param) {
 	});
 }
 
+function queryUser(type, text, callback) {
+	doAjax({
+		path: '/validate/' + type + '?q=' + text, 
+		type: 'GET',
+		callback: callback
+	});
+}
+
 function resetPassword(currentPw, newPw, callback) {
 	doAjax({
 		path: '/account/reset', 

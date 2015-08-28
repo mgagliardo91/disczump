@@ -2,11 +2,14 @@ $(document).ready(function(){
        
     var signUpValidate = new ZumpValidate({
         items: [
-            {id:'username', type:'email', hint: 'This will be how you log in to your inventory.'},
+            {id:'email', type:'email', hint: 'This will be how you log in to your inventory.'},
             {id:'password', type: 'text', min: 6, hint: 'Password must be at least 6 characters in length.'},
             {id:'verify-password', type:'compare', refId:'password'},
+            {id:'username', type:'username', output: 'username-feedback', min: 6, max: 15, hint: 'Username must be 6-15 characters and can only consist of letters, numbers, and underscore.'},
             {id:'zipCode', type:'zipcode', output: 'citystate'},
-            {id:'alias', type:'none', hint: 'This will be how your name is publicly displayed.'}
+            {id:'firstName', type:'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }, hint: 'Enter your first name to help people find you. (Cannot contain spaces)'},
+            {id:'lastName',  type:'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }, hint: 'Enter your last name to help people find you. (Cannot contain spaces)'},
+            {id:'pdgaNumber', type:'number', max: 6}
         ],
         feedbackOnInit: true
     });
@@ -44,8 +47,8 @@ $(document).ready(function(){
     
     var resetValidate = new ZumpValidate({
         items: [
-            {id:'password', type: 'text', min: 6, hint: 'Password must be at least 6 characters in length.'},
-            {id:'verify-password', type:'compare', refId:'password'}
+            {id:'reset-password', type: 'text', min: 6, hint: 'Password must be at least 6 characters in length.'},
+            {id:'reset-verify-password', type:'compare', refId:'password'}
         ]
     });
     

@@ -7,10 +7,13 @@ var async = require('async');
 var UserConfig = require('../../config/config.js').user.preferences;
 
 module.exports = {
+	query: query,
+	queryUsers: queryUsers,
 	getUser: getUser,
 	updateActivity: updateActivity,
 	updateAccessCount: updateAccessCount,
     checkPassword: checkPassword,
+    checkUsername: checkUsername,
     getAccount: getAccount,
     getPreferences: getPreferences,
     updateAccount: updateAccount,
@@ -22,19 +25,57 @@ module.exports = {
     getAlias: getAlias
 }
 
-function getUserInfo(userId, callback) {
-	var userInfo = {};
+function query(field, q, callback) {
+	User.find().where(field, new RegExp('^' + q + '$', 'i')).exec(function(err, users) {
+		if (err) 
+			return callback(Error.createError(err, Error.internalError));
+			
+		return callback(null, users);
+	})
+}
+
+function queryUsers(query, callback) {
+	var query = query.trim();
 	
+	if (query.indexOf(' ') >= 0) { // name query
+		var nameQuery = query.split(' ');
+		User.find({ $and : [{'local.firstName': new RegExp(nameQuery[0], 'i')}, 
+						{'local.lastName': new RegExp(nameQuery[1], 'i')}]},
+			function(err, users) {
+				if (err) 
+					return callback(Error.createError(err, Error.internalError));
+				
+				var userInfoArr = [];
+				_.each(users, function(user) {
+					userInfoArr.push(user.accountToString());
+				});
+				return callback(null, userInfoArr);
+			});
+	} else {
+		User.find({ $or:[ {'local.username': new RegExp(query, 'i')}, 
+						{'local.firstName': new RegExp(query, 'i')}, 
+						{'local.lastName': new RegExp(query, 'i')} ]}, 
+			function(err, users) {
+				if (err) 
+					return callback(Error.createError(err, Error.internalError));
+				
+				var userInfoArr = [];
+				_.each(users, function(user) {
+					userInfoArr.push(user.accountToString());
+				});
+				return callback(null, userInfoArr);
+		});
+	}
+}
+
+function getUserInfo(userId, callback) {
 	User.findOne({_id: userId}, function(err, user) {
        if (err) 
 			return callback(Error.createError(err, Error.internalError));
 			
 		if (!user) return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
 		
-		userInfo._id = user._id;
-		userInfo.alias = user.getAlias();
-		
-		return callback(null, user);	
+		return callback(null, user.accountToString());	
 	});
 }
 
@@ -88,6 +129,10 @@ function updateActivity(userId) {
 
 function checkPassword(password) {
 	return password.length >= 6;
+}
+
+function checkUsername(username) {
+	return /^[a-zA-Z0-9\_]{6,15}$/.test(username);
 }
 
 function getAccount(userId, callback) {

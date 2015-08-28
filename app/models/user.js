@@ -12,7 +12,10 @@ var userSchema = mongoose.Schema({
 	    default: shortId.generate
 	},
     local            : {
-        email        : String,
+        username     : {type: String, unique: true},
+        firstName    : String,
+        lastName     : String,
+        email        : {type: String, unique: true},
         password     : String,
         dateJoined  : {type: Date, default: Date.now},
         lastAccess  : {type: Date, default: Date.now},
@@ -81,8 +84,16 @@ userSchema.methods.accountToString = function() {
     var account = {};
     
     account._id = this._id;
-    account.dateJoined = this.dateJoined;
-    account.alias = this.getAlias();
+    account.dateJoined = this.local.dateJoined;
+    account.username = this.local.username;
+	
+	if (typeof(this.local.firstName) !== 'undefined') {
+    account.firstName = this.local.firstName;
+	}
+	
+	if (typeof(this.local.lastName) !== 'undefined') {
+    account.lastName = this.local.lastName;
+	}
 	
 	if (typeof(this.local.image) !== 'undefined') {
 		account.image = this.local.image;

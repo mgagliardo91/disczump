@@ -2,7 +2,10 @@ var ZumpValidate = function(opt) {
     var items = [];
     var clientCb;
     var feedbackOnInit = false;
-    var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+    var emailRegex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+    var usernameRegex = /^[a-zA-Z0-9_]*$/;
+    var zipCodeRegex = /^\d{5}$/;
+    var numberRegex = /^[0-9]*$/;
     
     this.init = function(opt) {
         if (isDef(opt.items)) {
@@ -41,7 +44,7 @@ var ZumpValidate = function(opt) {
                 }
                 
                 if (typeof item.hint !== 'undefined') {
-                    $input.tooltip(generateTooltipOptions('left auto', 'focus', item.hint, '200px'));
+                    $input.tooltip(generateTooltipOptions('top', 'focus', item.hint, '200px'));
                 }
             } else {
                 items = _.without(items, item);
@@ -77,7 +80,7 @@ var ZumpValidate = function(opt) {
         
         if (_.has(item, 'isInit') || feedbackOnInit) {
             if (clientCb) {
-                clientCb($item, isValid);
+                clientCb($item, isValid, item.required);
             } else {
                 defaultFeedback($item, isValid);
             }
@@ -89,8 +92,10 @@ var ZumpValidate = function(opt) {
     
     var handleEvent = function(e) {
         if (e.keyCode == 9 || e.keyCode == 16) return;
-        
-        validate($(this).attr('id'), $(this), e.type);
+        var $this = $(this);
+        delay(function() {
+			 validate($this.attr('id'), $this, e.type);
+	    }, 500 );
     }
     
     var validate = function(id, $input, eventType) {
@@ -112,16 +117,22 @@ var ZumpValidate = function(opt) {
             
             if (item.min) {
                 isValid = val.length == 0 ? undefined : val.length >= item.min;
-                if (!(typeof isValid === 'undefined') && !isValid) return callback($input, isValid);
+                if (!(typeof isValid === 'undefined') && !isValid)  {
+                    if (item.output) $('#' + item.output).text('');
+                    return callback($input, isValid);
+                }
             }
             
             if (item.max) {
                 isValid = val.length == 0 ? undefined : val.length <= item.max;
-                if (!(typeof isValid === 'undefined') && !isValid) return callback($input, isValid);
+                if (!(typeof isValid === 'undefined') && !isValid)  {
+                    if (item.output) $('#' + item.output).text('');
+                    return callback($input, isValid);
+                }
             }
             
             if (item.type == 'email') {
-                isValid = (val.length == 0 ? undefined : regex.test(val));
+                isValid = (val.length == 0 ? undefined : emailRegex.test(val));
                 if (!(typeof isValid === 'undefined') && !isValid) return callback($input, isValid);
                 
             } else if (item.type == 'compare') {
@@ -131,13 +142,35 @@ var ZumpValidate = function(opt) {
                     isValid = ref.val().length == 0 ? undefined : val === ref.val();
                     if (!(typeof isValid === 'undefined') && !isValid) return callback($input, isValid);
                 }
+                
             } else if (item.type == 'function') {
                 if (item.fn) {
                     isValid = item.fn(val);
                     if (!(typeof isValid === 'undefined') && !isValid) return callback($input, isValid);
                 }
+                
+            } else if (item.type == 'number') {
+                isValid = val.length == 0 ? undefined : numberRegex.test(val);
+                
+            } else if (item.type == 'username') {
+                isValid = val.length == 0 ? undefined : usernameRegex.test(val);
+                
+                if (isValid) {
+                    if (eventType == 'keyup') {
+                        shouldCb = false;
+                        queryUser('username', val, function(success, retData) {
+                            var available = !retData.count;
+                            var availableText = available ? 'available' : 'not available';
+                            $('#' + item.output).text('This username is ' + availableText);
+                            callback($input, available);
+                        });
+                    }
+                } else {
+                    $('#' + item.output).text('');
+                }
+                
             } else if (item.type == 'zipcode') {
-                isValid = val.length == 0 ? undefined : /^\d{5}$/.test(val);
+                isValid = val.length == 0 ? undefined : zipCodeRegex.test(val);
                 
                 if (isValid) {
                     if (eventType == 'keyup') {
@@ -147,7 +180,10 @@ var ZumpValidate = function(opt) {
                             callback($input, success);
                         });
                     }
-                } else $('#' + item.output).text('');
+                } else {
+                    $('#' + item.output).text('');
+                }
+                
             } else if (item.type == 'none') {
                 return;
             }
@@ -156,12 +192,20 @@ var ZumpValidate = function(opt) {
         }
     }
     
+    var delay = (function(){
+      var timer = 0;
+      return function(callback, ms){
+        clearTimeout (timer);
+        timer = setTimeout(callback, ms);
+      };
+    })();
+    
     var defaultFeedback = function ($input, isValid) {
         if (isValid != undefined) {
             $input.parent().removeClass((isValid ? 'has-error' : 'has-success'))
                 .addClass((isValid ? 'has-success' : 'has-error'));
         } else {
-            $input.parent().removeClass('has-success').addClass('has-error');
+            $input.parent().removeClass('has-success').removeClass('has-error');
         }
     }
     
