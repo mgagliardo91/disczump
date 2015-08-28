@@ -174,9 +174,27 @@ function putThreadState(threadId, threadState, callback) {
 	});
 }
 
-function getMessages(threadId, callback) {
+function getMessages(threadId, params, callback) {
+	var queryString = '';
+	if (typeof(params) !== 'undefined') {
+		if (typeof(params.count) !== 'undefined') {
+			queryString = 'count=' + params.count;
+		}
+		
+		if (typeof(params.refId) !== 'undefined') {
+			queryString = queryString + 
+				(queryString.length > 0 ? '&' : '') + 
+				'refId=' + 
+				params.refId;
+		}
+		
+		if (queryString.length > 0) {
+			queryString = '?' + queryString;
+		}
+	}
+	
 	doAjax({
-		path: '/threads/' + threadId + '/messages', 
+		path: '/threads/' + threadId + '/messages' + queryString, 
 		type: 'GET',
 		callback: callback
 	});

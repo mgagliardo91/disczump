@@ -106,7 +106,7 @@ module.exports = function(app, passport, gridFs) {
         
     app.route('/threads/:threadId/messages')
         .get(hasAccess, function(req, res) {
-            MessageController.getMessages(req.user._id, req.params.threadId, function(err, messages) {
+            MessageController.getMessages(req.user._id, req.params.threadId, req.query, function(err, messages) {
                 if (err)
                     return res.json(err);
                     

@@ -685,6 +685,18 @@
     padding: 10px;
 }
 
+#load-messages {
+    text-align: center;
+    color: blue;
+    margin-bottom: 10px;
+}
+
+#load-messages:hover {
+    color: black;
+    cursor: pointer;
+    background-color: #EAEAEA;
+}
+
 .add-message-text {
     height: 70px;
     width: 100%;
@@ -750,6 +762,7 @@
     width: 70%;
     overflow: auto;
     padding: 0px 10px;
+    position: relative;
 }
 
 #message-container::-webkit-scrollbar {

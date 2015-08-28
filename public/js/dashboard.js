@@ -1183,6 +1183,7 @@ function zumpLibraryInit() {
 		inboxList: '#inbox-list',
 		addMessageContainer: '#add-message-container',
 		messageContainer: '#message-container',
+		loadMessages: '#load-messages',
 		messageCount: '#message-count',
 		sendMessageBtn: '#send-message-btn',
 		newMessage: '#new-message',
@@ -3243,12 +3244,12 @@ var ZumpMessenger = function(opt) {
     //----------------------/
     
 	var zumpMessenger = this;
-	var threads = [];
-	var messageList = [];
+	var threadCache = {};
 	var userPhotoCache = {};
 	var newMessageCount = 0;
 	var activeThread;
 	var activateThread;
+	var pullCount = 20;
 	var sendOnEnter = true;
 	var enterLock = true;
 	
@@ -3258,6 +3259,7 @@ var ZumpMessenger = function(opt) {
     
     var $inboxList;
     var $messageContainer;
+    var $loadMessages;
     var $addMessageContainer;
     var $messageCount;
     var $threadTitle;
@@ -3294,6 +3296,10 @@ var ZumpMessenger = function(opt) {
 			$messageContainer = $(opt.messageContainer);
 		}
 		
+		if (isDef(opt.loadMessages)) {
+			$loadMessages = $(opt.loadMessages);
+		}
+		
 		if (isDef(opt.sendMessageBtn)) {
 			$sendMessageBtn = $(opt.sendMessageBtn);
 		}
@@ -3325,7 +3331,7 @@ var ZumpMessenger = function(opt) {
 	
 	this.handleMessage = function(message) {
 		if (pageSettings.activePage == '#pg-inbox' && activeThread.threadId == message.threadId) {
-			var thread = getThread(message.threadId);
+			var thread = getThread(message.threadId).thread;
 			thread.messageCount += 1;
 			thread.currentMessageCount += 1;
 			thread.modifiedDate = message.createDate;
@@ -3337,13 +3343,11 @@ var ZumpMessenger = function(opt) {
 	    	updateThread(thread);
 	    	
 		} else {
-			var thread = getThread(message.threadId);
+			var thread = getThread(message.threadId).thread;
 			thread.currentMessageCount += 1;
 			thread.modifiedDate = message.createDate;
 			$('li.thread-container[threadId="' + thread.threadId + '"]').remove();
-			threads = _.reject(threads, function(threadObj) { return threadObj.threadId == thread.threadId; });
-			threads.unshift(thread);
-			appendThread(thread);
+			prependThread(thread);
 		}
 	}
 	
@@ -3358,7 +3362,7 @@ var ZumpMessenger = function(opt) {
     		maxHeight: height + 'px'
     	});
     	
-	    $messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
+    	$messageContainer.scrollTop($messageContainer[0].scrollHeight);
     }
     
     var setupListeners = function() {
@@ -3383,128 +3387,11 @@ var ZumpMessenger = function(opt) {
 			sendOnEnter = !sendOnEnter;
 		});
 		
-		$newMessage.on('keydown', onKeyDown);
-    }
-    
-    var sendMessage = function() {
-    	var body = $newMessage.val();
-		if (body == '') return true;
-		
-    	var content = {content: body};
-		$sendMessageBtn.find('i').show();
-		postMessage(activeThread.threadId, content, function(success, message) {
-			$sendMessageBtn.find('i').hide();
-			if (success) {
-				$newMessage.val('');
-				appendMessage(message);
-	        	$messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
-	        	
-	        	var thread = getThread(message.threadId);
-	        	thread.messageCount += 1;
-				thread.currentMessageCount += 1;
-				thread.modifiedDate = message.createDate;
-				updateThread(thread);
-			}
+		$loadMessages.click(function(e) {
+			loadMore();
 		});
-    }
-    
-    var onKeyDown = function(event) {
-		if ( event.which == 13 && enterLock) {
-			if (event.shiftKey) {
-				enterLock = false;
-				var e = jQuery.Event('keypress');
-				e.which = 13;
-				e.keyCode = 13;
-				$newMessage.trigger(e);
-			} else {
-				event.preventDefault();
-				sendMessage();
-			}
-		}
 		
-		enterLock = true;
-    }
-    
-    var showThread = function(threadId) {
-    	if (typeof(activeThread) !== 'undefined' && activeThread.threadId == threadId) return false;
-    	
-    	var thread = getThread(threadId);
-		if (!thread) return;
-		
-		activeThread = thread;
-		var $threadContainer = $('.thread-container[threadId="' + threadId + '"]');
-		
-		$threadContainer.addClass('thread-open').siblings().removeClass('thread-open');
-		$threadTitle.text(thread.threadTag);
-		
-		activateThread();
-		
-		setThreadState($threadContainer, false);
-		setThread(thread);
-    }
-    
-    var setThread = function(thread) {
-    	getMessages(thread.threadId, function(success, messages) {
-    		if (success) {
-    			thread.messageCount = messages.length;
-				updateMessageCount();
-				
-    			messageList = messages;
-    			$messageContainer.empty();
-    			// Handle paged list
-    			
-    			_.each(messages, function(message) {
-    				appendMessage(message);
-    			});
-    			
-		        $messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
-    		}
-    	});
-    }
-    
-    var setThreadState = function($threadContainer, isNew) {
-    	if (!isNew) {
-    		$threadContainer.removeClass('thread-new');
-    		$threadContainer.find('.thread-icon i').removeClass('fa-square').addClass('fa-square-o');
-    	} else {
-    		$threadContainer.addClass('thread-new');
-    		$threadContainer.find('.thread-icon i').removeClass('fa-square-o').addClass('fa-square');
-    	}
-    }
-    
-    var appendMessage = function(message) {
-    	var incoming = message.userId != userAccount._id;
-    	var date = new Date(message.createDate);
-    	var $message = $('<div class="thread-message message-' + (incoming ? 'incoming' : 'outgoing') + '" messageId="' + message._id +  '"></div>');
-    	$message.append('<div class="thread-message-area">' +
-                                '<div class="message-user"></div>' +
-                                '<div class="message-content">' +
-                                    '<div class="message-date">' + date.toLocaleString() + '</div>' +
-                                    '<div class="message-bubble">' +
-                                        message.body.replace(/\n/g, '<br>') + 
-                                    '</div>' +
-                                '</div>' +
-                            '</div>' +
-                            '<div class="clearfix"></div>');
-        
-        var userPhoto = userPhotoCache[message.userId];
-        if (typeof(userPhoto) !== 'undefined') {
-        	if (userPhoto != '') $message.find('.message-user').css('background-image', 'url("' + userPhoto + '")');
-        } else {
-        	userPhotoCache[message.userId] = '';
-        	getUser(message.userId, function(success, user) {
-        		if (success) {
-        			userPhotoCache[user._id] = user.image;
-        			
-        			var msgByUser = _.where(messageList, {userId: user._id});
-        			_.each(msgByUser, function(msg) {
-        				$messageContainer.find('.thread-message[messageId="' + msg._id + '"]').find('.message-user').css('background-image', 'url("' + user.image + '")');
-        			});
-        		}
-        	})
-        }
-        
-        $messageContainer.append($message)
+		$newMessage.on('keydown', onKeyDown);
     }
     
     /*
@@ -3513,9 +3400,9 @@ var ZumpMessenger = function(opt) {
     var initializeInboxList = function() {
     	getThreads(function(success, threadList) {
     		if (success) {
-    			threads = threadList;
     			newMessageCount = 0;
-    			_.each(threads, function(thread) {
+    			_.each(threadList, function(thread) {
+    				threadCache[thread.threadId] = {thread: thread, messages: [], lastId: undefined};
     				appendThread(thread);
     			});
     		}
@@ -3523,7 +3410,22 @@ var ZumpMessenger = function(opt) {
     }
     
     var getThread = function(id) {
-		return _.first(_.where(threads, {'threadId' : id}));
+    	var thread = threadCache[id];
+    	if (typeof(thread) === 'undefined') {
+    		return undefined;
+    	} else {
+    		return thread;
+    	}
+    }
+    
+    var getParams = function(threadCacheObj) {
+    	var params = {count: pullCount};
+    	
+    	if (typeof(threadCacheObj.lastId) !== 'undefined') {
+    		params.refId = threadCacheObj.lastId;
+    	}
+    	
+    	return params;
     }
     
     var updateThread = function(thread) {
@@ -3537,11 +3439,19 @@ var ZumpMessenger = function(opt) {
     	updateMessageCount();
     }
     
+    var prependThread = function(thread) {
+        $inboxList.prepend(createThread(thread));
+    }
+    
     var appendThread = function(thread) {
+        $inboxList.append(createThread(thread));
+    }
+    
+    var createThread = function(thread) {
     	var $threadContainer = $('<li class="thread-container hover-active" threadId="' + thread.threadId + '">');
     	populateThreadContainer($threadContainer, thread);
-        $inboxList.append($threadContainer);
     	updateMessageCount();
+    	return $threadContainer;
     }
     
     var populateThreadContainer = function($threadContainer, thread) {
@@ -3571,8 +3481,8 @@ var ZumpMessenger = function(opt) {
     var updateMessageCount = function() {
     	var messageCount = 0;
     	
-    	_.each(threads, function(thread) {
-    		messageCount += (thread.currentMessageCount - thread.messageCount);
+    	_.each(_.values(threadCache), function(threadCacheObj) {
+    		messageCount += (threadCacheObj.thread.currentMessageCount - threadCacheObj.thread.messageCount);
     	});
     	
     	if (messageCount > 0) {
@@ -3582,7 +3492,174 @@ var ZumpMessenger = function(opt) {
     	}
 		
     }
-	
+    
+    var showThread = function(threadId) {
+    	if (typeof(activeThread) !== 'undefined' && activeThread.threadId == threadId) return false;
+    	
+    	var threadCacheObj = getThread(threadId);
+		if (!threadCacheObj) return;
+		
+		var thread = threadCacheObj.thread;
+		
+		activeThread = thread;
+		var $threadContainer = $('.thread-container[threadId="' + threadId + '"]');
+		
+		$threadContainer.addClass('thread-open').siblings().removeClass('thread-open');
+		$threadTitle.text(thread.threadTag);
+		
+		threadCacheObj.thread.messageCount = threadCacheObj.thread.currentMessageCount;
+		
+		activateThread();
+		setThreadState($threadContainer, false);
+		setThread(threadCacheObj);
+    }
+    
+    var setThreadState = function($threadContainer, isNew) {
+    	if (!isNew) {
+    		$threadContainer.removeClass('thread-new');
+    		$threadContainer.find('.thread-icon i').removeClass('fa-square').addClass('fa-square-o');
+    	} else {
+    		$threadContainer.addClass('thread-new');
+    		$threadContainer.find('.thread-icon i').removeClass('fa-square-o').addClass('fa-square');
+    	}
+    }
+    
+    var setThread = function(threadCacheObj) {
+    	$messageContainer.find('.thread-message').remove();
+    	showMessages(threadCacheObj, function() {
+    		$messageContainer.scrollTop($messageContainer[0].scrollHeight);
+    	});
+    }
+    
+    var loadMore = function() {
+    	if (typeof(activeThread) === 'undefined') return;
+    	
+    	var threadCacheObj = getThread(activeThread.threadId);
+    	pullMessages(threadCacheObj, function() {
+    		var $sepMsg = $('.thread-message[messageId="' + threadCacheObj.sepId + '"]');
+    		$messageContainer.scrollTop($sepMsg.position().top);
+    	});
+    }
+    
+    var showMessages = function(threadCacheObj, callback) {
+    	if (threadCacheObj.messages.length == 0) {
+    		pullMessages(threadCacheObj, callback);
+    	} else {
+			_.each(threadCacheObj.messages, function(message) {
+				prependMessage(message);
+			});
+			
+			callback();
+    	}
+    }
+    
+    var pullMessages = function(threadCacheObj, callback) {
+    	getMessages(threadCacheObj.thread.threadId, getParams(threadCacheObj), function(success, messages) {
+    		if (success) {
+    			threadCacheObj.messages = threadCacheObj.messages.concat(messages);
+    			threadCacheObj.lastId = messages[messages.length - 1]._id;
+    			threadCacheObj.sepId = messages[0]._id;
+    			
+    			if (threadCacheObj.messages.length == threadCacheObj.thread.currentMessageCount) {
+	    			$loadMessages.hide();
+	    		} else {
+	    			$loadMessages.show();
+	    		}
+    			
+				updateMessageCount();
+    			
+    			_.each(messages, function(message) {
+    				prependMessage(message);
+    			});
+    			
+    			callback();
+    		}
+    	});
+    }
+    
+    var prependMessage = function(message) {
+    	$loadMessages.after(createMessage(message));
+    }
+    
+    var appendMessage = function(message) {
+    	$messageContainer.append(createMessage(message));
+    }
+    
+    var createMessage = function(message) {
+    	var incoming = message.userId != userAccount._id;
+    	var date = new Date(message.createDate);
+    	var $message = $('<div class="thread-message message-' + (incoming ? 'incoming' : 'outgoing') + '" messageId="' + message._id +  '"></div>');
+    	$message.append('<div class="thread-message-area">' +
+                                '<div class="message-user"></div>' +
+                                '<div class="message-content">' +
+                                    '<div class="message-date">' + date.toLocaleString() + '</div>' +
+                                    '<div class="message-bubble">' +
+                                        message.body.replace(/\n/g, '<br>') + 
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="clearfix"></div>');
+        
+        var userPhoto = userPhotoCache[message.userId];
+        if (typeof(userPhoto) !== 'undefined') {
+        	if (userPhoto != '') $message.find('.message-user').css('background-image', 'url("' + userPhoto + '")');
+        } else {
+        	userPhotoCache[message.userId] = '';
+        	getUser(message.userId, function(success, user) {
+        		if (success) {
+        			userPhotoCache[user._id] = user.image;
+        			
+        			var messageList = getThread(activeThread.threadId).messages;
+        			var msgByUser = _.where(messageList, {userId: user._id});
+        			_.each(msgByUser, function(msg) {
+        				$messageContainer.find('.thread-message[messageId="' + msg._id + '"]').find('.message-user').css('background-image', 'url("' + user.image + '")');
+        			});
+        		}
+        	})
+        }
+        
+        return $message;
+    }
+    
+    var sendMessage = function() {
+    	var body = $newMessage.val();
+		if (body == '') return true;
+		
+    	var content = {content: body};
+		$sendMessageBtn.find('i').show();
+		postMessage(activeThread.threadId, content, function(success, message) {
+			$sendMessageBtn.find('i').hide();
+			if (success) {
+				$newMessage.val('');
+				appendMessage(message);
+	        	$messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
+	        	
+	        	var thread = getThread(message.threadId).thread;
+	        	thread.messageCount += 1;
+				thread.currentMessageCount += 1;
+				thread.modifiedDate = message.createDate;
+				updateThread(thread);
+			}
+		});
+    }
+    
+    var onKeyDown = function(event) {
+		if ( event.which == 13 && enterLock) {
+			if (event.shiftKey) {
+				enterLock = false;
+				var e = jQuery.Event('keypress');
+				e.which = 13;
+				e.keyCode = 13;
+				$newMessage.trigger(e);
+			} else {
+				event.preventDefault();
+				sendMessage();
+			}
+		}
+		
+		enterLock = true;
+    }
+   
 	this.init(opt);
 }
 

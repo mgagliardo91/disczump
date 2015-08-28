@@ -89,18 +89,37 @@ function putThreadState(userId, threadId, threadState, callback) {
     });
 }
 
-function getMessages(userId, threadId, callback) {
+function getMessages(userId, threadId, params, callback) {
      getLocalThread(userId, threadId, function(err, localThread) {
         if (err) return callback(err);
         
-        Message.find({threadId: localThread.threadId}).sort({createDate: 1}).exec(function(err, messages) {
+        Message.find({threadId: localThread.threadId}).sort({createDate: -1}).exec(function(err, messages) {
             if (err)
                 return callback(Error.createError(err, Error.internalError));
                 
             localThread.messageCount = messages.length;
             localThread.save();
             
-            return callback(null, messages);
+            var startIndex = 0;
+            
+            if (typeof(params.refId) !== 'undefined') {
+                var refMessage = _.findWhere(messages, {'_id' : params.refId});
+                
+                if (refMessage) {
+                    startIndex = Math.min(messages.length - 1, messages.indexOf(refMessage) + 1);
+                }
+            }
+        
+            var messageCount = messages.length - startIndex;
+            var pMessageCount;
+            
+            if (typeof(params.count) !== 'undefined' && 
+                !_.isNaN(pMessageCount = parseInt(params.count)) &&
+                pMessageCount <= messageCount) {
+                messageCount = pMessageCount;
+            }
+            
+            return callback(null, messages.splice(startIndex, messageCount));
         });
     });
 }
