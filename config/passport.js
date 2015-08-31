@@ -18,6 +18,7 @@ var EventController          = require('../app/controllers/event');
 var configAuth = require('./auth');
 var localConfig = require('./localConfig');
 var fbGraph = require('fbgraph');
+var async = require('async');
 
 module.exports = function(passport) {
 
@@ -136,8 +137,8 @@ module.exports = function(passport) {
                 if (!_.has(req.body, 'username') || !UserController.checkUsername(req.body.username)) {
                     return done(null, false, req.flash('error', 'A valid username is required to create an account.'));
                 }
-                
-                UserController.query('local.email', req.body.username, function(err, users) {
+
+                UserController.query('local.username', req.body.username, function(err, users) {
                     if (err || users.length > 0) {
                         return done(null, false, req.flash('error', 'The username [' + req.body.username + '] is already in use.'));
                     }

@@ -1892,10 +1892,11 @@ img.fit-parent {
 /*===================================================================*/
 /*                                                                   */
 /*                            Tag List                               */
+
 /*                                                                   */
 /*===================================================================*/
 
-.tag-list-container {
+#tag-list-container {
     border: 1px solid #ccc;
     height: 57px;
     border-width: thin;

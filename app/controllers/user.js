@@ -227,12 +227,12 @@ function updateAccount(userId, account, callback) {
 		if (!user)
 	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
 		
-		if (_.has(account, 'alias')) {
-			if (account.alias == '') {
-				user.local.alias = undefined;
-			} else {
-				user.local.alias = account.alias;
-			}
+		if (_.has(account, 'firstName')) {
+			user.local.firstName = account.firstName;
+		}
+		
+		if (_.has(account, 'lastName')) {
+			user.local.lastName = account.lastName;
 		}
 		
 		if (_.has(account, 'zipCode') && /^\d{5}$/.test(account.zipCode)) {
@@ -243,12 +243,32 @@ function updateAccount(userId, account, callback) {
 			user.local.pdgaNumber = account.pdgaNumber;
 		}
 		
-		user.save(function(err) {
-		    if (err)
-    			return callback(Error.createError(err, Error.internalError));
-    		else
-    			return callback(null, user.accountToString());
-		});
+		async.series([
+			function(cb) {
+				if (_.has(account, 'username') && checkUsername(account.username)) {
+					query('local.username', account.username, function(err, users) {
+			            if (err || users.length > 0) {
+			                cb(Error.createError('The username already exists.', Error.invalidDataError));
+			            } else {
+							user.local.username = account.username;
+							cb();
+			            }
+					});
+				}
+			}],
+			function(err) {
+				if (err) {
+		    		return callback(err);
+				}
+				
+				user.save(function(err) {
+				    if (err) {
+		    			return callback(Error.createError(err, Error.internalError));
+				    } else {
+		    			return callback(null, user.accountToString());
+				    }
+				});	
+			});
     });
 }
 

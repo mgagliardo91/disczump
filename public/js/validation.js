@@ -160,8 +160,9 @@ var ZumpValidate = function(opt) {
                         shouldCb = false;
                         queryUser('username', val, function(success, retData) {
                             var available = !retData.count;
-                            var availableText = available ? 'available' : 'not available';
-                            $('#' + item.output).text('This username is ' + availableText);
+                            var isCurrent = item.data && item.data == val;
+                            var availableText = isCurrent ? 'Current Username' : (available ? 'Available' : 'Unavailable');
+                            $('#' + item.output).text(availableText);
                             callback($input, available);
                         });
                     }

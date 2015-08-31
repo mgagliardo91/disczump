@@ -35,7 +35,6 @@
                     <li class="sidebar-select nav" pg-select="#pg-statistics"><span class="float-left fa-tools"><i class="fa fa-pie-chart fa-sidebar-icon"></i></span><span class="sidebar-select-text">Statistics</span></li>
                     </section>
                     <h5 class="sidebar-section-header"><span>Actions</span><hr /><div class="clearfix"></div></h5>
-                    {{!--<li class="sidebar-select" id="create-disc-modal"><span class="float-left fa-tools"><i class="fa fa-plus fa-sidebar-icon"></i></span><span class="sidebar-select-text">Add Disc</span></li>--}}
                     <li class="sidebar-select nav" pg-select="#pg-modify-disc"><span class="float-left fa-tools"><i class="fa fa-plus fa-sidebar-icon"></i></span><span class="sidebar-select-text">Add Disc</span></li>
                     <h5 class="sidebar-section-header"><span>Settings</span><hr /><div class="clearfix"></div></h5>
                     <li class="sidebar-select nav" pg-select="#pg-settings"><span class="float-left fa-tools"><i class="fa fa-user fa-sidebar-icon"></i></span><span class="sidebar-select-text">Account</span></li>
@@ -173,7 +172,7 @@
             	            <div class="form-group">
             	                <label class="col-sm-2 control-label">Weight</label>
             	                <div class="col-sm-4">
-            	                    <input type="text" id="disc-weight" class="form-control text-assist number-validate" param="weight">
+            	                    <input type="text" id="disc-weight" class="form-control text-assist" param="weight">
             	                </div>
             	                <label class="col-sm-2 control-label">Color</label>
             	                <div class="col-sm-4">
@@ -182,27 +181,27 @@
             	            </div>
             	            <div class="accordion-container">
             	            	<div class="accordion-header">
-            	                    <label class="no-select" param="advanced"><span><i class="fa fa-chevron-right fa-tools"></i></span>Advanced</label>
+            	                    <label class="no-select" param="#collapseAdvanced"><span><i class="fa fa-chevron-right fa-tools"></i></span>Advanced</label>
             	                </div>
             	                <div class="advanced-area collapse" id="collapseAdvanced">
             			            <div class="form-group">
             			                <label class="col-sm-3 control-label">Speed</label>
             			                <div class="col-sm-3">
-            			                    <input type="text" id="disc-speed" class="form-control text-assist weight-number-validate" param="speed">
+            			                    <input type="text" id="disc-speed" class="form-control text-assist" param="speed">
             			                </div>
             			                <label class="col-sm-3 control-label">Glide</label>
             			                <div class="col-sm-3">
-            			                    <input type="text" id="disc-glide" class="form-control text-assist number-validate" param="glide">
+            			                    <input type="text" id="disc-glide" class="form-control text-assist" param="glide">
             			                </div>
             			            </div>
             			            <div class="form-group">
             			                <label class="col-sm-3 control-label">Turn</label>
             			                <div class="col-sm-3">
-            			                    <input type="text" id="disc-turn" class="form-control text-assist number-validate" param="turn">
+            			                    <input type="text" id="disc-turn" class="form-control text-assist" param="turn">
             			                </div>
             			                <label class="col-sm-3 control-label">Fade</label>
             			                <div class="col-sm-3">
-            			                    <input type="text" id="disc-fade" class="form-control text-assist number-validate" param="fade">
+            			                    <input type="text" id="disc-fade" class="form-control text-assist" param="fade">
             			                </div>
             			            </div>
             			            <div class="form-group tag-input-group">
@@ -210,15 +209,15 @@
             			                <div class="col-sm-10">
             			                    <div style="position:relative">
             			                        <div class="input-group add-disc-tag-container">
-            			                            <input type="text" class="form-control add-disc-tag">
+            			                            <input type="text" class="form-control" id="add-disc-tag">
             			                            <span class="input-group-btn">
-            			                                <button class="btn btn-default add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>
+            			                                <button class="btn btn-default" id="add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>
             			                            </span>
             			                        </div>
             			                    </div>
             			                </div>
             			                <div class="col-sm-10 col-sm-offset-2">
-            			                    <div class="tag-list-container">
+            			                    <div id="tag-list-container">
             			                    </div>
             			                </div>
             			            </div>
@@ -235,7 +234,7 @@
             			                </div>
             			                <label class="col-sm-3 control-label allow-icon">Condition<i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="condition"></i></label>
             			                <div class="col-sm-3">
-            			                    <input type="text" id="disc-condition" class="form-control text-assist condition-number-validate" param="condition">
+            			                    <input type="text" id="disc-condition" class="form-control text-assist" param="condition">
             			                </div>
             			            </div>
             	                </div>
@@ -243,7 +242,7 @@
             	            <div class="image-accordion-area">
             		            <div class="accordion-container">
             		                <div class="accordion-header">
-            		                    <label class="current-images-label no-select" param="current-images"><span><i class="fa fa-chevron-right fa-tools"></i></span>Current Pictures</label>
+            		                    <label class="current-images-label no-select" param="#collapseCurrentImages"><span><i class="fa fa-chevron-right fa-tools"></i></span>Current Pictures</label>
             		            	</div>
             		            	<div class="current-images-panel-collapse collapse" id="collapseCurrentImages">
             				            <div class="image-list">
@@ -256,10 +255,10 @@
             			        </div>
             		            <div class="accordion-container">
             		                <div class="accordion-header">
-            		                    <label class="add-images-label no-select" param="dropzone"><span><i class="fa fa-chevron-right fa-tools"></i></span>Add Pictures</label>
+            		                    <label class="add-images-label no-select" param="#collapseDropzone"><span><i class="fa fa-chevron-right fa-tools"></i></span>Add Pictures</label>
             		                </div>
             		                <div class="dropzone-panel-collapse collapse" id="collapseDropzone">
-            		                    <div class="image-list dropzone-area">
+            		                    <div class="image-list" id="dropzone-area">
             		                        <div class="image-list-container" id="dropzone-container">
             		                            <div class="image-list-table" id="dropzone-previews">
             		                                <div class="image-item-container image-add" id="dropzone-trigger">
@@ -276,7 +275,7 @@
             		            </div>
             	            </div>
             	            <div class="modify-button-container">
-    		                    <button type="button" class="btn btn-primary" fn-title="save" discId=''><span><i class="fa fa-save fa-tools"></i></span>Save</button>
+    		                    <button type="button" class="btn btn-primary" id="save-disc" discId=''><span><i class="fa fa-save fa-tools"></i></span>Save</button>
                             </div>
                         </form>
                     </div>
@@ -428,10 +427,6 @@
                         <div class="profile-status">
                             <div class="data-table">
                                 <div class="data-row">
-                                    <div class="data-label">Username:</div>
-                                    <div class="data-value">{{user.local.email}}</div>
-                                </div>
-                                <div class="data-row">
                                     <div class="data-label">Status:</div>
                                     {{#if user.local.active}}
                                     <div class="data-value">Active</div>
@@ -442,7 +437,7 @@
                                 <div class="data-row">
                                     <div class="data-label">Facebook:</div>
                                     {{#if user.facebook.id}}
-                                    <div class="data-value">Linked</div>
+                                    <div class="data-value">Linked - <span style="color: blue">{{user.facebook.email}}</span></div>
                                     {{else}}
                                     <div class="data-value">Not Linked</div>
                                     {{/if}}
@@ -452,32 +447,46 @@
                     </div>
                     <div class="row">
                         <div class="row-label">Personal Information</div>
-                        <div class="form-horizontal form-small" id="accountForm">
+                        <div class="form-horizontal form-small" id="account-form">
                             <div class="form-group">
-                                <label for="accountAllias" class="col-sm-3 control-label">Alias
-                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="account-alias"></i>
-                                </label>
+                                <label for="account-first-name" class="col-sm-3 control-label">First Name</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" id="accountAlias" placeholder="Alias" value="{{user.local.alias}}">
+                                    <input type="text" class="form-control" id="account-first-name" placeholder="First Name" value="{{user.local.firstName}}">
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="accountZipCode" class="col-sm-3 control-label">Zip Code</label>
-                                <div class="col-sm-3">
-                                    <input type="text" class="form-control" id="accountZipCode" placeholder="Zip Code" value="{{user.local.zipCode}}">
-                                </div>
-                                <div class="col-sm-6 lh-input" id="accountCityState">
+                                <label for="account-last-name" class="col-sm-3 control-label">Last Name</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" id="account-last-name" placeholder="Last Name" value="{{user.local.lastName}}">
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="accountPDGA" class="col-sm-3 control-label">PDGA Number</label>
+                                <label for="account-username" class="col-sm-3 control-label">Username
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="account-username"></i>
+                                </label>
+                                <div class="col-sm-5">
+                                    <input type="text" class="form-control" id="account-username" placeholder="Username" value="{{user.local.username}}">
+                                </div>
+                                <div class="col-sm-4 lh-input" id="account-username-feedback">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-zip-code" class="col-sm-3 control-label">Zip Code</label>
+                                <div class="col-sm-5">
+                                    <input type="text" class="form-control" id="account-zip-code" placeholder="Zip Code" value="{{user.local.zipCode}}">
+                                </div>
+                                <div class="col-sm-4 lh-input" id="account-city-state">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-pdga" class="col-sm-3 control-label">PDGA Number</label>
                                 <div class="col-sm-3">
-                                    <input type="text" class="form-control" id="accountPDGA" placeholder="PDGA Number" value="{{user.local.pdgaNumber}}">
+                                    <input type="text" class="form-control" id="account-pdga" placeholder="PDGA Number" value="{{user.local.pdgaNumber}}">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <div class="col-sm-12">
-                                    <button id="accountSave" class="btn btn-primary pull-right">Save</button>
+                                    <button id="account-save" class="btn btn-primary pull-right">Save</button>
                                 </div>
                             </div>
                         </div>
