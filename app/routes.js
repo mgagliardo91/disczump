@@ -106,11 +106,11 @@ module.exports = function(app, passport, gridFs) {
         });
     });
     
-    // app.get('/test', function(req, res) {
-    //   res.render('test', {
-    //       isIndex: true
-    //   });
-    // });
+    app.get('/test', function(req, res) {
+      res.render('test', {
+          isIndex: true
+      });
+    });
     
     app.get('/disc/:discid', function(req, res) {
         var userId = undefined;
@@ -132,7 +132,7 @@ module.exports = function(app, passport, gridFs) {
                });
             }
             
-            UserController.getAlias(disc.userId, function(err, alias){
+            UserController.getUser(disc.userId, function(err, user){
                 if (err) {
                     return res.render('notification', {
                         isMobile: req.device.isMobile,
@@ -151,15 +151,16 @@ module.exports = function(app, passport, gridFs) {
                 if (req.device.isMobile) {
                     return res.render('mobile/viewdisc', {
                         disc: disc,
-                        alias: alias,
+                        user: user,
                         isPublicPage: true,
                         isMobile: true
                     });
                 } else {
-                    return res.render('viewdisc', {
+                    return res.render('discview', {
                         disc: disc,
-                        alias: alias,
-                        isPublicPage: true
+                        user: user,
+                        isPublicPage: true,
+                        isLoggedIn: req.isAuthenticated()
                     });
                 }
                 

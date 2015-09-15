@@ -9,6 +9,7 @@ var UserConfig = require('../../config/config.js').user.preferences;
 module.exports = {
 	query: query,
 	queryUsers: queryUsers,
+	getPreview: getPreview,
 	getUser: getUser,
 	updateActivity: updateActivity,
 	updateAccessCount: updateAccessCount,
@@ -36,6 +37,9 @@ function query(field, q, callback) {
 
 function queryUsers(query, callback) {
 	var query = query.trim();
+	if (!query.length) return callback(null, {query: query, results: []});
+	
+	var regExp = new RegExp(query, 'i');
 	
 	if (query.indexOf(' ') >= 0) { // name query
 		var nameQuery = query.split(' ');
@@ -49,12 +53,17 @@ function queryUsers(query, callback) {
 				_.each(users, function(user) {
 					userInfoArr.push(user.accountToString());
 				});
-				return callback(null, userInfoArr);
+				
+				userInfoArr.sort(function(x,y) {
+					return x.firstName.toLowerCase() > y.firstName.toLowerCase();
+				});
+				
+				return callback(null, {query: query, results: userInfoArr});
 			});
 	} else {
-		User.find({ $or:[ {'local.username': new RegExp(query, 'i')}, 
-						{'local.firstName': new RegExp(query, 'i')}, 
-						{'local.lastName': new RegExp(query, 'i')} ]}, 
+		User.find({ $or:[ {'local.username': regExp}, 
+						{'local.firstName': regExp}, 
+						{'local.lastName': regExp} ]}, 
 			function(err, users) {
 				if (err) 
 					return callback(Error.createError(err, Error.internalError));
@@ -63,7 +72,31 @@ function queryUsers(query, callback) {
 				_.each(users, function(user) {
 					userInfoArr.push(user.accountToString());
 				});
-				return callback(null, userInfoArr);
+				
+				userInfoArr.sort(function(x,y) {
+					var xVal = '';
+					var yVal = '';
+					
+					if (regExp.test(x.username)) {
+						xVal = 'a:' + x.username.toLowerCase();
+					} else if  (regExp.test(x.firstName)) {
+						xVal = 'b:' + x.firstName.toLowerCase();
+					} else if  (regExp.test(x.lastName)) {
+						xVal = 'c:' + x.lastName.toLowerCase();
+					}
+					
+					if (regExp.test(y.username)) {
+						yVal = 'a:' + y.username.toLowerCase();
+					} else if  (regExp.test(y.firstName)) {
+						yVal = 'b:' + y.firstName.toLowerCase();
+					} else if  (regExp.test(y.lastName)) {
+						yVal = 'c:' + y.lastName.toLowerCase();
+					}
+					
+					return xVal > yVal;
+				});
+				
+				return callback(null, {query: query, results: userInfoArr});
 		});
 	}
 }
@@ -76,6 +109,15 @@ function getUserInfo(userId, callback) {
 		if (!user) return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
 		
 		return callback(null, user.accountToString());	
+	});
+}
+
+function getPreview(userId, refDiscId, callback) {
+	DiscController.getPublicPreview(userId, refDiscId, function(err, preview) {
+		if (err)
+			return callback(err);
+			
+		return callback(null, {userId: userId, discs: preview});
 	});
 }
 
@@ -227,12 +269,12 @@ function updateAccount(userId, account, callback) {
 		if (!user)
 	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
 		
-		if (_.has(account, 'alias')) {
-			if (account.alias == '') {
-				user.local.alias = undefined;
-			} else {
-				user.local.alias = account.alias;
-			}
+		if (_.has(account, 'firstName')) {
+			user.local.firstName = account.firstName;
+		}
+		
+		if (_.has(account, 'lastName')) {
+			user.local.lastName = account.lastName;
 		}
 		
 		if (_.has(account, 'zipCode') && /^\d{5}$/.test(account.zipCode)) {
@@ -243,12 +285,38 @@ function updateAccount(userId, account, callback) {
 			user.local.pdgaNumber = account.pdgaNumber;
 		}
 		
-		user.save(function(err) {
-		    if (err)
-    			return callback(Error.createError(err, Error.internalError));
-    		else
-    			return callback(null, user.accountToString());
-		});
+		async.series([
+			function(cb) {
+				if (_.has(account, 'username') && checkUsername(account.username)) {
+					if (account.username == user.local.username) {
+						return cb();
+					}
+					
+					query('local.username', account.username, function(err, users) {
+			            if (err || users.length > 0) {
+			                cb(Error.createError('The username already exists.', Error.invalidDataError));
+			            } else {
+							user.local.username = account.username;
+							cb();
+			            }
+					});
+				} else {
+					cb(Error.createError('The username does not meet the required criteria.', Error.invalidDataError));
+				}
+			}],
+			function(err) {
+				if (err) {
+		    		return callback(err);
+				}
+				
+				user.save(function(err) {
+				    if (err) {
+		    			return callback(Error.createError(err, Error.internalError));
+				    } else {
+		    			return callback(null, user.accountToString());
+				    }
+				});	
+			});
     });
 }
 
@@ -334,8 +402,8 @@ function deleteUser(userId, gfs, callback) {
 function validatePreference(preference, value) {
 	var displayCount = ['20', '40', '60', '80', '100', 'All']
 	var colorKey = ['mini', 'distance', 'fairway', 'mid', 'putter'];
-	var sortProp = ['name', 'brand', 'tagList', 'type', 'material', 'weight', 'color', 'speed', 'glide', 'turn', 'fade'];
-	var views = ['gallery', 'dashboard', 'statistics'];
+	var sortProp = ['name', 'brand', 'tagList', 'type', 'material', 'weight', 'color', 'speed', 'glide', 'turn', 'fade', 'condition', 'createDate'];
+	var views = ['gallery', 'inventory', 'statistics'];
 	var enables = [true, false];
 	
 	if (preference == 'displayCount') {

@@ -113,6 +113,11 @@
 	border-radius: 5px;
 	padding: 8px 10px;
 	margin: 0px 5px;
+    display: inline-block;
+}
+
+.nav-btn-small {
+	padding: 5px 5px;
 }
 
 .navbar-btn-list .mobile-btn {
@@ -131,6 +136,12 @@
 }
 
 .navbar-btn-list a:hover .nav-btn {
+	cursor: pointer;
+	border: 2px solid rgb(0, 142, 221);
+	margin: 0px 4px;
+}
+
+.nav-btn:hover {
 	cursor: pointer;
 	border: 2px solid rgb(0, 142, 221);
 	margin: 0px 4px;
@@ -245,7 +256,7 @@
     font-weight: bold;
 }
 
-.page-title > hr {
+.page-title + hr {
     margin-top: 5px;
     margin-bottom: 0;
     border-top: 1px solid #D2D2D2;
@@ -387,4 +398,14 @@ a.btn-facebook:hover {
 .panel {
     margin: 0px;
     background-color: transparent;
+}
+
+
+.dz-link {
+    color: rgb(0, 142, 221)
+}
+
+.dz-link:hover {
+    text-decoration: underline;
+    cursor: pointer;
 }

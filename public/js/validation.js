@@ -5,7 +5,7 @@ var ZumpValidate = function(opt) {
     var emailRegex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
     var usernameRegex = /^[a-zA-Z0-9_]*$/;
     var zipCodeRegex = /^\d{5}$/;
-    var numberRegex = /^[0-9]*$/;
+    var numberRegex = /^-*[0-9]+$/;
     
     this.init = function(opt) {
         if (isDef(opt.items)) {
@@ -23,12 +23,39 @@ var ZumpValidate = function(opt) {
         setupListeners();
     }
     
+    this.doValidate = function() {
+        _.each(items, function(item) {
+            validate(item.id, undefined, 'keyup'); 
+        });
+    }
+    
     this.isAllValid = function() {
         var invalid = _.filter(items, function(item) {
-            return (item.isValid == undefined || !item.isValid);
+            return item.optional ? (typeof(item.isValid) !== 'undefined' && !item.isValid) 
+                : !item.isValid;
         });
         
         return invalid.length == 0;
+    }
+    
+    this.getInvalidItems = function() {
+        var invalidItems = _.filter(items, function(item) {
+            return item.optional ? (typeof(item.isValid) !== 'undefined' && !item.isValid) 
+                : !item.isValid;
+        });
+        
+        return invalidItems;
+    }
+    
+    this.updateItem = function(id, field, val) {
+        var curItem = _.findWhere(items, {id: id});
+        curItem[field] = val;
+        
+        if (curItem) {
+            items = _.reject(items, {id: id});
+            items.push(curItem);
+            validate(curItem.id, undefined, 'keyup');
+        }
     }
     
     var setupListeners = function() {
@@ -38,7 +65,7 @@ var ZumpValidate = function(opt) {
             if ($input.length) {
                
                 if (typeof item.type !== 'undefined' && item.type != 'none') {
-                    $input.on('keyup paste change', handleEvent);
+                    $input.on('keyup paste change leave', handleEvent);
                 } else {
                     item.isValid = true;
                 }
@@ -93,9 +120,12 @@ var ZumpValidate = function(opt) {
     var handleEvent = function(e) {
         if (e.keyCode == 9 || e.keyCode == 16) return;
         var $this = $(this);
+        var delayInterval = e.type == 'keyup' ? 500 : 0;
+        
         delay(function() {
-			 validate($this.attr('id'), $this, e.type);
-	    }, 500 );
+            validate($this.attr('id'), $this, e.type);
+        }, delayInterval );
+        
     }
     
     var validate = function(id, $input, eventType) {
@@ -159,9 +189,10 @@ var ZumpValidate = function(opt) {
                     if (eventType == 'keyup') {
                         shouldCb = false;
                         queryUser('username', val, function(success, retData) {
-                            var available = !retData.count;
-                            var availableText = available ? 'available' : 'not available';
-                            $('#' + item.output).text('This username is ' + availableText);
+                            var isCurrent = item.data && item.data == val;
+                            var available = !retData.count || isCurrent;
+                            var availableText = isCurrent ? 'Current Username' : (available ? 'Available' : 'Unavailable');
+                            $('#' + item.output).text(availableText);
                             callback($input, available);
                         });
                     }
