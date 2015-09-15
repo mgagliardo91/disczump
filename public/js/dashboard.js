@@ -5,7 +5,13 @@ var $sidebar;
 var $sidebarFilter;
 
 // UI Objects
-var pageSettings = {tableMode: true, activePage: undefined};
+var pageSettings = {
+	tableMode: true, 
+	activePage: undefined, 
+	pageCache: {},
+	pageNav: [],
+	panelNav: []
+};
 var sidebarSettings = {collapsed: false, locked: false};
 var pageEvents = {};
 var modifyHandler = {type: 'Add', discId: undefined};
@@ -15,7 +21,9 @@ var myZumpColorPicker;
 var myMessenger;
 var myDashboard;
 var myEditor;
+var mySocial;
 var accountValidation;
+var changePasswordValidate;
 
 // Global vars
 var socket;
@@ -45,7 +53,6 @@ $(document).ready(function(){
 	}); 
    	
    	setupFrameworkListeners();
-	setupSearchListeners();
     
     /*===================================================================*/
 	/*                                                                   */
@@ -59,7 +66,7 @@ $(document).ready(function(){
     	$accountForm.find('.alert').remove();
     	
     	if (!accountValidation.isAllValid()) {
-    		return $accountForm.prepend(generateError('This shit ain\'t valid nigga.', 'ERROR'));
+    		return false;
     	}
     	
     	var username = $('#account-username').val();
@@ -79,19 +86,16 @@ $(document).ready(function(){
     			$('#account-username').val(retData.username);
     			$('#account-first-name').val(retData.firstName);
     			$('#account-last-name').val(retData.lastName);
-    			$('#account-zip-code').val(retData.zipCode).parent().removeClass('has-success');
+    			$('#account-zip-code').val(retData.zipCode);
     			$('#account-pdga').val(retData.pdgaNumber);
     			$accountForm.prepend(generateSuccess('Account successfully updated.', 'Success'));
     			autoCloseAlert($accountForm.find('.alert'), 3000);
+    			
+    			accountValidation.updateItem('account-username', 'data', retData.username);
+    		} else {
+    			$accountForm.prepend(generateError(retData.message, retData.type));
     		}
     	});
-    });
-    
-    var changePasswordValidate = new ZumpValidate({
-        items: [
-            {id:'new-password', type: 'text', min: 6, hint: 'Password must be at least 6 characters in length.'},
-            {id:'confirm-password', type:'compare', refId:'new-password'}
-        ]
     });
     
     $('#change-password-save').click(function() {
@@ -99,7 +103,7 @@ $(document).ready(function(){
     	
     	var currentPassword = $('#current-password').val();
     	var newPassword = $('#new-password').val();
-    	var confirmPassword = $('#confirm-password').val();
+    	var confirmPassword = $('#confirm-new-password').val();
     	
     	// check new == confirm
     	if (changePasswordValidate.isAllValid()) {
@@ -109,19 +113,19 @@ $(document).ready(function(){
 	    			autoCloseAlert($('#accountActionsForm').find('.alert'), 3000);
 	    			$('#current-password').val('');
 			    	$('#new-password').val('').parent().removeClass('has-success');
-			    	$('#confirm-password').val('').parent().removeClass('has-success');
+			    	$('#confirm-new-password').val('').parent().removeClass('has-success');
 	    		} else {
 	    			$('#accountActionsForm').prepend(generateError(retData.message, retData.type));
 	    			$('#current-password').val('');
 			    	$('#new-password').val('').parent().removeClass('has-success has-error');
-			    	$('#confirm-password').val('').parent().removeClass('has-success has-error');
+			    	$('#confirm-new-password').val('').parent().removeClass('has-success has-error');
 	    		}
 	    	});
     	} else {
     		$('#accountActionsForm').prepend(generateError('New password and confirmed password do not match.', 'ERROR'));
     		$('#current-password').val('');
 	    	$('#new-password').val('').parent().removeClass('has-success has-error');
-	    	$('#confirm-password').val('').parent().removeClass('has-success has-error');
+	    	$('#confirm-new-password').val('').parent().removeClass('has-success has-error');
     	}
     });
     
@@ -179,7 +183,7 @@ $(document).ready(function(){
     		galleryCount : galleryCount
     	}, function(success, retData) {
     		if (success) {
-    			$('#preferences-form').prepend(generateSuccess('Default settings saved successfully. Changes will take effect when page is <a href="/">reloaded</a>.', 'Success'));
+    			$('#preferences-form').prepend(generateSuccess('Default settings saved successfully. Changes will take effect when page is <a href="/dashboard">reloaded</a>.', 'Success'));
     			userPrefs = retData;
     		}
     	});
@@ -190,7 +194,7 @@ $(document).ready(function(){
     	generateConfirmationModal('Warning!', text, 'Restore', function() {
 			updatePreferences(undefined, function(success, retData) {
 	    		if (success) {
-	    			$('#preferences-form').prepend(generateSuccess('Default settings have been restored. Changes will take effect when page is <a href="/">reloaded</a>.', 'Success'));
+	    			$('#preferences-form').prepend(generateSuccess('Default settings have been restored. Changes will take effect when page is <a href="/dashboard">reloaded</a>.', 'Success'));
 	    			userPrefs = retData;
 	    		}
 	    	});
@@ -248,19 +252,6 @@ $(document).ready(function(){
 	/*                       Start on-load commands                      */
 	/*                                                                   */
 	/*===================================================================*/
-
-	pageEvents['pg-gallery'] = {
-		onShow: function() {
-			pageSettings.tableMode = false;
-    	    myDashboard.showDiscGallery();
-		},
-		onHide: function() {
-			pageSettings.tableMode = true;
-		},
-		isShowing: function() {
-			
-		}
-	}
 	
 	pageEvents['pg-dashboard'] = {
 		onShow: function() {
@@ -270,7 +261,9 @@ $(document).ready(function(){
 			
 		},
 		isShowing: function() {
-			
+			if (myDashboard.isPublicMode()) {
+				myDashboard.setDiscList(discs);
+			}
 		}
 	}
 	
@@ -313,7 +306,6 @@ $(document).ready(function(){
     /* Initial Commands */
    	$('.page').hide();
     resizeSidebar();
-    $searchResults.hide();
     
     getSession(function(success, data) {
     	if (success) {
@@ -330,7 +322,7 @@ $(document).ready(function(){
 		    		setUserPrefs();
 		    		initializeTooltips();
 		    		zumpLibraryInit();
-		    		loadUserPrefs();
+    				changePage('#pg-dashboard');
 		    		getAllDiscs(function(success, discsFromServer){
 						if (success) {
 							discs = discsFromServer;
@@ -344,13 +336,15 @@ $(document).ready(function(){
     	}	
     });
     
+	if ($('#menu-tutorial').hasClass('prog-click')) {
+		$('#menu-tutorial').trigger('click');
+	}
     
     $('.page-alert').slideDown(300);
     
     setTimeout(function() {
         initializePage();
     }, 200);
- 
 });
 
 function setupFrameworkListeners() {
@@ -368,46 +362,30 @@ function setupFrameworkListeners() {
    	
    	$('#menu-feedback').click(function(e) {
    		e.stopImmediatePropagation();
-   		generateFeedbackModal('Feedback Form', 'Submit', function() {
-   			if ($('#feedback-textarea').val().length < 1) {
-   				return $('.modal-body').prepend(generateError('You must enter information into the text box before submitting the form.', 'ERROR'));
-   			} else {
-   				$('.modal-body').find('.alert').remove();
-   				var text = $('#feedback-textarea').val();
-   				postFeedback(text, function(success, retData) {
-   					if (success) {
-   						$('.custom-modal').modal('hide');
-   					} else {
-   						console.log('Error submitting feedback.');
-   					}
-   				});
-   			}
-   		});
-   		return false;
+   		setLoading(true);
+   		// generateFeedbackModal('Feedback Form', 'Submit', function() {
+   		// 	if ($('#feedback-textarea').val().length < 1) {
+   		// 		return $('.modal-body').prepend(generateError('You must enter information into the text box before submitting the form.', 'ERROR'));
+   		// 	} else {
+   		// 		$('.modal-body').find('.alert').remove();
+   		// 		var text = $('#feedback-textarea').val();
+   		// 		postFeedback(text, function(success, retData) {
+   		// 			if (success) {
+   		// 				$('.custom-modal').modal('hide');
+   		// 			} else {
+   		// 				console.log('Error submitting feedback.');
+   		// 			}
+   		// 		});
+   		// 	}
+   		// });
+   		return true;
    	});
    	
 	$('.sidebar-nav-select').click(function(e) {
 		e.stopPropagation();
     	var $this = $(this);
     	var nav = $this.attr('nav-select');
-       	var $nav = $(nav);
-       	var $curNav = $('.nav-sidebar:visible');
-       	
-       	if ($sidebarFilter.is(':visible')) {
-       		$('#results-header-filter').css({
-      			'background-color' : 'initial',
-      			'color' : '#000',
-      			'border-color' : 'rgb(134, 134, 134)'
-      		});
-       	}
-       	
-       	if ($nav.length && !$nav.is(':visible')) {
-       		activePage = nav;
-       		$curNav.fadeOut(100, function() {
-				$this.addClass('active').siblings('.sidebar-nav-select').removeClass('active');
-       			$nav.fadeIn(100);
-       		});
-       	}
+       	changeSidebar(nav);
 	});
 	
    	$('.nav-sidebar li.sidebar-select.nav').click(function(e){
@@ -415,6 +393,12 @@ function setupFrameworkListeners() {
        	var $this = $(this);
        	var nav = $this.attr('pg-select');
        	changePage(nav);
+      	return false;
+   	});
+   	
+   	$('.dz-page-back').click(function(e) {
+   		e.stopPropagation();
+       	pageBack();
       	return false;
    	});
    	
@@ -429,80 +413,12 @@ function setupFrameworkListeners() {
 			}	
      	});
     });
-    
+  
 	$(document).on('mouseenter', '.hover-active', function() {
 		$(this).addClass('active');
 	}).on('mouseleave', '.hover-active', function() {
 		$(this).removeClass('active');
 	});
-}
-
-function setupSearchListeners() {
-	$searchBar.focusin(function() {
-		$(this).trigger('keyup');
-    }).on('keyup', function() {
-		delay(function() {
-			if ($searchBar.val().length > 0) {
-				if (!$searchResults.is(':visible')) {
-					$(activePage).hide();
-					$searchResults.show();
-				}
-				doSearch();
-			} else {
-				$searchResults.hide();
-				$(activePage).show();
-			}
-	}, 100 );
-    }).click(function(e) {
-    	e.stopPropagation();
-    });
-    
-    $searchResults.focusout(function() {
-    	$searchResults.hide();
-		$(activePage).show();
-    });
-    
-    $(document).click(function(e) {
-    	if ($searchResults.is(':visible')) {
-    		if (!$(e.target).closest('#sidebar-search').length) {
-		        $searchResults.hide();
-				$(activePage).show();
-		    }
-    	}
-	});
-	
-	$(document).on('mouseenter', '#search-results-container li', function() {
-		$(this).find('.fa-search-results').show();
-	}).on('mouseleave', '#search-results-container li', function() {
-		$(this).find('.fa-search-results').hide();
-	});
-	
-	$(document).on('click', '.result-section-output li:not(.result-item-empty)', function(e) {
-		e.stopPropagation();
-		var $parent = $(this).parents('.result-section');
-		var option = $parent.attr('id').match(/-([a-zA-Z]+)/)[1];
-		var val = $(this).text();
-		
-		$searchBar.val('');
-		myDashboard.Filter().clearFilters();
-		myDashboard.Filter().pushFilterItem(option, val, true);
-		$searchResults.hide();
-		$(activePage).show();
-	});
-
-	$(document).on('vmouseup', 'input[type="text"]', function(e) {
-		e.stopImmediatePropagation();
-		e.stopPropagation();
-		return false;
-	});
-	
-	$('#export-list').click(function(e){
-		exportList();
-	});
-	
-    $('#search-request').click(function() {
-    	$searchBar.focus();
-    });
 }
 
 /*
@@ -522,18 +438,92 @@ function parseNotification(notification) {
 	}
 }
 
+function setLoading(visible) {
+	var $loading = $('#loading-screen');
+	var $sprite = $('.loader-sprite');
+	if (visible) {
+		$('body').css({
+			'position': 'fixed',
+			'overflow-y': 'scroll'
+		});
+		
+		$sprite.css({
+			left: ($(document).width() - $('.sidebar').outerWidth())/2 - 125,
+			top: $(window).height()/2 - 125
+		});
+		$loading.css({
+			width: $(document).width() - $('.sidebar').outerWidth(),
+			left: $('.sidebar').outerWidth(),
+			height: $(document).height()
+		}).show();
+	} else {
+		$('body').css({
+			'position': 'static',
+			'overflow-y': 'auto'
+		});
+		$loading.hide();
+	}
+}
+
+function changeSidebar(nav) {
+	if (nav == pageSettings.panelNav.curPanel) return;
+	
+	toggleSidebar(nav);
+}
+
+function toggleSidebar(nav, complete) {
+	var $nav = $(nav);
+   	var $curNav = $('.nav-sidebar:visible');
+   	
+   	if ($nav.length) {
+   		if ($nav.is(':visible') && pageSettings.panelNav.length > 0) {
+   			var lastPanel = pageSettings.panelNav.pop();
+	   		$nav = $(lastPanel);
+	   	} else {
+	   		pageSettings.panelNav = _.without(pageSettings.panelNav, '#' + $curNav.attr('id'));
+	   		pageSettings.panelNav.push('#' + $curNav.attr('id'));
+	   	}
+	   	
+	   	pageSettings.panelNav.curPanel = '#' + $nav.attr('id');
+	   	
+   		$curNav.fadeOut(0, function() {
+   			$('.sidebar-nav-indicator').removeClass('active');
+			$('.sidebar-nav-indicator[nav-select="#' + $nav.attr('id') + '"]').addClass('active');
+   			$nav.fadeIn(0, function() {
+   				resizeSidebarResults();
+   				if (complete) complete();
+   			});
+   		});
+   	}
+}
+
+function pageBack() {
+	if (pageSettings.pageNav.length) {
+		var page = pageSettings.pageNav.pop();
+		changePage(page);
+	}
+}
+
 /*
 * Changes the current dashboard page
 */
-function changePage(page) {
+function changePage(page, callback) {
    	var $page = $(page);
    	var $curPage = $('.page:visible');
    	var $navItem = $('.nav-sidebar li.sidebar-select[pg-select="' + page + '"]');
    	
+   	if (!$page.length) {
+   		if ($navItem.length) {
+       		$navItem.addClass('active').siblings().removeClass('active');
+   		}
+   		return;
+   	}
+   	
+   	if (!isDef(pageSettings.pageCache[$page.attr('id')])) {
+   		pageSettings.pageCache[$page.attr('id')] = {};
+   	}
+   	
    	if (!$curPage.length) {
-       	if (isDef(pageEvents[$curPage.attr('id')])) {
-        	pageEvents[$curPage.attr('id')].onHide();
-       	}
         $page.fadeIn(100, function() {
 			if ($navItem.length) {
 			   	$navItem.addClass('active');
@@ -544,47 +534,59 @@ function changePage(page) {
            	}
            	
            	pageSettings.activePage = page;
+           	if (callback) callback();
         });
         return;
    	}
    
-   	if ($page.length) {
-   		if ($page.is(':visible')) {
-   			pageEvents[$page.attr('id')].isShowing();
-   			if ($navItem.length) {
-            	$navItem.addClass('active');
-			}
-   		} else {
-   			var curPageEvents = pageEvents[$curPage.attr('id')];
-   			
-   			if (curPageEvents && curPageEvents.canLeave && !curPageEvents.canLeave()) {
-   				return;
-   			}
-   			
-   			$curPage.fadeOut(100, function() {
-   				
-	           	if (isDef(curPageEvents)) {
-	            	curPageEvents.onHide();
-	           	}
-	           	
-	           	$('.nav-sidebar li.sidebar-select').removeClass('active');
-	            $page.fadeIn(100, function() {
-	                if ($navItem.length) {
-	                	$navItem.addClass('active');
-					}
-					
-	                if (isDef(pageEvents[$page.attr('id')])) {
-	            		pageEvents[$page.attr('id')].onShow();
-	               	}
-	               	
-		           	pageSettings.activePage = page;
-	            });
-	       	});
-   		}
-   	} else {
+   	if ($page.is(':visible')) {
+   		pageEvents[$page.attr('id')].isShowing();
    		if ($navItem.length) {
-       		$navItem.addClass('active').siblings().removeClass('active');
+        	$navItem.addClass('active');
+		}
+   	} else {
+   		var curPageEvents = pageEvents[$curPage.attr('id')];
+   		
+   		if (curPageEvents && curPageEvents.canLeave && !curPageEvents.canLeave()) {
+   			return;
    		}
+   		
+   		pageSettings.pageCache[$curPage.attr('id')].scrollPos = $(document).scrollTop();
+   		
+       	pageSettings.pageNav = _.reject(pageSettings.pageNav, function(page) {
+       		return page == '#' + $curPage.attr('id');
+       	});
+   		pageSettings.pageNav.push('#' + $curPage.attr('id'));
+   		
+   		$curPage.fadeOut(100, function() {
+   			
+           	if (isDef(curPageEvents)) {
+            	curPageEvents.onHide();
+           	}
+           	
+           	$('.nav-sidebar li.sidebar-select').removeClass('active');
+           	
+   			
+            $page.fadeIn(100, function() {
+                if ($navItem.length) {
+                	$navItem.addClass('active');
+				}
+				
+                if (isDef(pageEvents[$page.attr('id')])) {
+            		pageEvents[$page.attr('id')].onShow();
+               	}
+               	
+               	var pageCache = pageSettings.pageCache[$page.attr('id')];
+   				if (isDef(pageCache.scrollPos)) {
+   					$("html, body").scrollTop(pageCache.scrollPos);
+   				} else {
+   					$("html, body").scrollTop(0);
+   				}
+               	
+	           	pageSettings.activePage = page;
+	           	if (callback) callback();
+            });
+       	});
    	}
 }
 
@@ -640,22 +642,6 @@ function setUserPrefs() {
 
 // TESTING///
 
-
-function loadUserPrefs() {
-	$('.sidebar-select[pg-select="#pg-' + userPrefs.defaultView + '"]').addClass('active').trigger('click');
-	$('#paginate-display-count').val(userPrefs.displayCount);
-	$('#paginate-display-count').trigger('change');
-	myDashboard.Gallery().updateGalleryCount(userPrefs.galleryCount);
-	
-	
-	var $tutorialMenu = $('#menu-tutorial');
-	
-	if ($tutorialMenu.hasClass('prog-click')) {
-			$('#menu-tutorial').trigger('click');
-	}
-	
-}
-
 function initializeTooltips() {
 	var ttDefaultView = generateTooltipOptions('top', 'hover', 'Select a default view to show every time your DiscZump account loads.', '200px');
 	var ttDisplayCount = generateTooltipOptions('top', 'hover', 'Select a default number of discs to show per page when your DiscZump account loads the dashboard view.', '200px');
@@ -702,7 +688,13 @@ function generateTooltipOptions(placement, trigger, title, width) {
 
 function zumpLibraryInit() {
 	
+	mySocial = new ZumpSocial();
+	
 	myDashboard = new ZumpDashboard({
+		defaultView: userPrefs.defaultView,
+		searchToggle: '#inventory-search-toggle',
+		searchPanel: '#sidebar-search',
+		searchResults: '#search-results-container',
 		inventory: {
 			inventoryHeader: '#inventory-header',
 			inventoryContainer: '.disc-inventory-container'
@@ -710,7 +702,8 @@ function zumpLibraryInit() {
 		paginate: {
 			pageForward: '#page-forward',
 			pageBack: '#page-back',
-			paginateCount: '#paginate-display-count'
+			paginateCount: '#paginate-display-count',
+			displayCount: userPrefs.displayCount,
 		},
 		sort: {
 			dynamicHeader: '#disc-inventory-header-dynamic',
@@ -722,16 +715,33 @@ function zumpLibraryInit() {
 		filter: {
 			filterResults: '#filter-results',
 			filterCount: '#filter-count',
-			filterToggle: '#results-header-filter',
+			filterToggle: '#dashboard-filter-toggle',
 			currentFilterContainer: '#current-filter-container',
 	    	filterContainer: '#filter-container'
 		},
 		gallery: {
-			galleryContainer: '#gallery-container'
+			galleryContainer: '#gallery-container',
+			galleryCount: userPrefs.galleryCount
 		},
 		statistics: {
 			statPlot: '#statistics-plot',
 			renderGraph: '#render-graph'
+		},
+		onDeleteDisc: function(delDisc) {
+			discs = _.filter(discs, function(disc){
+				return disc._id != delDisc._id;
+			});
+			myDashboard.setDiscList(discs);
+		},
+		onUpdateDisc: function(upDisc) {
+			discs = _.filter(discs, function(disc){
+				return disc._id != upDisc._id;
+			});
+			discs.push(upDisc);
+			myDashboard.updateSingleDisc(upDisc);
+		},
+		onDisplayProfile: function(userId) {
+			mySocial.showProfile(userId);
 		}
 	});
 	
@@ -746,16 +756,6 @@ function zumpLibraryInit() {
 			myDashboard.setDiscList(discs);
 		}
 	});
-	
-    accountValidation = new ZumpValidate({
-    	items: [
-    		{id: 'account-username', data: userAccount.username, type: 'username', output: 'account-username-feedback', min: 6, max: 15},
-            {id: 'account-first-name', type: 'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }},
-            {id: 'account-last-name',  type: 'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }},
-            {id: 'account-zip-code', type: 'zipcode', output: 'account-city-state'},
-            {id: 'account-pdga', type: 'number', max: 6}
-    	]
-    });
     
     myZumpColorPicker = new ZumpColorPicker({
        baseColors: [
@@ -779,10 +779,29 @@ function zumpLibraryInit() {
 		sendMessageBtn: '#send-message-btn',
 		newMessage: '#new-message',
 		sendOnEnter: '#message-on-enter',
+		searchInbox: '#search-inbox',
 		activateThread: function() {
 			changePage('#pg-inbox');
 		}
 	});
+	
+	accountValidation = new ZumpValidate({
+    	items: [
+    		{id: 'account-username', data: userAccount.username, type: 'username', output: 'account-username-feedback', min: 6, max: 15},
+            {id: 'account-first-name', optional: true, type: 'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }},
+            {id: 'account-last-name',  optional: true, type: 'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }},
+            {id: 'account-zip-code', type: 'zipcode', output: 'account-city-state'},
+            {id: 'account-pdga', optional: true, type:'function', fn: function(val) { return val.length == 0 ? undefined : /^[0-9]*$/.test(val) }, max: 6}
+    	],
+        feedbackOnInit: true
+    });
+    
+    changePasswordValidate = new ZumpValidate({
+        items: [
+            {id:'new-password', type: 'text', min: 6, hint: 'Password must be at least 6 characters in length.'},
+            {id:'confirm-new-password', type:'compare', refId:'new-password'}
+        ]
+    });
 }
 
 /*===================================================================*/
@@ -825,6 +844,8 @@ function resizeSidebar() {
        	$searchResults.off('mouseenter').off('mouseleave');
        	$searchBar.off('focusin').off('focusout');
 	}
+	
+	resizeSidebarResults();
 }
 
 /*
@@ -850,39 +871,6 @@ function collapseSidebar() {
 		$sidebar.css('width', '');
 	});
 }
-
-/*
-* Global search method
-*/
-function doSearch() {
-	var search = $searchBar.val();
-	
-	containSearch(search, ['name', 'brand', 'tagList'], function(prop, list) {
-		if (prop == 'name') {
-			updateSearchResults($('#results-name'), list);
-		} else if (prop == 'brand') {
-			updateSearchResults($('#results-brand'), list);
-		} else if (prop == 'tagList') {
-			updateSearchResults($('#results-tagList'), list);
-		}
-	});
-}
-
-/*
-* Shows search based on results
-*/
-function updateSearchResults($section, list) {
-	var $output = $section.children('.result-section-output');
-	$output.children('li:not(.result-item-empty)').remove();
-	if (list.length > 0) {
-		$output.children('.result-item-empty').hide();
-		_.each(list, function(result) {
-			$output.append(generateResultItem(result));
-		});
-	} else {
-		$output.children('.result-item-empty').show();
-	}
-}   
 
 /*
 * Generates a modal popup for users to submit feedback
@@ -1078,7 +1066,7 @@ function exportList() {
 						var writeHeaders = true;
 						var list = discs;
 						if (type == 'filtered') {
-							list = discList;
+							list = myDashboard.Filter().filter(discs);
 						}
 						
 						_.each(list, function(disc) {
@@ -1135,14 +1123,67 @@ function generateConfirmationModal(title, bodyText, btnText, deleteFn) {
 	});
 }
 
-/*
-* Generates the HTML for a search result item
-*/
-function generateResultItem(item) {
-	return '<li>' + item + '<i class="fa fa-reply fa-search-results"></i></li>';
-}
-
 /* Global Methods */
+
+jQuery.fn.extend({
+    dzTriSwitch: function(opt, val) {
+    	var $this = $(this);
+    	
+        var createSelector = function() {
+            return $('<div class="dz-switch-selector dz-switch-on"></div>');
+        }
+    	
+    	if (typeof(opt) === 'undefined' || opt.init) {
+			$this.find('.dz-switch-opt').click(function(e) {
+			    var $this = $(this);
+			    var width = $this.outerWidth();
+			    if ($this.hasClass('active')) return;
+			    
+			    var $active = $this.siblings('.dz-switch-opt.active');
+			    var $activeSel = $active.find('.dz-switch-selector');
+			    var select = createSelector();
+			    
+			    if ($this.isAfter($active)) {
+			        width = -1 * width;
+			    }
+			    
+			    if ($active.length) {
+			        select.css({marginLeft: width + 'px'});
+			        $this.prepend(select);
+			        
+			        $activeSel.animate({
+			            marginLeft: (width * -1) + 'px'
+			        }, 100, function() {
+			            $active.removeClass('active');
+			            $activeSel.remove();
+			            
+			        });
+			        
+			        select.animate({
+			            marginLeft: '0px'
+			        }, 100, function() {
+			            $this.addClass('active');
+			        	if (opt.init.onChange) opt.init.onChange($this.attr('value'));
+			        });
+			        
+			    } else {
+			        $this.addClass('active');
+			        $this.prepend(select);
+			        if (opt.init.onChange) opt.init.onChange($this.attr('value'));
+			    }
+			});
+			return this;
+    	}
+    	
+    	if (opt == 'change') {
+    		this.find('.dz-switch-opt[value="' + val + '"]').trigger('click');
+    		return this;
+    	}
+    },
+    isAfter: function($elem){
+        return this.index() > $elem.index();
+    }
+});
 
 /*
 * Returns the current search params
@@ -1175,43 +1216,6 @@ var delay = (function(){
     timer = setTimeout(callback, ms);
   };
 })();
-
-/*
-* Returns a list of properties for the given disc list
-*/
-function getProperties(prop) {
-	var list = [];
-	if (discs.length && _.isArray(discs[0][prop])) {
-		var arrList = _.pluck(discs, prop);
-		_.each(arrList, function(arr) { 
-			list = list.concat(arr);	
-		});
-	} else {
-		list = _.pluck(discs,  prop);
-	}
-	
-	return _.uniq(list);
-}
-
-/*
-* Checks to see if an object contains a property
-*/
-function containSearch(val, properties, callback) {
-	_.each(properties, function(prop) {
-		callback(prop, checkContains(val, prop));
-	});
-}
-
-/*
-* Checks to see if a property contains the value
-*/
-function checkContains(val, prop){
-	if (!val || !prop) return [];
-	var filtered = _.filter(getProperties(prop), function(item) {
-		return item.toLowerCase().indexOf(val.toLowerCase()) >= 0;	
-	});
-	return filtered;
-}
 
 /*
 * Generates a information message
@@ -1283,6 +1287,33 @@ function copyDisc(id) {
 	return newDisc;
 }
 
+function resizeSidebarResults() {
+	
+	$.each($('.sidebar-results-container:visible'), function() {
+		var label = $(this).siblings('.sidebar-results-ref').last();
+		var height = $(window).outerHeight(true) - (label.offset().top - $(window).scrollTop() - parseInt(label.css('margin-top')) + label.outerHeight(true));
+		$(this).css({
+			height: height + 'px',
+			maxHeight: height + 'px'
+		});
+	});
+}
+
+function parseDate(date) {
+	var arr = date.split('-');
+	var year = arr[0];
+	var month = getMonth(arr[1]);
+	var day = arr[2].substring(0,2);
+	
+	return month + ' ' + day + ', ' + year;
+}
+
+function getMonth(month) {
+	var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+					'August', 'September', 'October', 'November', 'December'];
+	return months[month-1];
+}
+
 /*===================================================================*/
 /*                                                                   */
 /*                     Library Objects                               */
@@ -1338,7 +1369,7 @@ var ZumpEditor = function(opt) {
     	$tagInput = $('#add-disc-tag');
     	$dropzoneArea = $('#dropzone-area');
     	$discVisibility = $('#disc-visibility');
-    	$pgTitle = $('#pg-modify-disc').find('.page-title > span');
+    	$pgTitle = $('#pg-modify-disc').find('.page-title');
     	$imageContainer = $('#existing-image-list');
     	
     	setupListeners();
@@ -1364,6 +1395,19 @@ var ZumpEditor = function(opt) {
     //----------------------\
     // Private Functions
     //----------------------/
+    var discEditorValidation = new ZumpValidate({
+    	items: [
+    		{id: 'disc-brand', type: 'text', min: 1},
+    		{id: 'disc-name', type: 'text', min: 1},
+    		{id: 'disc-weight', optional: true, type: 'number'},
+    		{id: 'disc-speed', optional: true, type: 'number'},
+    		{id: 'disc-glide', optional: true, type: 'number'},
+    		{id: 'disc-turn', optional: true, type: 'number'},
+    		{id: 'disc-fade', optional: true, type: 'number'},
+    		{id: 'disc-condition', optional: true, type:'function', fn: function(val) { return val.length == 0 ? undefined : /^(10|[0-9])$/.test(val) }, max: 2}
+    	]
+    });
+    
     var setupListeners = function() {
 	
 	    $clearForm.click(function() {
@@ -1381,7 +1425,25 @@ var ZumpEditor = function(opt) {
 	        }
 	        
 	        $(param).collapse('toggle');
+	        
+	        if ($chevron.hasClass('fa-chevron-down')) {
+	        	var subArr = _.filter(textAssistArr, function(textAssist) {
+	        		return textAssist.accordionParent;
+	        	});
+	        	_.each(subArr, function(textAssist) {
+					textAssist.triggerResize();
+				});
+	        }
 	    });
+		
+		$(document).on('mouseenter', '.image-item', function(){
+			var $this = $(this);
+			if (!$this.parents('.image-item-container').hasClass('dz-processing')) {
+				$(this).find('.image-overlay').show();
+			}
+		}).on('mouseleave', '.image-item', function(){
+			$(this).find('.image-overlay').hide();
+		});
 		
 		$(document).on('click', '.tag-item-remove', function(){
 			var $parent = $(this).parents('.tag-item');
@@ -1395,7 +1457,23 @@ var ZumpEditor = function(opt) {
 	    $saveDisc.click(function() {
 			$modifyForm.find('div.alert').remove();
 			
-	    	if (modifyHandler.type == "Add") {
+			var invalidItems = discEditorValidation.getInvalidItems();
+			if (invalidItems.length) {
+				var errorLength = invalidItems.length;
+				var errorText = '';
+				
+				_.each(invalidItems, function(item) {
+		    		if (errorLength > 1) {
+		    			errorText = errorText + $('#' + item.id).attr('param') + ', ';
+		    		} else {
+		    			errorText = errorText + $('#' + item.id).attr('param');
+		    		}
+		    		errorLength = errorLength - 1;
+		    	});
+				
+				return $modifyForm.prepend(generateError('Invalid data in ' + (invalidItems.length > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
+				
+			} else if (modifyHandler.type == "Add") {
 	    		saveNewDisc();
 	    	} else if (modifyHandler.type == "Edit") {
 	    		saveExistingDisc();
@@ -1445,19 +1523,15 @@ var ZumpEditor = function(opt) {
     }
     
     var initialize = function() {
-		$modifyForm.find('.collapse').collapse({
-		  toggle: false
-		});
 		
     	$modifyForm.find('.text-assist').each(function(index) {
 			var textAssist = new ZumpTextAssist({
 		        inputElement: $(this),
 		        searchProp: $(this).attr('param'),
 		        items: function() { return discs; }, 
-		        onSelection: function(item) {
-		        }
-		    });
-		    
+		        onSelection: function(item) {}
+		    }); 
+		    textAssist.accordionParent = $(this).closest('.collapse').attr('id');;
 		    textAssistArr.push(textAssist);
 		});
 		
@@ -1474,33 +1548,36 @@ var ZumpEditor = function(opt) {
 		});
 		
 		textAssistArr.push(tagTextAssist);
-		
+
 		$modifyForm.find('[tt="condition"]').tooltip({
 	    	delay: { "show": 200, "hide": 100 },
 	    	placement: 'top',
 	    	trigger: 'hover',
-	    	title: 'Condition based on Sleepy Scale. Must be an integer with 1 optional decimal place.',
+	    	title: 'Condition based on Sleepy Scale. Must be an integer from 0 to 10.',
 	    	template: '<div class="tooltip" role="tooltip" style="width: 150px;">' +
 	    				'<div class="tooltip-arrow"></div>' +
 	    				'<div class="tooltip-inner"></div>' +
 	    				'</div>'
 	    });
 	    
+	    $modifyForm.find('.collapse').collapse({
+		  toggle: false
+		});
+	    
 		createDropZone($dropzoneArea);
-	    $discVisibility.bootstrapSwitch('state', true);
-	    $pgTitle.text(modifyHandler.type);
+	    clearModifyDiscForm();
     }
 	
 	/*
 	* Setup for the modify disc page each time it's opened
 	*/
 	var stageModifyDiscPage = function(action, discId) {
-		$pgTitle.text(action);
-		
 		if (action == 'Add') {
+			$pgTitle.text('Add Disc');
 			$('.current-images-label').hide();
 			$('#clear-modify-disc-form').show();
 		} else if (action == 'Edit') {
+			$pgTitle.text('Edit Disc');
 			clearModifyDiscForm();
 			$('.current-images-label').show();
 			$('#clear-modify-disc-form').hide();
@@ -1515,6 +1592,7 @@ var ZumpEditor = function(opt) {
 	var clearModifyDiscForm = function() {
 		$modifyForm.trigger('reset');
 		$modifyForm.find('.has-error').removeClass('has-error');
+		$modifyForm.find('.has-success').removeClass('has-success');
 		$modifyForm.find('div.alert').remove();
 		$tagContainer.empty();
 		$imageContainer.empty();
@@ -1562,6 +1640,8 @@ var ZumpEditor = function(opt) {
 				});
 			}	
 		});
+		
+		discEditorValidation.doValidate();
 	}
 	
 	/*
@@ -1591,32 +1671,8 @@ var ZumpEditor = function(opt) {
 		if (isProcessing) return;
 		
 		isProcessing = true;
-		$modifyForm.find('div.alert').remove();
 		
 		var disc = createDisc();
-		var errorCount = $modifyForm.find('.has-error').length;
-		
-		if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
-			isProcessing = false;
-			return $modifyForm.prepend(generateError('Brand and Name are required.', 'ERROR'));
-	    }
-	    
-	    if (errorCount > 0) {
-	    	var errorText = '';
-	    	var errorLength = errorCount;
-	    	
-	    	_.each($modifyForm.find('.has-error'), function(element) {
-	    		if (errorLength > 1) {
-	    			errorText = errorText + $(element).prev().text() + ', ';
-	    		} else {
-	    			errorText = errorText + $(element).prev().text();
-	    		}
-	    		errorLength = errorLength - 1;
-	    	});
-	    	
-			isProcessing = false;
-	    	return $modifyForm.prepend(generateError('Invalid data in ' + (errorCount > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
-	    }
 	    
 	    postDisc(disc, function(success, retData) {
 			if (success) {
@@ -1653,31 +1709,7 @@ var ZumpEditor = function(opt) {
 		if (isProcessing) return;
 		isProcessing = true;
 		
-		var errorCount = $modifyForm.find('.has-error').length;
-		
-		if (errorCount > 0) {
-	    	var errorText = '';
-	    	var errorLength = errorCount;
-	    	
-	    	_.each($modifyForm.find('.has-error'), function(element) {
-	    		if (errorLength > 1) {
-	    			errorText = errorText + $(element).prev().text() + ', ';
-	    		} else {
-	    			errorText = errorText + $(element).prev().text();
-	    		}
-	    		errorLength = errorLength - 1;
-	    	});
-	    	
-	    	isProcessing = false;
-	    	return $modifyForm.prepend(generateError('Invalid data in ' + (errorCount > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
-	    }
-		
 		var disc = createDisc(changeObject.curDisc);
-		
-		if (!disc.brand || !disc.name || disc.brand == '' || disc.name == '') {
-			isProcessing = false;
-			return $modifyForm.prepend(generateError('Brand and Name are required.', 'ERROR'));
-	    }
 	    
 	    putDisc(disc, function(success, retData) {
 			if (success) {
@@ -1890,12 +1922,31 @@ var ZumpDashboard = function(opt) {
 	var mySort;
 	var myFilter;
 	var myGallery;
+	var unfilteredList;
 	var discList;
 	var refPageTop;
 	var refContBottom;
+	var activeView;
+	var discViewId;
+	var onUpdateDisc;
+	var onDeleteDisc;
+	var onDisplayProfile;
+	var publicList = false;
 	
 	var paginateOptions = {displayCount: 20, currentPage: 1, lastPage: 1};
 	var chartData = {};
+	var searchFields = [{text: 'Name', property: 'name'},
+				        {text: 'Brand', property: 'brand'},
+				        {text: 'Tags', property: 'tagList'},
+				        {text: 'Type', property: 'type'},
+				        {text: 'Material', property: 'material'},
+				        {text: 'Weight', property: 'weight'},
+				        {text: 'Color', property: 'color'},
+				        {text: 'Speed', property: 'speed'},
+				        {text: 'Glide', property: 'glide'},
+				        {text: 'Turn', property: 'turn'},
+				        {text: 'Fade', property: 'fade'},
+				        {text: 'Condition', property: 'condition'}];
 	
 	//----------------------\
     // JQuery Objects
@@ -1909,13 +1960,16 @@ var ZumpDashboard = function(opt) {
     var $inventoryContainer;
     var $renderGraph;
     var $statPlot;
+    var $searchToggle;
+    var $searchPanel;
+    var $searchResults;
+	var $imageArea;
 
 	//----------------------\
     // Prototype Functions
     //----------------------/
     
 	this.init = function(opt) {
-		
 		
 		$inventoryHeader = $(opt.inventory.inventoryHeader);
     	$inventoryContainer = $(opt.inventory.inventoryContainer);
@@ -1926,6 +1980,18 @@ var ZumpDashboard = function(opt) {
 		$paginateCount = $(opt.paginate.paginateCount);
 		$renderGraph = $(opt.statistics.renderGraph);
 		$statPlot = $(opt.statistics.statPlot);
+		$searchToggle = $(opt.searchToggle);
+		$searchPanel = $(opt.searchPanel);
+		$searchResults = $(opt.searchResults);
+		$imageArea = $('#view-disc-image-container');
+		onUpdateDisc = opt.onUpdateDisc;
+		onDeleteDisc = opt.onDeleteDisc;
+		onDisplayProfile = opt.onDisplayProfile;
+		
+		if (opt.paginate.displayCount) {
+			paginateOptions.displayCount = opt.paginate.displayCount;
+			$paginateCount.val(paginateOptions.displayCount);
+		}
 		
 	   	/* Logic */
 	    refPageTop = $('body').outerHeight() - $('body').height() - $('nav').outerHeight();
@@ -1949,7 +2015,9 @@ var ZumpDashboard = function(opt) {
 		        {text: 'Speed', property: 'speed', type: 'number'},
 		        {text: 'Glide', property: 'glide', type: 'number'},
 		        {text: 'Turn', property: 'turn', type: 'number'},
-		        {text: 'Fade', property: 'fade', type: 'number'}
+		        {text: 'Fade', property: 'fade', type: 'number'},
+		        {text: 'Condition', property: 'condition', type: 'number'},
+		        {text: 'Create Date', property: 'createDate', type: 'date'}
 		    ],
 		    triggerSort: showDiscs,
 		    init: opt.sort.defaultSort
@@ -1973,7 +2041,8 @@ var ZumpDashboard = function(opt) {
 		        {text: 'Speed', property: 'speed'},
 		        {text: 'Glide', property: 'glide'},
 		        {text: 'Turn', property: 'turn'},
-		        {text: 'Fade', property: 'fade'}
+		        {text: 'Fade', property: 'fade'},
+		        {text: 'Condition', property: 'condition'}
 		    ],
 		    onFilterChange: function() {
 		        zumpDashboard.updateFilter();
@@ -1984,13 +2053,31 @@ var ZumpDashboard = function(opt) {
 		* ZumpGallery Initialization
 		*/
 		myGallery = new ZumpGallery({
-			galleryContainer: opt.gallery.galleryContainer
+			galleryContainer: opt.gallery.galleryContainer,
+			galleryCount: opt.gallery.galleryCount,
+			onItemClick: function(id) {
+				showDiscView(id);
+			}
 		});
 		
 		/*
 		* Initialize Listeners
 		*/
 		initListeners(opt);
+		
+		if (opt.defaultView) {
+			$('#dashboard-view-switch').dzTriSwitch('change', opt.defaultView);
+		} else {
+			$('#dashboard-view-switch').dzTriSwitch('change', 'inventory');
+		}
+	}
+	
+	this.isPublicMode = function() {
+		return publicList;
+	}
+	
+	this.setView = function(view) {
+		changeView(view);
 	}
 	
 	this.Gallery = function() {
@@ -2005,9 +2092,32 @@ var ZumpDashboard = function(opt) {
 		showDiscs(maintainPage);
 	}
 	
-	this.setDiscList = function(discs) {
-		discList = discs;
+	this.setDiscList = function(discs, user) {
+		unfilteredList = discs;
+		
+		if (typeof(user) !== 'undefined') {
+			publicList = true;
+			$('.sidebar-select[pg-select="#pg-dashboard"]').removeClass('active');
+			$('#public-dashboard').text(user.username).attr('userId', user._id);
+			$('.dashboard-title').show();
+		} else {
+			publicList = false;
+			$('#public-dashboard').text('').attr('userId','');
+			$('.dashboard-title').hide();
+		}
+		
+		discViewId = undefined;
+		myFilter.clearFilters();
 		this.updateFilter(true);
+	}
+	
+	this.updateSingleDisc = function(upDisc) {
+		unfilteredList = _.filter(unfilteredList, function(disc){
+			return disc._id != unfilteredList._id;
+		});
+		unfilteredList.push(upDisc);
+		updateDiscItem(upDisc);
+		if (discViewId == upDisc._id) discViewId = undefined;
 	}
 	
 	/*
@@ -2015,7 +2125,7 @@ var ZumpDashboard = function(opt) {
 	*/
 	this.updateFilter = function(generateFilters) {
 		$filterCount.text(myFilter.getCount() > 0 ? myFilter.getCount() : '');
-		discList = myFilter.filter(discs, generateFilters);
+		discList = myFilter.filter(unfilteredList, generateFilters);
 		showDiscs();
 	}
 	
@@ -2023,8 +2133,7 @@ var ZumpDashboard = function(opt) {
 	* Forces the UI to update based on screen size
 	*/
 	this.doResize = function() {
-		resizeResultHeader();
-	    resizeTagLists();
+		resizeDashboard();
 	}
 	
 	/*
@@ -2046,14 +2155,175 @@ var ZumpDashboard = function(opt) {
     // Private Functions
     //----------------------/
 	
+	
+	var resizeDashboard = function() {
+		resizeResultHeader();
+	    resizeTagLists();
+	}
+	
+	/*
+	* Global search method
+	*/
+	var doSearch = function() {
+		var search = $searchBar.val();
+		$searchResults.empty();
+		containSearch(search, _.pluck(searchFields, 'property'), function(prop, list) {
+			if (!list.length) return;
+			
+			var field = _.findWhere(searchFields, {property: prop});
+			updateSearchResults(field.property, field.text, list);
+		});
+	}
+	
+	/*
+	* Shows search based on results
+	*/
+	var updateSearchResults = function(prop, propText, list) {
+		var $container = $('<div class="result-section" id="results-' + prop + '">' +
+                            '<div class="result-header">' + propText + '</div>' + 
+                            '<div class="result-section-output">' + 
+                            '</div>' + 
+                        '</div>');
+		var $output = $container.children('.result-section-output');
+		
+		_.each(list, function(result) {
+			$output.append(generateResultItem(result));
+		});
+		
+		$searchResults.append($container);
+	}
+	
+	var clearSearchResults = function() {
+		$('.result-section').find('li').remove();
+	}
+
+	/*
+	* Generates the HTML for a search result item
+	*/
+	function generateResultItem(item) {
+		return '<li>' + item + '<i class="fa fa-reply fa-search-results"></i></li>';
+	}
+	
+	/*
+	* Returns a list of properties for the given disc list
+	*/
+	function getProperties(prop) {
+		var list = [];
+		if (unfilteredList.length && _.isArray(unfilteredList[0][prop])) {
+			var arrList = _.pluck(unfilteredList, prop);
+			_.each(arrList, function(arr) { 
+				list = list.concat(arr);	
+			});
+		} else {
+			list = _.pluck(unfilteredList,  prop);
+		}
+		
+		return _.uniq(list);
+	}
+	
+	/*
+	* Checks to see if an object contains a property
+	*/
+	function containSearch(val, properties, callback) {
+		_.each(properties, function(prop) {
+			callback(prop, checkContains(val, prop));
+		});
+	}
+	
+	/*
+	* Checks to see if a property contains the value
+	*/
+	function checkContains(val, prop){
+		if (!val || !prop) return [];
+		var filtered = _.filter(getProperties(prop), function(item) {
+			return typeof(item) !== 'undefined' && item.toLowerCase().indexOf(val.toLowerCase()) >= 0;	
+		});
+		return filtered;
+	}
+	
+	var changeView = function(view) {
+		var $view = $('#view-' + view);
+	    var $curView = $('.dashboard-view:visible');
+	   	
+	   	if (!$curView.length) {
+	        $view.fadeIn(100, function() {
+	        	onViewChange(view);
+	        	activeView = view;
+	        });
+	        return;
+	   	}
+	   
+	   	if ($view.length) {
+	   		if (!$view.is(':visible')) {
+	   			$curView.fadeOut(100, function() {
+		            $view.fadeIn(100, function() {
+						resizeDashboard();
+	        			onViewChange(view);
+	        			activeView = view;
+		            });
+		       	});
+	   		}
+	   	}
+	}
+	
+	var onViewChange = function(view) {
+		if (view == 'gallery') {
+    	    zumpDashboard.showDiscGallery();
+		}
+	}
+	
 	/*
 	* Initializes all of the listeners
 	*/
 	var initListeners = function(opt) {
 		$(window).on('resize', function() {
-	        resizeResultHeader();
-	        resizeTagLists();
+	        resizeDashboard();
 	   	});
+	   	
+	   	$('#dashboard-view-switch').dzTriSwitch({
+	   		init: {
+	   			onChange: function(value) {
+		        	changeView(value);
+		        }
+	   		}
+	    });
+	    
+	    /**************************
+		* Handlers for search
+		***************************/
+		
+	    $searchToggle.click(function(e) {
+	    	toggleSidebar('#sidebar-search', function() {
+	    		$searchBar.focus();
+	    	});
+	    });
+	    
+	    $searchBar.on('keyup', function() {
+			delay(function() {
+				doSearch();
+			}, 100 );
+	    }).click(function(e) {
+	    	e.stopPropagation();
+	    });
+		
+		$(document).on('click', '.result-section-output li', function(e) {
+			e.stopPropagation();
+			var $parent = $(this).parents('.result-section');
+			var option = $parent.attr('id').match(/-([a-zA-Z]+)/)[1];
+			var val = $(this).text();
+			
+			$searchBar.val('');
+			clearSearchResults();
+			myFilter.clearFilters();
+			myFilter.pushFilterItem(option, val, true);
+			toggleSidebar('#sidebar-filter');
+		});
+	
+		// $(document).on('vmouseup', 'input[type="text"]', function(e) {
+		// 	e.stopImmediatePropagation();
+		// 	e.stopPropagation();
+		// 	return false;
+		// });
 	   	
 	   	/**************************
 		* Handlers for pagination
@@ -2089,7 +2359,22 @@ var ZumpDashboard = function(opt) {
 		/**************************
 		* Handlers for dashboard
 		***************************/
-		$(document).on('click', '.image-preview:not(.active)', function() {
+		$('#public-dashboard').click(function(e) {
+			onDisplayProfile($(this).attr('userId'));
+		});
+		
+		$(document).on('click', '.filterable[filterable="true"]', function(e) {
+			var filterOn = $(this).attr('filterOn');
+			var property = $(this).attr('prop');
+			
+			if (filterOn.length && property.length) {
+				myFilter.pushFilterItem(property, filterOn);
+				changeSidebar('#sidebar-filter');
+				changePage('#pg-dashboard');
+			}
+		});
+		
+		$(document).on('click', '#existing-image-list .image-preview:not(.active)', function() {
 			var src = $(this).children('img').attr('src');
 			var $blockDisplay = $(this).parents('.image-block-display');
 			var $primAryimage = $blockDisplay.find('#disc-primary-image');
@@ -2097,15 +2382,6 @@ var ZumpDashboard = function(opt) {
 			$blockDisplay.find('.image-preview.active').removeClass('active');
 			$primAryimage.attr('src', src);
 			$(this).addClass('active');
-		});
-		
-		$(document).on('mouseenter', '.image-item', function(){
-			var $this = $(this);
-			if (!$this.parents('.image-item-container').hasClass('dz-processing')) {
-				$(this).find('.image-overlay').show();
-			}
-		}).on('mouseleave', '.image-item', function(){
-			$(this).find('.image-overlay').hide();
 		});
 	   	
 	   	$(window).scroll(function(){
@@ -2132,10 +2408,7 @@ var ZumpDashboard = function(opt) {
 			generateConfirmationModal('WARNING!', text, 'Delete', function($btn, $inner, done) {
 				deleteDisc(discId, function(success, data) {
 					if (success) {
-						discs = _.filter(discs, function(disc){
-							return disc._id != data._id;
-						});
-						updateFilter(true);
+						onDeleteDisc(data);
 					} else {
 						console.log(generateError(data.message, 'ERROR'));
 					}
@@ -2165,43 +2438,32 @@ var ZumpDashboard = function(opt) {
 			disc.visible = !disc.visible;
 			putDisc(disc, function(success, retData) {
 				if (success) {
-					discs = _.filter(discs, function(disc){
-						return disc._id != retData._id;
-					});
-					discs.push(retData);
-					updateDiscItem(disc);
+					onUpdateDisc(retData);
 				} else {
 					console.log(generateError(retData.message, 'ERROR'));
 				}
 			});
 		});
-		 
-		$(document).on('click', '.disc-info-tag', function() {
-			myFilter.pushFilterItem('tagList', $(this).text());
-			$(opt.filter.filterToggle).trigger('click');
+		
+		$(document).on('click', '.disc-info-name', function() {
+			var discId = $(this).parents('.disc-item').attr('discId');
+			showDiscView(discId);
 		});
 		 
 		$(document).on('click', '.disc-content-image', function(e) {
 			var discItem = $(this).parents('.disc-item');
 			var disc = getDisc(discItem.attr('discid'));
 			
-			getAllDiscImages(disc._id, function(success, images) {
-				if (success && images.length > 0) {
-					var zumpLightbox = new ZumpLightbox({
-						content: {
-							imageArray: images,
-							defaultImage: disc.primaryImage
-						},
-						onCreate: function($lightbox) {
-						},
-						onShow: function($lightbox) {
-						},
-						onHide: function() {
-						}
-					});
-					zumpLightbox.showLightbox();
-				}
-			});
+			if (isDef(disc.imageArray)) {
+				showDiscLightbox(disc);
+			} else {
+				getAllDiscImages(disc._id, function(success, images) {
+					if (success && images.length > 0) {
+						disc.imageArray = images;
+						showDiscLightbox(disc);
+					}
+				});
+			}
 		});
 		
 		/**************************
@@ -2212,11 +2474,41 @@ var ZumpDashboard = function(opt) {
 			var type = $('#graph-type').val();
 			generatePlot(prop, type);
 		});
+		
+		/**************************
+		* Handlers for Disc View
+		***************************/
+		$(document).on('click', '#view-disc-image-container .image-preview', function(e) {
+	        $imageArea.find('.image-preview.active').removeClass('active');
+	        $(this).addClass('active');
+	        var id = $(this).children('img').attr('imageId');
+	        var disc = getDisc(discViewId);
+	        var img = _.findWhere(disc.imageArray, {_id: id});
+	        if (img) {
+	            $('#view-disc-image').attr('src', '/files/' + img.fileId);
+	        }
+	    });
 	}
 	
 	/**************************
 	* Dashboard
 	***************************/
+	
+	var showDiscLightbox = function(disc) {
+		var zumpLightbox = new ZumpLightbox({
+			content: {
+				imageArray: disc.imageArray,
+				defaultImage: disc.primaryImage
+			},
+			onCreate: function($lightbox) {
+			},
+			onShow: function($lightbox) {
+			},
+			onHide: function() {
+			}
+		});
+		zumpLightbox.showLightbox();
+	}
 	
 	/*
 	* Ensures the header width maintains the result view width
@@ -2263,6 +2555,128 @@ var ZumpDashboard = function(opt) {
 		
 		// Initialize notes tooltip
 		$discItem.find('i[tt="notes"]').tooltip(generateTooltipOptions('left', 'hover', disc.notes, 'auto'));
+		$discItem.find('i[tt="createDate"]').tooltip(generateTooltipOptions('left', 'hover', 'Added on ' + parseDate(disc.createDate), 'auto'));
+		
+		// resizes tag lists
+		resizeTagLists();
+	}
+	
+	var stringifyDisc = function(disc) {
+		var discString = {};
+		
+		discString.type = getSafe(disc.type, '');
+		discString.material = getSafe(disc.material, '');
+		discString.color = getSafe(disc.color, '');
+		discString.weight = getSafe(disc.weight, '');
+		discString.condition = getSafe(disc.condition, '');
+		discString.speed = getSafe(disc.speed, '');
+		discString.glide = getSafe(disc.glide, '');
+		discString.turn = getSafe(disc.turn, '');
+		discString.fade = getSafe(disc.fade, '');
+		discString.notes = getSafe(disc.notes, '');
+		
+		return discString;
+	}
+	
+	var showDiscView = function(discId) {
+		if (discViewId == discId) {
+			changePage('#pg-disc-view');
+			return;
+		}
+		
+		discViewId = discId;
+		var disc = getDisc(discId);
+		var discString = stringifyDisc(disc);
+		
+		$('#view-disc-title').text(disc.brand + ' ' + disc.name);
+		$('#view-disc-notes').text(discString.notes.length ? discString.notes : '-');
+		
+		setDiscViewItem($('#view-disc-type'), discString.type, '', '-');
+		setDiscViewItem($('#view-disc-material'), discString.material, '', '-');
+		setDiscViewItem($('#view-disc-weight'), discString.weight, 'g', '-');
+		setDiscViewItem($('#view-disc-condition'), discString.condition, '/10', '-');
+		setDiscViewItem($('#view-disc-speed'), discString.speed, '', '--');
+		setDiscViewItem($('#view-disc-glide'), discString.glide, '', '--');
+		setDiscViewItem($('#view-disc-turn'), discString.turn, '', '--');
+		setDiscViewItem($('#view-disc-fade'), discString.fade, '', '--');
+		
+		var $tagArea = $('#view-disc-tagList');
+		$tagArea.empty();
+		_.each(disc.tagList, function(tag) {
+			$tagArea.append('<div class="tag-item filterable" filterable="true" prop="tagList" filterOn="' + tag + '" tagval="' + tag + '">' +
+	                            '<p class="tag-item-text">' + tag + '</p>' +
+	                        '</div>');
+		});
+		
+		clearDiscViewImages();
+		
+		if(isDef(disc.imageArray)) {
+			updateDiscViewImages(disc);
+		} else {
+			disc.imageArray = [];
+			updateDiscViewImages(disc);
+			getAllDiscImages(disc._id, function(success, images) {
+				if (success) {
+					disc.imageArray = images;
+					updateDiscViewImages(disc);
+				}
+			});
+		}
+		
+		changePage('#pg-disc-view');
+	}
+	
+	var setDiscViewItem = function($elem, val, append, def) {
+		$elem.text(val.length ? val + append : def).attr('filterable', val.length ? 'true' : 'false').attr('filterOn', val ? val : '');
+	}
+	
+	var clearDiscViewImages = function() {
+		$imageArea.empty();
+		$('#view-disc-image').attr('src', '/static/logo/logo_small.svg');
+		$imageArea.append('<div class="image-item-container logo-placeholder">' +
+		                '<div class="image-item">' +
+		                    '<div class="image-preview active">' +
+		                        '<img src="/static/logo/logo_small.svg" class="fit-parent">' +
+		                    '</div>' +
+		                '</div>' +
+		            '</div>');
+	}
+	
+	var updateDiscViewImages = function(disc) {
+		if (disc.imageArray.length) {
+			$imageArea.empty();
+			_.each(disc.imageArray, function(image) {
+				var $image = $('<div class="image-item-container">' +
+                                            '<div class="image-item">' +
+												'<div class="image-preview">' +
+                                                    '<img src="/files/' + image.thumbnailId + '" imageId="' + image._id + '" class="fit-parent">' +
+                                                '</div>' +
+                                            '</div>' +
+                                        '</div>');
+				
+				if (disc.primaryImage == image._id) {
+					if (!isDef(disc.tempFileId)) {
+						disc.tempFileId = image.fileId;
+						disc.tempThumbnailId = image.thumbnailId;
+					}
+					
+					$('#view-disc-image').attr('src', '/files/' + disc.tempFileId);
+					$image.find('.image-preview').addClass('active');
+				} else {
+					preloadImage(image.fileId);
+				}
+				
+				$imageArea.append($image);
+			});
+		} else if (isDef(disc.tempFileId)) {
+			$('#view-disc-image').attr('src', '/files/' + disc.tempFileId);
+			$imageArea.empty();
+		}
+	}
+	
+	var preloadImage = function(imageUrl) {
+		var image = new Image();
+    	image.src = '/files/' + imageUrl;
 	}
 	
 	/*
@@ -2289,6 +2703,7 @@ var ZumpDashboard = function(opt) {
 				if (_.contains(paged, disc)) {
 					var $discItem = generateDiscTemplate(disc);
 					$discItem.find('i[tt="notes"]').tooltip(generateTooltipOptions('left', 'hover', disc.notes, 'auto'));
+					$discItem.find('i[tt="createDate"]').tooltip(generateTooltipOptions('left', 'hover', 'Added on ' + parseDate(disc.createDate), 'auto'));
 					$filterResults.append($discItem);
 				}
 			});
@@ -2395,10 +2810,11 @@ var ZumpDashboard = function(opt) {
 		var tagDropdownInner = '';
 		var flightNumbersHTML = '';
 		var notesHTML = '';
+		var calendarHTML = '';
 		
 		_.each(disc.tagList, function(tag) {
-			tagDropdownInner = tagDropdownInner + '<li class="disc-info-tag"><a>' + tag + '</a></li>';
-			tagHTML = tagHTML + '<span class="disc-info-tag">' + tag + '</span>';
+			tagDropdownInner = tagDropdownInner + '<li class="disc-info-tag filterable filterable-text" filterable="true" prop="tagList" filterOn="' + tag + '"><a>' + tag + '</a></li>';
+			tagHTML = tagHTML + '<span class="disc-info-tag filterable filterable-text" filterable="true" prop="tagList" filterOn="' + tag + '">' + tag + '</span>';
 		});
 		
 		tagDropdown = '<div class="dropdown tag-dropdown" style="display: none">' +
@@ -2413,6 +2829,10 @@ var ZumpDashboard = function(opt) {
 		
 		if (isDef(disc.notes) && disc.notes != '') { 
 			notesHTML = '<span><i class="fa fa-file-text fa-lg fa-dim fa-disc-notes" data-toggle="tooltip" tt="notes"></i></span>';
+		}
+		
+		if (isDef(disc.createDate) && disc.createDate != '') {
+			calendarHTML = '<span><i class="fa fa-calendar fa-lg fa-dim fa-disc-date" data-toggle="tooltip" tt="createDate"></i></span>';
 		}
 	
 		if ((typeof disc.speed != 'undefined') || (typeof disc.glide != 'undefined') || (typeof disc.turn != 'undefined') || (typeof disc.fade != 'undefined')) {
@@ -2432,9 +2852,12 @@ var ZumpDashboard = function(opt) {
 	                		'<table>' +
 	                			'<tbody style="text-align: center;">' +
 		                            '<tr class="disc-item-actions-top">' +
-		                            	'<td></td>' +
+		                            	'<td>' +
+		                            		calendarHTML +
+		                            	'</td>' +
 		                                '<td>' +
-		                                	'<span><i class="fa fa-minus-circle fa-lg fa-dim fa-delete-disc-item"></i></span>' +
+		                                	(publicList ? '' :
+		                                	'<span><i class="fa fa-minus-circle fa-lg fa-dim fa-delete-disc-item"></i></span>') +
 		                                '</td>' +
 		                            '</tr>' +
 		                            '<tr class="disc-item-actions-middle">' +
@@ -2442,7 +2865,8 @@ var ZumpDashboard = function(opt) {
 		                            		notesHTML +
 		                            	'</td>' +
 		                                '<td>' +
-		                                	'<span><i class="fa fa-pencil fa-lg fa-dim fa-edit-disc-item"></i></span>' +
+		                                	(publicList ? '' :
+		                                	'<span><i class="fa fa-pencil fa-lg fa-dim fa-edit-disc-item"></i></span>') +
 		                                '</td>' +
 		                            '</tr>' +
 		                            '<tr class="disc-item-actions-bottom">' +
@@ -2452,9 +2876,11 @@ var ZumpDashboard = function(opt) {
 		                                	'') +
 		                            	'</td>' +
 		                                '<td>' +
+		                                	(publicList ?
+		                                	'' :
 		                                	(disc.visible ?
 		                                	'<span><i class="fa fa-eye fa-lg fa-dim fa-visible-disc-item"></i></span>' :
-		                                	'<span><i class="fa fa-eye-slash fa-lg fa-dim fa-visible-disc-item"></i></span>') +
+		                                	'<span><i class="fa fa-eye-slash fa-lg fa-dim fa-visible-disc-item"></i></span>')) +
 		                                '</td>' +
 		                            '</tr>' +
 	                           	'</tbody>' +
@@ -2465,7 +2891,8 @@ var ZumpDashboard = function(opt) {
 	                            '<div class="disc-info-left-pane div-inline float-left">' +
 	                            	'<div class="disc-info-name-container float-left">' +
 		                                '<div class="disc-info-brand">' + (disc.brand ? disc.brand : '') + '</div>' +
-		                                '<div class="disc-info-name"><a target="_blank" href="/disc/' + disc._id + '">' + (disc.name ? disc.name : '') + '</a></div>' +
+		                                // '<div class="disc-info-name"><a target="_blank" href="/disc/' + disc._id + '">' + (disc.name ? disc.name : '') + '</a></div>' +
+		                                '<div class="disc-info-name">' + (disc.name ? disc.name : '') + '</div>' +
 	                            	'</div>' +
 	                            	(disc.condition ? '<div class="disc-info-condition float-right">' + disc.condition + '</div>' : '') +
 	                            	'<div class="clearfix"></div>' +
@@ -2582,25 +3009,25 @@ var ZumpDashboard = function(opt) {
 	    	chartData.chartType = type;
 		}
 	   
-		var discList = _.groupBy(myFilter.filter(discs, false), chartData.chartProp);
+		var plotData = _.groupBy(myFilter.filter(discList, false), chartData.chartProp);
 	    var data = [];
 	    var isSingleUnit = true;
 	    
-	    for(var group in discList) {
+	    for(var group in plotData) {
 	    	if (group == 'undefined') continue;
-	    	if (isSingleUnit && discList[group].length > 1) isSingleUnit = false;
+	    	if (isSingleUnit && plotData[group].length > 1) isSingleUnit = false;
 	        data.push({
 	           label: group,
-	           y: discList[group].length,
+	           y: plotData[group].length,
 	           legendText: group
 	        });
 	    }
 	    
-	    var chartData = getChartData(chartData.chartType, 
+	    var toChart = getChartData(chartData.chartType, 
 	    	chartData.chartPropName, data.length == 1, isSingleUnit);
-	    chartData.data[0].dataPoints = data;
+	    toChart.data[0].dataPoints = data;
 	    
-	   $statPlot.CanvasJSChart(chartData);
+	   $statPlot.CanvasJSChart(toChart);
 	   
 	}
 	
@@ -2644,6 +3071,13 @@ var ZumpDashboard = function(opt) {
 		}
 		
 		return properties;
+	}
+	
+	/*
+	* Returns a disc based on the id
+	*/
+	function getDisc(id) {
+		return _.first(_.where(unfilteredList, {'_id' : id}));
 	}
 	
 	this.init(opt);
@@ -2810,6 +3244,287 @@ var ZumpTutorial = function(opt) {
 }
 
 /*
+* Name: ZumpSocial
+* Date: 09/01/2015
+*/
+var ZumpSocial = function(opt) {
+	
+	//----------------------\
+    // Javascript Objects
+    //----------------------/
+    var zumpSocial = this;
+    var profileList = [];
+    var zipCodeCache = {};
+    var curUser = '';
+    
+    //----------------------\
+    // jQuery Objects
+    //----------------------/
+    var $searchProfile;
+    var $profileList;
+    var $searchContainer;
+    var $viewContainer;
+    var $profileUsername;
+    var $profileName;
+    var $profilePDGA;
+    var $profilePictureContainer;
+    var $profileLocation;
+    var $profileJoinDate;
+    var $profileDiscCount;
+    var $profileViewDashboard;
+    var $profileLoading;
+    var $discRow;
+    
+    //----------------------\
+    // Prototype Functions
+    //----------------------/
+    this.init = function(opt) {
+    	$searchProfile = $('#search-profile');
+    	$profileList = $('#profile-list');
+		$searchContainer = $('#profile-search-container');
+		$viewContainer = $('#profile-view');
+		$profileUsername = $('#profile-username');
+		$profileName = $('#profile-name');
+		$profilePDGA = $('#profile-pdga');
+		$profilePictureContainer = $('#profile-view-image-container');
+		$profileLocation = $('#profile-location');
+		$profileJoinDate = $('#profile-join-date');
+		$profileDiscCount = $('#profile-disc-count');
+		$profileViewDashboard = $('#profile-view-dashboard');
+		$profileLoading = $('#profile-loading');
+		$discRow = $('.public-disc-row');
+    	
+    	setupListeners();
+    }
+    
+    this.showProfile = function(userId) {
+    	var user = _.findWhere(profileList, {_id: userId});
+    	if (typeof(user) !== 'undefined') {
+			populateProfile(user);
+			changePage('#pg-profile');
+    	} else {
+    		getUser(userId, function() {
+				populateProfile(user);
+				changePage('#pg-profile');
+    		});
+    	}
+    	
+    }
+    
+    //----------------------\
+    // Private Functions
+    //----------------------/
+    
+    var setupListeners = function() {
+    	$searchProfile.on('keyup', function() {
+    		var query = $searchProfile.val();
+    		if (query.length) {
+    			$profileLoading.css('display', 'table');
+    			delay(function() {
+					getProfiles(query, function(success, queryResult) {
+						clearProfileList();
+						if (success) {
+							if (queryResult.query != $searchProfile.val()) {
+								return false;
+							}
+							profileList = queryResult.results;
+							profileList = _.reject(profileList, function(item) {
+								return item.username == userAccount.username;
+							});
+							if (profileList.length) {
+								_.each(profileList, appendProfileItem);
+							} else {
+								appendNoResults();
+							}
+							$profileLoading.css('display', 'none');
+						}
+					});
+				}, 500 );
+    		} else {
+    			clearProfileList();
+    			$profileLoading.css('display', 'none');
+    		}
+			
+    	});
+    	
+    	$(document).on('click', '.profile-item', function() {
+    		var selectedUser = $(this).attr('userid');
+    		if (curUser == selectedUser) {
+    			return false;
+    		} else {
+    			curUser = selectedUser;
+	    		emptyProfileTemplate();
+	    		zumpSocial.showProfile(curUser);
+    		}
+    	});
+    	
+    	$profileViewDashboard.click(function() {
+    		getAllPublicDiscsByUser(curUser, function(success, discs) {
+    			if (success) {
+    				var user = _.findWhere(profileList, {_id: curUser});
+    				changePage('#pg-dashboard', function() {
+    					myDashboard.setDiscList(discs, user);
+    				});
+    			}	
+    		});
+    	});
+    	
+    	$(window).on('resize', resize);
+    }
+    
+    var populateProfile = function(user) {
+    	var firstName = getSafe(user.firstName, '');
+    	var lastName = getSafe(user.lastName, '');
+    	var fullName = (firstName.length ? firstName + ' ' + lastName : lastName);
+    	var pdga = getSafe(user.pdgaNumber, '');
+    	var image = getSafe(user.image, '');
+    	var dateJoined = parseDate(user.dateJoined);
+    	
+    	getPreview(user);
+    	
+    	if (fullName.length) {
+    		$profileName.text(fullName);
+    	}
+    	
+    	if (pdga.length) {
+    		$profilePDGA.text('#' + pdga);
+    	}
+    	
+    	$profilePictureContainer.empty();
+    	
+    	if (image.length) {
+    		$profilePictureContainer.append('<img src="' + image + '">');
+    	} else {
+    		$profilePictureContainer.append('<span><i class="fa fa-user"></i></span>');
+    	}
+    	
+    	$profileUsername.text(user.username);
+    	$profileLocation.attr('value', user.zipCode);
+    	if (zipCodeCache[user.zipCode]) {
+			$profileLocation.text(zipCodeCache[user.zipCode]);
+    	}
+    	
+    	$profileJoinDate.text(dateJoined);
+    }
+    
+    var getPreview = function(user) {
+    	$discRow.empty();
+    	 getProfilePreview(user._id, function(success, retData) {
+            if (success && retData.discs.count > 0) {
+            	
+            	$profileDiscCount.text(retData.discs.count);
+            	var previewDiscs = retData.discs.preview;
+                
+                for (var i = 0; i < 5; i++) {
+                    if (previewDiscs.length > i) {
+                        $discRow.append(publicDisc(previewDiscs[i]));
+                    }
+                }
+                resize();
+            }
+        });
+    }
+    
+    var resize = function() {
+	    $('.public-disc-item').each(function() {
+	        var font = 0.15 * parseInt($(this).width());
+	        $(this).css({
+	            'font-size': font
+	        });
+	    });
+	}
+    
+    var emptyProfileTemplate = function() {
+    	$profileUsername.text('');
+    	$profileName.text('');
+    	$profilePDGA.text('');
+    	$profilePictureContainer.empty();
+    	$profileLocation.text('');
+    	$profileJoinDate.text('');
+    	$profileDiscCount.text('');
+    }
+    
+    var appendNoResults = function() {
+    	$profileList.append('<li id="profile-item-none">' +
+    							'<div>No Results</div>' + 
+    						'</li>');
+    }
+    
+    var appendProfileItem = function(user) {
+    	var pdga = getSafe(user.pdgaNumber, '');
+    	var firstName = getSafe(user.firstName, '');
+    	var lastName = getSafe(user.lastName, '');
+    	var fullName = (firstName.length ? firstName + ' ' + lastName : lastName);
+    	
+    	var $profileItem = $('<li class="profile-item hover-active no-select" userId="' + user._id + '"></li>');
+    	
+    	$profileItem.append('<div class="profile-item-image"' + (typeof(user.image) !== 'undefined' ? ' style="background-image:url(' + user.image + ');"' : '') + '></div>' +
+                                (typeof(user.image) !== 'undefined' ? '' : '<span><i class="fa fa-user"></i></span>') +
+                            '</div>' +
+                            '<div class="profile-item-details">' +
+                                '<div class="profile-item-details-inner">' +
+                                    '<div class="profile-item-label">' + fullName + '</div>' +
+                                    '<div class="profile-item-text">' + user.username + '</div>' +
+                                    '<div class="profile-item-text">' + (pdga.length ? '#' + pdga : '') + '</div>' +
+                                    '<div class="profile-item-text city-state" value="' + user.zipCode + '"></div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="clearfix"></div>');
+        
+        var cityState = zipCodeCache[user.zipCode];
+        
+        if (cityState) {
+        	if (cityState.length) {
+        		$profileItem.find('.city-state').text(cityState);
+        	}
+        } else {
+        	zipCodeCache[user.zipCode] = '';
+        	getCityState(user.zipCode, function(success, retData) {
+	        	if (success) {
+	        		$('.city-state[value="' + user.zipCode + '"]').text(retData);
+	        		zipCodeCache[user.zipCode] = retData;
+	        	}
+	        });
+        }
+        
+        $profileList.append($profileItem);
+    }
+    
+    var clearProfileList = function() {
+    	$profileList.empty();
+    }
+    
+    var publicDisc = function(disc) {
+	    var $disc = $('<div class="public-disc-item disc-gallery-item" discid="' + disc._id + '"></div>');
+	    $disc.append('<div class="disc-gallery-overlay" style="display: none;">' +
+	                            '<div class="disc-gallery-text-container">' +
+	                                '<div class="disc-gallery-text-wrapper">' +
+	                                    '<div class="disc-gallery-overlay-text no-select">' + disc.brand + '</div>' +
+	                                    '<div class="disc-gallery-overlay-text no-select">' + disc.name + '</div>' +
+	                                '</div>' +
+	                            '</div>' +
+	                        '</div>' +
+	                        '<div class="disc-gallery-image-container">' +
+	                            '<div class="disc-gallery-image">' +
+	                                '<img src="/static/logo/logo_small.svg">' +
+	                            '</div>' +
+	                        '</div>');
+	    
+	    if (disc.primaryImage) {
+	        getPrimaryDiscImage(disc.primaryImage, function(success, primaryImage) {
+	            if (success) {
+	                $('.public-disc-item[discid="' + primaryImage.discId + '"]').find('.disc-gallery-image > img').attr('src', '/files/' + primaryImage.thumbnailId);
+	            }
+	        });
+	    }
+	    
+	    return $disc;
+	}
+    
+    this.init(opt);
+}
+
+/*
 * Name: ZumpMessenger
 * Date: 08/19/2015
 */
@@ -2842,6 +3557,7 @@ var ZumpMessenger = function(opt) {
     var $sendMessageBtn;
     var $newMessage;
     var $sendOnEnter;
+    var $searchInbox;
     
     //----------------------\
     // Prototype Functions
@@ -2890,6 +3606,10 @@ var ZumpMessenger = function(opt) {
 		
 		if (isDef(opt.inboxList)) {
 			$inboxList = $(opt.inboxList);
+		}
+		
+		if (isDef(opt.searchInbox)) {
+			$searchInbox = $(opt.searchInbox);
 		}
 		
 		initializeInboxList();
@@ -2943,6 +3663,10 @@ var ZumpMessenger = function(opt) {
     
     var setupListeners = function() {
     	
+    	$searchInbox.keyup(function(e) {
+    		doSearch($searchInbox.val());
+    	});
+    	
 		$(document).on('click', '.thread-container', function() {
 			showThread($(this).attr('threadid'));
 		});
@@ -2982,6 +3706,18 @@ var ZumpMessenger = function(opt) {
     				appendThread(thread);
     			});
     		}
+    	});
+    }
+    
+    var doSearch = function(val) {
+    	$('.thread-container').hide();
+    	
+    	var matchList = _.filter(_.values(threadCache), function(threadCacheObj) {
+    		return threadCacheObj.thread.threadTag.toLowerCase().indexOf(val.toLowerCase()) > -1;
+    	});
+    	
+    	_.each(matchList, function(threadCacheObj) {
+    		$('li.thread-container[threadId="' + threadCacheObj.thread.threadId + '"]').show();
     	});
     }
     
@@ -3253,6 +3989,7 @@ var ZumpGallery = function(opt) {
 	var zumpGallery = this;
 	var objCount = 0;
 	var itemsPerRow;
+	var itemClick;
 	var objList = [];
 	
     //----------------------\
@@ -3281,6 +4018,10 @@ var ZumpGallery = function(opt) {
 		
 		if (isDef(opt.galleryCount)) {
 			itemsPerRow = opt.galleryCount;
+		}
+		
+		if (isDef(opt.onItemClick)) {
+			itemClick = opt.onItemClick;
 		}
 	}
 	
@@ -3436,7 +4177,7 @@ var ZumpGallery = function(opt) {
 		$(window).on('resize', resizeGallery);
 		$(document).on('mouseenter', '.disc-gallery-item', showOverlay);
 		$(document).on('mouseleave', '.disc-gallery-item', hideOverlay);
-		$(document).on('click', '.disc-gallery-item', showPublicView);
+		$(document).on('click', '.disc-gallery-row > .disc-gallery-item', showPublicView);
 	}
 	
 	/*
@@ -3446,14 +4187,13 @@ var ZumpGallery = function(opt) {
 		$(window).off('resize', resizeGallery);
 		$(document).off('mouseenter', '.disc-gallery-item', showOverlay);
 		$(document).off('mouseleave', '.disc-gallery-item', hideOverlay);
-		$(document).off('click', '.disc-gallery-item', showPublicView);
+		$(document).off('click', '.disc-gallery-row > .disc-gallery-item', showPublicView);
 		
 	}
 	
 	var showPublicView = function(e) {
 		var id = $(this).attr('objid');
-		var win = window.open('/disc/' + id, '_blank');
-  		win.focus();
+		itemClick(id);
 	}
 	
 	/*
@@ -3479,7 +4219,7 @@ var ZumpGallery = function(opt) {
 		var itemWidth = Math.min(500, Math.floor(width / colCount * 0.99));
 		var fontsize = getGalleryFontSize(itemWidth);
 		
-		$('.disc-gallery-item').css({
+		$('.disc-gallery-row > .disc-gallery-item').css({
 			width: itemWidth + 'px',
 			height: itemWidth + 'px',
 			maxWidth: itemWidth + 'px',
@@ -3487,7 +4227,7 @@ var ZumpGallery = function(opt) {
 			'font-size': fontsize
 		});
 		
-		$('.disc-gallery-item').find('img').css({
+		$('.disc-gallery-row > .disc-gallery-item').find('img').css({
 			maxWidth: itemWidth + 'px',
 			maxHeight: itemWidth + 'px'
 		})
@@ -3978,6 +4718,8 @@ var ZumpSort = function(opt) {
     this.genericSort = function(sorter, array) {
     	if (sorter.sortType == 'number') {
     		array = _.sortBy(array, function(obj) { return parseInt(obj[sorter.sortProp])});
+    	} else if (sorter.sortType == 'date') {
+    		array = _.sortBy(array, function(obj) { return new Date(obj[sorter.sortProp])});
     	} else {
     		array = _.sortBy(array, function(obj) {
     			return obj[sorter.sortProp].toLowerCase();
@@ -4191,9 +4933,10 @@ var ZumpFilter = function(opt) {
     //----------------------\
     // Javascript Objects
     //----------------------/
-    var filters = {};
-    var filterItems = [];
-    var filterOrder = [];
+    var filters = {}; // Current filters by filter property
+    var filterItems = []; // List of filter properties to use
+    var filterOrder = []; // Current order of filtering
+    var filterCache = {}; // Caches filter items to be searched upon
     var filterChangeEvent;
     var zumpFilter = this;
     var lastNav;
@@ -4261,29 +5004,7 @@ var ZumpFilter = function(opt) {
         
         // Toggle Filter Container
         $filterToggle.click(function(){
-	      	if ($sidebarFilter.is(':visible')) {
-	            $sidebarFilter.fadeOut(100, function() {
-		      		$lastSidebar.addClass('active');
-			    	$(lastNav).fadeIn(100);
-	            });
-	            $filterToggle.css({
-	      			'background-color' : 'initial',
-	      			'color' : '#000',
-	      			'border-color' : 'rgb(134, 134, 134)'
-	      		});
-	      	} else {
-	      		$lastSidebar = $('.sidebar-nav-toolbar').find('.active')
-	      		lastNav = $lastSidebar.attr('nav-select');
-	            $(lastNav).fadeOut(100, function() {
-		            $lastSidebar.removeClass('active');
-		            $sidebarFilter.fadeIn(100);
-	            });
-	          	$filterToggle.css({
-	      			'background-color' : 'rgb(0, 142, 221)',
-	      			'color' : '#FFF',
-	      			'border-color' : '#000'
-	      		});
-	      	}
+       		toggleSidebar('#sidebar-filter');
 	    });
         
         $(document).on('click', '.filter-option', function(e){
@@ -4323,6 +5044,27 @@ var ZumpFilter = function(opt) {
 	   				$this.find('i').removeClass('fa-angle-double-right').addClass('fa-angle-double-down');
 	   			$this.siblings('.filter-option-container').slideDown(300);
 	   		}
+		});
+		
+		$(document).on('keyup', '.filter-search', function() {
+			filterCache[$(this).attr('prop')].search = $(this).val();
+			doSearchFilter($(this).attr('prop'));	
+		});
+		
+		$(document).on('click', '.filter-expand', function() {
+			var $this = $(this);
+			var prop = $this.attr('prop');
+			var state = $this.attr('state');
+			filterCache[prop].viewAll = state == '0';
+			doSearchFilter(prop);
+			
+			var count = getSafe(filterCache[prop].searchCount, filterCache[prop].items.length);
+			
+			if (state == '1') {
+				$this.text('(5/' + count + ') More...').attr('state','0');
+			} else {
+				$this.text('Less...').attr('state','1');
+			}
 		});
 		
 		/*
@@ -4379,6 +5121,8 @@ var ZumpFilter = function(opt) {
     */
     this.pushFilterItem = function(property, value, clearFirst) {
     	if (isDef(filters[property])) {
+    		
+    		if (!_.contains(filterCache[property].items, value)) return;
     		
     		if (clearFirst) {
     			clearFilterItems(property);
@@ -4446,6 +5190,30 @@ var ZumpFilter = function(opt) {
     //----------------------\
     // Private Functions
     //----------------------/
+    
+    var doSearchFilter = function(property) {
+    	var items = filterCache[property].items;
+    	var val = filterCache[property].search;
+    	
+    	var filtered = _.filter(items, function(item) { return typeof(item) === 'undefined' || item.toLowerCase().indexOf(val.toLowerCase()) > -1 });
+    	filterCache[property].searchCount = filtered.length;
+    	var $container = $('#filter-' + property);
+    	$container.find('.filter-option').hide();
+    	
+    	for (var i = 0; i < filtered.length; i++) {
+    		var item = filtered[i];
+    		var $item = $container.find('.filter-option[filterOn="' + item + '"]');
+    		if (i < 5 || filterCache[property].viewAll) {
+    			$item.show();
+    		}
+    	}
+    	
+    	if (filtered.length < 5) {
+    		$container.find('.filter-expand').hide();
+    	} else {
+    		$container.find('.filter-expand').show();
+    	}
+    }
     
     var pushFilterOrder = function(property) {
     	if (!_.contains(filterOrder, property)) filterOrder.push(property);
@@ -4533,6 +5301,9 @@ var ZumpFilter = function(opt) {
     * Create Filter Panel
     */
     var createFilterPanel = function(property, text, isGroup) {
+    	var searchItem = '<li class="filter-option-search">' +
+                                '<input type="text" class="filter-search" prop="' + property + '" placeholder="Search Filters...">'
+                            '</li>';
         var emptyItem = '<li class="filter-option-static">' +
                                 'No Items' +
                             '</li>';
@@ -4541,6 +5312,7 @@ var ZumpFilter = function(opt) {
         $filterPanel.attr('id', 'filter-container-' + property);
         $filterPanel.html('<div class="filter-item"><span class="pull-right"><i class="fa fa-angle-double-right"></i></span>' + text + '</div>' +
                         '<ul class="filter-option-container' + (!isGroup ? ' filter-item-parent" id="filter-' + property + '"' : '"' ) + ' style="display: none;">' +
+                            (!isGroup ? searchItem : '') + 
                             (!isGroup ? emptyItem : '') + 
                         '</ul>');
                         
@@ -4629,16 +5401,35 @@ var ZumpFilter = function(opt) {
     		return i;
     	});
     	
+    	if (typeof(filterCache[property]) === 'undefined') {
+    		filterCache[property] = { items: items, search: ''};
+    	} else {
+    		filterCache[property].items = items;
+    	}
+    	
     	$filterBody.find('li.filter-option').remove();
+    	$filterBody.find('li.filter-expand').remove();
+    	
     	if (items.length > 0) {
     		$filterBody.find('li.filter-option-static').hide();
-    		_.each(items, function(item) {
+    		
+    		for (var i = 0; i < items.length; i++) {
+    			var item = items[i];
     			var $filterOption = $(generateFilterOption(item)); 
     			if (_.contains(filters[property], item)) {
     				setFilterOption($filterOption, true);
     			}
     			$filterBody.append($filterOption);
-    		});
+    			if (i > 4 && !filterCache[property].viewAll) $filterOption.hide();
+    		}
+    		
+    		if (items.length > 4) {
+    			var count = '(5/' + items.length + ')';
+		        $filterBody.append('<li class="filter-expand" state="' + (filterCache[property].viewAll ? '1' : '0') + '" prop="' + property + '">' +
+                        (filterCache[property].viewAll ? 'Less...' : count + ' More...') +
+                    '</li>');
+    		}
+    		
     	} else {
     		$filterBody.find('li.filter-option-static').show();
     	}
@@ -4653,6 +5444,8 @@ var ZumpFilter = function(opt) {
     	filters[property] = _.reject(filters[property], function(item) {
     			return _.contains(toRemove, item);
     	});
+    	
+    	doSearchFilter(property);
     	
     }
     
@@ -5051,9 +5844,11 @@ var ZumpTextAssist = function(opt) {
 	        var leftOff = $input.position().left;
 	    	var topOff = $input.position().top;
 	    	
-	    	$dropdown.css({width: $input.outerWidth() + 'px'});
-	    	$dropdown.css({left: leftOff, 
-	    		top: topOff + $input.outerHeight()});
+	    	$dropdown.css({
+	    		width: $input.outerWidth() + 'px',
+	    		left: leftOff, 
+	    		top: topOff + $input.outerHeight()
+	    	});
         }
     }
     
@@ -5071,7 +5866,7 @@ var ZumpTextAssist = function(opt) {
     }
     
     /*
-    * Creates the dropdown div/list to hold result items
+    * Creates the result items for dropdowns
     */
     var generateResult = function(result) {
     	

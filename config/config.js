@@ -36,7 +36,7 @@ module.exports = {
     	    	{property: 'brand',sortAsc: true},
     	    	{property: 'name',sortAsc: true}
         	],
-        	'defaultView': 'dashboard',
+        	'defaultView': 'inventory',
         	'galleryCount': '6'
         }
     }

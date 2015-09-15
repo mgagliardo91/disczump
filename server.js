@@ -62,6 +62,13 @@ var hbs = exphbs.create({
       or3: function(in1, in2, in3, options){
         if (in1 || in2 || in3) return options.fn(this);
         return options.inverse(this);
+      },
+      exists: function(in1, options) {
+        if (typeof(in1) === 'undefined' || in1.length == 0) {
+           return options.inverse(this);
+        }
+        
+        return options.fn(this);
       }
     }
 });

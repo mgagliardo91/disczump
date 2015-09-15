@@ -16,128 +16,113 @@
     	{{#if info.title}}<strong>{{info.title}}:</strong> {{/if}}{{info.text}}
     </div>
     {{/if}}
+    <div id="loading-screen">
+        <div class="loader-sprite"></div>
+    </div>
     <div class="container-fluid">
         <div class="row">
             <div class="sidebar">
                 <div class="sidebar-nav-toolbar">
-                    <span class="sidebar-icon sidebar-nav-select active pull-left" nav-select="#sidebar-home"><i class="fa fa-home fa-toolbar-icon"></i></span>
-                    <span class="sidebar-icon sidebar-nav-select pull-left" nav-select="#sidebar-inbox"><i class="fa fa-envelope fa-toolbar-icon"></i><span id="message-count"></span></span>
-                    <span class="sidebar-icon sidebar-nav-select pull-left" nav-select="#sidebar-profile"><i class="fa fa-users fa-toolbar-icon"></i></span>
+                    <span class="sidebar-icon sidebar-nav-select sidebar-nav-indicator active pull-left" nav-select="#sidebar-home"><i class="fa fa-home fa-toolbar-icon"></i></span>
+                    <span class="sidebar-icon sidebar-nav-select sidebar-nav-indicator pull-left" nav-select="#sidebar-inbox"><i class="fa fa-envelope fa-toolbar-icon"></i><span id="message-count"></span></span>
+                    <span class="sidebar-icon sidebar-nav-select sidebar-nav-indicator pull-left" nav-select="#sidebar-profile"><i class="fa fa-users fa-toolbar-icon"></i></span>
                     <span class="toolbar-border"></span>
                     <div class="clearfix"></div>
                 </div>
-                <input type="text" class="search-format" id="search-all" placeholder="Search...">
                 <ul class="nav-sidebar no-select" id="sidebar-home">
-                    <h5 class="sidebar-section-header"><span>Views</span><hr /><div class="clearfix"></div></h5>
-                    <section id="section-views">
-                    <li class="sidebar-select nav" pg-select="#pg-dashboard"><span class="float-left fa-tools"><i class="fa fa-tachometer fa-sidebar-icon"></i></span><span class="sidebar-select-text">Dashboard</span></li>
-                    <li class="sidebar-select nav" pg-select="#pg-gallery"><span class="float-left fa-tools"><i class="fa fa-film fa-sidebar-icon"></i></span><span class="sidebar-select-text">Gallery</span></li>
-                    <li class="sidebar-select nav" pg-select="#pg-statistics"><span class="float-left fa-tools"><i class="fa fa-pie-chart fa-sidebar-icon"></i></span><span class="sidebar-select-text">Statistics</span></li>
-                    </section>
                     <h5 class="sidebar-section-header"><span>Actions</span><hr /><div class="clearfix"></div></h5>
+                    <li class="sidebar-select nav" pg-select="#pg-dashboard"><span class="float-left fa-tools"><i class="fa fa-tachometer fa-sidebar-icon"></i></span><span class="sidebar-select-text">My Dashboard</span></li>
                     <li class="sidebar-select nav" pg-select="#pg-modify-disc"><span class="float-left fa-tools"><i class="fa fa-plus fa-sidebar-icon"></i></span><span class="sidebar-select-text">Add Disc</span></li>
                     <h5 class="sidebar-section-header"><span>Settings</span><hr /><div class="clearfix"></div></h5>
                     <li class="sidebar-select nav" pg-select="#pg-settings"><span class="float-left fa-tools"><i class="fa fa-user fa-sidebar-icon"></i></span><span class="sidebar-select-text">Account</span></li>
                     <li class="sidebar-select nav" pg-select="#pg-preferences"><span class="float-left fa-tools"><i class="fa fa-cogs fa-sidebar-icon"></i></span><span class="sidebar-select-text">Preferences</span></li>
                 </ul>
                 <ul class="nav-sidebar" id="sidebar-search" style="display: none;">
-                    <div id="search-results-container">
-                        <div class="result-section" id="results-name">
-                            <h5 class="sidebar-section-header"><span>Name</span><hr /></h5><div class="clearfix"></div>
-                            <div class="result-section-output">
-                                <li class="result-item-empty">No Results</li>
-                            </div>
-                        </div>
-                        <div class="result-section" id="results-brand">
-                            <h5 class="sidebar-section-header"><span>Brand</span><hr /></h5><div class="clearfix"></div>
-                            <div class="result-section-output">
-                                <li class="result-item-empty">No Results</li>
-                            </div>
-                        </div>
-                        <div class="result-section" id="results-tagList">
-                            <h5 class="sidebar-section-header"><span>Tag</span><hr /></h5><div class="clearfix"></div>
-                            <div class="result-section-output">
-                                <li class="result-item-empty">No Results</li>
-                            </div>
-                        </div>
+                    <input type="text" class="search-format" id="search-all" placeholder="Search Inventory...">
+                    <h5 class="sidebar-section-header sidebar-results-ref"><span>Results</span><hr /></h5><div class="clearfix"></div>
+                    <div class="sidebar-results-container" id="search-results-container">
                     </div>
                 </ul>
                 <ul class="nav-sidebar" id="sidebar-filter" style="display: none;">
-                    <h5 class="sidebar-section-header"><span>Current Filters</span><hr /></h5><div class="clearfix"></div>
+                    <h5 class="sidebar-section-header sidebar-results-ref"><span>Filters</span><hr /></h5><div class="clearfix"></div>
                     <div id="current-filter-container"></div>
-                    <h5 class="sidebar-section-header"><span>Filter</span><hr /></h5><div class="clearfix"></div>
-                    <div id="filter-container"></div>
+                    <div class="sidebar-results-container" id="filter-container"></div>
                 </ul>
                 <ul class="nav-sidebar" id="sidebar-profile" style="display: none;">
-                    <h5 class="sidebar-section-header"><span>Profiles</span><hr /></h5><div class="clearfix"></div>
-                    <ul class="" id="profile-list">
-                        <li class="profile-item hover-active" userId="">
-                            <div class="profile-item-image" style="background-image:url({{user.local.image}});"></div>
-                            <div class="profile-item-details">
-                                <div class="profile-item-details-inner">
-                                    <div class="profile-item-label">Ben</div>
-                                    <div class="profile-item-text">#68700</div>
-                                    <div class="profile-item-text">Raleigh, NC</div>
-                                </div>
-                            </div>
-                            <div class="clearfix"></div>
-                        </li>
-                        <li class="profile-item hover-active" userId="">
-                            <div class="profile-item-image">
-                                <span>
-                                    <i class="fa fa-user"></i>
-                                </span>
-                            </div>
-                            <div class="profile-item-details">
-                                <div class="profile-item-details-inner">
-                                    <div class="profile-item-label">Ben</div>
-                                    <div class="profile-item-text">#68700</div>
-                                    <div class="profile-item-text">Raleigh, NC</div>
-                                </div>
-                            </div>
-                            <div class="clearfix"></div>
-                        </li>
-                    </ul>
-                    {{!--<div class="row profile-title-container">--}}
-                    {{!--    <div id="profile-alias">Ben</div>--}}
-                    {{!--    <div id="profile-pdga">#68700</div>--}}
-                    {{!--</div>--}}
-                    {{!--<div class="row profile-picture-container">--}}
-                    {{!--    {{#if user.local.image}}--}}
-                    {{!--    <img src="{{user.local.image}}">--}}
-                    {{!--    {{else}}--}}
-                    {{!--    <span><i class="fa fa-user"></i></span>--}}
-                    {{!--    {{/if}}--}}
-                    {{!--</div>--}}
-                    {{!--<div class="row profile-action-container">--}}
-                    {{!--    <button id="send-message" class="btn btn-primary">--}}
-                    {{!--        <span><i class="fa fa-envelope fa-tools"></i>Send Message</span>--}}
-                    {{!--    </button>--}}
-                    {{!--</div>--}}
-                    {{!--<div class="row profile-data-container">--}}
-                    {{!--    <div class="profile-data-row">--}}
-                    {{!--        <span id="profile-location">Raleigh, NC</span>--}}
-                    {{!--    </div>--}}
-                    {{!--    <div class="profile-data-row">--}}
-                    {{!--        <span>Member Since <span id="profile-join-date">12/31/2015</span></span>--}}
-                    {{!--    </div>--}}
-                    {{!--    <div class="profile-data-row">--}}
-                    {{!--        <span><span id="profile-disc-count">36</span> Public Discs</span>--}}
-                    {{!--    </div>--}}
-                    {{!--</div>--}}
+                    <div id="profile-search-container">
+                        <input type="text" class="search-format" id="search-profile" placeholder="Search Profiles...">
+                        <h5 class="sidebar-section-header sidebar-results-ref"><span>Profiles</span><hr /></h5><div class="clearfix"></div>
+                        <div id="profile-loading">
+                            <div><i class="fa fa-spinner fa-pulse fa-3x"></i></div>
+                        </div>
+                        <ul class="sidebar-results-container" id="profile-list"></ul>
+                    </div>
                 </ul>
                 <ul class="nav-sidebar" id="sidebar-inbox" style="display: none;">
-                    <h5 class="sidebar-section-header"><span>Inbox</span><hr /></h5><div class="clearfix"></div>
-                    <ul class="thread-container-list" id="inbox-list">
+                    <input type="text" class="search-format" id="search-inbox" placeholder="Search Inbox...">
+                    <h5 class="sidebar-section-header sidebar-results-ref"><span>Inbox</span><hr /></h5><div class="clearfix"></div>
+                    <ul class="thread-container-list sidebar-results-container" id="inbox-list">
                     </ul>
                 </ul>
             </div>
             <div class="page-view">
+                <div class="page" id="pg-profile">
+                    <div class="row">
+                        <div class="page-title">
+                            <div id="profile-username"></div>
+                            <div id="profile-pdga"></div>
+                            <div class="clearfix"></div>
+                        </div><hr>
+                    </div>
+                    <div id="profile-view">
+                        <div class="row">
+                            <div class="profile-view-left">
+                                <div id="profile-view-image-container"></div>
+                            </div>
+                            <div class="profile-view-right">
+                                <div class="row profile-data-container">
+                                    <div class="profile-label-row">
+                                        <span id="profile-name"></span>
+                                    </div>
+                                    <div class="profile-data-row">
+                                        <span id="profile-location" class="city-state" value=""></span>
+                                    </div>
+                                    <div class="profile-data-row">
+                                        <span>Member Since:  <span id="profile-join-date"></span></span>
+                                    </div>
+                                    <div class="profile-data-row">
+                                        <span><span id="profile-disc-count"></span> Public Discs</span>
+                                    </div>
+                                </div>
+                                <div class="row profile-action-container">
+                                    <button id="send-message" class="btn btn-primary">
+                                        <span><i class="fa fa-envelope fa-tools"></i>Send Message</span>
+                                    </button>
+                                    <button id="profile-view-dashboard" class="btn btn-default">
+                                        <span><i class="fa fa-tachometer fa-tools"></i>View Dashboard</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="row" id="public-disc-table">
+                            <div class="row-label">Public Discs<span class="pull-right dz-link" id="show-dashboard">View All</span></div>
+                            <div class="public-disc-row-container">
+                                <div class="public-disc-row">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="page" id="pg-modify-disc">
                     <div class="row">
-                        <div class="page-title"><span></span> Disc
-                            <a href="#" id="clear-modify-disc-form">Clear Form</a>
-                        <hr></div>
+                        <div class="page-button-container">
+                            <span class="nav-btn nav-btn-small dz-page-back"><i class="fa fa-reply"></i> Return</span>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="page-title">Add Disc</div>
+                        <hr>
+                        <div class="clearfix"></div>
                     </div>
                     <div id="disc-action-container">
                         <form class="form-horizontal" id="modify-disc-form" role="form" discId="" autocomplete="off">
@@ -155,8 +140,7 @@
             	                <label class="col-sm-2 control-label">Type</label>
             	                <div class="col-sm-4">
             	                    <select id="disc-type" class="form-control" param="type">
-            	                        <option value=""' + (isEdit ? '' : 'selected') + '></option>
-            	                        {{!--<option value=""' + (isEdit ? '' : 'selected') + '></option>--}}
+            	                        <option value="" selected></option>
             	                        <option value="Distance Driver">Distance Driver</option>
             	                        <option value="Fairway Driver">Fairway Driver</option>
             	                        <option value="Mid-range">Mid-range</option>
@@ -275,6 +259,7 @@
             		            </div>
             	            </div>
             	            <div class="modify-button-container">
+            	                <a href="#" id="clear-modify-disc-form">Clear Form</a>
     		                    <button type="button" class="btn btn-primary" id="save-disc" discId=''><span><i class="fa fa-save fa-tools"></i></span>Save</button>
                             </div>
                         </form>
@@ -282,7 +267,7 @@
                 </div>
                 <div class="page" id="pg-inbox">
                     <div class="row">
-                        <div class="page-title">Thread: <span id="thread-title"></span><hr></div>
+                        <div class="page-title">Thread: <span id="thread-title"></span></div><hr>
                     </div>
                     <div id="message-container">
                         <div id="load-messages">Load More...</div>
@@ -301,11 +286,127 @@
                         <div class="create-message-option no-select"><span id="message-on-enter"><i class="fa fa-check-square"></i> Send Message on Enter</span></div>
                     </div>
                 </div>
+                <div class="page" id="pg-disc-view">
+                    <div class="row">
+                        <div class="page-button-container">
+                            <span class="nav-btn nav-btn-small dz-page-back"><i class="fa fa-reply"></i> Return</span>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="page-title" id="view-disc-title">Disc</div>
+                        <hr>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div id="disc-view">
+                        <div class="image-block-display">
+                            <div class="image-block">
+                                <div class="image-block-frame">
+                                    <img src="/static/logo/logo_small.svg" thumbnailId="logo" class="fit-parent" id="view-disc-image">
+                                </div>
+                            </div>
+                            <div class="image-list">
+                                <div class="image-list-container image-list-container-simple">
+                                    <div class="image-list-table" id="view-disc-image-container">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="view-info-container">
+                            <div class="view-disc-row disc-info">
+                                <div class="flight-container">
+                                    <table class="flight-number-table">
+                                        <tbody>
+                                            <tr>
+                                                <td class="flight-number-table-cell">
+                                                    <p class="flight-number-table-cell-title">Speed</p>
+                                                    <p class="flight-number-table-cell-value filterable filterable-text" id="view-disc-speed" prop="speed">--</p>
+                                                </td>
+                                                <td class="flight-number-table-cell">
+                                                    <p class="flight-number-table-cell-title">Glide</p>
+                                                    <p class="flight-number-table-cell-value filterable filterable-text" id="view-disc-glide" prop="glide">--</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="flight-number-table-cell">
+                                                    <p class="flight-number-table-cell-title">Turn</p>
+                                                    <p class="flight-number-table-cell-value filterable filterable-text" id="view-disc-turn" prop="turn">--</p>
+                                                </td>
+                                                <td class="flight-number-table-cell">
+                                                    <p class="flight-number-table-cell-title">Fade</p>
+                                                    <p class="flight-number-table-cell-value filterable filterable-text" id="view-disc-fade" prop="fade">--</p>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="view-disc-info">
+                                    <div>
+                                        <div class="view-disc-info-row">
+                                            <div class="info-label">Type:</div>
+                                            <div class="info-data filterable filterable-text" id="view-disc-type" prop="type">-</div>
+                                        </div>
+                                        <div class="view-disc-info-row">
+                                            <div class="info-label">Material:</div>
+                                            <div class="info-data filterable filterable-text" id="view-disc-material" prop="material">-</div>
+                                        </div>
+                                        <div class="view-disc-info-row">
+                                            <div class="info-label">Color:</div>
+                                            <div class="info-data filterable filterable-text" id="view-disc-color" prop="color">-</div>
+                                        </div>
+                                        <div class="view-disc-info-row">
+                                            <div class="info-label">Weight:</div>
+                                            <div class="info-data filterable filterable-text" id="view-disc-weight" prop="weight">-</div>
+                                        </div>
+                                        <div class="view-disc-info-row">
+                                            <div class="info-label">Condition:</div>
+                                            <div class="info-data filterable filterable-text" id="view-disc-condition" prop="condition">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="view-disc-row short">
+                                <div class="info-label">Tags:</div>
+                                <div class="info-data" id="view-disc-tagList">
+			                     </div>
+                            </div>
+                            <div class="view-disc-row short">
+                                <div class="info-label">Notes:</div>
+                                <div class="info-data" id="view-disc-notes">-</div>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
                 <div class="page" id="pg-dashboard">
                     <div class="row">
-                        <div class="page-title">Dashboard<hr></div>
+                        <div class="page-button-container">
+                            <div class="dz-switch-toggle sidebar-nav-indicator" id="inventory-search-toggle" nav-select="#sidebar-search">
+                                <div class="dz-switch-opt">
+                                    <span><i class="fa fa-search"></i></span>
+                                </div>
+                            </div>
+                            <div class="dz-switch-toggle sidebar-nav-indicator" id="dashboard-filter-toggle" nav-select="#sidebar-filter">
+                                <div class="dz-switch-opt">
+                                    <span><i class="fa fa-filter"></i></span>
+                                    <span id="filter-count"></span>
+                                </div>
+                            </div>
+                            <div class="dz-tri-switch" id="dashboard-view-switch">
+                                <div class="dz-switch-opt" value="inventory">
+                                    <span><i class="fa fa-list-ul"></i></span>
+                                </div>
+                                <div class="dz-switch-opt" value="gallery">
+                                    <span><i class="fa fa-th-large"></i></span>
+                                </div>
+                                <div class="dz-switch-opt" value="statistics">
+                                    <span><i class="fa fa-pie-chart"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="page-title"><span id="public-dashboard" class="hover-active dashboard-title"></span><span class="dashboard-title">'s </span>Dashboard</div>
+                        <hr>
                     </div>
-                    <div class="row">
+                    <div class="row dashboard-view" id="view-inventory">
                         <div class="disc-inventory-header" id="inventory-header">
                             <div class="header-static header-row no-select">
                                 <div class="div-inline float-left" style="width: 40%">
@@ -320,10 +421,6 @@
                                     </select>
                                     <span id="results-header-sort">
                                         <i class="fa fa-sort"></i> Sort
-                                    </span>
-                                    <span id="results-header-filter">
-                                        <i class="fa fa-filter"></i> Filter
-                                        <span id="filter-count"></span>
                                     </span>
                                 </div>
                                 <div class="div-inline float-left text-center" style="width: 20%">
@@ -355,18 +452,10 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="page" id="pg-gallery">
-                    <div class="row">
-                        <div class="page-title">Gallery<hr></div>
+                    <div class="row dashboard-view" id="view-gallery">
+                        <div id="gallery-container"></div>
                     </div>
-                    <div id="gallery-container"></div>
-                </div>
-                <div class="page" id="pg-statistics">
-                    <div class="row">
-                        <div class="page-title">Statistics<hr></div>
-                    </div>
-                    <div class="row">
+                    <div class="row dashboard-view" id="view-statistics">
                         <div class="statistics-settings">
                             <div class="form-horizontal form-small">
                                 <div class="form-group">
@@ -405,16 +494,16 @@
                                     </div>
                                 </div>
                             </div>
-                            
                         </div> 
-                    </div>
-                    <div class="row statistics-container">
-                        <div id="statistics-plot"></div>
+                        <div class="row statistics-container">
+                            <div id="statistics-plot"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="page" id="pg-settings">
                     <div class="row">
-                        <div class="page-title">Account Settings<hr></div>
+                        <div class="page-title">Account Settings</div>
+                        <hr>
                     </div>
                     <div class="row">
                         <div class="profile-image">
@@ -514,9 +603,9 @@
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="confirm-password" class="col-sm-4 col-sm-offset-1 control-label">Confirm Password</label>
+                                        <label for="confirm-new-password" class="col-sm-4 col-sm-offset-1 control-label">Confirm Password</label>
                                         <div class="col-sm-6">
-                                            <input type="password" class="form-control" id="confirm-password" placeholder="Confirm Password">
+                                            <input type="password" class="form-control" id="confirm-new-password" placeholder="Confirm Password">
                                         </div>
                                     </div>
                                     <div class="form-group">
@@ -544,8 +633,9 @@
                 <div class="page" id="pg-preferences">
                     <div class="row">
                         <div class="page-title">Preferences
-                            <a href="#" id="default-settings-restore">Restore Default Preferences</a>
-                        <hr></div>
+                            <a href="#" id="default-settings-restore" class="hover-active">Restore Default Preferences</a>
+                        </div>
+                        <hr>
                     </div>
                     <div class="row">
                         <div class="row-label">Default Settings</div>
@@ -556,7 +646,7 @@
                                 </label>
                                 <div class="col-sm-5">
                                     <select id="default-view" class="form-control">
-                                        <option value="dashboard">Dashboard</option>
+                                        <option value="inventory">Inventory</option>
                                         <option value="gallery">Gallery</option>
                                         <option value="statistics">Statistics</option>
                                     </select>
@@ -613,6 +703,8 @@
                                         <option value="glide">Glide</option>
                                         <option value="turn">Turn</option>
                                         <option value="fade">Fade</option>
+                                        <option value="condition">Condition</option>
+                                        <option value="createDate">Create Date</option>
                                     </select>
                                 </div>
                                 <label for="sort-order-primary-direction" class="col-sm-2 control-label">Direction</label>
@@ -639,6 +731,8 @@
                                         <option value="glide">Glide</option>
                                         <option value="turn">Turn</option>
                                         <option value="fade">Fade</option>
+                                        <option value="condition">Condition</option>
+                                        <option value="createDate">Create Date</option>
                                     </select>
                                 </div>
                                 <label for="sort-order-secondary-direction" class="col-sm-2 control-label">Direction</label>

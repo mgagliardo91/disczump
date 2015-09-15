@@ -4,6 +4,7 @@ var DiscImageController = require('./discImage');
 var _ = require('underscore');
 
 module.exports = {
+    getPublicPreview: getPublicPreview,
     getDiscs: getDiscs,
     getDisc: getDisc,
     postDisc: postDisc,
@@ -14,9 +15,33 @@ module.exports = {
 /* Public Access
  * ----------------------
  */
+
+function getPublicPreview(userId, refDiscId, callback) {
+    var retDiscs = [];
+    var hasRefDisc = typeof(refDiscId) !== 'undefined';
+    var index = 0;
+    
+    getDiscs(undefined, userId, function(err, discs) {
+        if (err)
+            return callback(err);
+        
+        shuffle(discs);
+        
+        while (index < discs.length && retDiscs.length < 5) {
+            if (!(hasRefDisc && discs[index]._id == refDiscId)) {
+                retDiscs.push(discs[index]);
+            }
+            index++;
+        }
+        
+        callback(null, {count: discs.length, preview: retDiscs});
+        
+    });
+}
+ 
 function getDiscs(reqUserId, userId, callback) {
     
-    if (reqUserId == userId) {
+    if (typeof(reqUserId) !== 'undefined' && reqUserId == userId) {
         Disc.find({userId: userId}, function (err, discs){
             if (err)
                 return callback(Error.createError(err, Error.internalError));
@@ -71,33 +96,6 @@ function getDisc(userId, discId, callback) {
     });
 }
 
-
-
-/* Private Access
- * ----------------------
- */
-
-/// Get All Discs by User
-/*function getDiscs(userId, callback) {
-    
-}*/
-
-/// Get Disc by Id and User
-/*function getDisc(userId, discId, callback) {
-    Disc.findById(discId, function(err, disc) {
-        if (err) 
-            return callback(Error.createError(err, Error.internalError));
-        
-        if (!disc)
-            return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
-        if (disc.userId == userId) {
-            return callback(null, disc);
-        } else {
-            return callback(Error.createError('Not authorized to view disc.', Error.unauthorizedError));
-        }
-    });	
-}*/
-
 /// Create Disc
 function postDisc(userId, data, callback) {
     var disc = new Disc();
@@ -109,7 +107,6 @@ function postDisc(userId, data, callback) {
     disc.type = data.type;
     disc.color = data.color;
     disc.notes = data.notes;
-    disc.condition = data.condition;
     
     if (_.has(data, 'visible')) {
         disc.visible = data.visible;
@@ -155,6 +152,14 @@ function postDisc(userId, data, callback) {
         }
     }
     
+    if (_.has(data, 'condition')) {
+        if (data.condition == '') {
+            disc.condition = undefined;
+        } else if ( _.isNumber(parseInt(data.condition)) && !(_.isNaN(parseInt(data.condition)))){
+            disc.condition = data.condition;
+        }
+    }
+    
     disc.tagList = [];
     if (_.has(data, 'tagList')) {
         _.each(data.tagList, function(tag) {
@@ -186,31 +191,27 @@ function putDisc(userId, discId, data, callback) {
         }
         
         if (typeof data.name !== 'undefined') {
-            disc.name = data.name;
+            disc.name = data.name.trim();
         }
         
         if (_.has(data, 'material')) {
-            disc.material = data.material;
+            disc.material = data.material.trim();
         }
         
         if (_.has(data, 'type')) {
-            disc.type = data.type;
+            disc.type = data.type.trim();
         }
         
         if (_.has(data, 'color')) {
-            disc.color = data.color;
+            disc.color = data.color.trim();
         }
         
         if (_.has(data, 'notes')) {
-            disc.notes = data.notes;
+            disc.notes = data.notes.trim();
         }
         
         if (_.has(data, 'visible')) {
             disc.visible = data.visible;
-        }
-        
-        if (_.has(data, 'condition')) {
-            disc.condition = data.condition;
         }
         
         if (_.has(data, 'image')) {
@@ -218,44 +219,52 @@ function putDisc(userId, discId, data, callback) {
         }
         
         if (_.has(data, 'weight')) {
-        if (data.weight == '') {
-            disc.weight = undefined;
-        } else if ( _.isNumber(parseInt(data.weight)) && !(_.isNaN(parseInt(data.weight)))){
-            disc.weight = data.weight;
+            if (data.weight == '') {
+                disc.weight = undefined;
+            } else if ( _.isNumber(parseInt(data.weight)) && !(_.isNaN(parseInt(data.weight)))){
+                disc.weight = data.weight;
+            }
         }
-    }
-    
-    if (_.has(data, 'speed')) {
-        if (data.speed == '') {
-            disc.speed = undefined;
-        } else if ( _.isNumber(parseInt(data.speed)) && !(_.isNaN(parseInt(data.speed)))){
-            disc.speed = data.speed;
+        
+        if (_.has(data, 'speed')) {
+            if (data.speed == '') {
+                disc.speed = undefined;
+            } else if ( _.isNumber(parseInt(data.speed)) && !(_.isNaN(parseInt(data.speed)))){
+                disc.speed = data.speed;
+            }
         }
-    }
-    
-    if (_.has(data, 'glide')) {
-        if (data.glide == '') {
-            disc.glide = undefined;
-        } else if ( _.isNumber(parseInt(data.glide)) && !(_.isNaN(parseInt(data.glide)))){
-            disc.glide = data.glide;
+        
+        if (_.has(data, 'glide')) {
+            if (data.glide == '') {
+                disc.glide = undefined;
+            } else if ( _.isNumber(parseInt(data.glide)) && !(_.isNaN(parseInt(data.glide)))){
+                disc.glide = data.glide;
+            }
         }
-    }
-    
-    if (_.has(data, 'turn')) {
-        if (data.turn == '') {
-            disc.turn = undefined;
-        } else if ( _.isNumber(parseInt(data.turn)) && !(_.isNaN(parseInt(data.turn)))){
-            disc.turn = data.turn;
+        
+        if (_.has(data, 'turn')) {
+            if (data.turn == '') {
+                disc.turn = undefined;
+            } else if ( _.isNumber(parseInt(data.turn)) && !(_.isNaN(parseInt(data.turn)))){
+                disc.turn = data.turn;
+            }
         }
-    }
-    
-    if (_.has(data, 'fade')) {
-        if (data.fade == '') {
-            disc.fade = undefined;
-        } else if ( _.isNumber(parseInt(data.fade)) && !(_.isNaN(parseInt(data.fade)))){
-            disc.fade = data.fade;
+        
+        if (_.has(data, 'fade')) {
+            if (data.fade == '') {
+                disc.fade = undefined;
+            } else if ( _.isNumber(parseInt(data.fade)) && !(_.isNaN(parseInt(data.fade)))){
+                disc.fade = data.fade;
+            }
         }
-    }
+        
+        if (_.has(data, 'condition')) {
+            if (data.condition == '') {
+                disc.condition = undefined;
+            } else if ( _.isNumber(parseInt(data.condition)) && !(_.isNaN(parseInt(data.condition)))){
+                disc.condition = data.condition;
+            }
+        }
         
         if (typeof data.tagList !== 'undefined') {
             disc.tagList = [];
@@ -310,4 +319,20 @@ function deleteDisc(userId, discId, gfs, callback) {
             });
         });
     });
+}
+
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex ;
+
+  while (currentIndex !== 0) {
+
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
 }

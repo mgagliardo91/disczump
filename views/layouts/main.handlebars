@@ -124,9 +124,13 @@
                                 {{#if route}}
                                     <a href="/{{route.url}}"><span class="nav-btn">{{route.text}}</span></a>
                                 {{/if}}
+                                {{#if isLoggedIn}}
+                                    <a href="/dashboard" rel="external" data-ajax="false"><span class="nav-btn">Dashboard</span></a>
+                                {{else}}
                                 {{#if isPublicPage}}
                                     <a href="/login" rel="external" data-ajax="false"><span class="nav-btn">Sign In</span></a>
                                     <a href="/signup" rel="external" data-ajax="false"><span class="nav-btn">Sign Up</span></a>
+                                {{/if}}
                                 {{/if}}
                             </div>
                         </div>

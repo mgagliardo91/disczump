@@ -64,7 +64,7 @@ function getCityState(zipcode, callback) {
 function doAjax(param) {
 	var success = false;
 	var retData;
-	$.ajax({
+	return $.ajax({
 		type: param.type,
 		dataType: "json",
 		url: (param.url ? param.url : url) + param.path,
@@ -92,6 +92,20 @@ function doAjax(param) {
 function queryUser(type, text, callback) {
 	doAjax({
 		path: '/validate/' + type + '?q=' + text, 
+		type: 'GET',
+		callback: callback
+	});
+}
+
+var profileQuery;
+
+function getProfiles(query, callback) {
+	if (profileQuery && profileQuery.readystate != 4){
+        profileQuery.abort();
+    }
+	
+	profileQuery = doAjax({
+		path: '/users?q=' + query, 
 		type: 'GET',
 		callback: callback
 	});
@@ -232,6 +246,22 @@ function getPrimaryDiscImage(imageId, callback) {
 function getAllDiscs(callback) {
 	doAjax({
 		path: '/discs/',
+		type: 'GET',
+		callback: callback
+	});
+}
+
+function getProfilePreview(userId, callback) {
+	doAjax({
+		path: '/users/' + userId + '/preview',
+		type: 'GET',
+		callback: callback
+	});
+}
+
+function getPublicPreview(userId, refDiscId, callback) {
+	doAjax({
+		path: '/users/' + userId + '/preview?refDiscId=' + refDiscId,
 		type: 'GET',
 		callback: callback
 	});

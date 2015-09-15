@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+{{#section 'head'}}
+<head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# testdisczumpfb: http://ogp.me/ns/fb/testdisczumpfb#">
+    <title>DiscZump - Public View</title>
+    <link rel="stylesheet" href="/static/css/discview.css">
+    <link rel="stylesheet" href="/static/css/jquery-ui.min.css">
+    {{#if disc.visible}}
+    <meta property="og:site_name"           content="DiscZump">
+    <meta property="og:title"               content="{{disc.brand}} {{disc.name}}" />
+    <meta property="og:url"                 content="http://www.disczump.com/disc/{{disc._id}}" />
+    <meta property="og:type"                content="product" />
+    <meta property="og:description"         content="Condition: {{#if disc.condition}}{{disc.condition}}/10{{else}}<No Entry>{{/if}} | Material: {{#if disc.material}}{{disc.material}}{{else}}<No Entry>{{/if}} | Weight: {{#if disc.weight}}{{disc.weight}}g{{else}}<No Entry>{{/if}}" />
+    <meta property="fb:app_id"              content="1433417853616595" />
+    {{#if disc.retPrimaryImage.fileId}}
+    <meta property="og:image"               content="http://www.disczump.com/files/{{disc.retPrimaryImage.fileId}}/600" />
+    {{/if}}
+    {{/if}}
+</head>
+{{/section}}
+<body>
+    <div class="page public-disc-view" id="{{disc._id}}">
+        <div class="row">
+            <div class="page-button-container">
+                <span id="view-profile" class="media-btn" userId="{{user._id}}"><i class="fa fa-user" title="View Profile"></i></span>
+                <span id="share-disc" class="media-btn"><i class="fa fa-facebook-square" title="Share Disc"></i></span>
+                <div class="clearfix"></div>
+            </div>
+            <div class="page-title" id="view-disc-title">{{disc.brand}} {{disc.name}}</div>
+            <hr>
+            <div class="clearfix"></div>
+        </div>
+        <div id="disc-view">
+            <div class="image-block-display">
+                <div class="image-block">
+                    <div class="image-block-frame">
+                        {{#if disc.retPrimaryImage.fileId}}
+                        <img src="/files/{{disc.retPrimaryImage.fileId}}" class="fit-parent" id="view-disc-image">
+                        {{else}}
+                        <img src="/static/logo/logo_small.svg" class="fit-parent" id="view-disc-image">
+                        {{/if}}
+                    </div>
+                </div>
+                <div class="image-list">
+                    <div class="image-list-container image-list-container-simple">
+                        <div class="image-list-table" id="view-disc-image-container">
+                            <div class="image-item-container logo-placeholder">
+                                <div class="image-item">
+                                    <div class="image-preview active">
+                                        <img src="/static/logo/logo_small.svg" class="fit-parent">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="view-info-container">
+                <div class="view-disc-row disc-info">
+                    <div class="flight-container">
+                        <table class="flight-number-table">
+                            <tbody>
+                                <tr>
+                                    <td class="flight-number-table-cell">
+                                        <p class="flight-number-table-cell-title">Speed</p>
+                                        <p class="flight-number-table-cell-value">{{#exists disc.speed}}{{disc.speed}}{{else}}--{{/exists}}</p>
+                                    </td>
+                                    <td class="flight-number-table-cell">
+                                        <p class="flight-number-table-cell-title">Glide</p>
+                                        <p class="flight-number-table-cell-value">{{#exists disc.glide}}{{disc.glide}}{{else}}--{{/exists}}</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="flight-number-table-cell">
+                                        <p class="flight-number-table-cell-title">Turn</p>
+                                        <p class="flight-number-table-cell-value">{{#exists disc.turn}}{{disc.turn}}{{else}}--{{/exists}}</p>
+                                    </td>
+                                    <td class="flight-number-table-cell">
+                                        <p class="flight-number-table-cell-title">Fade</p>
+                                        <p class="flight-number-table-cell-value">{{#exists disc.fade}}{{disc.fade}}{{else}}--{{/exists}}</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="view-disc-info">
+                        <div>
+                            <div class="view-disc-info-row">
+                                <div class="info-label">Type:</div>
+                                <div class="info-data">{{#exists disc.type}}{{disc.type}}{{else}}-{{/exists}}</div>
+                            </div>
+                            <div class="view-disc-info-row">
+                                <div class="info-label">Material:</div>
+                                <div class="info-data">{{#exists disc.material}}{{disc.material}}{{else}}-{{/exists}}</div>
+                            </div>
+                            <div class="view-disc-info-row">
+                                <div class="info-label">Color:</div>
+                                <div class="info-data">{{#exists disc.color}}{{disc.color}}{{else}}-{{/exists}}</div>
+                            </div>
+                            <div class="view-disc-info-row">
+                                <div class="info-label">Weight:</div>
+                                <div class="info-data">{{#exists disc.weight}}{{disc.weight}}g{{else}}-{{/exists}}</div>
+                            </div>
+                            <div class="view-disc-info-row">
+                                <div class="info-label">Condition:</div>
+                                <div class="info-data">{{#exists disc.condition}}{{disc.condition}}/10{{else}}-{{/exists}}</div>
+                            </div>
+                            <div class="view-disc-info-row">
+                                <div class="info-label">Owner:</div>
+                                <div class="info-data dz-link" id="disc-owner" userId="{{user._id}}">{{user.local.username}}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="view-disc-row short">
+                    <div class="info-label">Tags:</div>
+                    <div class="info-data" id="view-disc-tagList">
+                        {{#each disc.tagList}}
+                            <div class="tag-item"><p class="tag-item-text">{{this}}</p></div>
+                        {{/each}}
+                     </div>
+                </div>
+                <div class="view-disc-row short">
+                    <div class="info-label">Notes:</div>
+                    <div class="info-data" id="view-disc-notes">{{#exists disc.notes}}{{disc.notes}}{{else}}-{{/exists}}</div>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <div class="row" id="public-disc-table">
+            <div class="row-label">Public Discs<span class="pull-right dz-link" id="show-dashboard">View All</span></div>
+            <div class="public-disc-row-container">
+                <div class="public-disc-row">
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/static/js/discview.js"></script>
+</body>
+</html>

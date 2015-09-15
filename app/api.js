@@ -216,10 +216,20 @@ module.exports = function(app, passport, gridFs) {
                 return res.json(user);
            })
         });
+        
+    app.route('/users/:userId/preview')
+        .get(function(req, res) {
+            UserController.getPreview(req.params.userId, req.query.refDiscId, function(err, preview) {
+              if (err)
+                    return res.json(err);
+                    
+                return res.json(preview);
+            });
+        });
     
     app.route('/users/:userId/discs')
     
-        .get(function(req, res) {
+        .get(hasAccess, function(req, res) {
             var userId = undefined;
             if (req.user) userId = req.user._id;
             
