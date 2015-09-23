@@ -22,8 +22,7 @@ module.exports = {
     updatePreferences: updatePreferences,
     resetPassword: resetPassword,
     tryResetPassword: tryResetPassword,
-    deleteUser: deleteUser,
-    getAlias: getAlias
+    deleteUser: deleteUser
 }
 
 function query(field, q, callback) {
@@ -129,25 +128,6 @@ function getUser(userId, callback) {
 		if (!user) return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
 		
 		return callback(null, user);	
-	});
-}
-
-function getAlias(userId, callback) {
-	User.findOne({_id: userId}, function(err, user) {
-       if (err) 
-			return callback(Error.createError(err, Error.internalError));
-		
-		
-		if (!user)
-	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-	   		
-	   	var alias = 'User_' + user._id;
-	   	
-	   	if (!(typeof user.local.alias === 'undefined')) {
-	   		alias = user.local.alias;
-	   	}
-		
-		return callback(null, {display: alias, image: user.local.image});
 	});
 }
 
@@ -364,39 +344,54 @@ function tryResetPassword(userId, currentPw, newPw, callback) {
 }
 
 function deleteUser(userId, gfs, callback) {
-	User.findOne({_id: userId}, function (err, user) {
+	User.findOne({_id: userId}, function(err, user) {
 		if (err)
 			return callback(Error.createError(err, Error.internalError));
 			
 		if (!user)
 			return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-		
-		console.log('Initiating deletion of user: ' + user._id);
-		DiscController.getDiscs(user._id, user._id, function(err, discs) {
 			
-			console.log('Deleting [' + discs.length + '] discs owned by user.');
-			
-			async.each(discs, function(disc, aCallback) {
-		        DiscController.deleteDisc(user._id, disc._id, gfs, function(err, disc) {
-		            if (err)
-		                console.log(err);
-		                
-		            console.log('Successfully deleted disc:' + disc._id);
-		        	aCallback();
-		        });
-		    }, function(err) {
-		        user.remove(function(err) {
-		        	if (err)
-		        		return callback(Error.createError(err, Error.internalError));
-		        	
-			        console.log('Successfully deleted user.');
-			        EventController.createEvent(user._id, EventController.types.AccountDeletion);
-			        callback(null, user.accountToString());
-		        });
-		        
-		    });
+		user.local.active = false;
+		user.save(function(err) {
+			user.addEvent("Account deactiated");
+			callback(null, user.accountToString());
 		});
 	});
+	
+	
+	// User.findOne({_id: userId}, function (err, user) {
+	// 	if (err)
+	// 		return callback(Error.createError(err, Error.internalError));
+			
+	// 	if (!user)
+	// 		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
+		
+	// 	console.log('Initiating deletion of user: ' + user._id);
+	// 	DiscController.getDiscs(user._id, user._id, function(err, discs) {
+			
+	// 		console.log('Deleting [' + discs.length + '] discs owned by user.');
+			
+	// 		async.each(discs, function(disc, aCallback) {
+	// 	        DiscController.deleteDisc(user._id, disc._id, gfs, function(err, disc) {
+	// 	            if (err)
+	// 	                console.log(err);
+		                
+	// 	            console.log('Successfully deleted disc:' + disc._id);
+	// 	        	aCallback();
+	// 	        });
+	// 	    }, function(err) {
+	// 	        user.remove(function(err) {
+	// 	        	if (err)
+	// 	        		return callback(Error.createError(err, Error.internalError));
+		        	
+	// 		        console.log('Successfully deleted user.');
+	// 		        EventController.createEvent(user._id, EventController.types.AccountDeletion);
+	// 		        callback(null, user.accountToString());
+	// 	        });
+		        
+	// 	    });
+	// 	});
+	// });
 }
 
 function validatePreference(preference, value) {

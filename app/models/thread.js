@@ -10,6 +10,7 @@ var threadSchema = mongoose.Schema({
 	    default: shortId.generate
 	},
     isPrivate       : {type: Boolean, default: false},
+    users           : [String],
     createDate      : {type: Date, default: Date.now},
     modifiedDate    : {type: Date, default: Date.now()},
     messageCount    : {type: Number, default: 0},

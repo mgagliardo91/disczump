@@ -32,29 +32,5 @@ $(document).ready(function(){
             return false;
         } 
     });
-   
-    var recoverValidate = new ZumpValidate({
-        items: [
-            {id:'recover-username', type:'email'}
-        ]
-    });
     
-    $('#recover-form').submit(function() {
-        if (!recoverValidate.isAllValid()) {
-            return false;
-        } 
-    });
-    
-    var resetValidate = new ZumpValidate({
-        items: [
-            {id:'reset-password', type: 'text', min: 6, hint: 'Password must be at least 6 characters in length.'},
-            {id:'reset-verify-password', type:'compare', refId:'password'}
-        ]
-    });
-    
-    $('#reset-form').submit(function() {
-        if (!resetValidate.isAllValid()) {
-            return false;
-        } 
-    });
 });

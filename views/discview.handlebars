@@ -21,9 +21,10 @@
 <body>
     <div class="page public-disc-view" id="{{disc._id}}">
         <div class="row">
-            <div class="page-button-container">
-                <span id="view-profile" class="media-btn" userId="{{user._id}}"><i class="fa fa-user" title="View Profile"></i></span>
-                <span id="share-disc" class="media-btn"><i class="fa fa-facebook-square" title="Share Disc"></i></span>
+            <div class="page-btn-container">
+                <span id="view-profile" class="page-title-btn" userId="{{user._id}}"><i class="fa fa-user" title="View Profile"></i></span>
+                <span id="share-disc" class="page-title-btn"><i class="fa fa-facebook-square" title="Share Disc"></i></span>
+                <span id="copy-link" class="page-title-btn"><i class="fa fa-link" title="Copy Public URL"></i></span>
                 <div class="clearfix"></div>
             </div>
             <div class="page-title" id="view-disc-title">{{disc.brand}} {{disc.name}}</div>

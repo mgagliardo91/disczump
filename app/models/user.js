@@ -57,6 +57,10 @@ var userSchema = mongoose.Schema({
     }
 });
 
+userSchema.methods.totalAccessCount = function() {
+    return this.local.accessCount.desktop + this.local.accessCount.mobile;
+}
+
 userSchema.methods.addEvent = function(event) {
     
     if (typeof(event) !== 'undefined') {
@@ -68,16 +72,6 @@ userSchema.methods.addEvent = function(event) {
         this.save();
     }
     
-}
-
-userSchema.methods.getAlias = function() {
-    var alias = 'User_' + this._id;
-	   	
-   	if (!(typeof this.local.alias === 'undefined')) {
-   		alias = this.local.alias;
-   	}
-   	
-   	return alias;
 }
 
 userSchema.methods.accountToString = function() {

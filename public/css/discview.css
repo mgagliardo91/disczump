@@ -158,15 +158,6 @@
     cursor: pointer;
 }
 
-.accordion-container {
-    margin-top: 10px;
-}
-
-.accordion-header label:hover {
-    cursor: pointer;
-    text-decoration: underline;
-}
-
 .advanced-area {
     width: 80%;
     margin: auto;
@@ -366,22 +357,7 @@ img.fit-parent {
     cursor: pointer;
 }
 
-.page-button-container {
-    float: right;
-}
-
-.media-btn {
-    font-size: 2em;
-    line-height: 1.5em;
-    cursor: pointer;
-    padding-right: 10px;
-}
-
-.media-btn:last-child {
-    padding-right: 0px;
-}
-
-.media-btn:hover {
+#view-profile:hover, #copy-link:hover {
     color: rgb(0, 142, 221);
 }
 

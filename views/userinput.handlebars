@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+    <title>DiscZump - {{userinput.pageHeader}}</title>
+</head>
+<body>
+    <div class="page-container container">
+        <div class="page-header">
+            <img src="/static/logo/logo_small_round.svg">
+            <h1>{{userinput.header}}</h1>
+        </div>
+        <div class="page-body">
+            {{#if message.error}}
+            <div class="alert alert-danger" role="alert">
+                <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <strong>Error: </strong>{{message.error}}
+            </div>
+            {{/if}}
+            
+            {{#if message.info}}
+            <div class="alert alert-info" role="alert">
+                <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <strong>Note: </strong>{{message.info}}
+            </div>
+            {{/if}}
+            
+            {{#if userinput.text}}
+            <p>{{userinput.text}}</p>
+            {{/if}}
+            
+            <form id="user-input-form" action="{{userinput.route}}" method="post" autocomplete="off">
+                {{#each userinput.input}}
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa {{this.icon}} fa-fw"></i></span>
+                    <input class="form-control" id="{{this.id}}" {{#if this.name}}name="{{this.name}}" {{/if}}type="{{this.type}}" placeholder="{{this.placeholder}}">
+                </div>
+                {{/each}}
+                <button id="submit" class="btn btn-primary pull-right" type="submit">{{userinput.btnText}}</button>
+            </form>
+        </div>
+    </div>
+    <script src="/static/js/userinput.js"></script>
+    <script src="/static/js/validation.js"></script>
+</body>
+</html>

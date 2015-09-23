@@ -10,11 +10,6 @@ var temporaryLinkSchema = mongoose.Schema({
 	    unique: true,
 	    default: shortId.generate
 	},
-    authorizationId: {
-        type: String,
-        required: true,
-        unique: true
-    },
     userId: {
         type: String,
         required: true

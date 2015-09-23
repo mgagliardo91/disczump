@@ -17,6 +17,7 @@ var EventController          = require('../app/controllers/event');
 
 var configAuth = require('./auth');
 var localConfig = require('./localConfig');
+var configRoutes = require('../config/config.js').routes;
 var fbGraph = require('fbgraph');
 var async = require('async');
 
@@ -50,6 +51,12 @@ module.exports = function(passport) {
     
                     if (err)
                         return done(err);
+                        
+                    if (!user.local.active) {
+                        req.flash('link.url', '/' + configRoutes.confirmAccount + '/user/' + user._id);
+                        req.flash('link.text', 'Resend Activation');
+                        return done(null, null, req.flash('info', 'Account not activated.'));
+                    }
     
                     if (user) {
                         
@@ -82,27 +89,32 @@ module.exports = function(passport) {
     
                 });
             } else {
-                
-                var user = req.user;
-                user.facebook.id = profile.id;
-                user.facebook.token = profile.token;
-                user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
-                user.facebook.email = profile.emails ? profile.emails[0].value : undefined;
-                
-                fbGraph.get(profile.id + "/picture?width=500&access_token=" + token, function(err, pic) {
-                    if (!err && pic.image) {
-                        user.local.image = pic.location;
+                User.findOne({'facebook.id' : profile.id }, function(err, user) {
+                    if (!err && user && user._id != req.user._id) {
+                        return done(null, null, req.flash('infoTitle', 'Link Failed'));
                     }
                     
-                    // save the user
-                    user.save(function(err) {
-                        if (err)
-                            throw err;
+                    var user = req.user;
+                    user.facebook.id = profile.id;
+                    user.facebook.token = profile.token;
+                    user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
+                    user.facebook.email = profile.emails ? profile.emails[0].value : undefined;
+                    
+                    fbGraph.get(profile.id + "/picture?width=500&access_token=" + token, function(err, pic) {
+                        if (!err && pic.image) {
+                            user.local.image = pic.location;
+                        }
                         
-                        EventController.createEvent(user._id, EventController.types.AccountLink);
-                        req.flash('infoTitle', 'Link Successful');
-                        req.flash('infoText', 'You can now login using Facebook!');
-                        return done(null, user);
+                        // save the user
+                        user.save(function(err) {
+                            if (err)
+                                throw err;
+                            
+                            EventController.createEvent(user._id, EventController.types.AccountLink);
+                            req.flash('infoTitle', 'Link Successful');
+                            req.flash('infoText', 'You can now login using Facebook!');
+                            return done(null, user);
+                        });
                     });
                 });
             }

@@ -81,9 +81,8 @@ module.exports = function(app, passport, gridFs) {
                 ],
                 function(err, results) {
                     
-                });
-            
-            
+                }
+            );
         });
     
     app.route('/threads/:threadId')

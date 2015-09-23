@@ -3,6 +3,8 @@ var $searchResults;
 var $searchBar;
 var $sidebar;
 var $sidebarFilter;
+var $loading;
+var $sprite;
 
 // UI Objects
 var pageSettings = {
@@ -23,10 +25,10 @@ var myDashboard;
 var myEditor;
 var mySocial;
 var accountValidation;
-var changePasswordValidate;
 
 // Global vars
 var socket;
+var userCache = {};
 var discs = [];
 var fnLock = false;
 var activePage = '#pg-dashboard';
@@ -45,6 +47,9 @@ $(document).ready(function(){
 	$sidebarFilter = $('#sidebar-filter');
     $searchBar = $('#search-all');
 	$sidebar = $('.sidebar');
+	$loading = $('#loading-screen');
+	$sprite = $('.loader-sprite');
+	
 	$.ajaxSetup({ cache: true });
 	$.getScript('//connect.facebook.net/en_UK/all.js', function(){
 		FB.init({
@@ -98,35 +103,8 @@ $(document).ready(function(){
     	});
     });
     
-    $('#change-password-save').click(function() {
-    	$('#accountActionsForm').find('.alert').remove();
-    	
-    	var currentPassword = $('#current-password').val();
-    	var newPassword = $('#new-password').val();
-    	var confirmPassword = $('#confirm-new-password').val();
-    	
-    	// check new == confirm
-    	if (changePasswordValidate.isAllValid()) {
-    		resetPassword(currentPassword, newPassword, function(success, retData) {
-	    		if (success) {
-	    			$('#accountActionsForm').prepend(generateSuccess('Password has been changed successfully.', 'Success'));
-	    			autoCloseAlert($('#accountActionsForm').find('.alert'), 3000);
-	    			$('#current-password').val('');
-			    	$('#new-password').val('').parent().removeClass('has-success');
-			    	$('#confirm-new-password').val('').parent().removeClass('has-success');
-	    		} else {
-	    			$('#accountActionsForm').prepend(generateError(retData.message, retData.type));
-	    			$('#current-password').val('');
-			    	$('#new-password').val('').parent().removeClass('has-success has-error');
-			    	$('#confirm-new-password').val('').parent().removeClass('has-success has-error');
-	    		}
-	    	});
-    	} else {
-    		$('#accountActionsForm').prepend(generateError('New password and confirmed password do not match.', 'ERROR'));
-    		$('#current-password').val('');
-	    	$('#new-password').val('').parent().removeClass('has-success has-error');
-	    	$('#confirm-new-password').val('').parent().removeClass('has-success has-error');
-    	}
+    $('#account-change-pwd').click(function() {
+    	window.location.href = '/reset';
     });
     
     $('#account-delete').click(function() {
@@ -254,20 +232,56 @@ $(document).ready(function(){
 	/*===================================================================*/
 	
 	pageEvents['pg-dashboard'] = {
-		onShow: function() {
+		beforeShow: function(sender) {
+			if (myDashboard.isPublicMode() && isDef(sender) && sender[0] == $('li.sidebar-select[pg-select="#pg-dashboard"]')[0]) {
+				myDashboard.setDiscList(discs);
+			}
+		},
+		onShow: function(sender) {
+			if (myDashboard.isPublicMode()) {
+				$('.sidebar-select[pg-select="#pg-dashboard"]').removeClass('active');
+			}
+	
 			myDashboard.doResize();
 		},
 		onHide: function() {
+		},
+		isShowing: function(sender) {
+			if (myDashboard.isPublicMode()) {
+				
+				if (isDef(sender) && sender[0] == $('li.sidebar-select[pg-select="#pg-dashboard"]')[0]) {
+					myDashboard.setDiscList(discs);
+				} else {
+					$('.sidebar-select[pg-select="#pg-dashboard"]').removeClass('active');
+				}
+			}
 			
+			myDashboard.doResize();
+		}
+	}
+	
+	pageEvents['pg-disc-view'] = {
+		beforeShow: function() {
+			if (!myDashboard.isPublicMode()) {
+				$('#view-disc-edit').show();
+				myDashboard.bindPrivateListeners();
+			}
+		},
+		onShow: function() {
+		},
+		onHide: function() {
+			if (!myDashboard.isPublicMode()) {
+				$('#view-disc-edit').hide();
+				myDashboard.unbindPrivateListeners();	
+			}
 		},
 		isShowing: function() {
-			if (myDashboard.isPublicMode()) {
-				myDashboard.setDiscList(discs);
-			}
 		}
 	}
 	
 	pageEvents['pg-inbox'] = {
+		beforeShow: function() {
+		},
 		onShow: function() {
 			myMessenger.initPage();
 		},
@@ -279,7 +293,22 @@ $(document).ready(function(){
 		}
 	}
 	
+	pageEvents['pg-preferences'] = {
+		beforeShow: function() {
+		    setUserPrefs();
+		},
+		onShow: function() {
+		},
+		onHide: function() {
+		},
+		isShowing: function() {
+			
+		}
+	}
+	
 	pageEvents['pg-modify-disc'] = {
+		beforeShow: function() {
+		},
 		onShow: function() {
 			myEditor.onShow();
 		},
@@ -319,13 +348,15 @@ $(document).ready(function(){
     		getUserPreferences(function(success, prefs) {
 		    	if (success) {
 		    		userPrefs = prefs;
-		    		setUserPrefs();
 		    		initializeTooltips();
 		    		zumpLibraryInit();
+		    		initializePage();
     				changePage('#pg-dashboard');
+    				setLoading(true);
 		    		getAllDiscs(function(success, discsFromServer){
 						if (success) {
 							discs = discsFromServer;
+    						setLoading(false);
 							myDashboard.setDiscList(discs);
 						} else {
 							alert('Unable to intialize');
@@ -341,10 +372,6 @@ $(document).ready(function(){
 	}
     
     $('.page-alert').slideDown(300);
-    
-    setTimeout(function() {
-        initializePage();
-    }, 200);
 });
 
 function setupFrameworkListeners() {
@@ -392,7 +419,7 @@ function setupFrameworkListeners() {
     	e.stopPropagation();
        	var $this = $(this);
        	var nav = $this.attr('pg-select');
-       	changePage(nav);
+       	triggerPageChange($(this), nav);
       	return false;
    	});
    	
@@ -438,30 +465,29 @@ function parseNotification(notification) {
 	}
 }
 
+function resizeLoader() {
+	$loading.css({
+		width: $(document).width() - $('.sidebar').outerWidth(),
+		left: $('.sidebar').outerWidth(),
+		height: $(document).height()
+	});
+	
+	$sprite.css({
+		left: ($loading.width() - $sprite.width()) / 2,
+		top: ($(window).height() - $sprite.height()) / 2
+	});
+}
+
 function setLoading(visible) {
-	var $loading = $('#loading-screen');
-	var $sprite = $('.loader-sprite');
 	if (visible) {
-		$('body').css({
-			'position': 'fixed',
-			'overflow-y': 'scroll'
-		});
-		
-		$sprite.css({
-			left: ($(document).width() - $('.sidebar').outerWidth())/2 - 125,
-			top: $(window).height()/2 - 125
-		});
-		$loading.css({
-			width: $(document).width() - $('.sidebar').outerWidth(),
-			left: $('.sidebar').outerWidth(),
-			height: $(document).height()
-		}).show();
+		$('body').css('overflow', 'hidden');
+		$loading.show();
+		resizeLoader();
+		$(window).on('resize', resizeLoader);
 	} else {
-		$('body').css({
-			'position': 'static',
-			'overflow-y': 'auto'
-		});
+		$('body').css('overflow', 'auto');
 		$loading.hide();
+		$(window).off('resize', resizeLoader);
 	}
 }
 
@@ -504,18 +530,22 @@ function pageBack() {
 	}
 }
 
+function changePage(page, callback) {
+	triggerPageChange(undefined, page, callback);
+}
+
 /*
 * Changes the current dashboard page
 */
-function changePage(page, callback) {
+function triggerPageChange(sender, page, callback) {
    	var $page = $(page);
    	var $curPage = $('.page:visible');
    	var $navItem = $('.nav-sidebar li.sidebar-select[pg-select="' + page + '"]');
    	
    	if (!$page.length) {
-   		if ($navItem.length) {
-       		$navItem.addClass('active').siblings().removeClass('active');
-   		}
+   		// if ($navItem.length) {
+     //  		$navItem.addClass('active').siblings().removeClass('active');
+   		// }
    		return;
    	}
    	
@@ -524,13 +554,19 @@ function changePage(page, callback) {
    	}
    	
    	if (!$curPage.length) {
+   		setLoading(true);
+   		if (isDef(pageEvents[$page.attr('id')])) {
+        	pageEvents[$page.attr('id')].beforeShow(sender);
+       	}
+   		setLoading(false);
+   		
         $page.fadeIn(100, function() {
 			if ($navItem.length) {
 			   	$navItem.addClass('active');
 			}
 			
             if (isDef(pageEvents[$page.attr('id')])) {
-            	pageEvents[$page.attr('id')].onShow();
+            	pageEvents[$page.attr('id')].onShow(sender);
            	}
            	
            	pageSettings.activePage = page;
@@ -540,10 +576,11 @@ function changePage(page, callback) {
    	}
    
    	if ($page.is(':visible')) {
-   		pageEvents[$page.attr('id')].isShowing();
+   		pageEvents[$page.attr('id')].isShowing(sender);
    		if ($navItem.length) {
         	$navItem.addClass('active');
 		}
+       	if (callback) callback();
    	} else {
    		var curPageEvents = pageEvents[$curPage.attr('id')];
    		
@@ -566,6 +603,12 @@ function changePage(page, callback) {
            	
            	$('.nav-sidebar li.sidebar-select').removeClass('active');
            	
+           	
+   			setLoading(true);
+           	if (isDef(pageEvents[$page.attr('id')])) {
+        		pageEvents[$page.attr('id')].beforeShow(sender);
+           	}
+   			setLoading(false);
    			
             $page.fadeIn(100, function() {
                 if ($navItem.length) {
@@ -573,7 +616,7 @@ function changePage(page, callback) {
 				}
 				
                 if (isDef(pageEvents[$page.attr('id')])) {
-            		pageEvents[$page.attr('id')].onShow();
+            		pageEvents[$page.attr('id')].onShow(sender);
                	}
                	
                	var pageCache = pageSettings.pageCache[$page.attr('id')];
@@ -595,9 +638,28 @@ function changePage(page, callback) {
 */
 function initializePage() {
     var params = getSearchParameters();
-    if (params.view) {
-        $('.nav-sidebar > li[pg-select="#pg-' + params.view + '"]').trigger('click');
+    
+    if (isDef(params.view)) {
+    	if (params.view == 'disc') {
+    		initViewDisc(params);
+    	} else if (params.view == 'profile') {
+    		initViewProfile(params);
+    	} else if (params.view == 'dashboard') {
+    		
+    	}
     }
+}
+
+function initViewProfile(params) {
+	if (isDef(params.user_id)) {
+		mySocial.showProfile(params.user_id);
+	}
+}
+
+function initViewDisc(params) {
+	if (isDef(params.disc_id)) {
+		myDashboard.showPublicDisc(params.disc_id);
+	}
 }
 
 /*===================================================================*/
@@ -794,13 +856,6 @@ function zumpLibraryInit() {
             {id: 'account-pdga', optional: true, type:'function', fn: function(val) { return val.length == 0 ? undefined : /^[0-9]*$/.test(val) }, max: 6}
     	],
         feedbackOnInit: true
-    });
-    
-    changePasswordValidate = new ZumpValidate({
-        items: [
-            {id:'new-password', type: 'text', min: 6, hint: 'Password must be at least 6 characters in length.'},
-            {id:'confirm-new-password', type:'compare', refId:'new-password'}
-        ]
     });
 }
 
@@ -1198,7 +1253,7 @@ function getSearchParameters() {
 */
 function transformToAssocArray( prmstr ) {
     var params = {};
-    var prmarr = prmstr.split("#");
+    var prmarr = prmstr.split("&");
     for ( var i = 0; i < prmarr.length; i++) {
         var tmparr = prmarr[i].split("=");
         params[tmparr[0]] = tmparr[1];
@@ -1206,61 +1261,6 @@ function transformToAssocArray( prmstr ) {
     return params;
 }
 
-/*
-* Excutes a function after a specified period of time
-*/
-var delay = (function(){
-  var timer = 0;
-  return function(callback, ms){
-    clearTimeout (timer);
-    timer = setTimeout(callback, ms);
-  };
-})();
-
-/*
-* Generates a information message
-*/
-function generateInfo(message, title) {
-	
-	return generateMessage('info', message, title);
-}
-
-/*
-* Generates an error message
-*/
-function generateError(message, title) {
-	
-	return generateMessage('danger', message, title);
-}
-
-/*
-* Generates a success message
-*/
-function generateSuccess(message, title) {
-	
-	return generateMessage('success', message, title);
-}
-
-/*
-* Generates a standard message based on arguments
-*/
-function generateMessage(type, message, title) {
-	
-	return '<div class="alert alert-' + type + ' alert-dismissible fade in" role="alert">' +
-        		'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-        		'<h4><strong>' + (title ? title + '!' : '') + '</strong></h4>' +
-        		'<p>' + message + '</p>' +
-    		'</div>';
-}
-
-/*
-* Automatically closes an alert based on delay time
-*/
-function autoCloseAlert($element, delay) {
-	setTimeout(function() {
-		$element.children('.close').trigger('click');
-	}, delay);
-}
 
 /*
 * Returns a disc based on the id
@@ -1335,6 +1335,7 @@ var ZumpEditor = function(opt) {
 	var onNewDisc;
 	var onUpdatedDisc;
 	var isProcessing = false;
+	var cropLock = false;
     
     //----------------------\
     // JQuery Objects
@@ -1343,11 +1344,16 @@ var ZumpEditor = function(opt) {
     var $tagContainer;
     var $clearForm;
     var $saveDisc;
+    var $cloneDisc;
     var $tagInput;
     var $dropzoneArea;
     var $discVisibility;
     var $pgTitle;
     var $imageContainer;
+    var $clearForm;
+    var $curImagesSection;
+    var $photoCrop;
+    var $cropImage;
     
     //----------------------\
     // Prototype Functions
@@ -1364,6 +1370,7 @@ var ZumpEditor = function(opt) {
     	
     	$clearForm = $('#clear-modify-disc-form');
     	$saveDisc = $('#save-disc');
+    	$cloneDisc = $('#clone-disc');
     	$modifyForm = $('#modify-disc-form');
     	$tagContainer = $('#tag-list-container');
     	$tagInput = $('#add-disc-tag');
@@ -1371,6 +1378,8 @@ var ZumpEditor = function(opt) {
     	$discVisibility = $('#disc-visibility');
     	$pgTitle = $('#pg-modify-disc').find('.page-title');
     	$imageContainer = $('#existing-image-list');
+    	$clearForm = $('#clear-modify-disc-form');
+    	$curImagesSection = $('#current-images-section');
     	
     	setupListeners();
     	initialize();
@@ -1413,28 +1422,6 @@ var ZumpEditor = function(opt) {
 	    $clearForm.click(function() {
 	    	clearModifyDiscForm();
 	    });
-			    
-		$modifyForm.find('.accordion-header > label').click(function(e) {
-			var param = $(this).attr('param');
-	        var $chevron = $(this).find('.fa');
-	        
-	        if ($chevron.hasClass('fa-chevron-right')) {
-	            $chevron.removeClass('fa-chevron-right').addClass('fa-chevron-down');
-	        } else {
-	            $chevron.removeClass('fa-chevron-down').addClass('fa-chevron-right');
-	        }
-	        
-	        $(param).collapse('toggle');
-	        
-	        if ($chevron.hasClass('fa-chevron-down')) {
-	        	var subArr = _.filter(textAssistArr, function(textAssist) {
-	        		return textAssist.accordionParent;
-	        	});
-	        	_.each(subArr, function(textAssist) {
-					textAssist.triggerResize();
-				});
-	        }
-	    });
 		
 		$(document).on('mouseenter', '.image-item', function(){
 			var $this = $(this);
@@ -1473,11 +1460,17 @@ var ZumpEditor = function(opt) {
 				
 				return $modifyForm.prepend(generateError('Invalid data in ' + (invalidItems.length > 1 ? errorText + ' fields.' : errorText + ' field.'), 'ERROR'));
 				
-			} else if (modifyHandler.type == "Add") {
+			} else if (modifyHandler.type == 'Add' || modifyHandler.type == 'Clone') {
 	    		saveNewDisc();
-	    	} else if (modifyHandler.type == "Edit") {
+	    	} else if (modifyHandler.type == 'Edit') {
 	    		saveExistingDisc();
 	    	}
+	    });
+	    
+	    $cloneDisc.click(function() {
+	    	modifyHandler.type = 'Clone';
+	    	modifyHandler.discId = 'undefined';
+	    	changePage('#pg-modify-disc');
 	    });
 	    
 	    $('#add-custom-tag').click(function(){
@@ -1531,7 +1524,6 @@ var ZumpEditor = function(opt) {
 		        items: function() { return discs; }, 
 		        onSelection: function(item) {}
 		    }); 
-		    textAssist.accordionParent = $(this).closest('.collapse').attr('id');;
 		    textAssistArr.push(textAssist);
 		});
 		
@@ -1574,15 +1566,26 @@ var ZumpEditor = function(opt) {
 	var stageModifyDiscPage = function(action, discId) {
 		if (action == 'Add') {
 			$pgTitle.text('Add Disc');
-			$('.current-images-label').hide();
-			$('#clear-modify-disc-form').show();
+			$curImagesSection.hide();
+			$clearForm.show();
+			$cloneDisc.hide();
+			
 		} else if (action == 'Edit') {
 			$pgTitle.text('Edit Disc');
 			clearModifyDiscForm();
-			$('.current-images-label').show();
-			$('#clear-modify-disc-form').hide();
+			$curImagesSection.show();
+			$clearForm.hide();
+			$cloneDisc.show();
 			$('.sidebar-select.nav[pg-select="#pg-modify-disc"]').removeClass('active');
 			populateDiscForm();
+			
+		} else if (action == 'Clone') {
+			$pgTitle.text('Add Disc');
+			$modifyForm.find('div.alert').remove();
+			$curImagesSection.hide();
+			$cloneDisc.hide();
+			$imageContainer.empty();
+			clearDropzone();
 		}
 	}
 	
@@ -1598,7 +1601,7 @@ var ZumpEditor = function(opt) {
 		$imageContainer.empty();
 		$discVisibility.bootstrapSwitch('state', true);
 		clearDropzone();
-		setAccordions($modifyForm, 'hide');
+		// setAccordions($modifyForm, 'hide');
 	}
 	
 	/*
@@ -1645,19 +1648,6 @@ var ZumpEditor = function(opt) {
 	}
 	
 	/*
-	* Sets all accordions (show/hide) for specified container
-	*/
-	var setAccordions = function($container, action) {
-		$container.find('.collapse').collapse(action);
-		
-		if (action) {
-			var remove = action == 'show' ? 'fa-chevron-right' : 'fa-chevron-down';
-			var add = action == 'show' ? 'fa-chevron-down' : 'fa-chevron-right';
-			$container.find('.accordion-header > label .fa').removeClass(remove).addClass(add);
-		}
-	}
-	
-	/*
 	* Clears dropzone
 	*/
 	var clearDropzone = function() {
@@ -1682,11 +1672,11 @@ var ZumpEditor = function(opt) {
 						$modifyForm.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success'));
 						autoCloseAlert($modifyForm.find('.alert'), 2000);
 						getDiscById(retData._id, function(err, disc) {
-							
 							isProcessing = false;
 							onNewDisc(disc);
 						});
 						clearDropzone();
+						dropzone.off('queuecomplete');
 					});
 					dropzone.processQueue();
 				} else {
@@ -1727,14 +1717,17 @@ var ZumpEditor = function(opt) {
 					dropzone.options.url = '/api/discs/' + retData._id + '/images';
 					dropzone.on('queuecomplete', function() {
 						$modifyForm.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success'));
+						autoCloseAlert($modifyForm.find('.alert'), 2000);
 						getDiscById(retData._id, function(err, disc) {
 							isProcessing = false;
 							onUpdatedDisc(disc);
 						});
+						dropzone.off('queuecomplete');
 					})
 					dropzone.processQueue();
 				} else {
 					$modifyForm.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success'));
+					autoCloseAlert($modifyForm.find('.alert'), 2000);
 					isProcessing = false;
 					onUpdatedDisc(retData);
 				}
@@ -1903,6 +1896,116 @@ var ZumpEditor = function(opt) {
 				});
 			}
 		});
+		
+		 dropzone.on('addedfile', function (file) {
+		 	if (cropLock) {
+		 		dropzone.removeFile(file);
+		 		return;
+		 	}
+		 	
+	        if (file.cropped) {
+	            return;
+	        }
+	        
+	        if (file.width < 200) {
+	            return;
+	        }
+	        
+	        cropLock = true;
+	        
+	        var cachedFilename = file.name;
+	        dropzone.removeFile(file);
+	        
+	        var reader = new FileReader();
+	        reader.onloadend = function() {
+	        	showPhotoCrop(file.name, reader.result);
+	        };
+	        
+	        reader.readAsDataURL(file);
+	    });
+	}
+	
+	var repositionPhotoCrop = function() {
+		var $cropContainer = $photoCrop.find('.crop-container');
+		
+		var top = ($(window).height() - $cropContainer.outerHeight())/2;
+		var left = ($(window).width() - $cropContainer.outerWidth())/2;
+		$cropContainer.css({
+			top: top,
+			left: left
+		});
+	}
+	
+	/*
+	* Removes the photo crop from screen
+	*/
+	var destroyPhotoCrop = function() {
+		if ($photoCrop.length) {
+			$photoCrop.remove();
+		}
+	}
+	
+	/*
+	* Accepts a cropped image
+	*/
+	var acceptCrop = function() {
+		var fileName = $cropImage.attr('filename');
+		var blob = $cropImage.cropper('getCroppedCanvas').toDataURL();
+       var newFile = dataURItoBlob(blob);
+       newFile.cropped = true;
+       newFile.name = fileName;
+	   cropLock = false;
+       dropzone.addFile(newFile);
+       destroyPhotoCrop();
+	}
+	
+	/*
+	* Modal to handle image cropping
+	*/
+	var showPhotoCrop = function(name, blob) {
+		$photoCrop = $('<div class="backdrop photo-crop"></div>');
+		$photoCrop.append('<div class="crop-container">' + 
+							'<div class="crop-area">' + 
+								'<img filename="' + name + '" src="' + blob +'" />' + 
+							'</div>' + 
+							'<div class="crop-control-area">' + 
+								'<div class="crop-control">' + 
+									'<button type="button" class="btn btn-default" id="cancel-crop" discid=""><span><i class="fa fa-trash fa-tools"></i></span>Cancel</button>' + 
+									'<button type="button" class="btn btn-primary" id="accept-crop" discid=""><span><i class="fa fa-save fa-tools"></i></span>Accept</button>' + 
+								'</div>' +
+							'</div>' + 
+						'</div>');
+		
+		$cropImage = $photoCrop.find('.crop-area > img');
+						
+    	$('body').css('overflow', 'hidden');
+		$('body').append($photoCrop);
+		$(window).on('resize', repositionPhotoCrop);
+		$photoCrop.find('#accept-crop').click(acceptCrop);
+		$photoCrop.find('#cancel-crop').click(destroyPhotoCrop);
+		
+		repositionPhotoCrop();
+		
+		$cropImage.cropper({
+		  aspectRatio: 1/ 1,
+		  autoCropArea: 1,
+		  dragCrop: false,
+		  cropBoxMovable: false,
+		  cropBoxResizable: false
+        });
+	}
+	
+	/*
+	* Converts a dataURI to a blob
+	*/
+	var dataURItoBlob = function(dataURI) {
+	    var byteString = atob(dataURI.split(',')[1]);
+	    var ab = new ArrayBuffer(byteString.length);
+	    var ia = new Uint8Array(ab);
+	    for (var i = 0; i < byteString.length; i++) {
+	        ia[i] = byteString.charCodeAt(i);
+	    }
+	    return new Blob([ab], { type: 'image/jpeg' });
 	}
     
     this.init(opt);
@@ -2072,6 +2175,14 @@ var ZumpDashboard = function(opt) {
 		}
 	}
 	
+	this.bindPrivateListeners = function() {
+		bindListeners();
+	}
+	
+	this.unbindPrivateListeners = function() {
+		unbindListeners();
+	}
+	
 	this.isPublicMode = function() {
 		return publicList;
 	}
@@ -2092,12 +2203,15 @@ var ZumpDashboard = function(opt) {
 		showDiscs(maintainPage);
 	}
 	
+	this.showPublicDisc = function(discId) {
+		showDiscView(discId);
+	}
+	
 	this.setDiscList = function(discs, user) {
 		unfilteredList = discs;
 		
 		if (typeof(user) !== 'undefined') {
 			publicList = true;
-			$('.sidebar-select[pg-select="#pg-dashboard"]').removeClass('active');
 			$('#public-dashboard').text(user.username).attr('userId', user._id);
 			$('.dashboard-title').show();
 		} else {
@@ -2245,15 +2359,16 @@ var ZumpDashboard = function(opt) {
 		var $view = $('#view-' + view);
 	    var $curView = $('.dashboard-view:visible');
 	   	
-	   	if (!$curView.length) {
-	        $view.fadeIn(100, function() {
-	        	onViewChange(view);
-	        	activeView = view;
-	        });
-	        return;
-	   	}
-	   
 	   	if ($view.length) {
+	   		
+		   	if (!$curView.length) {
+		        $view.fadeIn(100, function() {
+		        	onViewChange(view);
+		        	activeView = view;
+		        });
+		        return;
+		   	}
+	   
 	   		if (!$view.is(':visible')) {
 	   			$curView.fadeOut(100, function() {
 		            $view.fadeIn(100, function() {
@@ -2488,11 +2603,30 @@ var ZumpDashboard = function(opt) {
 	            $('#view-disc-image').attr('src', '/files/' + img.fileId);
 	        }
 	    });
+	    
+	    $('#view-disc-owner').click(function() {
+	    	onDisplayProfile($(this).attr('userId'));
+	    });
+	    
 	}
 	
 	/**************************
 	* Dashboard
 	***************************/
+	
+	var bindListeners = function() {
+		$(document).on('click', '#view-disc-edit', function() {
+			var discId = $(this).attr('discId');
+			var nav = '#pg-modify-disc';
+			modifyHandler.type = "Edit";
+			modifyHandler.discId = discId;
+			changePage(nav);
+		});
+	}
+	
+	var unbindListeners = function() {
+		$(document).off('click', '#view-disc-edit');
+	}
 	
 	var showDiscLightbox = function(disc) {
 		var zumpLightbox = new ZumpLightbox({
@@ -2514,9 +2648,11 @@ var ZumpDashboard = function(opt) {
 	* Ensures the header width maintains the result view width
 	*/
 	var resizeResultHeader = function() {
-		$inventoryHeader.css({
-			'width': $inventoryContainer.outerWidth()
-		});
+		if ($inventoryContainer.is(':visible')) {
+			$inventoryHeader.css({
+				'width': $inventoryContainer.outerWidth()
+			});
+		}
 	}
 	
 	/*
@@ -2550,15 +2686,17 @@ var ZumpDashboard = function(opt) {
 	*/
 	var updateDiscItem = function(disc) {
 		var $discItem = $('div.disc-item[discId="' + disc._id + '"]');
-		$discItem.empty().append(generateDiscData(disc));
-		getPrimaryDiscImage(disc.primaryImage, updateDiscImage);
-		
-		// Initialize notes tooltip
-		$discItem.find('i[tt="notes"]').tooltip(generateTooltipOptions('left', 'hover', disc.notes, 'auto'));
-		$discItem.find('i[tt="createDate"]').tooltip(generateTooltipOptions('left', 'hover', 'Added on ' + parseDate(disc.createDate), 'auto'));
-		
-		// resizes tag lists
-		resizeTagLists();
+		if ($discItem.length) {
+			$discItem.empty().append(generateDiscData(disc));
+			getPrimaryDiscImage(disc.primaryImage, updateDiscImage);
+			
+			// Initialize notes tooltip
+			$discItem.find('i[tt="notes"]').tooltip(generateTooltipOptions('left', 'hover', disc.notes, 'auto'));
+			$discItem.find('i[tt="createDate"]').tooltip(generateTooltipOptions('left', 'hover', 'Added on ' + parseDate(disc.createDate), 'auto'));
+			
+			// resizes tag lists
+			resizeTagLists();
+		}
 	}
 	
 	var stringifyDisc = function(disc) {
@@ -2579,16 +2717,29 @@ var ZumpDashboard = function(opt) {
 	}
 	
 	var showDiscView = function(discId) {
-		if (discViewId == discId) {
+		var disc = getDisc(discId);
+		if (isDef(disc)) showDisc(disc);
+		else {
+			getDiscById(discId, function(success, disc) {
+				if (success) {
+					 showDisc(disc);
+				}
+			});
+		}
+	}
+	
+	var showDisc = function(disc) {
+		if (discViewId == disc._id) {
 			changePage('#pg-disc-view');
 			return;
 		}
 		
-		discViewId = discId;
-		var disc = getDisc(discId);
+		discViewId = disc._id;
+		
 		var discString = stringifyDisc(disc);
 		
 		$('#view-disc-title').text(disc.brand + ' ' + disc.name);
+		$('#view-disc-edit').attr('discId', discViewId);
 		$('#view-disc-notes').text(discString.notes.length ? discString.notes : '-');
 		
 		setDiscViewItem($('#view-disc-type'), discString.type, '', '-');
@@ -2599,6 +2750,18 @@ var ZumpDashboard = function(opt) {
 		setDiscViewItem($('#view-disc-glide'), discString.glide, '', '--');
 		setDiscViewItem($('#view-disc-turn'), discString.turn, '', '--');
 		setDiscViewItem($('#view-disc-fade'), discString.fade, '', '--');
+		
+		var user = userCache[disc.userId];
+		if (isDef(user)) {
+			setDiscOwner(user);
+		} else {
+			getUser(disc.userId, function(success, discUser) {
+				if (success) {
+					userCache[discUser._id] = discUser;
+					setDiscOwner(discUser);
+				}	
+			});
+		}
 		
 		var $tagArea = $('#view-disc-tagList');
 		$tagArea.empty();
@@ -2624,6 +2787,11 @@ var ZumpDashboard = function(opt) {
 		}
 		
 		changePage('#pg-disc-view');
+	}
+	
+	var setDiscOwner = function(user) {
+		var $owner = $('#view-disc-owner');
+		$owner.text(user.username).attr('userId', user._id).addClass('dz-link');
 	}
 	
 	var setDiscViewItem = function($elem, val, append, def) {
@@ -2697,7 +2865,7 @@ var ZumpDashboard = function(opt) {
 		if (discList.length) {
 			_.each(sorted, function(disc) {
 				if (!isDef(disc.tempFileId)) {
-						getPrimaryDiscImage(disc.primaryImage, updateDiscImage);	
+					getPrimaryDiscImage(disc.primaryImage, updateDiscImage);	
 				}
 				
 				if (_.contains(paged, disc)) {
@@ -2712,8 +2880,7 @@ var ZumpDashboard = function(opt) {
 		}
 		
 		updateHeader(sorted.length);
-		resizeResultHeader();
-		resizeTagLists();
+		resizeDashboard();
 		renderPlot();
 	}
 	
@@ -2809,7 +2976,6 @@ var ZumpDashboard = function(opt) {
 		var tagDropdown = '';
 		var tagDropdownInner = '';
 		var flightNumbersHTML = '';
-		var notesHTML = '';
 		var calendarHTML = '';
 		
 		_.each(disc.tagList, function(tag) {
@@ -2826,10 +2992,6 @@ var ZumpDashboard = function(opt) {
 						'</div>';
 		
 		var color = getColorize(disc.type);
-		
-		if (isDef(disc.notes) && disc.notes != '') { 
-			notesHTML = '<span><i class="fa fa-file-text fa-lg fa-dim fa-disc-notes" data-toggle="tooltip" tt="notes"></i></span>';
-		}
 		
 		if (isDef(disc.createDate) && disc.createDate != '') {
 			calendarHTML = '<span><i class="fa fa-calendar fa-lg fa-dim fa-disc-date" data-toggle="tooltip" tt="createDate"></i></span>';
@@ -2857,30 +3019,32 @@ var ZumpDashboard = function(opt) {
 		                            	'</td>' +
 		                                '<td>' +
 		                                	(publicList ? '' :
-		                                	'<span><i class="fa fa-minus-circle fa-lg fa-dim fa-delete-disc-item"></i></span>') +
+		                                	'<span><i class="fa fa-minus-circle fa-lg fa-dim fa-delete-disc-item" title="Delete Disc"></i></span>') +
 		                                '</td>' +
 		                            '</tr>' +
 		                            '<tr class="disc-item-actions-middle">' +
 		                            	'<td>' +
-		                            		notesHTML +
+		                            		(disc.visible ?
+		                            		'<span><i class="fa fa-link fa-lg fa-dim fa-copy-link" title="Copy Public URL"></i></span>' :
+		                                	'') +
 		                            	'</td>' +
 		                                '<td>' +
 		                                	(publicList ? '' :
-		                                	'<span><i class="fa fa-pencil fa-lg fa-dim fa-edit-disc-item"></i></span>') +
+		                                	'<span><i class="fa fa-pencil fa-lg fa-dim fa-edit-disc-item" title="Edit Disc"></i></span>') +
 		                                '</td>' +
 		                            '</tr>' +
 		                            '<tr class="disc-item-actions-bottom">' +
 		                            	'<td>' + 
 		                            		(disc.visible ?
-		                            		'<span><i class="fa fa-facebook-square fa-lg fa-dim fa-share-disc-item"></i></span>' :
+		                            		'<span><i class="fa fa-facebook-square fa-lg fa-dim fa-share-disc-item" title="Share Disc"></i></span>' :
 		                                	'') +
 		                            	'</td>' +
 		                                '<td>' +
 		                                	(publicList ?
 		                                	'' :
 		                                	(disc.visible ?
-		                                	'<span><i class="fa fa-eye fa-lg fa-dim fa-visible-disc-item"></i></span>' :
-		                                	'<span><i class="fa fa-eye-slash fa-lg fa-dim fa-visible-disc-item"></i></span>')) +
+		                                	'<span><i class="fa fa-eye fa-lg fa-dim fa-visible-disc-item" title="Make Private"></i></span>' :
+		                                	'<span><i class="fa fa-eye-slash fa-lg fa-dim fa-visible-disc-item" title="Make Public"></i></span>')) +
 		                                '</td>' +
 		                            '</tr>' +
 	                           	'</tbody>' +
@@ -3272,6 +3436,7 @@ var ZumpSocial = function(opt) {
     var $profileJoinDate;
     var $profileDiscCount;
     var $profileViewDashboard;
+    var $profilSendMessage;
     var $profileLoading;
     var $discRow;
     
@@ -3291,6 +3456,7 @@ var ZumpSocial = function(opt) {
 		$profileJoinDate = $('#profile-join-date');
 		$profileDiscCount = $('#profile-disc-count');
 		$profileViewDashboard = $('#profile-view-dashboard');
+		$profilSendMessage = $('#profile-send-message');
 		$profileLoading = $('#profile-loading');
 		$discRow = $('.public-disc-row');
     	
@@ -3300,12 +3466,16 @@ var ZumpSocial = function(opt) {
     this.showProfile = function(userId) {
     	var user = _.findWhere(profileList, {_id: userId});
     	if (typeof(user) !== 'undefined') {
+    		userCache[user._id] = user;
 			populateProfile(user);
 			changePage('#pg-profile');
     	} else {
-    		getUser(userId, function() {
-				populateProfile(user);
-				changePage('#pg-profile');
+    		getUser(userId, function(success, retUser) {
+    			if (success) {
+    				userCache[retUser._id] = retUser;
+					populateProfile(retUser);
+					changePage('#pg-profile');
+    			}
     		});
     	}
     	
@@ -3350,6 +3520,7 @@ var ZumpSocial = function(opt) {
     	$(document).on('click', '.profile-item', function() {
     		var selectedUser = $(this).attr('userid');
     		if (curUser == selectedUser) {
+    			changePage('#pg-profile');
     			return false;
     		} else {
     			curUser = selectedUser;
@@ -3358,13 +3529,16 @@ var ZumpSocial = function(opt) {
     		}
     	});
     	
+    	$profilSendMessage.click(function() {
+    		myMessenger.openThread(curUser);
+    	});
+    	
     	$profileViewDashboard.click(function() {
     		getAllPublicDiscsByUser(curUser, function(success, discs) {
     			if (success) {
     				var user = _.findWhere(profileList, {_id: curUser});
-    				changePage('#pg-dashboard', function() {
-    					myDashboard.setDiscList(discs, user);
-    				});
+    				myDashboard.setDiscList(discs, user);
+    				changePage('#pg-dashboard');
     			}	
     		});
     	});
@@ -3458,9 +3632,8 @@ var ZumpSocial = function(opt) {
     	
     	var $profileItem = $('<li class="profile-item hover-active no-select" userId="' + user._id + '"></li>');
     	
-    	$profileItem.append('<div class="profile-item-image"' + (typeof(user.image) !== 'undefined' ? ' style="background-image:url(' + user.image + ');"' : '') + '></div>' +
-                                (typeof(user.image) !== 'undefined' ? '' : '<span><i class="fa fa-user"></i></span>') +
-                            '</div>' +
+    	$profileItem.append((typeof(user.image) !== 'undefined' ? '<div class="profile-item-image" style="background-image:url(' + user.image + ');"></div>' : 
+    						'<div class="profile-item-image"><span><i class="fa fa-user"></i></span></div>') +
                             '<div class="profile-item-details">' +
                                 '<div class="profile-item-details-inner">' +
                                     '<div class="profile-item-label">' + fullName + '</div>' +
@@ -3568,61 +3741,35 @@ var ZumpMessenger = function(opt) {
     */
 	this.init = function(opt) {
 		
-		if (isDef(opt.messageCount)) {
 			$messageCount = $(opt.messageCount);
-		}
-		
-		if (isDef(opt.threadTitle)) {
 			$threadTitle = $(opt.threadTitle);
-		}
-		
-		if (isDef(opt.activateThread)) {
 			activateThread = opt.activateThread;
-		}
-		
-		if (isDef(opt.addMessageContainer)) {
 			$addMessageContainer = $(opt.addMessageContainer);
-		}
-		
-		if (isDef(opt.messageContainer)) {
 			$messageContainer = $(opt.messageContainer);
-		}
-		
-		if (isDef(opt.loadMessages)) {
 			$loadMessages = $(opt.loadMessages);
-		}
-		
-		if (isDef(opt.sendMessageBtn)) {
 			$sendMessageBtn = $(opt.sendMessageBtn);
-		}
-		
-		if (isDef(opt.newMessage)) {
 			$newMessage = $(opt.newMessage);
-		}
-		
-		if (isDef(opt.sendOnEnter)) {
 			$sendOnEnter = $(opt.sendOnEnter);
-		}
-		
-		if (isDef(opt.inboxList)) {
 			$inboxList = $(opt.inboxList);
-		}
-		
-		if (isDef(opt.searchInbox)) {
 			$searchInbox = $(opt.searchInbox);
-		}
 		
 		initializeInboxList();
 		setupListeners();
 	}
 	
+	this.openThread = function(receivingUser) {
+		tryOpenThread(receivingUser);
+	}
+	
 	this.threadLeft = function() {
 		$('.thread-container').removeClass('thread-open');
 		activeThread = undefined;
+		$(window).off('resize', resizeMessageArea);
 	}
 	
 	this.initPage = function() {
 		resizeMessageArea();
+		$(window).on('resize', resizeMessageArea);
 	}
 	
 	this.handleMessage = function(message) {
@@ -3805,6 +3952,27 @@ var ZumpMessenger = function(opt) {
 		
     }
     
+    var tryOpenThread = function(receivingUser) {
+    	var threadQuery = _.filter(_.values(threadCache), function(threadCacheObj) {
+    		return _.contains(threadCacheObj.thread.users, receivingUser);
+    	});
+    	
+    	if (threadQuery.length) {
+    		showThread(threadQuery[0].thread.threadId);
+			changeSidebar('#sidebar-inbox');
+    		
+    	} else {
+    		postThread(receivingUser, function(success, thread) {
+    			if (success) {
+					threadCache[thread.threadId] = {thread: thread, messages: [], lastId: undefined};
+					prependThread(thread);
+	    			showThread(thread.threadId);
+					changeSidebar('#sidebar-inbox');
+    			}
+    		});
+    	}
+    }
+    
     var showThread = function(threadId) {
     	if (typeof(activeThread) !== 'undefined' && activeThread.threadId == threadId) return false;
     	
@@ -3854,6 +4022,7 @@ var ZumpMessenger = function(opt) {
     }
     
     var showMessages = function(threadCacheObj, callback) {
+	    $loadMessages.hide();
     	if (threadCacheObj.messages.length == 0) {
     		pullMessages(threadCacheObj, callback);
     	} else {
@@ -3898,15 +4067,17 @@ var ZumpMessenger = function(opt) {
     }
     
     var createMessage = function(message) {
+    	var thread = getThread(message.threadId).thread;
     	var incoming = message.userId != userAccount._id;
     	var date = new Date(message.createDate);
+    	var body = processMessage(message.body);
     	var $message = $('<div class="thread-message message-' + (incoming ? 'incoming' : 'outgoing') + '" messageId="' + message._id +  '"></div>');
     	$message.append('<div class="thread-message-area">' +
-                                '<div class="message-user"></div>' +
+                                '<div class="message-user" style="background-image:url(/static/logo/logo_small_nobg.svg)"></div>' +
                                 '<div class="message-content">' +
                                     '<div class="message-date">' + date.toLocaleString() + '</div>' +
                                     '<div class="message-bubble">' +
-                                        message.body.replace(/\n/g, '<br>') + 
+                                        body.replace(/\n/g, '<br>') + 
                                     '</div>' +
                                 '</div>' +
                             '</div>' +
@@ -3919,18 +4090,34 @@ var ZumpMessenger = function(opt) {
         	userPhotoCache[message.userId] = '';
         	getUser(message.userId, function(success, user) {
         		if (success) {
+        			if (!isDef(user.image)) return;
+        			
         			userPhotoCache[user._id] = user.image;
         			
         			var messageList = getThread(activeThread.threadId).messages;
         			var msgByUser = _.where(messageList, {userId: user._id});
         			_.each(msgByUser, function(msg) {
-        				$messageContainer.find('.thread-message[messageId="' + msg._id + '"]').find('.message-user').css('background-image', 'url("' + user.image + '")');
+        				$messageContainer.find('.thread-message[messageId="' + msg._id + '"]').find('.message-user').css('background-image', 'url("' + userPhotoCache[user._id] + '")');
         			});
         		}
         	})
         }
         
         return $message;
+    }
+    
+    var processMessage = function(body) {
+    	var urlRegex = /(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w\.#=?-]*)*\/?/g;
+    	var res = _.uniq(body.match(urlRegex));
+    	
+    	if (res.length) {
+    		_.each(res, function(url) {
+    			var regex = new RegExp(url, 'g');
+	    		body = body.replace(regex, '<a href="' + url + '">' + url + '</a>');
+	    	});
+    	}
+    	
+    	return body;
     }
     
     var sendMessage = function() {
@@ -3951,6 +4138,8 @@ var ZumpMessenger = function(opt) {
 				thread.currentMessageCount += 1;
 				thread.modifiedDate = message.createDate;
 				updateThread(thread);
+			} else {
+				console.log(err);
 			}
 		});
     }
@@ -4051,6 +4240,7 @@ var ZumpGallery = function(opt) {
 		
 		if (!$galleryContainer.is(':visible')) $galleryContainer.show();
 		resizeGallery();
+		$galleryTable.show();
 	}
 	
 	/*
@@ -4214,6 +4404,8 @@ var ZumpGallery = function(opt) {
 	* Function to resize gallery based on screen size
 	*/
 	var resizeGallery = function() {
+		if (!$galleryContainer.is(':visible')) return;
+		
 		var width = $galleryContainer.width();
 		var colCount = itemsPerRow;
 		var itemWidth = Math.min(500, Math.floor(width / colCount * 0.99));
@@ -4644,18 +4836,10 @@ var ZumpSort = function(opt) {
         $sortToggle.click(function(){
 	       if ($dynamicHeader.is(':visible')) { 
 	            $dynamicHeader.slideUp(300);
-	            $sortToggle.css({
-	       			'background-color' : 'initial',
-	       			'color' : '#000',
-	       			'border-color' : 'rgb(134, 134, 134)'
-	       		});
+	            $sortToggle.removeClass('active');
 	       } else {
 	           	$dynamicHeader.slideDown(300);
-	           	$sortToggle.css({
-	       			'background-color' : 'rgb(0, 142, 221)',
-	       			'color' : '#FFF',
-	       			'border-color' : '#000'
-	       		});
+	           	$sortToggle.addClass('active');
 	       }
 	    });
         
@@ -5423,7 +5607,7 @@ var ZumpFilter = function(opt) {
     			if (i > 4 && !filterCache[property].viewAll) $filterOption.hide();
     		}
     		
-    		if (items.length > 4) {
+    		if (items.length > 5) {
     			var count = '(5/' + items.length + ')';
 		        $filterBody.append('<li class="filter-expand" state="' + (filterCache[property].viewAll ? '1' : '0') + '" prop="' + property + '">' +
                         (filterCache[property].viewAll ? 'Less...' : count + ' More...') +

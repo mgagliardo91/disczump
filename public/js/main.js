@@ -32,6 +32,62 @@ function hasAttr($elem, attribute) {
 	return (typeof attr !== typeof undefined && attr !== false);
 }
 
+/*
+* Excutes a function after a specified period of time
+*/
+var delay = (function(){
+  var timer = 0;
+  return function(callback, ms){
+    clearTimeout (timer);
+    timer = setTimeout(callback, ms);
+  };
+})();
+
+/*
+* Generates a information message
+*/
+function generateInfo(message, title) {
+	
+	return generateMessage('info', message, title);
+}
+
+/*
+* Generates an error message
+*/
+function generateError(message, title) {
+	
+	return generateMessage('danger', message, title);
+}
+
+/*
+* Generates a success message
+*/
+function generateSuccess(message, title) {
+	
+	return generateMessage('success', message, title);
+}
+
+/*
+* Generates a standard message based on arguments
+*/
+function generateMessage(type, message, title) {
+	
+	return '<div class="alert alert-' + type + ' alert-dismissible fade in" role="alert">' +
+        		'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+        		'<h4><strong>' + (title ? title + '!' : '') + '</strong></h4>' +
+        		'<p>' + message + '</p>' +
+    		'</div>';
+}
+
+/*
+* Automatically closes an alert based on delay time
+*/
+function autoCloseAlert($element, delay) {
+	setTimeout(function() {
+		$element.children('.close').trigger('click');
+	}, delay);
+}
+
 function getCityState(zipcode, callback) {
 	var success = false;
 	var retData;
@@ -162,11 +218,11 @@ function getThreads(callback) {
 	});
 }
 
-function postThread(thread, callback) {
+function postThread(receivingUser, callback) {
 	doAjax({
 		path: '/threads', 
 		type: 'POST',
-		data: thread,
+		data: {receivingUser: receivingUser},
 		callback: callback
 	});
 }

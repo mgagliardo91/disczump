@@ -27,6 +27,7 @@ function getLocalThreadObj(localThread, callback) {
         
         localThreadObj.currentMessageCount = thread.messageCount;
         localThreadObj.modifiedDate = thread.modifiedDate;
+        localThreadObj.users = thread.users;
         callback(null, localThreadObj);
     });
 }
@@ -186,43 +187,23 @@ function getPrivateThreads(userId, callback) {
 
 function createPrivateThread(userId, receivingUserId, callback) {
     
-    ThreadLocal.find({userId: userId, isPrivate: true}, function(err, privateThreads) {
-        if (err) return callback(Error.createError(err, Error.internalError));
+    // See if thread already exists
+    Thread.findOne({$and: [{isPrivate: true},{users: userId},{users: receivingUserId}]}, function(err, thread) {
+        if (err)
+            return callback(Error.createError(err, Error.internalError));
         
-        if (!privateThreads || _.isEmpty(privateThreads)) {
+        if (thread)
+            return callback(Error.createError('A private thread already exists.', Error.invalidDataError));
+        
+        generatePrivateThread(userId, receivingUserId, function(err, localThread) {
+            if (err) return callback(err);
             
-            generatePrivateThread(userId, receivingUserId, function(err, localThread) {
+            getLocalThreadObj(localThread, function(err, localThreadObj) {
                 if (err) return callback(err);
                 
-                getLocalThreadObj(localThread, function(err, localThreadObj) {
-                    if (err) return callback(err);
-                    
-                    return callback(null, localThreadObj);
-                });
+                return callback(null, localThreadObj);
             });
-        } else {
-            async.each(privateThreads, function(thread, asyncCB) {
-                ThreadLocal.findOne({threadId: thread.threadId, userId: receivingUserId, isPrivate: true}, function(err, existingThread) {
-                    if (!err && existingThread) {
-                        asyncCB(true);
-                    } else {
-                        asyncCB(false);
-                    }
-                });
-            }, function(err) {
-                if (err) return callback(Error.createError('A thread already exists.', Error.invalidDataError));
-                
-                generatePrivateThread(userId, receivingUserId, function(err, localThread) {
-                    if (err) return callback(err);
-                    
-                    getLocalThreadObj(localThread, function(err, localThreadObj) {
-                        if (err) return callback(err);
-                        
-                        return callback(null, localThreadObj);
-                    });
-                });
-            });
-        }
+        });
     });
 }
 
@@ -232,7 +213,8 @@ function generatePrivateThread(firstUser, secondUser, callback) {
     
     async.series([
         function(cb) {
-            createThread(true, function(err, thread) {
+            var users = [firstUser, secondUser];
+            createThread(users, true, function(err, thread) {
                 if (err) {
                     cb(err);
                 } else {
@@ -274,7 +256,7 @@ function createThreadLocal(userId, refUserId, thread, callback) {
         t.threadId = thread._id;
         t.userId = userId;
         t.threadPhoto = user.local.image;
-        t.threadTag = user.getAlias();
+        t.threadTag = user.local.username;
         t.save(function(err) {
             if (err) return callback(Error.createError(err, Error.internalError));
         
@@ -283,8 +265,9 @@ function createThreadLocal(userId, refUserId, thread, callback) {
     });
 }
 
-function createThread(isPrivate, callback) {
+function createThread(users, isPrivate, callback) {
     var t = new Thread();
+    t.users = users;
     t.isPrivate = isPrivate;
     t.save(function(err) {
         if (err) return callback(Error.createError(err, Error.internalError));

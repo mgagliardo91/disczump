@@ -9,7 +9,7 @@
     top: 0;
     left: 0;
     z-index: 125;
-    background-color: rgba(0, 53, 82, 0.8);
+    background-color: rgba(45, 45, 45, 0.92);
 }
 
 .loader-sprite {
@@ -147,8 +147,32 @@
     margin-left: 350px;
 }
 
-.page-button-container {
-    float: right;
+#view-disc-edit:hover {
+    color: rgb(255, 190, 73);    
+}
+
+#clone-disc:hover {
+    color: rgb(0, 142, 221);    
+}
+
+.page-title-btn .fa-times:hover {
+    color: #C3C3C3;
+}
+
+.paginate-container {
+    position: absolute;
+    left: 0;
+    right: 0;
+}
+
+.dashboard-header-left {
+    position: absolute;
+    left: 5px;
+}
+
+.dashboard-header-right {
+    position: absolute;
+    right: 5px;
 }
 
 .page {
@@ -157,7 +181,7 @@
     width: 100%;
     margin: auto;
     overflow-x: hidden;
-    min-width: 785px;
+    min-width: 850px;
     max-width: 1500px;
 }
 
@@ -319,6 +343,20 @@
 
 /*===================================================================*/
 /*                                                                   */
+/*                           Account Page                            */
+/*                                                                   */
+/*===================================================================*/
+
+.account-actions-container {
+    text-align: center;
+}
+
+.account-btn {
+    margin: 0px 10px;
+}
+
+/*===================================================================*/
+/*                                                                   */
 /*                           Statistics                              */
 /*                                                                   */
 /*===================================================================*/
@@ -334,9 +372,14 @@
 /*===================================================================*/
 
 #disc-action-container {
-    max-width: 60%;
+    max-width: 1000px;
     margin: 10px auto;
-    width: 60%;
+}
+
+.modify-form-section {
+    padding: 10px 0px;
+    max-width: 800px;
+    margin: auto;
 }
 
 .modify-button-container {
@@ -355,6 +398,15 @@
 .modify-button-container > a:hover {
     text-decoration: none;
     color: #000;
+}
+
+.create-disc-textarea {
+    resize: vertical;
+}
+
+.allow-icon {
+    padding-left: 0px;
+    padding-right: 0px;
 }
 
 .fa-pad-left {
@@ -398,6 +450,18 @@
     padding-top: 2.5em;
 }
 
+@media (min-width: 1151px) and (max-width: 1500px) {
+    .modify-form-section {
+        max-width: 650px;
+    }
+}
+
+@media (max-width: 1150px) {
+    .modify-form-section {
+        max-width: 600px;
+    }
+}
+
 /*===================================================================*/
 /*                                                                   */
 /*                             Modal CSS                             */
@@ -426,19 +490,6 @@
     margin: 0px;
 }
 
-.modal-title-disc-type {
-    color: #ADADAD;
-}
-
-.create-disc-textarea {
-    resize: vertical;
-}
-
-.allow-icon {
-    padding-left: 0px;
-    padding-right: 0px;
-}
-
 #feedback-textarea {
     width: 100%;
     height: 200px;
@@ -462,6 +513,7 @@
 #filter-count {
     color: red;
     font-weight: bold;
+    padding-left: 2px;
 }
 
 .current-filter-item {
@@ -508,6 +560,10 @@
     font-size: 0.9em;
     color: #fff;
     border-bottom: 1px solid #444444;
+}
+
+.filter-item-container:first-of-type > .filter-item {
+    border-top: 1px solid #444444;
 }
 
 .filter-search {
@@ -890,6 +946,10 @@
     display: inline-block;
 }
 
+.thread-message.message-outgoing .message-bubble {
+    background-color: #ECECEC;
+}
+
 .thread-message.message-outgoing .thread-message-area {
     float: right;
 }
@@ -901,6 +961,7 @@
     margin: auto;
     background-position: center center;
     background-size: cover;
+    border: 1px solid #989898;
 }
 
 .thread-message.message-incoming .message-user {
@@ -925,7 +986,7 @@
 }
 
 .message-bubble {
-    background-color: #C7D2D8;
+    background-color: #C2DBE8;
     width: 100%;
     border-radius: 5px;
     border: 1px solid #ADADAD;
@@ -1012,7 +1073,7 @@
 
 .profile-item.active {
     cursor: pointer;
-    background-color: #74ADFF;
+    background-color: #AFDCF5;
 }
 
 .profile-item-image {
@@ -1325,6 +1386,12 @@
     cursor: default;
 }
 
+/*===================================================================*/
+/*                                                                   */
+/*                      Result Header                                */
+/*                                                                   */
+/*===================================================================*/
+
 .result-header {
     background-color: #008EDD;
     color: white;
@@ -1332,21 +1399,24 @@
     font-size: 0.8em;
 }
 
-/*===================================================================*/
-/*                                                                   */
-/*                      Sort Field Area                              */
-/*                                                                   */
-/*===================================================================*/
-
-#results-header-sort, #results-header-filter {
-    cursor: pointer;
-    padding: 6px 12px;
+.results-header-btn {
+    padding: 6px 10px;
     border: 1px solid rgb(134, 134, 134);
     border-radius: 5px;
     margin: 0px 5px;
 }
 
-#results-header-filter:hover, #results-header-sort:hover, .page-dynamic:hover, .page-static:hover {
+.results-header-btn.active {
+    background-color: rgb(0, 142, 221);
+	color: #FFF;
+	border-color: #000;
+}
+
+.results-header-btn:hover {
+    cursor: pointer;
+}
+
+.results-header-btn:hover:not(.active), .page-dynamic:hover, .page-static:hover {
     color: rgb(0, 142, 221);
     border-color: rgb(0, 142, 221);
 }
@@ -1359,6 +1429,10 @@
 .sort-text li {
     text-transform: capitalize;
     font-size: 10px;
+}
+
+#results-header-count {
+    margin-left: 10px;
 }
 
 #paginate-display-count {
@@ -1553,8 +1627,8 @@ select, option {
 }
 
 .header-static {
-    line-height: 30px;
-    padding: 5px 5px;
+    line-height: 40px;
+    height: 40px;
 }
 
 .header-dynamic {
@@ -1566,11 +1640,6 @@ select, option {
 .header-row {
     position: relative;
     width: 100%;
-}
-
-.header-static > .div-inline {
-    max-height: 30px;
-    overflow: hidden;
 }
 
 .header-text {
@@ -1719,20 +1788,18 @@ select, option {
     cursor: pointer;
 }
 
-.fa-disc-notes:hover {
-    color: rgb(255, 190, 73);
+.fa-copy-link:hover {
+    color: #00A926;
+    cursor: pointer;
 }
 
 .fa-disc-date:hover {
     color: #E85947;
 }
 
-.fa-visible-disc-item {
-    cursor: pointer;
-}
-
 .fa-visible-disc-item:hover {
     color: #989595 !important;
+    cursor: pointer;
 }
 
 .fa-visible-disc-item.fa-eye {
@@ -2052,15 +2119,6 @@ select, option {
     cursor: pointer;
 }
 
-.accordion-container {
-    margin-top: 10px;
-}
-
-.accordion-header label:hover {
-    cursor: pointer;
-    text-decoration: underline;
-}
-
 .advanced-area {
     width: 80%;
     margin: auto;
@@ -2367,6 +2425,7 @@ img.fit-parent {
     margin-bottom: 10px;
     border-collapse: collapse;
     margin: 0 auto;
+    display: none;
 }
 
 
@@ -2872,6 +2931,46 @@ img.fit-parent {
         margin-left: 550px;
     }
 }
+
+/*===================================================================*/
+/*                                                                   */
+/*                            Crop Area                              */
+/*                                                                   */
+/*===================================================================*/
+.crop-container {
+    position: absolute;
+}
+
+.crop-area {
+    width: 500px;
+    height: 500px;
+}
+
+.crop-area > img {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    min-height: 100%;
+}
+
+.crop-control-area {
+    width: 500px;
+    display: table;
+    padding-top: 20px;
+}
+
+.crop-control {
+    float: right;
+}
+
+.crop-control .btn {
+    margin-right: 20px;
+}
+
+.crop-control .btn:last-child {
+    margin-right: 0px;
+}
+
 
 /*===================================================================*/
 /*                                                                   */

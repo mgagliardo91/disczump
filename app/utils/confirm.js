@@ -20,26 +20,24 @@ module.exports = {
             TemporaryLink.remove({ userId: user._id, route: configRoutes.confirmAccount }, function (err) {
                 if (err)
 			        console.log(err);
-            });
-            
-            if (user.local.active)
-                return callback(Error.createError('The account is already active.', Error.invalidDataError));
-            
-            var confirm = new TemporaryLink({authorizationId: crypto.randomBytes(32).toString('hex'), 
-                userId: user._id, route : configRoutes.confirmAccount});
-            
-            confirm.save(function(err) {
-                if (err)
-			        return callback(Error.createError(err, Error.internalError));
+			        
+		        if (user.local.active)
+                    return callback(Error.createError('The account is already active.', Error.invalidDataError));
                 
-                console.log(JSON.stringify(confirm));
-                callback(null, user, generateConfirmationEmail(user, confirm));
+                var confirm = new TemporaryLink({userId: user._id, route : 'confirm'});
+                
+                confirm.save(function(err) {
+                    if (err)
+    			        return callback(Error.createError(err, Error.internalError));
+                    
+                    callback(null, user, generateConfirmationEmail(user, confirm));
+                });
             });
         });
     },
     
     confirmAccount : function(authorizationId, callback) {
-        TemporaryLink.findOne({authorizationId: authorizationId, route: configRoutes.confirmAccount }, function (err, confirm) {
+        TemporaryLink.findOne({_id: authorizationId, route: 'confirm' }, function (err, confirm) {
             if (err)
 	            return callback(Error.createError(err, Error.internalError));
             

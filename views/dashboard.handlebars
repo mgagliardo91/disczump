@@ -4,6 +4,7 @@
     <title>DiscZump - Dashboard</title>
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/dropzone.css">
+    <link rel="stylesheet" href="https://cdn.rawgit.com/fengyuanchen/cropper/v0.11.1/dist/cropper.min.css">
     <link rel="stylesheet" href="/static/css/bootstrap-switch.min.css">
     <link rel="stylesheet" href="/static/css/bootstrap-slider.css">
     <link href='https://fonts.googleapis.com/css?family=Orbitron:400,900' rel='stylesheet' type='text/css'>
@@ -95,7 +96,7 @@
                                     </div>
                                 </div>
                                 <div class="row profile-action-container">
-                                    <button id="send-message" class="btn btn-primary">
+                                    <button id="profile-send-message" class="btn btn-primary">
                                         <span><i class="fa fa-envelope fa-tools"></i>Send Message</span>
                                     </button>
                                     <button id="profile-view-dashboard" class="btn btn-default">
@@ -116,8 +117,11 @@
                 </div>
                 <div class="page" id="pg-modify-disc">
                     <div class="row">
-                        <div class="page-button-container">
-                            <span class="nav-btn nav-btn-small dz-page-back"><i class="fa fa-reply"></i> Return</span>
+                        <div class="page-btn-container">
+                            <span id="clone-disc" class="page-title-btn" discId=""><i class="fa fa-files-o" title="Clone Disc"></i></span>
+                            <span class="page-title-btn dz-page-back"><i class="fa fa-times" title="Return"></i></span>
+                            {{!--<span class="nav-btn nav-btn-small" id="clone-disc"><span><i class="fa fa-files-o fa-tools"></i></span>Clone</span>--}}
+                            {{!--<span class="nav-btn nav-btn-small dz-page-back"><i class="fa fa-reply"></i> Return</span>--}}
                             <div class="clearfix"></div>
                         </div>
                         <div class="page-title">Add Disc</div>
@@ -126,138 +130,129 @@
                     </div>
                     <div id="disc-action-container">
                         <form class="form-horizontal" id="modify-disc-form" role="form" discId="" autocomplete="off">
-            				<div class="form-group">
-            	                <label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>
-            	                <div class="col-sm-4">
-            	                    <input type="text" id="disc-brand" class="form-control text-assist" param="brand">
-            	                </div>
-            	                <label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>
-            	                <div class="col-sm-4">
-            	                    <input type="text" id="disc-name" class="form-control text-assist" param="name">
-            	                </div>
-            	            </div>
-            	             <div class="form-group">
-            	                <label class="col-sm-2 control-label">Type</label>
-            	                <div class="col-sm-4">
-            	                    <select id="disc-type" class="form-control" param="type">
-            	                        <option value="" selected></option>
-            	                        <option value="Distance Driver">Distance Driver</option>
-            	                        <option value="Fairway Driver">Fairway Driver</option>
-            	                        <option value="Mid-range">Mid-range</option>
-            	                        <option value="Putt/Approach">Putt/Approach</option>
-            	                        <option value="Mini">Mini</option>
-            	                     </select>
-            	                </div>
-            	                <label class="col-sm-2 control-label">Material</label>
-            	                <div class="col-sm-4">
-            	                    <input type="text" id="disc-material" class="form-control text-assist" param="material">
-            	                </div>
-            	            </div>
-            	            <div class="form-group">
-            	                <label class="col-sm-2 control-label">Weight</label>
-            	                <div class="col-sm-4">
-            	                    <input type="text" id="disc-weight" class="form-control text-assist" param="weight">
-            	                </div>
-            	                <label class="col-sm-2 control-label">Color</label>
-            	                <div class="col-sm-4">
-            	                    <input type="text" id="disc-color" class="form-control text-assist" param="color">
-            	                </div>
-            	            </div>
-            	            <div class="accordion-container">
-            	            	<div class="accordion-header">
-            	                    <label class="no-select" param="#collapseAdvanced"><span><i class="fa fa-chevron-right fa-tools"></i></span>Advanced</label>
-            	                </div>
-            	                <div class="advanced-area collapse" id="collapseAdvanced">
-            			            <div class="form-group">
-            			                <label class="col-sm-3 control-label">Speed</label>
-            			                <div class="col-sm-3">
-            			                    <input type="text" id="disc-speed" class="form-control text-assist" param="speed">
-            			                </div>
-            			                <label class="col-sm-3 control-label">Glide</label>
-            			                <div class="col-sm-3">
-            			                    <input type="text" id="disc-glide" class="form-control text-assist" param="glide">
-            			                </div>
-            			            </div>
-            			            <div class="form-group">
-            			                <label class="col-sm-3 control-label">Turn</label>
-            			                <div class="col-sm-3">
-            			                    <input type="text" id="disc-turn" class="form-control text-assist" param="turn">
-            			                </div>
-            			                <label class="col-sm-3 control-label">Fade</label>
-            			                <div class="col-sm-3">
-            			                    <input type="text" id="disc-fade" class="form-control text-assist" param="fade">
-            			                </div>
-            			            </div>
-            			            <div class="form-group tag-input-group">
-            			                <label class="col-sm-2 control-label">Tags</label>
-            			                <div class="col-sm-10">
-            			                    <div style="position:relative">
-            			                        <div class="input-group add-disc-tag-container">
-            			                            <input type="text" class="form-control" id="add-disc-tag">
-            			                            <span class="input-group-btn">
-            			                                <button class="btn btn-default" id="add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>
-            			                            </span>
-            			                        </div>
-            			                    </div>
-            			                </div>
-            			                <div class="col-sm-10 col-sm-offset-2">
-            			                    <div id="tag-list-container">
-            			                    </div>
-            			                </div>
-            			            </div>
-            			            <div class="form-group">
-            			                <label class="col-sm-2 control-label">Notes</label>
-            			                <div class="col-sm-10">
-            			                    <textarea id="disc-notes" class="form-control create-disc-textarea" rows="3" param="notes"></textarea>
-            			                </div>
-            			            </div>
-            			            <div class="form-group">
-            			                <label class="col-sm-2 control-label">Public</label>
-            			                <div class="col-sm-4">
-            			                    <input type="checkbox" name="visible" param="visible" id="disc-visibility">
-            			                </div>
-            			                <label class="col-sm-3 control-label allow-icon">Condition<i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="condition"></i></label>
-            			                <div class="col-sm-3">
-            			                    <input type="text" id="disc-condition" class="form-control text-assist" param="condition">
-            			                </div>
-            			            </div>
-            	                </div>
-            	            </div>
-            	            <div class="image-accordion-area">
-            		            <div class="accordion-container">
-            		                <div class="accordion-header">
-            		                    <label class="current-images-label no-select" param="#collapseCurrentImages"><span><i class="fa fa-chevron-right fa-tools"></i></span>Current Pictures</label>
-            		            	</div>
-            		            	<div class="current-images-panel-collapse collapse" id="collapseCurrentImages">
-            				            <div class="image-list">
-            				                <div class="image-list-container image-list-container-simple">
-            				                    <div class="image-list-table" id="existing-image-list">
-            				                    </div>
-            				                </div>
-            				            </div>
-            				        </div>
-            			        </div>
-            		            <div class="accordion-container">
-            		                <div class="accordion-header">
-            		                    <label class="add-images-label no-select" param="#collapseDropzone"><span><i class="fa fa-chevron-right fa-tools"></i></span>Add Pictures</label>
-            		                </div>
-            		                <div class="dropzone-panel-collapse collapse" id="collapseDropzone">
-            		                    <div class="image-list" id="dropzone-area">
-            		                        <div class="image-list-container" id="dropzone-container">
-            		                            <div class="image-list-table" id="dropzone-previews">
-            		                                <div class="image-item-container image-add" id="dropzone-trigger">
-            		                                    <div class="image-item">
-            		                                        <div class="image-entity">
-            		                                            <span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>
-            		                                        </div>
-            		                                    </div>
-            		                                </div>
-            		                            </div>
-            		                        </div>
-            		                    </div>
-            		                </div>
-            		            </div>
-            	            </div>
+                            <div class="row-label">General</div>
+                            <div class="modify-form-section">
+                				<div class="form-group">
+                	                <label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>
+                	                <div class="col-sm-4">
+                	                    <input type="text" id="disc-brand" class="form-control text-assist" param="brand">
+                	                </div>
+                	                <label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>
+                	                <div class="col-sm-4">
+                	                    <input type="text" id="disc-name" class="form-control text-assist" param="name">
+                	                </div>
+                	            </div>
+                	             <div class="form-group">
+                	                <label class="col-sm-2 control-label">Type</label>
+                	                <div class="col-sm-4">
+                	                    <select id="disc-type" class="form-control" param="type">
+                	                        <option value="" selected></option>
+                	                        <option value="Distance Driver">Distance Driver</option>
+                	                        <option value="Fairway Driver">Fairway Driver</option>
+                	                        <option value="Mid-range">Mid-range</option>
+                	                        <option value="Putt/Approach">Putt/Approach</option>
+                	                        <option value="Mini">Mini</option>
+                	                     </select>
+                	                </div>
+                	                <label class="col-sm-2 control-label">Material</label>
+                	                <div class="col-sm-4">
+                	                    <input type="text" id="disc-material" class="form-control text-assist" param="material">
+                	                </div>
+                	            </div>
+                	            <div class="form-group">
+                	                <label class="col-sm-2 control-label">Weight</label>
+                	                <div class="col-sm-4">
+                	                    <input type="text" id="disc-weight" class="form-control text-assist" param="weight">
+                	                </div>
+                	                <label class="col-sm-2 control-label">Color</label>
+                	                <div class="col-sm-4">
+                	                    <input type="text" id="disc-color" class="form-control text-assist" param="color">
+                	                </div>
+                	            </div>
+                            </div>
+            	            <div class="row-label">Advanced</div>
+            	            <div class="modify-form-section">
+                	            <div class="form-group">
+        			                <label class="col-sm-2 control-label">Speed</label>
+        			                <div class="col-sm-3">
+        			                    <input type="text" id="disc-speed" class="form-control text-assist" param="speed">
+        			                </div>
+        			                <label class="col-sm-3 control-label">Glide</label>
+        			                <div class="col-sm-3">
+        			                    <input type="text" id="disc-glide" class="form-control text-assist" param="glide">
+        			                </div>
+        			            </div>
+        			            <div class="form-group">
+        			                <label class="col-sm-2 control-label">Turn</label>
+        			                <div class="col-sm-3">
+        			                    <input type="text" id="disc-turn" class="form-control text-assist" param="turn">
+        			                </div>
+        			                <label class="col-sm-3 control-label">Fade</label>
+        			                <div class="col-sm-3">
+        			                    <input type="text" id="disc-fade" class="form-control text-assist" param="fade">
+        			                </div>
+        			            </div>
+        			            <div class="form-group tag-input-group">
+        			                <label class="col-sm-2 control-label">Tags</label>
+        			                <div class="col-sm-10">
+        			                    <div style="position:relative">
+        			                        <div class="input-group add-disc-tag-container">
+        			                            <input type="text" class="form-control" id="add-disc-tag">
+        			                            <span class="input-group-btn">
+        			                                <button class="btn btn-default" id="add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>
+        			                            </span>
+        			                        </div>
+        			                    </div>
+        			                </div>
+        			                <div class="col-sm-10 col-sm-offset-2">
+        			                    <div id="tag-list-container">
+        			                    </div>
+        			                </div>
+        			            </div>
+        			            <div class="form-group">
+        			                <label class="col-sm-2 control-label">Notes</label>
+        			                <div class="col-sm-10">
+        			                    <textarea id="disc-notes" class="form-control create-disc-textarea" rows="3" param="notes"></textarea>
+        			                </div>
+        			            </div>
+        			            <div class="form-group">
+        			                <label class="col-sm-2 control-label">Public</label>
+        			                <div class="col-sm-4">
+        			                    <input type="checkbox" name="visible" param="visible" id="disc-visibility">
+        			                </div>
+        			                <label class="col-sm-2 control-label allow-icon">Condition<i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="condition"></i></label>
+        			                <div class="col-sm-3">
+        			                    <input type="number" id="disc-condition" class="form-control text-assist" min="-3" max="10" param="condition">
+        			                </div>
+                                </div>
+                            </div>
+                            <div id="current-images-section">
+                                <div class="row-label">Current Images</div>
+                                <div class="modify-form-section">
+                                    <div class="image-list">
+        				                <div class="image-list-container image-list-container-simple">
+        				                    <div class="image-list-table" id="existing-image-list">
+        				                    </div>
+        				                </div>
+        				            </div>
+        				        </div>
+        				    </div>
+    			            <div class="row-label">Add Images</div>
+    			            <div class="modify-form-section">
+        			            <div class="image-list" id="dropzone-area">
+    		                        <div class="image-list-container" id="dropzone-container">
+    		                            <div class="image-list-table" id="dropzone-previews">
+    		                                <div class="image-item-container image-add" id="dropzone-trigger">
+    		                                    <div class="image-item">
+    		                                        <div class="image-entity">
+    		                                            <span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>
+    		                                        </div>
+    		                                    </div>
+    		                                </div>
+    		                            </div>
+    		                        </div>
+    		                    </div>  
+                            </div>
             	            <div class="modify-button-container">
             	                <a href="#" id="clear-modify-disc-form">Clear Form</a>
     		                    <button type="button" class="btn btn-primary" id="save-disc" discId=''><span><i class="fa fa-save fa-tools"></i></span>Save</button>
@@ -288,8 +283,10 @@
                 </div>
                 <div class="page" id="pg-disc-view">
                     <div class="row">
-                        <div class="page-button-container">
-                            <span class="nav-btn nav-btn-small dz-page-back"><i class="fa fa-reply"></i> Return</span>
+                        <div class="page-btn-container">
+                            <span id="view-disc-edit" class="page-title-btn" discId=""><i class="fa fa-pencil" title="Edit Disc"></i></span>
+                            <span class="page-title-btn dz-page-back"><i class="fa fa-times" title="Return"></i></span>
+                            {{!--<span class="nav-btn nav-btn-small dz-page-back"><i class="fa fa-reply"></i> Return</span>--}}
                             <div class="clearfix"></div>
                         </div>
                         <div class="page-title" id="view-disc-title">Disc</div>
@@ -360,6 +357,10 @@
                                             <div class="info-label">Condition:</div>
                                             <div class="info-data filterable filterable-text" id="view-disc-condition" prop="condition">-</div>
                                         </div>
+                                        <div class="view-disc-info-row">
+                                            <div class="info-label">Owner:</div>
+                                            <div class="info-data" id="view-disc-owner" userId="">-</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="clearfix"></div>
@@ -379,18 +380,7 @@
                 </div>
                 <div class="page" id="pg-dashboard">
                     <div class="row">
-                        <div class="page-button-container">
-                            <div class="dz-switch-toggle sidebar-nav-indicator" id="inventory-search-toggle" nav-select="#sidebar-search">
-                                <div class="dz-switch-opt">
-                                    <span><i class="fa fa-search"></i></span>
-                                </div>
-                            </div>
-                            <div class="dz-switch-toggle sidebar-nav-indicator" id="dashboard-filter-toggle" nav-select="#sidebar-filter">
-                                <div class="dz-switch-opt">
-                                    <span><i class="fa fa-filter"></i></span>
-                                    <span id="filter-count"></span>
-                                </div>
-                            </div>
+                        <div class="page-btn-container">
                             <div class="dz-tri-switch" id="dashboard-view-switch">
                                 <div class="dz-switch-opt" value="inventory">
                                     <span><i class="fa fa-list-ul"></i></span>
@@ -402,14 +392,23 @@
                                     <span><i class="fa fa-pie-chart"></i></span>
                                 </div>
                             </div>
+                            {{!--<span id="" class="page-title-tri-btn"><i class="fa fa-list-ul" title="List View"></i></span>--}}
+                            {{!--<span id="" class="page-title-tri-btn active"><i class="fa fa-th-large" title="Gallery View"></i></span>--}}
+                            {{!--<span id="" class="page-title-tri-btn"><i class="fa fa-pie-chart" title="Statistics View"></i></span>--}}
                         </div>
                         <div class="page-title"><span id="public-dashboard" class="hover-active dashboard-title"></span><span class="dashboard-title">'s </span>Dashboard</div>
                         <hr>
                     </div>
                     <div class="row dashboard-view" id="view-inventory">
                         <div class="disc-inventory-header" id="inventory-header">
-                            <div class="header-static header-row no-select">
-                                <div class="div-inline float-left" style="width: 40%">
+                            <div class="header-static header-row text-center no-select">
+                                <span class="paginate-container">
+                                    <ul class="list-inline form-control-static" id="paginate-nav">
+                                        <li class="page-static" id="page-back"><span class="glyphicon glyphicon-chevron-left"></span></li>
+                                        <li class="page-static" id="page-forward"><span class="glyphicon glyphicon-chevron-right"></span></li>
+                                    </ul>
+                                </span>
+                                <span class="float-left dashboard-header-left">
                                     <p class="form-control-static header-text">Display:</p>
                                     <select class="header-select" id="paginate-display-count">
                                         <option value="20">20</option>
@@ -419,21 +418,22 @@
                                         <option value="100">100</option>
                                         <option value="All">All</option>
                                     </select>
-                                    <span id="results-header-sort">
+                                    <span class="results-header-btn" id="results-header-sort">
                                         <i class="fa fa-sort"></i> Sort
                                     </span>
-                                </div>
-                                <div class="div-inline float-left text-center" style="width: 20%">
-                                    <ul class="list-inline form-control-static" id="paginate-nav">
-                                        <li class="page-static" id="page-back"><span class="glyphicon glyphicon-chevron-left"></span></li>
-                                        <li class="page-static" id="page-forward"><span class="glyphicon glyphicon-chevron-right"></span></li>
-                                    </ul>
-                                </div>
-                                <div class="div-inline float-left" style="width: 40%">
-                                    <div class="div-inline float-right header-text text-right" id="results-header-count">
+                                </span>
+                                <span class="float-right dashboard-header-right">
+                                    <span class="results-header-btn sidebar-nav-indicator" id="inventory-search-toggle" nav-select="#sidebar-search">
+                                        <i class="fa fa-search"></i> Search
+                                    </span>
+                                    <span class="results-header-btn sidebar-nav-indicator" id="dashboard-filter-toggle" nav-select="#sidebar-filter">
+                                        <i class="fa fa-filter"></i> Filter
+                                        <span id="filter-count"></span>
+                                    </span>
+                                    <span class="header-text" id="results-header-count">
                                         Results: 0
-                                    </div>
-                                </div>
+                                    </span>
+                                </span>
                                 <div class="clearfix"></div>
                             </div>
                             <div class="header-dynamic header-row" id="disc-inventory-header-dynamic">
@@ -582,51 +582,18 @@
                     </div>
                     <div class="row">
                         <div class="row-label">Actions</div>
-                        <div class="form-horizontal form-small" id="accountActionsForm">
-                            <div class="password-accordion-container">
-                                <div class="form-group">
-                                    <label id="password-accordion-label" class="no-select col-sm-12" aria-expanded="false" aria-controls="expand-change-password">
-                                        <span><i class="fa fa-chevron-right fa-tools"></i></span>Change Password
-                                    </label>
-                                </div>
-                                <div class="collapse" id="expand-change-password">
-                                    <div class="form-group">
-                                        <label for="current-password" class="col-sm-4 col-sm-offset-1 control-label">Current Password</label>
-                                        <div class="col-sm-6">
-                                            <input type="password" class="form-control" id="current-password" placeholder="Current Password">
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="new-password" class="col-sm-4 col-sm-offset-1 control-label">New Password</label>
-                                        <div class="col-sm-6">
-                                            <input type="password" class="form-control" id="new-password" placeholder="New Password">
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="confirm-new-password" class="col-sm-4 col-sm-offset-1 control-label">Confirm Password</label>
-                                        <div class="col-sm-6">
-                                            <input type="password" class="form-control" id="confirm-new-password" placeholder="Confirm Password">
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                    <div class="col-sm-12">
-                                        <button id="change-password-save" class="btn btn-primary pull-right">Save</button>
-                                    </div>
-                                </div>
-                            </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="col-sm-4 col-sm-offset-4 form-center">
-                                    <a href="/account/link">
-                                        <button id="facebook-link" class="btn btn-primary"><span><i class="fa fa-facebook-square fa-tools"></i></span>Manage Facebook</button>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="col-sm-4 col-sm-offset-4 form-center">
-                                    <button id="account-delete" class="btn btn-danger"><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete Account</button>
-                                </div>
-                            </div>
+                        <div class="account-actions-container">
+                            <span class="account-btn">
+                                <a href="/account/link">
+                                    <button id="facebook-link" class="btn btn-primary"><span><i class="fa fa-facebook-square fa-tools"></i></span>Manage Facebook</button>
+                                </a>
+                            </span>
+                            <span class="account-btn">
+                                <button id="account-change-pwd" class="btn btn-default"><span><i class="fa fa-key fa-tools"></i></span>Change Password</button>
+                            </span>
+                            <span class="account-btn">
+                                <button id="account-delete" class="btn btn-danger"><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete Account</button>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -823,6 +790,7 @@
         </div>
     </div>
     <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
+    <script src="https://cdn.rawgit.com/fengyuanchen/cropper/v0.11.1/dist/cropper.min.js"></script>
     <script src="/static/js/jquery.canvasjs.min.js"></script>
     <script src="https://cdn.rawgit.com/exif-js/exif-js/master/exif.js"></script>
     <script src="/static/js/dropzone.js"></script>

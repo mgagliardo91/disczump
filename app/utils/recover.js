@@ -20,31 +20,32 @@ module.exports = {
             if (!user)
                 return callback('No account associated email address found.');
             
-            TemporaryLink.remove({ userId: user._id, route: configRoutes.resetPassword }, function (err) {
+            TemporaryLink.remove({ userId: user._id, route: 'recover' }, function (err) {
                 if (err)
 			        return callback(Error.createError(err, Error.internalError));
-            });
+			        
+			    var recover = new TemporaryLink({userId: user._id, route : 'recover'});
             
-            var recover = new TemporaryLink({authorizationId: crypto.randomBytes(32).toString('hex'), 
-                userId: user._id, route : configRoutes.resetPassword});
-            
-            recover.save(function(err) {
-                if (err)
-			        return callback(Error.createError(err, Error.internalError));
-                
-                console.log(JSON.stringify(recover));
-                
-                user.addEvent('Password recovery initialized [' + recover._id + '].');
-                callback(null, generateRecoveryEmail(user, recover));
+                recover.save(function(err) {
+                    if (err)
+    			        return callback(Error.createError(err, Error.internalError));
+                    
+                    console.log(JSON.stringify(recover));
+                    
+                    user.addEvent('Password recovery initialized [' + recover._id + '].');
+                    callback(null, generateRecoveryEmail(user, recover));
+                });
             });
         });
     },
     
     validateRecovery : function(authorizationId, callback) {
-        TemporaryLink.findOne({authorizationId: authorizationId, route: configRoutes.resetPassword }, function (err, recover) {
-            if (err)
-			    return callback(Error.createError(err, Error.internalError));
-            
+        TemporaryLink.findOne({_id: authorizationId, route: 'recover' }, function (err, recover) {
+            if (err) {
+                console.log(err);
+                return callback(Error.createError(err, Error.internalError));
+            }
+			    
             if (!recover)
     			return callback(Error.createError('The recovery request does not exist.',
     			    Error.invalidDataError));

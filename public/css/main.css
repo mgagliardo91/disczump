@@ -168,7 +168,6 @@
 .image-link {
 	padding-top: 0px !important;
 	padding-bottom: 0px !important;
-	/*margin-top: 5px !important;*/
 }
 
 .image-link > img {
@@ -262,6 +261,32 @@
     border-top: 1px solid #D2D2D2;
 }
 
+.page-btn-container {
+    float: right;
+}
+
+.page-title-tri-btn {
+	font-size: 2em;
+    cursor: pointer;
+    padding: 0px 10px;
+    border-radius: 5px;
+}
+
+.page-title-tri-btn.active {
+	color: white;
+	background-color: rgb(0, 142, 221);
+}
+
+.page-title-btn {
+    font-size: 2em;
+    cursor: pointer;
+    padding-right: 10px;
+}
+
+.page-title-btn:last-of-type {
+    padding-right: 0px;
+}
+
 .page-alert {
 	position: absolute;
 	z-index: 5000;
@@ -285,6 +310,19 @@
 
 .page-body {
 	padding-bottom: 30px;
+}
+
+#user-input-form {
+	margin: 20px auto;
+	max-width: 400px;
+}
+
+#user-input-form > .input-group {
+	margin: 5px 0px;
+}
+
+#user-input-form > button {
+	margin-top: 10px;
 }
 
 .btn-wide {
