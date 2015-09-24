@@ -6,10 +6,10 @@ var _ = require('underscore');
 var async = require('async');
 var mongoose = require('mongoose');
 var config = require('../../config/config.js');
+var FileUtil = require('../utils/file.js');
 
 module.exports = {
 	createThumbnail: createThumbnail,
-	saveImage: saveImage,
     getDiscImages: getDiscImages,
     getDiscImage: getDiscImage,
     postDiscImage: postDiscImage,
@@ -33,7 +33,7 @@ function createThumbnail(gm, gfs, discImage, callback) {
           _id: discImage.fileId
         });
         
-        saveImage(gm, gfs, rs, {
+        FileUtil.saveImage(gm, gfs, rs, {
         	mimetype: file.contentType, 
         	filename: file.filename, 
         	maxSize: config.images.thumbnailSize
@@ -44,35 +44,6 @@ function createThumbnail(gm, gfs, discImage, callback) {
         		
         		return callback(null, discImage);
         	});
-        });
-    });
-}
-
-function saveImage(gm, gfs, readStream, fileParams, callback) {
-	var ws = gfs.createWriteStream({
-                  mode: 'w',
-                  content_type: fileParams.mimetype,
-                  filename: fileParams.filename
-              });
-
-    ws.on('close', function (file) {
-    	callback(file);
-      });
-      
-    gm(readStream).autoOrient().quality(90).size({bufferStream: true}, function(err, size) {
-    	if (err)
-    		console.log(err);
-    	
-    	if (typeof size !== 'undefined') {
-    		if (size.width > size.height) {
-	    		this.resize(size.width > fileParams.maxSize ? fileParams.maxSize : size.width);
-	    	} else {
-	    		this.resize(null, size.height > fileParams.maxSize ? fileParams.maxSize : size.height);
-	    	}
-    	}
-    	
-        this.stream('jpeg', function (err, stdout, stderr) {
-          stdout.pipe(ws);
         });
     });
 }
@@ -146,6 +117,9 @@ function deleteDiscImage(userId, imageId, gfs, callback) {
 			
 		if (_.isEmpty(discImage))
 			return callback(null, discImage);
+			
+		if (userId != discImage.userId)
+			return callback(Error.createError('Unauthorized to delete disc image.', Error.unauthorizedError));
 		
 		Disc.findOne({_id: discImage.discId}, function(err, disc) {
 			if (!err && !disc && !_.isEmpty(disc)) {
@@ -172,26 +146,21 @@ function deleteDiscImageObj(discImage, gfs, callback) {
 	var fileId = discImage.fileId;
 	var thumbnailId = discImage.thumbnailId;
 	
-	if (fileId) {
-		gfs.remove({_id:fileId}, function (err) {
-		 	if (err)
-			  	console.log(err);
+	async.parallel([
+		function(cb) {
+			FileUtil.deleteImage(fileId, gfs, cb);
+		},
+		function(cb) {
+			FileUtil.deleteImage(thumbnailId, gfs, cb);
+		}
+	], function(err, results) {
+		discImage.remove(function (err, discImage) {
+			if (err)
+				return callback(Error.createError(err, Error.internalError));
+			
+			console.log('Deleted disc image object: ' + discImage._id);
+			return callback(null, discImage);
 		});
-	}
-	
-	if (thumbnailId) {
-		gfs.remove({_id:thumbnailId}, function (err) {
-		 	if (err)
-			  	console.log(err);
-		});
-	}
-	
-	discImage.remove(function (err, discImage) {
-		if (err)
-			return callback(Error.createError(err, Error.internalError));
-		
-		console.log('Deleted disc image object: ' + discImage._id);
-		return callback(null, discImage);
 	});
 }
 
@@ -205,9 +174,7 @@ function deleteDiscImages(userId, discId, gfs, callback) {
 			return callback(null, discImages);
 		
 		async.each(discImages, function(discImage, asyncCB){
-			deleteDiscImageObj(discImage, gfs, function(err, discImage) {
-				asyncCB();	
-			});
+			deleteDiscImageObj(discImage, gfs, asyncCB);
 		}, function(err){
 			if (err)
 				return callback(Error.createError(err, Error.internalError));

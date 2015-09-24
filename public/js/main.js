@@ -210,6 +210,14 @@ function putAccount(account, callback) {
 	});
 }
 
+function deleteAccountImage(callback) {
+	doAjax({
+		path: '/account/image', 
+		type: 'DELETE',
+		callback: callback
+	});
+}
+
 function getThreads(callback) {
 	doAjax({
 		path: '/threads', 

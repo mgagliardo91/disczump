@@ -66,6 +66,7 @@ module.exports = function(app, passport, gridFs) {
         if (req.device.isMobile) {
             return res.render('mobile/dashboard', {
                 user : req.user,
+                image : req.user.accountToString().image,
                 isDashboard : true,
                 isMobile: true
             });
@@ -81,6 +82,7 @@ module.exports = function(app, passport, gridFs) {
             
             return res.render('dashboard', {
                 user : req.user,
+                image : req.user.accountToString().image,
                 firstUse: firstUse,
                 isDashboard : true,
                 isLinked : typeof(req.user.facebook.id) !== 'undefined',
@@ -151,14 +153,14 @@ module.exports = function(app, passport, gridFs) {
                 if (req.device.isMobile) {
                     return res.render('mobile/viewdisc', {
                         disc: disc,
-                        user: user,
+                        user: user.accountToString(),
                         isPublicPage: true,
                         isMobile: true
                     });
                 } else {
                     return res.render('discview', {
                         disc: disc,
-                        user: user,
+                        user: user.accountToString(),
                         isPublicPage: true,
                         isLoggedIn: req.isAuthenticated()
                     });
@@ -488,7 +490,7 @@ module.exports = function(app, passport, gridFs) {
         var user = req.user;
         user.facebook.token = undefined;
         user.facebook.id = undefined;
-        user.local.image = undefined;
+        user.facebook.image = undefined;
         user.save(function(err) {
             EventController.createEvent(user._id, EventController.types.AccountUnlink);
             req.flash('infoTitle', 'Unlink Successful');

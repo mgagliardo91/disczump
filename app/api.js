@@ -11,6 +11,7 @@ var Busboy = require('busboy');
 var gfs;
 var gm = require('gm').subClass({ imageMagick: true });
 var async = require('async');
+var FileUtil = require('./utils/file.js');
 
 // app/api.js
 module.exports = function(app, passport, gridFs) {
@@ -147,6 +148,51 @@ module.exports = function(app, passport, gridFs) {
         })
         .put(hasAccess, function(req, res) {
             UserController.updateAccount(req.user._id, req.body, function (err, user) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json(user);
+            });
+        });
+        
+    app.route('/account/image')
+        .post(hasAccess, function(req, res) {
+            var sendResponse = false;
+            var busboy = new Busboy({
+                  headers: req.headers
+              });
+             
+            busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
+                if (fieldname == 'accountImage' && /^image\//.test(mimetype)) {
+                    console.log("Fieldname: " + fieldname + "; Filename: " + filename + "; Encoding: " + encoding + "; MIME: " + mimetype);
+                    
+                    FileUtil.saveImage(gm, gfs, file, {
+                        mimetype: mimetype,
+                        filename: filename,
+                        maxSize: config.images.maxSize
+                        }, function(newFile) {
+                            UserController.postUserImage(req.user._id, newFile._id, gfs, function(err, user) {
+                                if (err)
+                                    return res.json(err);
+                                
+                                return res.json(user);
+                            });
+                    });
+                } else {
+                    sendResponse = true;
+                    file.resume();
+                }
+                
+            });
+            busboy.on('finish', function() {
+                if (sendResponse) {
+                    return res.json({});
+                }
+            });
+            req.pipe(busboy);
+        })
+        .delete(hasAccess, function(req, res) {
+            UserController.deleteUserImage(req.user._id, gfs, function(err, user) {
                 if (err)
                     return res.json(err);
                 
@@ -320,6 +366,9 @@ module.exports = function(app, passport, gridFs) {
             DiscController.getDisc(req.user._id, req.params.discId, function(err, disc) {
                 if (err)
                   return res.json(err);
+                 
+                if (disc.userId != req.user._id)
+                    return res.json(Error.createError('Unauthorized to modify disc.', Error.unauthorizedError));
             
                 var sendResponse = false;
                 var busboy = new Busboy({
@@ -330,7 +379,7 @@ module.exports = function(app, passport, gridFs) {
                     if (fieldname == 'discImage' && /^image\//.test(mimetype)) {
                         console.log("Fieldname: " + fieldname + "; Filename: " + filename + "; Encoding: " + encoding + "; MIME: " + mimetype);
                         
-                        DiscImageController.saveImage(gm, gfs, file, {
+                        FileUtil.saveImage(gm, gfs, file, {
                             mimetype: mimetype,
                             filename: filename,
                             maxSize: config.images.maxSize

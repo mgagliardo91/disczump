@@ -10,14 +10,15 @@
     left: 0;
     z-index: 125;
     background-color: rgba(45, 45, 45, 0.92);
+    display: none;
 }
 
 .loader-sprite {
     position: absolute;
-    width: 250px;
-    height: 250px;
-    background: url('/static/logo/loader_sprite.png') left center;
-    animation: play 1s steps(8) infinite;
+    width: 300px;
+    height: 300px;
+    /*background: url('/static/logo/loader_sprite.png') left center;*/
+    /*animation: play 1s steps(8) infinite;*/
 }
 
 @keyframes play {
@@ -193,12 +194,21 @@
 .profile-image {
     width: 170px;
     height: 170px;
-    float: left;
     text-align: center;
     border: 1px solid rgb(163, 163, 163);
     background-color: rgb(238, 238, 238);
     padding: 9px 8px 8px 9px;
     border-radius: 3px;
+}
+
+.profile-image.float {
+    float: left;
+}
+
+.profile-image.upload {
+    margin: auto;
+    margin-bottom: 10px;
+    position: relative;
 }
 
 .profile-image > img {
@@ -225,16 +235,6 @@
     display: table;
 }
 
-.row-label {
-    font-weight: bold;
-    padding: 2px 10px;
-    background-color: rgb(238, 238, 238);
-    color: #000;
-    margin-bottom: 20px;
-    border: 1px solid rgb(163, 163, 163);
-    border-radius: 3px;
-}
-
 .profile-actions {
     padding-left: 25px;
     list-style: none;
@@ -258,13 +258,13 @@
 
 .data-label {
     float: left;
-    width: 100px;
+    width: 150px;
     text-align: right;
     font-weight: bold;
 }
 
 .data-value {
-    margin-left: 110px;
+    margin-left: 160px;
 }
 
 .row {
@@ -355,6 +355,60 @@
     margin: 0px 10px;
 }
 
+.account-image {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.account-image td {
+    width: 50%;
+    text-align: center;
+}
+
+.account-image td:first-child {
+    border-right: 2px solid black;
+}
+
+.account-image.no-fb td {
+    width: 100%;
+    border-right: 0px;
+}
+
+#upload-profile-image.dragging {
+    background-color: rgb(175, 220, 245);
+}
+
+#upload-profile-image.dragging i {
+    font-size: 3em;
+}
+
+#upload-profile-image.dragging .upload-placeholder-text {
+    font-size: 2em;
+}
+
+#image-upload-placeholder {
+    display: table;
+    width: 100%;
+    height: 100%;
+}
+
+#image-upload-placeholder > div {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.upload-placeholder-text {
+   font-weight :bold;
+}
+
+.image-upload-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 300;
+    top: 0;
+    left: 0;
+}
 /*===================================================================*/
 /*                                                                   */
 /*                           Statistics                              */
@@ -470,6 +524,7 @@
 
 .modal-dialog {
     z-index: 2000;
+    width: 800px;
 }
 
 .custom-modal {
@@ -488,6 +543,50 @@
 .modal-footer {
     padding: 15px;
     margin: 0px;
+}
+
+.popup-body > table {
+    width: 100%;
+}
+
+.popup-body > table td {
+    padding: 10px;
+}
+
+.popup-body > table th {
+    padding: 10px;
+    text-align: center;
+}
+
+.popup-body > table .table-header-row {
+    background-color: rgb(0, 142, 221);
+    color: #FFF;
+}
+
+.popup-body > table tr:not(.table-header-row):nth-child(odd) {
+    background-color: #eee;
+}
+
+.popup-body > table tr:not(.table-header-row):nth-child(even) {
+    background-color: #fff;
+}
+
+.help-label {
+    width: 15%;
+    text-align: right;
+    font-weight: bold;
+}
+
+.help-text {
+    width: 65%;
+}
+
+.help-ex {
+    width: 20%;
+    text-align: right;
+    font-weight: bold;
+    color: #B1B1B1;
+    font-style: italic;
 }
 
 #feedback-textarea {
@@ -944,6 +1043,7 @@
     min-width: 200px;
     max-width: 80%;
     display: inline-block;
+    position: relative;
 }
 
 .thread-message.message-outgoing .message-bubble {
@@ -962,6 +1062,22 @@
     background-position: center center;
     background-size: cover;
     border: 1px solid #989898;
+}
+
+.message-user-overlay {
+    height: 50px;
+    width: 50px;
+    position: absolute;
+    z-index: 1;
+    cursor: pointer;
+}
+
+.thread-message.message-incoming .message-user-overlay {
+    left: 0;
+}
+
+.thread-message.message-outgoing .message-user-overlay {
+    right: 0;
 }
 
 .thread-message.message-incoming .message-user {
@@ -1133,13 +1249,6 @@
     margin: auto;
 }
 
-#profile-username {
-    float: left;
-}
-
-#profile-pdga {
-    float: right;
-}
 
 .profile-view-left {
     width: 350px;

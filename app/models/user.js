@@ -35,6 +35,7 @@ var userSchema = mongoose.Schema({
         token        : String,
         email        : String,
         name         : String,
+        image        : String,
     },
     preferences      : {
         colorize     : {
@@ -90,7 +91,9 @@ userSchema.methods.accountToString = function() {
 	}
 	
 	if (typeof(this.local.image) !== 'undefined') {
-		account.image = this.local.image;
+		account.image = '/files/' + this.local.image;
+	} else if (typeof(this.facebook.image !== 'undefined')) {
+	    account.image = this.facebook.image;
 	}
 	
 	if (typeof(this.local.zipCode) !== 'undefined') {

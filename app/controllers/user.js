@@ -5,6 +5,7 @@ var EventController = require('./event.js');
 var _ = require('underscore');
 var async = require('async');
 var UserConfig = require('../../config/config.js').user.preferences;
+var FileUtil = require('../utils/file.js');
 
 module.exports = {
 	query: query,
@@ -22,7 +23,9 @@ module.exports = {
     updatePreferences: updatePreferences,
     resetPassword: resetPassword,
     tryResetPassword: tryResetPassword,
-    deleteUser: deleteUser
+    deleteUser: deleteUser,
+    deleteUserImage: deleteUserImage,
+    postUserImage: postUserImage
 }
 
 function query(field, q, callback) {
@@ -357,41 +360,6 @@ function deleteUser(userId, gfs, callback) {
 			callback(null, user.accountToString());
 		});
 	});
-	
-	
-	// User.findOne({_id: userId}, function (err, user) {
-	// 	if (err)
-	// 		return callback(Error.createError(err, Error.internalError));
-			
-	// 	if (!user)
-	// 		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-		
-	// 	console.log('Initiating deletion of user: ' + user._id);
-	// 	DiscController.getDiscs(user._id, user._id, function(err, discs) {
-			
-	// 		console.log('Deleting [' + discs.length + '] discs owned by user.');
-			
-	// 		async.each(discs, function(disc, aCallback) {
-	// 	        DiscController.deleteDisc(user._id, disc._id, gfs, function(err, disc) {
-	// 	            if (err)
-	// 	                console.log(err);
-		                
-	// 	            console.log('Successfully deleted disc:' + disc._id);
-	// 	        	aCallback();
-	// 	        });
-	// 	    }, function(err) {
-	// 	        user.remove(function(err) {
-	// 	        	if (err)
-	// 	        		return callback(Error.createError(err, Error.internalError));
-		        	
-	// 		        console.log('Successfully deleted user.');
-	// 		        EventController.createEvent(user._id, EventController.types.AccountDeletion);
-	// 		        callback(null, user.accountToString());
-	// 	        });
-		        
-	// 	    });
-	// 	});
-	// });
 }
 
 function validatePreference(preference, value) {
@@ -437,4 +405,54 @@ function validatePreference(preference, value) {
 	}
 	
 	return false;
+}
+
+function deleteUserImage(userId, gfs, callback) {
+	User.findOne({_id: userId}, function(err, user) {
+		if (err)
+			return callback(Error.createError(err, Error.internalError));
+        
+        if (!user)
+	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
+	   		
+	   	if (typeof(user.local.image) !== 'undefined') {
+	   		FileUtil.deleteImage(user.local.image, gfs, function() {
+	   			user.local.image = undefined;
+	   			user.save(function(err) {
+					if (err)
+						return callback(Error.createError(err, Error.internalError));
+					
+					callback(null, user.accountToString());
+	   			});
+	   		});
+	   	}
+	   	
+	   	callback(null, user.accountToString());
+	});
+}
+
+function postUserImage(userId, fileId, gfs, callback) {
+	User.findOne({_id: userId}, function(err, user) {
+		if (err)
+			return callback(Error.createError(err, Error.internalError));
+        
+        if (!user)
+	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
+	   	
+	   	async.series([
+	   		function(cb) {
+	   			if (typeof(user.local.image) !== 'undefined') {
+			   		FileUtil.deleteImage(user.local.image, gfs, cb);
+			   	} else cb();
+	   		}
+	   	], function(err, results) {
+	   		user.local.image = fileId;
+		   	user.save(function(err) {
+				if (err)
+					return callback(Error.createError(err, Error.internalError));
+					
+				return callback(null, user.accountToString());
+		   	});
+	   	});
+	});
 }

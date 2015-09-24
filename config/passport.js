@@ -51,18 +51,18 @@ module.exports = function(passport) {
     
                     if (err)
                         return done(err);
-                        
-                    if (!user.local.active) {
-                        req.flash('link.url', '/' + configRoutes.confirmAccount + '/user/' + user._id);
-                        req.flash('link.text', 'Resend Activation');
-                        return done(null, null, req.flash('info', 'Account not activated.'));
-                    }
     
                     if (user) {
                         
+                        if (!user.local.active) {
+                            req.flash('link.url', '/' + configRoutes.confirmAccount + '/user/' + user._id);
+                            req.flash('link.text', 'Resend Activation');
+                            return done(null, null, req.flash('info', 'Account not activated.'));
+                        }
+                        
                         fbGraph.get(user.facebook.id + "/picture?width=500&access_token=" + token, function(err, pic) {
                             if (!err && pic.image) {
-                                user.local.image = pic.location;
+                                user.facebook.image = pic.location;
                                 user.save();
                             }
                         });
@@ -102,7 +102,7 @@ module.exports = function(passport) {
                     
                     fbGraph.get(profile.id + "/picture?width=500&access_token=" + token, function(err, pic) {
                         if (!err && pic.image) {
-                            user.local.image = pic.location;
+                            user.facebook.image = pic.location;
                         }
                         
                         // save the user

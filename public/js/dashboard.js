@@ -5,6 +5,8 @@ var $sidebar;
 var $sidebarFilter;
 var $loading;
 var $sprite;
+var $photoCrop;
+var $cropImage;
 
 // UI Objects
 var pageSettings = {
@@ -17,6 +19,8 @@ var pageSettings = {
 var sidebarSettings = {collapsed: false, locked: false};
 var pageEvents = {};
 var modifyHandler = {type: 'Add', discId: undefined};
+var accountDropzone;
+var cropLock;
 
 // Library Instances
 var myZumpColorPicker;
@@ -64,6 +68,8 @@ $(document).ready(function(){
 	/*                    Account Settings Listeners                     */
 	/*                                                                   */
 	/*===================================================================*/
+    
+    
     
     $('#account-save').click(function() {
     	var $accountForm = $('#account-form')
@@ -279,6 +285,17 @@ $(document).ready(function(){
 		}
 	}
 	
+	pageEvents['pg-profile'] = {
+		beforeShow: function() {
+		},
+		onShow: function() {
+		},
+		onHide: function() {
+		},
+		isShowing: function() {
+		}
+	}
+	
 	pageEvents['pg-inbox'] = {
 		beforeShow: function() {
 		},
@@ -287,6 +304,19 @@ $(document).ready(function(){
 		},
 		onHide: function() {
 			myMessenger.threadLeft();
+		},
+		isShowing: function() {
+			
+		}
+	}
+	
+	pageEvents['pg-settings'] = {
+		beforeShow: function() {
+		    initSettings();
+		},
+		onShow: function() {
+		},
+		onHide: function() {
 		},
 		isShowing: function() {
 			
@@ -350,7 +380,6 @@ $(document).ready(function(){
 		    		userPrefs = prefs;
 		    		initializeTooltips();
 		    		zumpLibraryInit();
-		    		initializePage();
     				changePage('#pg-dashboard');
     				setLoading(true);
 		    		getAllDiscs(function(success, discsFromServer){
@@ -362,6 +391,7 @@ $(document).ready(function(){
 							alert('Unable to intialize');
 						}
 					});
+		    		initializePage();
 		     	}
 		    });
     	}	
@@ -389,22 +419,21 @@ function setupFrameworkListeners() {
    	
    	$('#menu-feedback').click(function(e) {
    		e.stopImmediatePropagation();
-   		setLoading(true);
-   		// generateFeedbackModal('Feedback Form', 'Submit', function() {
-   		// 	if ($('#feedback-textarea').val().length < 1) {
-   		// 		return $('.modal-body').prepend(generateError('You must enter information into the text box before submitting the form.', 'ERROR'));
-   		// 	} else {
-   		// 		$('.modal-body').find('.alert').remove();
-   		// 		var text = $('#feedback-textarea').val();
-   		// 		postFeedback(text, function(success, retData) {
-   		// 			if (success) {
-   		// 				$('.custom-modal').modal('hide');
-   		// 			} else {
-   		// 				console.log('Error submitting feedback.');
-   		// 			}
-   		// 		});
-   		// 	}
-   		// });
+   		generateFeedbackModal('Feedback Form', 'Submit', function() {
+   			if ($('#feedback-textarea').val().length < 1) {
+   				return $('.modal-body').prepend(generateError('You must enter information into the text box before submitting the form.', 'ERROR'));
+   			} else {
+   				$('.modal-body').find('.alert').remove();
+   				var text = $('#feedback-textarea').val();
+   				postFeedback(text, function(success, retData) {
+   					if (success) {
+   						$('.custom-modal').modal('hide');
+   					} else {
+   						console.log('Error submitting feedback.');
+   					}
+   				});
+   			}
+   		});
    		return true;
    	});
    	
@@ -478,17 +507,26 @@ function resizeLoader() {
 	});
 }
 
+var loadId = 0;
+
 function setLoading(visible) {
 	if (visible) {
+		loadId++;
 		$('body').css('overflow', 'hidden');
 		$loading.show();
 		resizeLoader();
 		$(window).on('resize', resizeLoader);
 	} else {
-		$('body').css('overflow', 'auto');
-		$loading.hide();
-		$(window).off('resize', resizeLoader);
+		
+		loadId--;
+		if (loadId == 0) {
+			$('body').css('overflow', 'auto');
+			$loading.hide();
+			$(window).off('resize', resizeLoader);
+		}
 	}
+	
+	return loadId;
 }
 
 function changeSidebar(nav) {
@@ -543,9 +581,6 @@ function triggerPageChange(sender, page, callback) {
    	var $navItem = $('.nav-sidebar li.sidebar-select[pg-select="' + page + '"]');
    	
    	if (!$page.length) {
-   		// if ($navItem.length) {
-     //  		$navItem.addClass('active').siblings().removeClass('active');
-   		// }
    		return;
    	}
    	
@@ -576,10 +611,10 @@ function triggerPageChange(sender, page, callback) {
    	}
    
    	if ($page.is(':visible')) {
-   		pageEvents[$page.attr('id')].isShowing(sender);
    		if ($navItem.length) {
         	$navItem.addClass('active');
 		}
+   		pageEvents[$page.attr('id')].isShowing(sender);
        	if (callback) callback();
    	} else {
    		var curPageEvents = pageEvents[$curPage.attr('id')];
@@ -594,7 +629,7 @@ function triggerPageChange(sender, page, callback) {
        		return page == '#' + $curPage.attr('id');
        	});
    		pageSettings.pageNav.push('#' + $curPage.attr('id'));
-   		
+   		console.log(pageSettings.pageNav);
    		$curPage.fadeOut(100, function() {
    			
            	if (isDef(curPageEvents)) {
@@ -645,7 +680,7 @@ function initializePage() {
     	} else if (params.view == 'profile') {
     		initViewProfile(params);
     	} else if (params.view == 'dashboard') {
-    		
+    		initViewDashboard(params);
     	}
     }
 }
@@ -662,11 +697,137 @@ function initViewDisc(params) {
 	}
 }
 
+function initViewDashboard(params) {
+	if (isDef(params.user_id)) {
+		setLoading(true);
+		getUser(params.user_id, function(success, user) {
+			if (success) {
+				getAllPublicDiscsByUser(user._id, function(success, discs) {
+					if (success) {
+						setLoading(false);
+						myDashboard.setDiscList(discs, user);	
+						changePage('#pg-dashboard');
+					}
+				});
+			} else {
+				setLoading(false);
+			}
+		});
+	}
+}
+
 /*===================================================================*/
 /*                                                                   */
 /*              Account Settings & Preferences Functions             */
 /*                                                                   */
 /*===================================================================*/
+
+var $profileDropzone;
+var $placeholderText;
+var $placeholder;
+
+function initSettings() {
+	if (!isDef(accountDropzone)) {
+		
+		$profileDropzone = $('#upload-profile-image');
+		$placeholderText = $('.upload-placeholder-text');
+		$placeholder = $('#image-upload-placeholder');
+		
+		$('#profile-image-local-clear').click(function() {
+			accountDropzone.removeAllFiles();
+			$placeholder.show();
+		});
+		
+		$('#profile-image-fb-submit').click(function() {
+			deleteAccountImage(function(success, user) {
+				
+			});
+		});
+		
+		$('#profile-image-local-submit').click(function() {
+			
+		if (accountDropzone && accountDropzone.getAcceptedFiles().length > 0) {
+				accountDropzone.on('queuecomplete', function() {
+					// $modifyForm.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success'));
+					// autoCloseAlert($modifyForm.find('.alert'), 2000);
+					// getDiscById(retData._id, function(err, disc) {
+					// 	isProcessing = false;
+					// 	onUpdatedDisc(disc);
+					// });
+					// dropzone.off('queuecomplete');
+				})
+				accountDropzone.processQueue();
+			} else {
+				// $modifyForm.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success'));
+				// autoCloseAlert($modifyForm.find('.alert'), 2000);
+				// isProcessing = false;
+				// onUpdatedDisc(retData);
+			}
+		});
+		
+		var template = '<div><img data-dz-thumbnail /></div>'
+		
+		accountDropzone = new Dropzone('#upload-profile-image', {
+			url: '/api/account/image',
+			method: "POST",
+			thumbnailWidth: 150,
+			thumbnailHeight: 150,
+			parallelUploads: 1,
+			maxFiles: 1,
+			paramName: 'accountImage',
+			previewTemplate: template,
+			acceptedFiles: "image/*",
+			autoProcessQueue: false,
+			clickable: '#upload-profile-overlay',
+			accept: function(file, done) {
+				done();
+			},
+			init: function() {
+				this.on("dragenter", function() {
+					$profileDropzone.addClass('dragging');
+					$placeholderText.text('drop|here');
+				}).on("dragleave", function() {
+					$profileDropzone.removeClass('dragging');
+					$placeholderText.text('Click or drag image here');
+				}).on("drop", function() {
+					$profileDropzone.removeClass('dragging');
+					$placeholderText.text('Click or drag image here');
+				}).on('addedfile', function(file) {
+					if (cropLock) {
+				 		accountDropzone.removeFile(file);
+				 		return;
+				 	}
+				 	
+			        if (file.cropped) {
+			        	$placeholder.hide();
+						if (this.files[1] != null){
+							this.removeFile(this.files[0]);
+						}
+			            return;
+			        }
+			        
+			        if (file.width < 200) {
+			            return;
+			        }
+			        
+			        cropLock = true;
+			        
+			        var cachedFilename = file.name;
+			        accountDropzone.removeFile(file);
+			        
+			        var reader = new FileReader();
+			        reader.onloadend = function() {
+			        	showPhotoCrop(file.name, reader.result, function(newFile) {
+							accountDropzone.addFile(newFile);
+			        	});
+	        		};
+			        
+			        reader.readAsDataURL(file);
+				});
+			}
+		});
+	}
+}
 
 function setUserPrefs() {
 	if (userPrefs.defaultView.length > 0) {
@@ -964,6 +1125,142 @@ function generateFeedbackModal(title, btnText, submitFn) {
 }
 
 /*
+* Generates a modal popup to help users understand the Add/Edit disc page
+*/
+function generateHelpModal(title, bodyHTML) {
+	var header = '<h4 class="modal-title"><span><i class="fa fa-info-circle fa-tools"></i></span>' + title + '</h4>';
+          
+	var body = '<div class="popup-body">' +
+					'<table>' +
+						'<tr class="table-header-row">' +
+							'<th>Field</th>' +
+							'<th>Description</th>' +
+							'<th>Example</th>' +
+						'</tr>' +
+						bodyHTML +
+					'</table>' +
+				'</div>';
+			
+	var footer = '<button type="button" class="btn btn-default" fn-title="close">Close</button>';
+		
+	var fns = [
+				{
+					name: 'close',
+					function: function($btn, $inner, done) {
+						done();
+					}
+				}
+		];
+		
+	generateModal({
+		header: header, 
+		body: body, 
+		footer: footer, 
+		fns: fns
+	});
+}
+
+/*
+* Generates text for general section of help modal
+*/
+function getGeneralText() {
+	
+	return 	'<tr>' +
+				'<td class="help-label">Brand</td>' +
+				'<td class="help-text">Enter the brand of the disc. (This is a required field)</td>' +
+				'<td class="help-ex">Innova</td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td class="help-label">Name</td>' +
+				'<td class="help-text">Enter the name/mold of the disc. (This is a required field)</td>' +
+				'<td class="help-ex">Destroyer</td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td class="help-label">Type</td>' +
+				'<td class="help-text">Select the type of the disc.</td>' +
+				'<td class="help-ex">Distance Driver</td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td class="help-label">Material</td>' +
+				'<td class="help-text">Enter the material of the disc. Most brands have at least 3 distinct material types.</td>' +
+				'<td class="help-ex">Champion</td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td class="help-label">Weight</td>' +
+				'<td class="help-text">Enter the weight of the disc in grams. The weight is frequently printed or written on the underside of the flight plate. ' +
+					'<b>NOTE: </b>This field only accepts integers and weights typically range from 150 to 180.</td>' +
+				'<td class="help-ex">172</td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td class="help-label">Color</td>' +
+				'<td class="help-text">Enter the color of the disc.</td>' +
+				'<td class="help-ex">Orange</td>' +
+			'</tr>';
+}
+
+/*
+* Generates text for advanced section of help modal
+*/
+function getAdvancedText() {
+	return 	'<tr>' +
+				'<td class="help-label">Speed</td>' +
+				'<td class="help-text">Enter the speed of the disc. Speed is the first of four flight ' +
+					'numbers, and it refers to the speed at which the disc must be thrown to achieve the designed flight path. ' +
+					'<b>NOTE: </b>This field only accepts integers and speed values typically range from 1 to 15.</td>' +
+				'<td class="help-ex">12</td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td class="help-label">Glide</td>' +
+				'<td class="help-text">Enter the glide of the disc. Glide is the second of four flight ' +
+					'numbers, and it refers to the disc\'s ability to stay afloat during it\'s flight. ' +
+					'<b>NOTE: </b>This field only accepts integers and glide values typically range from 1 to 7.</td>' +
+				'<td class="help-ex">5</td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td class="help-label">Turn</td>' +
+				'<td class="help-text">Enter the turn of the disc. Turn is the third of four flight ' +
+					'numbers, and it refers to the disc\'s resistance to turning during the high speed portion of it\'s flight. ' +
+					'<b>NOTE: </b>This field only accepts integers and turn values typically range from -5 to 1.</td>' +
+				'<td class="help-ex">-1</td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td class="help-label">Fade</td>' +
+				'<td class="help-text">Enter the fade of the disc. Fade is the fourth of four flight ' +
+					'numbers, and it refers to the disc\'s resistance to turning during the low speed portion of it\'s flight. ' +
+					'<b>NOTE: </b>This field only accepts integers and fade values typically range from 0 to 6.</td>' +
+				'<td class="help-ex">3</td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td class="help-label">Tags</td>' +
+				'<td class="help-text">Enter tags associated with this disc. Use tags to group discs outside of inherent traits such as brand, material, color, etc. ' +
+					'Tags are great ways to associate discs with specific collections, bags, or tournaments. They are completely customizable, and examples include ' +
+					'"Thrower", "CFR", "Glow", "xxx Collection", "xxx Bag", etc. ' +
+					'<b>NOTE: </b>A disc can have multiple tags, and a tag can be associated with multiple discs.</td>' +
+				'<td class="help-ex">Thrower<br>Glow Bag<br>Zone Collection</td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td class="help-label">Notes</td>' +
+				'<td class="help-text">Use the notes area to store detailed comments related to this disc only. Notes are completely customizable and examples may ' +
+					'include "Found on hole 7 at...", "Won at...", "2008 World Championship stamp", "Only 1000 made", etc.</td>' +
+				'<td class="help-ex"></td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td class="help-label">Public</td>' +
+				'<td class="help-text">Toggle the visibility setting to allow or prevent other users from viewing your disc. If public mode is turned on, ' +
+					'then your disc is visible to the public and can be shared via Facebook or public URL. If public mode is turned off, then your disc is only privately viewable by the ' +
+					'creator and shareable links will not work. <b>NOTE: </b>Visibility is saved for each disc independently and it can be toggled directly from the dashboard by ' +
+					'clicking on the eyeball icon.</td>' +
+				'<td class="help-ex"></td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td class="help-label">Condition</td>' +
+				'<td class="help-text">Enter the condition of the disc based on the sleepy scale. ' +
+					'<b>NOTE: </b>This field only accepts integers from 0 to 10.</td>' +
+				'<td class="help-ex">9</td>' +
+			'</tr>';
+}
+
+/*
 * Generates a modal popup with the specified parameters
 */
 function generateModal(opt) {
@@ -1178,6 +1475,98 @@ function generateConfirmationModal(title, bodyText, btnText, deleteFn) {
 	});
 }
 
+/*===================================================================*/
+/*                                                                   */
+/*                           Cropper                                 */
+/*                                                                   */
+/*===================================================================*/
+var repositionPhotoCrop = function() {
+	$('.photo-crop').css({
+		top: $(document).scrollTop()
+	});
+	
+	var $cropContainer = $photoCrop.find('.crop-container');
+	var top = ($(window).height() - $cropContainer.outerHeight())/2;
+	var left = ($(window).width() - $cropContainer.outerWidth())/2;
+	$cropContainer.css({
+		top: top,
+		left: left
+	});
+}
+
+/*
+* Modal to handle image cropping
+*/
+var showPhotoCrop = function(name, blob, callback) {
+	$photoCrop = $('<div class="backdrop photo-crop"></div>');
+	$photoCrop.append('<div class="crop-container">' + 
+						'<div class="crop-area">' + 
+							'<img filename="' + name + '" src="' + blob +'" />' + 
+						'</div>' + 
+						'<div class="crop-control-area">' + 
+							'<div class="crop-control">' + 
+								'<button type="button" class="btn btn-default" id="cancel-crop" discid=""><span><i class="fa fa-trash fa-tools"></i></span>Cancel</button>' + 
+								'<button type="button" class="btn btn-primary" id="accept-crop" discid=""><span><i class="fa fa-save fa-tools"></i></span>Accept</button>' + 
+							'</div>' +
+						'</div>' + 
+					'</div>');
+	
+	$cropImage = $photoCrop.find('.crop-area > img');
+					
+	$('body').css('overflow', 'hidden');
+	$('body').append($photoCrop);
+	$(window).on('resize', repositionPhotoCrop);
+	
+	$photoCrop.find('#accept-crop').click(function() {
+		var fileName = $cropImage.attr('filename');
+		var blob = $cropImage.cropper('getCroppedCanvas').toDataURL();
+		var newFile = dataURItoBlob(blob);
+		newFile.cropped = true;
+		newFile.name = fileName;
+		cropLock = false;
+		
+		if ($photoCrop.length) {
+			$photoCrop.remove();
+		}
+		
+		$('body').css('overflow', 'auto');
+		$(window).off('resize', repositionPhotoCrop);
+		callback(newFile);
+	});
+	
+	$photoCrop.find('#cancel-crop').click(function() {
+		cropLock = false;
+		if ($photoCrop.length) {
+			$photoCrop.remove();
+		}
+		$('body').css('overflow', 'auto');
+		$(window).off('resize', repositionPhotoCrop);
+	});
+	
+	repositionPhotoCrop();
+	
+	$cropImage.cropper({
+	  aspectRatio: 1/ 1,
+	  autoCropArea: 1,
+	  dragCrop: false,
+	  cropBoxMovable: false,
+	  cropBoxResizable: false
+    });
+}
+
+/*
+* Converts a dataURI to a blob
+*/
+var dataURItoBlob = function(dataURI) {
+    var byteString = atob(dataURI.split(',')[1]);
+    var ab = new ArrayBuffer(byteString.length);
+    var ia = new Uint8Array(ab);
+    for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: 'image/jpeg' });
+}
+
 /* Global Methods */
 
 jQuery.fn.extend({
@@ -1335,7 +1724,6 @@ var ZumpEditor = function(opt) {
 	var onNewDisc;
 	var onUpdatedDisc;
 	var isProcessing = false;
-	var cropLock = false;
     
     //----------------------\
     // JQuery Objects
@@ -1352,8 +1740,6 @@ var ZumpEditor = function(opt) {
     var $imageContainer;
     var $clearForm;
     var $curImagesSection;
-    var $photoCrop;
-    var $cropImage;
     
     //----------------------\
     // Prototype Functions
@@ -1512,6 +1898,18 @@ var ZumpEditor = function(opt) {
 	    	
 	    	disc.primaryImage = imageId;
 	    	updateExistingImage(imageId);
+	    });
+	    
+	    $('#modify-disc-form .row-label i[section="general"]').click(function() {
+	    	var title = 'Modify Disc Help - General';
+	    	var body = getGeneralText();
+	    	generateHelpModal(title, body);
+	    });
+	    
+	    $('#modify-disc-form .row-label i[section="advanced"]').click(function() {
+	    	var title = 'Modify Disc Help - Advanced';
+	    	var body = getAdvancedText();
+	    	generateHelpModal(title, body);
 	    });
     }
     
@@ -1918,94 +2316,13 @@ var ZumpEditor = function(opt) {
 	        
 	        var reader = new FileReader();
 	        reader.onloadend = function() {
-	        	showPhotoCrop(file.name, reader.result);
+	        	showPhotoCrop(file.name, reader.result, function(newFile) {
+					dropzone.addFile(newFile);
+	        	});
 	        };
 	        
 	        reader.readAsDataURL(file);
 	    });
-	}
-	
-	var repositionPhotoCrop = function() {
-		var $cropContainer = $photoCrop.find('.crop-container');
-		
-		var top = ($(window).height() - $cropContainer.outerHeight())/2;
-		var left = ($(window).width() - $cropContainer.outerWidth())/2;
-		$cropContainer.css({
-			top: top,
-			left: left
-		});
-	}
-	
-	/*
-	* Removes the photo crop from screen
-	*/
-	var destroyPhotoCrop = function() {
-		if ($photoCrop.length) {
-			$photoCrop.remove();
-		}
-	}
-	
-	/*
-	* Accepts a cropped image
-	*/
-	var acceptCrop = function() {
-		var fileName = $cropImage.attr('filename');
-		var blob = $cropImage.cropper('getCroppedCanvas').toDataURL();
-       var newFile = dataURItoBlob(blob);
-       newFile.cropped = true;
-       newFile.name = fileName;
-	   cropLock = false;
-       dropzone.addFile(newFile);
-       destroyPhotoCrop();
-	}
-	
-	/*
-	* Modal to handle image cropping
-	*/
-	var showPhotoCrop = function(name, blob) {
-		$photoCrop = $('<div class="backdrop photo-crop"></div>');
-		$photoCrop.append('<div class="crop-container">' + 
-							'<div class="crop-area">' + 
-								'<img filename="' + name + '" src="' + blob +'" />' + 
-							'</div>' + 
-							'<div class="crop-control-area">' + 
-								'<div class="crop-control">' + 
-									'<button type="button" class="btn btn-default" id="cancel-crop" discid=""><span><i class="fa fa-trash fa-tools"></i></span>Cancel</button>' + 
-									'<button type="button" class="btn btn-primary" id="accept-crop" discid=""><span><i class="fa fa-save fa-tools"></i></span>Accept</button>' + 
-								'</div>' +
-							'</div>' + 
-						'</div>');
-		
-		$cropImage = $photoCrop.find('.crop-area > img');
-						
-    	$('body').css('overflow', 'hidden');
-		$('body').append($photoCrop);
-		$(window).on('resize', repositionPhotoCrop);
-		$photoCrop.find('#accept-crop').click(acceptCrop);
-		$photoCrop.find('#cancel-crop').click(destroyPhotoCrop);
-		
-		repositionPhotoCrop();
-		
-		$cropImage.cropper({
-		  aspectRatio: 1/ 1,
-		  autoCropArea: 1,
-		  dragCrop: false,
-		  cropBoxMovable: false,
-		  cropBoxResizable: false
-        });
-	}
-	
-	/*
-	* Converts a dataURI to a blob
-	*/
-	var dataURItoBlob = function(dataURI) {
-	    var byteString = atob(dataURI.split(',')[1]);
-	    var ab = new ArrayBuffer(byteString.length);
-	    var ia = new Uint8Array(ab);
-	    for (var i = 0; i < byteString.length; i++) {
-	        ia[i] = byteString.charCodeAt(i);
-	    }
-	    return new Blob([ab], { type: 'image/jpeg' });
 	}
     
     this.init(opt);
@@ -2609,6 +2926,7 @@ var ZumpDashboard = function(opt) {
 	    });
 	    
 	}
+	
 	
 	/**************************
 	* Dashboard
@@ -3464,7 +3782,15 @@ var ZumpSocial = function(opt) {
     }
     
     this.showProfile = function(userId) {
+    	curUser = userId;
     	var user = _.findWhere(profileList, {_id: userId});
+    	
+    	if (userId == userAccount._id) {
+			$('.profile-action-container > button').attr('disabled', 'disabled');
+		} else {
+			$('.profile-action-container > button').removeAttr('disabled');
+		}
+		
     	if (typeof(user) !== 'undefined') {
     		userCache[user._id] = user;
 			populateProfile(user);
@@ -3498,9 +3824,9 @@ var ZumpSocial = function(opt) {
 								return false;
 							}
 							profileList = queryResult.results;
-							profileList = _.reject(profileList, function(item) {
-								return item.username == userAccount.username;
-							});
+							// profileList = _.reject(profileList, function(item) {
+							// 	return item.username == userAccount.username;
+							// });
 							if (profileList.length) {
 								_.each(profileList, appendProfileItem);
 							} else {
@@ -3523,9 +3849,8 @@ var ZumpSocial = function(opt) {
     			changePage('#pg-profile');
     			return false;
     		} else {
-    			curUser = selectedUser;
 	    		emptyProfileTemplate();
-	    		zumpSocial.showProfile(curUser);
+	    		zumpSocial.showProfile(selectedUser);
     		}
     	});
     	
@@ -3818,6 +4143,10 @@ var ZumpMessenger = function(opt) {
 			showThread($(this).attr('threadid'));
 		});
 		
+		$(document).on('click', '.message-user-overlay', function() {
+			mySocial.showProfile($(this).attr('userId'));
+		});
+		
 		$sendMessageBtn.click(function(e) {
 			sendMessage();
 		});
@@ -4073,6 +4402,7 @@ var ZumpMessenger = function(opt) {
     	var body = processMessage(message.body);
     	var $message = $('<div class="thread-message message-' + (incoming ? 'incoming' : 'outgoing') + '" messageId="' + message._id +  '"></div>');
     	$message.append('<div class="thread-message-area">' +
+    							'<div class="message-user-overlay" userId="' + message.userId + '"></div>' +
                                 '<div class="message-user" style="background-image:url(/static/logo/logo_small_nobg.svg)"></div>' +
                                 '<div class="message-content">' +
                                     '<div class="message-date">' + date.toLocaleString() + '</div>' +

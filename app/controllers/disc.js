@@ -185,6 +185,9 @@ function putDisc(userId, discId, data, callback) {
             
         if (!disc)
             return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
+            
+        if (disc.userId != userId)
+            return callback(Error.createError('Unauthorized to modify disc.', Error.unauthorizedError));
         
         if (typeof data.brand !== 'undefined') {
             disc.brand = data.brand;
@@ -308,6 +311,9 @@ function deleteDisc(userId, discId, gfs, callback) {
             
         if (!disc)
             return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
+            
+        if (disc.userId != userId)
+            return callback(Error.createError('Unauthorized to delete disc.', Error.unauthorizedError));
         
         DiscImageController.deleteDiscImages(userId, discId, gfs, function(err, discImages) {
             disc.remove(function (err, disc) {

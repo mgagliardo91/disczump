@@ -365,16 +365,6 @@ img.fit-parent {
     color: #3b5999;
 }
 
-.row-label {
-    font-weight: bold;
-    padding: 2px 10px;
-    background-color: rgb(238, 238, 238);
-    color: #000;
-    margin-bottom: 20px;
-    border: 1px solid rgb(163, 163, 163);
-    border-radius: 3px;
-}
-
 #public-disc-table {
     margin-top: 30px;
 }

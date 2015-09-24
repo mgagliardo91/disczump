@@ -18,7 +18,7 @@
     </div>
     {{/if}}
     <div id="loading-screen">
-        <div class="loader-sprite"></div>
+        <div class="loader-sprite"><img src="/static/logo/logo_small_loading.svg"/></div>
     </div>
     <div class="container-fluid">
         <div class="row">
@@ -69,11 +69,12 @@
             <div class="page-view">
                 <div class="page" id="pg-profile">
                     <div class="row">
-                        <div class="page-title">
-                            <div id="profile-username"></div>
-                            <div id="profile-pdga"></div>
+                        <div class="page-btn-container">
+                            <span class="page-title-btn dz-page-back"><i class="fa fa-times" title="Return"></i></span>
                             <div class="clearfix"></div>
-                        </div><hr>
+                        </div>
+                        <div class="page-title" id="profile-username"></div>
+                        <hr>
                     </div>
                     <div id="profile-view">
                         <div class="row">
@@ -84,6 +85,9 @@
                                 <div class="row profile-data-container">
                                     <div class="profile-label-row">
                                         <span id="profile-name"></span>
+                                    </div>
+                                    <div class="profile-data-row">
+                                        <span id="profile-pdga"></span>
                                     </div>
                                     <div class="profile-data-row">
                                         <span id="profile-location" class="city-state" value=""></span>
@@ -120,8 +124,6 @@
                         <div class="page-btn-container">
                             <span id="clone-disc" class="page-title-btn" discId=""><i class="fa fa-files-o" title="Clone Disc"></i></span>
                             <span class="page-title-btn dz-page-back"><i class="fa fa-times" title="Return"></i></span>
-                            {{!--<span class="nav-btn nav-btn-small" id="clone-disc"><span><i class="fa fa-files-o fa-tools"></i></span>Clone</span>--}}
-                            {{!--<span class="nav-btn nav-btn-small dz-page-back"><i class="fa fa-reply"></i> Return</span>--}}
                             <div class="clearfix"></div>
                         </div>
                         <div class="page-title">Add Disc</div>
@@ -130,22 +132,24 @@
                     </div>
                     <div id="disc-action-container">
                         <form class="form-horizontal" id="modify-disc-form" role="form" discId="" autocomplete="off">
-                            <div class="row-label">General</div>
+                            <div class="row-label">General
+                                <span><i class="fa fa-question-circle" title="Help" section="general"></i></span>
+                            </div>
                             <div class="modify-form-section">
                 				<div class="form-group">
                 	                <label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>
                 	                <div class="col-sm-4">
-                	                    <input type="text" id="disc-brand" class="form-control text-assist" param="brand">
+                	                    <input type="text" id="disc-brand" class="form-control text-assist" param="brand" placeholder="ex. Innova">
                 	                </div>
                 	                <label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>
                 	                <div class="col-sm-4">
-                	                    <input type="text" id="disc-name" class="form-control text-assist" param="name">
+                	                    <input type="text" id="disc-name" class="form-control text-assist" param="name" placeholder="ex. Destroyer">
                 	                </div>
                 	            </div>
                 	             <div class="form-group">
                 	                <label class="col-sm-2 control-label">Type</label>
                 	                <div class="col-sm-4">
-                	                    <select id="disc-type" class="form-control" param="type">
+                	                    <select id="disc-type" class="form-control" param="type" placeholder="ex. Distance Driver">
                 	                        <option value="" selected></option>
                 	                        <option value="Distance Driver">Distance Driver</option>
                 	                        <option value="Fairway Driver">Fairway Driver</option>
@@ -156,40 +160,42 @@
                 	                </div>
                 	                <label class="col-sm-2 control-label">Material</label>
                 	                <div class="col-sm-4">
-                	                    <input type="text" id="disc-material" class="form-control text-assist" param="material">
+                	                    <input type="text" id="disc-material" class="form-control text-assist" param="material" placeholder="ex. Champion">
                 	                </div>
                 	            </div>
                 	            <div class="form-group">
                 	                <label class="col-sm-2 control-label">Weight</label>
                 	                <div class="col-sm-4">
-                	                    <input type="text" id="disc-weight" class="form-control text-assist" param="weight">
+                	                    <input type="text" id="disc-weight" class="form-control text-assist" param="weight" placeholder="ex. 172">
                 	                </div>
                 	                <label class="col-sm-2 control-label">Color</label>
                 	                <div class="col-sm-4">
-                	                    <input type="text" id="disc-color" class="form-control text-assist" param="color">
+                	                    <input type="text" id="disc-color" class="form-control text-assist" param="color"  placeholder="ex. Orange">
                 	                </div>
                 	            </div>
                             </div>
-            	            <div class="row-label">Advanced</div>
+            	            <div class="row-label">Advanced
+            	                <span><i class="fa fa-question-circle" title="Help" section="advanced"></i></span>
+            	            </div>
             	            <div class="modify-form-section">
                 	            <div class="form-group">
         			                <label class="col-sm-2 control-label">Speed</label>
         			                <div class="col-sm-3">
-        			                    <input type="text" id="disc-speed" class="form-control text-assist" param="speed">
+        			                    <input type="text" id="disc-speed" class="form-control text-assist" param="speed" placeholder="ex. 12">
         			                </div>
         			                <label class="col-sm-3 control-label">Glide</label>
         			                <div class="col-sm-3">
-        			                    <input type="text" id="disc-glide" class="form-control text-assist" param="glide">
+        			                    <input type="text" id="disc-glide" class="form-control text-assist" param="glide" placeholder="ex. 5">
         			                </div>
         			            </div>
         			            <div class="form-group">
         			                <label class="col-sm-2 control-label">Turn</label>
         			                <div class="col-sm-3">
-        			                    <input type="text" id="disc-turn" class="form-control text-assist" param="turn">
+        			                    <input type="text" id="disc-turn" class="form-control text-assist" param="turn" placeholder="ex. -1">
         			                </div>
         			                <label class="col-sm-3 control-label">Fade</label>
         			                <div class="col-sm-3">
-        			                    <input type="text" id="disc-fade" class="form-control text-assist" param="fade">
+        			                    <input type="text" id="disc-fade" class="form-control text-assist" param="fade" placeholder="ex. 3">
         			                </div>
         			            </div>
         			            <div class="form-group tag-input-group">
@@ -197,7 +203,7 @@
         			                <div class="col-sm-10">
         			                    <div style="position:relative">
         			                        <div class="input-group add-disc-tag-container">
-        			                            <input type="text" class="form-control" id="add-disc-tag">
+        			                            <input type="text" class="form-control" id="add-disc-tag" placeholder="ex. Destroyer Collection">
         			                            <span class="input-group-btn">
         			                                <button class="btn btn-default" id="add-custom-tag" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>
         			                            </span>
@@ -212,7 +218,7 @@
         			            <div class="form-group">
         			                <label class="col-sm-2 control-label">Notes</label>
         			                <div class="col-sm-10">
-        			                    <textarea id="disc-notes" class="form-control create-disc-textarea" rows="3" param="notes"></textarea>
+        			                    <textarea id="disc-notes" class="form-control create-disc-textarea" rows="3" param="notes" placeholder="ex. Found on hole 7 at..."></textarea>
         			                </div>
         			            </div>
         			            <div class="form-group">
@@ -222,7 +228,7 @@
         			                </div>
         			                <label class="col-sm-2 control-label allow-icon">Condition<i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="condition"></i></label>
         			                <div class="col-sm-3">
-        			                    <input type="number" id="disc-condition" class="form-control text-assist" min="-3" max="10" param="condition">
+        			                    <input type="text" id="disc-condition" class="form-control text-assist" param="condition" placeholder="ex. 9">
         			                </div>
                                 </div>
                             </div>
@@ -286,7 +292,6 @@
                         <div class="page-btn-container">
                             <span id="view-disc-edit" class="page-title-btn" discId=""><i class="fa fa-pencil" title="Edit Disc"></i></span>
                             <span class="page-title-btn dz-page-back"><i class="fa fa-times" title="Return"></i></span>
-                            {{!--<span class="nav-btn nav-btn-small dz-page-back"><i class="fa fa-reply"></i> Return</span>--}}
                             <div class="clearfix"></div>
                         </div>
                         <div class="page-title" id="view-disc-title">Disc</div>
@@ -506,15 +511,19 @@
                         <hr>
                     </div>
                     <div class="row">
-                        <div class="profile-image">
-                            {{#if user.local.image}}
-                            <img src="{{user.local.image}}" />
+                        <div class="profile-image float">
+                            {{#if image}}
+                            <img src="{{image}}" />
                             {{else}}
                             <span class="user-default-image"><i class="fa fa-user"></i></span>
                             {{/if}}
                         </div>
                         <div class="profile-status">
                             <div class="data-table">
+                                <div class="data-row">
+                                    <div class="data-label">Account Email:</div>
+                                    <div class="data-value">{{user.local.email}}</div>
+                                </div>
                                 <div class="data-row">
                                     <div class="data-label">Status:</div>
                                     {{#if user.local.active}}
@@ -526,7 +535,7 @@
                                 <div class="data-row">
                                     <div class="data-label">Facebook:</div>
                                     {{#if user.facebook.id}}
-                                    <div class="data-value">Linked - <span style="color: blue">{{user.facebook.email}}</span></div>
+                                    <div class="data-value">Linked</div>
                                     {{else}}
                                     <div class="data-value">Not Linked</div>
                                     {{/if}}
@@ -579,6 +588,39 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div class="row">
+                        <div class="row-label">Account Image</div>
+                        <div class="row-text">
+                            Upload your profile photo here. If you are linked with Facebook, 
+                            you can set your profile to remain up-to-date with your Facebook 
+                            profile picture.
+                        </div>
+                        <table class="account-image{{#unless user.facebook.id}} no-fb{{/unless}}">
+                            <tr>
+                                <td>
+                                    <div class="profile-image upload" id="upload-profile-image">
+                                        <div id="image-upload-placeholder">
+                                            <div>
+                                                <span><i class="fa fa-camera-retro fa-5x"></i></span>
+                                                <div class="upload-placeholder-text">Click or drag image here</div>
+                                            </div>
+                                        </div>
+                                        <div class="image-upload-overlay" id="upload-profile-overlay"></div>
+                                    </div>
+                                    <button id="profile-image-local-clear" class="btn btn-default">Clear</button>
+                                    <button id="profile-image-local-submit" class="btn btn-primary">Upload</button>
+                                </td>
+                                <td>
+                                    {{#if user.facebook.id}}
+                                     <div class="profile-image upload">
+                                        <img src="{{user.facebook.image}}" />
+                                    </div>
+                                    <button id="profile-image-fb-submit" class="btn btn-primary">Use Facebook Photo</button>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                     <div class="row">
                         <div class="row-label">Actions</div>
