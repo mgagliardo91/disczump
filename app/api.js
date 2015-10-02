@@ -102,7 +102,15 @@ module.exports = function(app, passport, gridFs) {
                     
                 return res.json(threadState);
             });
-        });
+        })
+        .delete(hasAccess, function(req, res) {
+            MessageController.deactivateThread(req.user._id, req.params.threadId, function(err, threadState) {
+               if (err)
+                    return res.json(err);
+                
+                return res.json(threadState);
+            });
+        })
         
     app.route('/threads/:threadId/messages')
         .get(hasAccess, function(req, res) {

@@ -24,6 +24,10 @@ function isDef(obj) {
 	return typeof obj !== 'undefined';
 }
 
+function getUserImage(user) {
+	return isDef(user.image) ? user.image : '/static/logo/logo_high_nobg.svg';
+}
+
 /*
 * Checks to see if an element has an attribute
 */
@@ -42,6 +46,13 @@ var delay = (function(){
     timer = setTimeout(callback, ms);
   };
 })();
+
+/*
+* Handles a standard server error
+*/
+function handleError(serverObj) {
+	generateError(serverObj.error.type, serverObj.error.message);
+}
 
 /*
 * Generates a information message
@@ -71,12 +82,20 @@ function generateSuccess(message, title) {
 * Generates a standard message based on arguments
 */
 function generateMessage(type, message, title) {
-	
-	return '<div class="alert alert-' + type + ' alert-dismissible fade in" role="alert">' +
+    
+    return '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' +
         		'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-        		'<h4><strong>' + (title ? title + '!' : '') + '</strong></h4>' +
-        		'<p>' + message + '</p>' +
+        		'<div class="alert-body">' +
+        			'<h4><strong>' + (title ? title + '!' : '') + '</strong></h4>' +
+	        		'<p>' + message + '</p>' +
+        		'</div>' +
     		'</div>';
+	
+	// return '<div class="alert alert-' + type + ' alert-dismissible fade in" role="alert">' +
+ //       		'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+ //       		'<h4><strong>' + (title ? title + '!' : '') + '</strong></h4>' +
+ //       		'<p>' + message + '</p>' +
+ //   		'</div>';
 }
 
 /*

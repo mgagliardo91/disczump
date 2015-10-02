@@ -13,10 +13,10 @@ var threadLocalSchema = mongoose.Schema({
     isPrivate       : {type: Boolean, default: false},
     threadId        : {type: String},
     messageCount    : {type: Number, default: 0},
-    threadPhoto     : {type: String},
     threadTag       : {type: String},
     message         : {type: String},
-    createDate      : {type: Date, default: Date.now}
+    createDate      : {type: Date, default: Date.now},
+    active          : {type: Boolean, default: true}
     
 });
 

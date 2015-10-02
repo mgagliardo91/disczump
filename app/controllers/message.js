@@ -11,6 +11,7 @@ var socketManager = require('../objects/socketCache.js');
 module.exports = {
     getThreadState: getThreadState,
     putThreadState: putThreadState,
+    deactivateThread: deactivateThread,
     getMessages: getMessages,
     sendMessage: sendMessage,
     getPrivateThreads: getPrivateThreads,
@@ -21,7 +22,7 @@ function getLocalThreadObj(localThread, callback) {
     
     var localThreadObj = localThread.toObject();
     
-    Thread.findOne({_id: localThreadObj.threadId}, function(err, thread) {
+    Thread.findOne({_id: localThread.threadId}, function(err, thread) {
         if (err)
             return callback(Error.createError(err, Error.internalError));
         
@@ -59,13 +60,11 @@ function getThreadState(userId, threadId, callback) {
 function putThreadState(userId, threadId, threadState, callback) {
     var messageCount;
     
-    if (typeof(threadState.messageCount) === 'undefined') {
-        return callback(Error.createError('The object is missing messageCount.', Error.invalidDataError));
-    }
-    
-    messageCount = parseInt(threadState.messageCount);
-    if (_.isNaN(messageCount)) {
-        return callback(Error.createError('The messageCount parameter must be an integer.', Error.invalidDataError));
+    if (typeof(threadState.messageCount) !== 'undefined') {
+        messageCount = parseInt(threadState.messageCount);
+        if (!_.isNaN(messageCount)) {
+            messageCount = undefined;
+        }
     }
     
     getLocalThread(userId, threadId, function(err, localThread) {
@@ -74,7 +73,7 @@ function putThreadState(userId, threadId, threadState, callback) {
         getLocalThreadObj(localThread, function(err, localThreadObj) {
             if (err) return callback(err);
         
-            if (messageCount < localThreadObj.messageCount || messageCount > localThreadObj.currentMessageCount) {
+            if (typeof(messageCount) === 'undefined' || messageCount < localThreadObj.messageCount || messageCount > localThreadObj.currentMessageCount) {
                 return callback(null, localThreadObj);
             } else {
                 localThread.messageCount = messageCount;
@@ -86,6 +85,19 @@ function putThreadState(userId, threadId, threadState, callback) {
                     return callback(null, localThreadObj);
                 });
             }
+        });
+    });
+}
+
+function deactivateThread(userId, threadId, callback) {
+    getLocalThread(userId, threadId, function(err, localThread) {
+        if (err) return callback(err);
+            
+        localThread.active = false;
+        localThread.save(function() {
+            if (err) return callback(err);
+            
+            callback(null, {"_id" : localThread._id});
         });
     });
 }
@@ -129,6 +141,7 @@ function sendMessage(userId, threadId, messageObj, callback) {
      getLocalThread(userId, threadId, function(err, localThread) {
          
         if (err) return callback(err);
+        
         var message = new Message();
         message.userId = userId;
         message.threadId = localThread.threadId;
@@ -166,7 +179,7 @@ function notifyUsers(message, userId) {
 
 function getPrivateThreads(userId, callback) {
     var retThreads = [];
-    ThreadLocal.find({userId: userId}, function(err, localThreads) {
+    ThreadLocal.find({userId: userId, active: true}, function(err, localThreads) {
         if (err) return Error.createError(err, Error.internalError);
         
         async.each(localThreads, function(localThread, cb) {
@@ -192,18 +205,44 @@ function createPrivateThread(userId, receivingUserId, callback) {
         if (err)
             return callback(Error.createError(err, Error.internalError));
         
-        if (thread)
-            return callback(Error.createError('A private thread already exists.', Error.invalidDataError));
-        
-        generatePrivateThread(userId, receivingUserId, function(err, localThread) {
-            if (err) return callback(err);
-            
-            getLocalThreadObj(localThread, function(err, localThreadObj) {
+        if (!thread) {
+            generatePrivateThread(userId, receivingUserId, function(err, localThread) {
                 if (err) return callback(err);
                 
-                return callback(null, localThreadObj);
+                getLocalThreadObj(localThread, function(err, localThreadObj) {
+                    if (err) return callback(err);
+                    
+                    return callback(null, localThreadObj);
+                });
             });
-        });
+        } else {
+            getLocalThread(userId, thread._id, function(err, localThread) {
+                if (err)
+                    return callback(err);
+                
+                async.series([
+                    function(cb) {
+                        if (!localThread.active) {
+                            localThread.active = true;
+                            localThread.save(function(err) {
+                                if (err) return cb(err);
+                                
+                                return cb();
+                            });
+                        } else cb();
+                    }
+                ], function(err, results) {
+                    if (err) return callback(err);
+                    
+                    getLocalThreadObj(localThread, function(err, localThreadObj) {
+                        if (err)
+                            return callback(err);
+                            
+                        return callback(null, localThreadObj);
+                    });
+                });
+            });
+        }
     });
 }
 
@@ -255,7 +294,6 @@ function createThreadLocal(userId, refUserId, thread, callback) {
         t.isPrivate = thread.isPrivate;
         t.threadId = thread._id;
         t.userId = userId;
-        t.threadPhoto = user.local.image;
         t.threadTag = user.local.username;
         t.save(function(err) {
             if (err) return callback(Error.createError(err, Error.internalError));

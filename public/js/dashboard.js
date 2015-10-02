@@ -726,6 +726,16 @@ var $profileDropzone;
 var $placeholderText;
 var $placeholder;
 
+function resetUserImage() {
+	if (userAccount.image) {
+		$('#account-image').find('img').attr('src', userAccount.image);
+		$('#nav-account').find('img').attr('src', userAccount.image);
+	} else {
+		$('#account-image').find('img').attr('src', '').hide();
+		$('#nav-account').find('img').attr('src', '').hide();
+	}
+}
+
 function initSettings() {
 	if (!isDef(accountDropzone)) {
 		
@@ -739,33 +749,26 @@ function initSettings() {
 		});
 		
 		$('#profile-image-fb-submit').click(function() {
-			deleteAccountImage(function(success, user) {
-				
+			generateConfirmationModal('Confirm Changes', 'This will remove your current account image, if one exists. Continue?', 'Confirm', function() {
+				deleteAccountImage(function(success, retData) {
+					if (success) {
+						userAccount = retData;
+						resetUserImage();
+						generateSuccess('Account image successfully updated', 'Update Successful');
+					} else {
+						handleError(retData);
+					}
+				});
 			});
 		});
 		
 		$('#profile-image-local-submit').click(function() {
-			
-		if (accountDropzone && accountDropzone.getAcceptedFiles().length > 0) {
-				accountDropzone.on('queuecomplete', function() {
-					// $modifyForm.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success'));
-					// autoCloseAlert($modifyForm.find('.alert'), 2000);
-					// getDiscById(retData._id, function(err, disc) {
-					// 	isProcessing = false;
-					// 	onUpdatedDisc(disc);
-					// });
-					// dropzone.off('queuecomplete');
-				})
+			if (accountDropzone && accountDropzone.getAcceptedFiles().length > 0) {
 				accountDropzone.processQueue();
-			} else {
-				// $modifyForm.prepend(generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success'));
-				// autoCloseAlert($modifyForm.find('.alert'), 2000);
-				// isProcessing = false;
-				// onUpdatedDisc(retData);
 			}
 		});
 		
-		var template = '<div><img data-dz-thumbnail /></div>'
+		var template = '<div style="position: relative"><img data-dz-thumbnail /><div class="image-progress" data-dz-uploadprogress=""></div></div>'
 		
 		accountDropzone = new Dropzone('#upload-profile-image', {
 			url: '/api/account/image',
@@ -823,6 +826,15 @@ function initSettings() {
 	        		};
 			        
 			        reader.readAsDataURL(file);
+				}).on("success", function(file, response) {
+					if (!isDef(response.error)) {
+						userAccount = response;
+						resetUserImage();
+						$('#profile-image-local-clear').trigger('click');
+						generateSuccess('Account image successfully updated', 'Update Successful');
+					} else {
+						handleError(response);
+					}
 				});
 			}
 		});
@@ -1446,7 +1458,7 @@ function exportList() {
 /*
 * Alerts the user that a disc will be deleted
 */
-function generateConfirmationModal(title, bodyText, btnText, deleteFn) {
+function generateConfirmationModal(title, bodyText, btnText, confirmFn) {
 	var header = '<h4 class="modal-title">' + title + '</h4>';
           
 	var body =  '<p>' + bodyText + '</p>';
@@ -1463,7 +1475,10 @@ function generateConfirmationModal(title, bodyText, btnText, deleteFn) {
 				},
 				{
 					name: 'confirm',
-					function: deleteFn
+					function: function($btn, $inner, done) {
+						done();
+						confirmFn();
+					}
 				}
 		];
 		
@@ -1498,6 +1513,8 @@ var repositionPhotoCrop = function() {
 * Modal to handle image cropping
 */
 var showPhotoCrop = function(name, blob, callback) {
+	$('body').css('overflow', 'hidden');
+	
 	$photoCrop = $('<div class="backdrop photo-crop"></div>');
 	$photoCrop.append('<div class="crop-container">' + 
 						'<div class="crop-area">' + 
@@ -1513,7 +1530,6 @@ var showPhotoCrop = function(name, blob, callback) {
 	
 	$cropImage = $photoCrop.find('.crop-area > img');
 					
-	$('body').css('overflow', 'hidden');
 	$('body').append($photoCrop);
 	$(window).on('resize', repositionPhotoCrop);
 	
@@ -1542,7 +1558,7 @@ var showPhotoCrop = function(name, blob, callback) {
 		$('body').css('overflow', 'auto');
 		$(window).off('resize', repositionPhotoCrop);
 	});
-	
+    
 	repositionPhotoCrop();
 	
 	$cropImage.cropper({
@@ -1552,6 +1568,8 @@ var showPhotoCrop = function(name, blob, callback) {
 	  cropBoxMovable: false,
 	  cropBoxResizable: false
     });
+    
+	console.log($(document).scrollTop());
 }
 
 /*
@@ -2837,14 +2855,13 @@ var ZumpDashboard = function(opt) {
 	   	$(document).on('click', '.fa-delete-disc-item', function() {
 			var discId = $(this).parents('.disc-item').attr('discid');
 			var text = 'Are you sure you want to delete this disc and all of its data?';
-			generateConfirmationModal('WARNING!', text, 'Delete', function($btn, $inner, done) {
+			generateConfirmationModal('WARNING!', text, 'Delete', function() {
 				deleteDisc(discId, function(success, data) {
 					if (success) {
 						onDeleteDisc(data);
 					} else {
 						console.log(generateError(data.message, 'ERROR'));
 					}
-					done();
 				});
 			});
 		});
@@ -3889,13 +3906,7 @@ var ZumpSocial = function(opt) {
     		$profilePDGA.text('#' + pdga);
     	}
     	
-    	$profilePictureContainer.empty();
-    	
-    	if (image.length) {
-    		$profilePictureContainer.append('<img src="' + image + '">');
-    	} else {
-    		$profilePictureContainer.append('<span><i class="fa fa-user"></i></span>');
-    	}
+    	$profilePictureContainer.find('img').attr('src', getUserImage(user));
     	
     	$profileUsername.text(user.username);
     	$profileLocation.attr('value', user.zipCode);
@@ -3937,7 +3948,7 @@ var ZumpSocial = function(opt) {
     	$profileUsername.text('');
     	$profileName.text('');
     	$profilePDGA.text('');
-    	$profilePictureContainer.empty();
+    	$profilePictureContainer.find('img').attr('src','');
     	$profileLocation.text('');
     	$profileJoinDate.text('');
     	$profileDiscCount.text('');
@@ -3957,8 +3968,7 @@ var ZumpSocial = function(opt) {
     	
     	var $profileItem = $('<li class="profile-item hover-active no-select" userId="' + user._id + '"></li>');
     	
-    	$profileItem.append((typeof(user.image) !== 'undefined' ? '<div class="profile-item-image" style="background-image:url(' + user.image + ');"></div>' : 
-    						'<div class="profile-item-image"><span><i class="fa fa-user"></i></span></div>') +
+    	$profileItem.append('<div class="profile-item-image" style="background-image:url(' + getUserImage(user) + ');"></div>' +
                             '<div class="profile-item-details">' +
                                 '<div class="profile-item-details-inner">' +
                                     '<div class="profile-item-label">' + fullName + '</div>' +
@@ -4041,6 +4051,7 @@ var ZumpMessenger = function(opt) {
 	var pullCount = 20;
 	var sendOnEnter = true;
 	var enterLock = true;
+	var forceUpdate = false;
 	
     //----------------------\
     // JQuery Objects
@@ -4245,11 +4256,9 @@ var ZumpMessenger = function(opt) {
     var populateThreadContainer = function($threadContainer, thread) {
     	var isNew = thread.currentMessageCount > thread.messageCount;
     	
-    	var hasPhoto = typeof(thread.threadPhoto) !== 'undefined';
     	var date = new Date(thread.modifiedDate);
     	
-    	$threadContainer.append('<div class="thread-image"' + (hasPhoto ? ' style="background-image:url(' + "'" + thread.threadPhoto + "'" + ');"' : '') + '>' +
-    							(!hasPhoto ? '<span><i class="fa fa-user"></i></span>' : '') +
+    	$threadContainer.append('<div class="thread-image" style="background-image:url(/static/logo/logo_small_nobg.svg);">' +
                             '</div>' +
                             '<div class="thread-icon">' +
                                 '<span><i class="fa fa-square-o"></i></span>' +
@@ -4263,6 +4272,27 @@ var ZumpMessenger = function(opt) {
                                 '</div>' +
                             '</div>' +
                             '<div class="clearfix"></div>');
+                            
+       	var recUser = _.without(thread.users, userAccount._id)[0];
+       	
+        var userPhoto = userPhotoCache[recUser];
+        if (typeof(userPhoto) !== 'undefined') {
+        	if (userPhoto != '') $threadContainer.find('.thread-image').css('background-image', 'url("' + userPhoto + '")');
+        } else {
+        	userPhotoCache[recUser] = '';
+        	getUser(recUser, function(success, user) {
+        		if (success) {
+        			if (!isDef(user.image)) return;
+        			
+        			userPhotoCache[user._id] = getUserImage(user);
+        			$threadContainer.find('.thread-image').css('background-image', 'url("' + userPhotoCache[user._id] + '")');
+        		}
+        	});
+        }                    
+        
+        
+        
+        
     	setThreadState($threadContainer, isNew);
     }
     
@@ -4303,7 +4333,13 @@ var ZumpMessenger = function(opt) {
     }
     
     var showThread = function(threadId) {
-    	if (typeof(activeThread) !== 'undefined' && activeThread.threadId == threadId) return false;
+    	
+		if (userCache[userAccount._id] != getUserImage(userAccount)) {
+			userCache[userAccount._id] = getUserImage(userAccount);
+			forceUpdate = true;
+		}
+		
+    	if (!forceUpdate && typeof(activeThread) !== 'undefined' && activeThread.threadId == threadId) return false;
     	
     	var threadCacheObj = getThread(threadId);
 		if (!threadCacheObj) return;
@@ -4321,6 +4357,8 @@ var ZumpMessenger = function(opt) {
 		activateThread();
 		setThreadState($threadContainer, false);
 		setThread(threadCacheObj);
+		
+		forceUpdate = false;
     }
     
     var setThreadState = function($threadContainer, isNew) {
@@ -4406,12 +4444,13 @@ var ZumpMessenger = function(opt) {
                                 '<div class="message-user" style="background-image:url(/static/logo/logo_small_nobg.svg)"></div>' +
                                 '<div class="message-content">' +
                                     '<div class="message-date">' + date.toLocaleString() + '</div>' +
-                                    '<div class="message-bubble">' +
-                                        body.replace(/\n/g, '<br>') + 
+                                    '<div class="message-bubble message-body">' +
                                     '</div>' +
                                 '</div>' +
                             '</div>' +
                             '<div class="clearfix"></div>');
+        
+        $message.find('.message-body').text(body.replace(/\n/g, '<br>'));
         
         var userPhoto = userPhotoCache[message.userId];
         if (typeof(userPhoto) !== 'undefined') {
@@ -4422,7 +4461,7 @@ var ZumpMessenger = function(opt) {
         		if (success) {
         			if (!isDef(user.image)) return;
         			
-        			userPhotoCache[user._id] = user.image;
+        			userPhotoCache[user._id] = getUserImage(user);
         			
         			var messageList = getThread(activeThread.threadId).messages;
         			var msgByUser = _.where(messageList, {userId: user._id});

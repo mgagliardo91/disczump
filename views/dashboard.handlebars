@@ -14,7 +14,9 @@
     {{#if info.text}}
     <div class="alert alert-info page-alert" role="alert">
     	<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-    	{{#if info.title}}<strong>{{info.title}}:</strong> {{/if}}{{info.text}}
+    	<div class="alert-body">
+    	    {{#if info.title}}<strong>{{info.title}}:</strong> {{/if}}{{info.text}}
+        </div>
     </div>
     {{/if}}
     <div id="loading-screen">
@@ -79,7 +81,7 @@
                     <div id="profile-view">
                         <div class="row">
                             <div class="profile-view-left">
-                                <div id="profile-view-image-container"></div>
+                                <div id="profile-view-image-container"><img /></div>
                             </div>
                             <div class="profile-view-right">
                                 <div class="row profile-data-container">
@@ -511,11 +513,11 @@
                         <hr>
                     </div>
                     <div class="row">
-                        <div class="profile-image float">
+                        <div class="profile-image float" id="account-image">
                             {{#if image}}
                             <img src="{{image}}" />
                             {{else}}
-                            <span class="user-default-image"><i class="fa fa-user"></i></span>
+                            <img src="/static/logo/logo_high_nobg.svg" />
                             {{/if}}
                         </div>
                         <div class="profile-status">

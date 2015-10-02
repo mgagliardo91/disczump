@@ -425,9 +425,9 @@ function deleteUserImage(userId, gfs, callback) {
 					callback(null, user.accountToString());
 	   			});
 	   		});
+	   	} else {
+	   		callback(null, user.accountToString());
 	   	}
-	   	
-	   	callback(null, user.accountToString());
 	});
 }
 
