@@ -1,7 +1,7 @@
 <body>
-    <p>Hello, <strong>{{#if user.local.alias}}{{user.local.alias}}{{else}}{{user.local.email}}{{/if}}</strong>!</p>
+    <p>Hello, <strong>{{user.local.username}}</strong>!</p>
     <br />
-    <p>Welcome to DiscZump{{#if user.local.passcode}} Beta{{/if}}! Please go to 
+    <p>Welcome to disc|zump{{#if user.local.passcode}} Beta{{/if}}! Please go to 
     <a href="{{serverURL}}/confirm/{{confirm._id}}">Confirm Account</a>
     to start using your new account.</p>
     <br />
@@ -14,5 +14,5 @@
     advantage of the complete set of features from a desktop computer.</p>
     <br />
     <p>Happy Zumping!</p>
-    <strong>DiscZump Staff</strong>
+    <strong>disc|zump Staff</strong>
 </body>

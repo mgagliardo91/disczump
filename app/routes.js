@@ -88,7 +88,8 @@ module.exports = function(app, passport, gridFs) {
                 isLinked : typeof(req.user.facebook.id) !== 'undefined',
                 info: {
                     title: req.flash('infoTitle'),
-                    text: req.flash('infoText')
+                    text: req.flash('infoText'),
+                    error: req.flash('infoError')
                 }
             });
         }
@@ -187,7 +188,11 @@ module.exports = function(app, passport, gridFs) {
                             return res.redirect('/login');
                         }
                         
-                        return res.redirect('/account/link');
+                        if (!req.user.facebook.id) {
+                            return res.redirect('/account/link');
+                        }
+                        
+                        return res.redirect('/dashboard');
                     });
                 }
             });
@@ -198,7 +203,7 @@ module.exports = function(app, passport, gridFs) {
                 if (err)
                     return res.send(err);
                 
-                Mailer.sendMail(user.local.email, 'DiscZump Account Confirmation', message, function(err, result) {
+                Mailer.sendMail(user.local.email, 'disc|zump Account Confirmation', message, function(err, result) {
                   if (err)
                         return res.send(err);
                         
@@ -247,7 +252,7 @@ module.exports = function(app, passport, gridFs) {
                   return res.redirect('/recover');
                 }
                 
-                Mailer.sendMail(req.body.email, 'DiscZump Password Recovery', message, function(err, result) {
+                Mailer.sendMail(req.body.email, 'disc|zump Password Recovery', message, function(err, result) {
                     if (err) {
                       req.flash('error', err.error.message);
                       return res.redirect('/recover');
@@ -357,6 +362,7 @@ module.exports = function(app, passport, gridFs) {
         
         // render the page and pass in any flash data if it exists
         res.render('login', {
+            redirect: req.flash('redirect'),
             route: {
                 url: 'signup',
                 text: 'Sign Up'
@@ -376,33 +382,9 @@ module.exports = function(app, passport, gridFs) {
     
     // process the login form
     app.post('/login', function(req, res, next) {
+        req.session.redirect = req.body.redirect;
         passport.authenticate('local-login', function(err, user, info) {
-            if (err)
-                return next(err);
-                
-            if (!user) {
-                req.flash('error', 'Invalid username or password. Please try again.');
-                
-                return res.redirect('/login');
-            } else {
-                if (!user.local.active) {
-                    req.flash('info', 'Account not activated.');
-                    req.flash('link.url', '/confirm/user/' + user._id);
-                    req.flash('link.text', 'Resend Activation');
-                    return res.redirect('/login');
-                } else {
-                    req.logIn(user, function(err) {
-                      if (err) {
-                          req.flas('error', err);
-                          return res.redirect('/login');
-                      }
-                      
-                      UserController.updateAccessCount(req.user._id, (req.device.isMobile ? 'mobile' : 'desktop'));
-                      
-                      return res.redirect('/dashboard');
-                    });
-                }
-            }
+            doLogIn(req, res, next, err, user, info);
         })(req, res, next);
     });
     
@@ -480,12 +462,6 @@ module.exports = function(app, passport, gridFs) {
     app.get('/account/link/facebook', isLoggedIn, passport.authorize('facebook', 
         { scope : ['email', 'user_photos'] }));
     
-    app.get('/account/link/facebook/callback', isLoggedIn,
-            passport.authorize('facebook', {
-                successRedirect : '/dashboard',
-                failureRedirect : '/account/link'
-            }));
-    
     app.get('/account/unlink/facebook', isLoggedIn, function(req, res) {
         var user = req.user;
         user.facebook.token = undefined;
@@ -499,13 +475,16 @@ module.exports = function(app, passport, gridFs) {
         });
     });
     
-    app.get('/auth/facebook', passport.authenticate('facebook', { scope : ['email', 'user_photos'] }));
+    app.post('/auth/facebook', function(req, res, next) {
+        req.session.redirect = req.body.redirect;
+        passport.authenticate('facebook', { scope : ['email', 'user_photos'] })(req, res, next);
+    });
 
-    app.get('/auth/facebook/callback',
-        passport.authenticate('facebook', {
-            successRedirect : '/dashboard',
-            failureRedirect : '/login'
-        }));
+    app.get('/auth/facebook/callback', function(req, res, next) {
+        passport.authenticate('facebook', function(err, user, info) {
+            doLogIn(req, res, next, err, user, info);
+        })(req, res, next);
+    });
 
     app.get('/logout', function(req, res) {
         req.logout();
@@ -513,10 +492,48 @@ module.exports = function(app, passport, gridFs) {
     });
 };
 
+function doLogIn(req, res, next, err, user, info) {
+    if (err)
+        return next(err);
+        
+    if (!user) {
+        req.flash('error', 'Invalid username or password. Please try again.');
+        
+        return res.redirect('/login');
+    } else {
+        if (!user.local.active) {
+            req.flash('info', 'Account not activated.');
+            req.flash('link.url', '/confirm/user/' + user._id);
+            req.flash('link.text', 'Resend Activation');
+            return res.redirect('/login');
+        } else {
+            var redirect = req.session.redirect;
+            req.session.redirect = undefined;
+            
+            req.logIn(user, function(err) {
+              if (err) {
+                  req.flash('error', err);
+                  req.flash('redirect', redirect);
+                  return res.redirect('/login');
+              }
+              
+              UserController.updateAccessCount(req.user._id, (req.device.isMobile ? 'mobile' : 'desktop'));
+              
+              if (redirect) {
+                  return res.redirect(redirect);
+              }
+              
+              return res.redirect('/dashboard');
+            });
+        }
+    }
+}
+
 function isLoggedIn(req, res, next) {
 
     if (req.isAuthenticated())
         return next();
-        
-    res.redirect('/');
+    
+    req.flash('redirect', req.url);
+    res.redirect('/login');
 }

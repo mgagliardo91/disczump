@@ -42,9 +42,7 @@ module.exports = function(passport) {
 
     },
     function(req, token, refreshToken, profile, done) {
-        
         process.nextTick(function() {
-            
             if (!req.user) {
                 
                  User.findOne({'facebook.id' : profile.id }, function(err, user) {
@@ -91,7 +89,10 @@ module.exports = function(passport) {
             } else {
                 User.findOne({'facebook.id' : profile.id }, function(err, user) {
                     if (!err && user && user._id != req.user._id) {
-                        return done(null, null, req.flash('infoTitle', 'Link Failed'));
+                        req.flash('infoTitle', 'Link Failed')
+                        req.flash('infoText', 'The Facebook account is already linked by another user.')
+                        req.flash('infoError', true);
+                        return done(null, null);
                     }
                     
                     var user = req.user;

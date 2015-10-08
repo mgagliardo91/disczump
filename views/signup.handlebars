@@ -9,7 +9,7 @@
     <div class="signup-form-container">
         <div class="signup-form-cell">
             <div class="signup-form-center">
-                <form action="/signup" method="post" autocomplete="off" id="signup-form">
+                <form action="/signup" method="post" id="signup-form" autocomplete="off">
                     <img src="/static/logo/logo_small.svg" class="main-logo" />
                     {{#if message.error}}
                     <div class="alert alert-danger" role="alert">
@@ -32,7 +32,7 @@
                             </div>
                             <div class="input-group" id="emailGroup">
                                 <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
-                                <input class="form-control" id="email" type="email" name="email" placeholder="Email" value="{{username}}">
+                                <input class="form-control" id="email" type="text" name="email" placeholder="Email" value="{{username}}" autocomplete="off">
                             </div>
                         </div>
                         {{#if isMobile}}
@@ -44,7 +44,7 @@
                             </div>
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                                <input class="form-control" id="password" type="password" name="password" placeholder="Password">
+                                <input class="form-control" id="password" type="password" name="password" placeholder="Password" autocomplete="off">
                             </div>
                         </div>
                         <div class="input-field">
@@ -55,7 +55,7 @@
                             </div>
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                                <input class="form-control" id="verify-password" type="password" placeholder="Verify Password">
+                                <input class="form-control" id="verify-password" type="password" placeholder="Verify Password" autocomplete="off">
                             </div>
                         </div>
                         {{else}}
@@ -68,7 +68,7 @@
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                                    <input class="form-control" id="password" type="password" name="password" placeholder="Password">
+                                    <input class="form-control" id="password" type="password" name="password" placeholder="Password" autocomplete="off">
                                 </div>
                             </div>
                             <div class="input-field inline">
@@ -79,7 +79,7 @@
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                                    <input class="form-control" id="verify-password" type="password" placeholder="Verify Password">
+                                    <input class="form-control" id="verify-password" type="password" placeholder="Verify Password" autocomplete="off">
                                 </div>
                             </div>
                             <div class="clearfix"></div>
@@ -94,7 +94,7 @@
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-addon"><i class="fa fa-user-secret fa-fw"></i></span>
-                                    <input class="form-control" id="username" type="text" name="username" placeholder="Username" value="{{username}}">
+                                    <input class="form-control" id="username" type="text" name="username" placeholder="Username" value="{{username}}" autocomplete="off">
                                 </div>
                             </div>
                             <div id="username-feedback" class="text-left inline">
@@ -110,7 +110,7 @@
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-addon"><i class="fa fa-location-arrow fa-fw"></i></span>
-                                    <input class="form-control" id="zipCode" type="text" name="zipCode" placeholder="Zip Code" value="{{zipCode}}">
+                                    <input class="form-control" id="zipCode" type="text" name="zipCode" placeholder="Zip Code" value="{{zipCode}}" autocomplete="off">
                                 </div>
                             </div>
                             <div id="citystate" class="text-left inline">
@@ -120,32 +120,32 @@
                         {{#if isMobile}}
                         <div class="input-group inline">
                             <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
-                            <input class="form-control" id="firstName" type="text" name="firstName" placeholder="First Name" value="{{firstName}}">
+                            <input class="form-control" id="firstName" type="text" name="firstName" placeholder="First Name" value="{{firstName}}" autocomplete="off">
                         </div>
                         <div class="input-group inline">
                             <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
-                            <input class="form-control" id="lastName" type="text" name="lastName" placeholder="Last Name" value="{{lastName}}">
+                            <input class="form-control" id="lastName" type="text" name="lastName" placeholder="Last Name" value="{{lastName}}" autocomplete="off">
                         </div>
                         <div class="input-group inline">
                             <span class="input-group-addon"><i class="fa fa-trophy fa-fw"></i></span>
-                            <input class="form-control" id="pdgaNumber" type="text" name="pdgaNumber" placeholder="PDGA Number" value="{{pdgaNumber}}">
+                            <input class="form-control" id="pdgaNumber" type="text" name="pdgaNumber" placeholder="PDGA Number" value="{{pdgaNumber}}" autocomplete="off">
                         </div>
                         {{else}}
                         <div class="input-group-inline">
                             <div class="input-group inline">
                                 <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
-                                <input class="form-control" id="firstName" type="text" name="firstName" placeholder="First Name">
+                                <input class="form-control" id="firstName" type="text" name="firstName" placeholder="First Name" autocomplete="off">
                             </div>
                             <div class="input-group inline">
                                 <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
-                                <input class="form-control" id="lastName" type="text" name="lastName" placeholder="Last Name">
+                                <input class="form-control" id="lastName" type="text" name="lastName" placeholder="Last Name" autocomplete="off">
                             </div>
                             <div class="clearfix"></div>
                         </div>
                         <div class="input-group-inline">
                             <div class="input-group inline">
                                 <span class="input-group-addon"><i class="fa fa-trophy fa-fw"></i></span>
-                                <input class="form-control" id="pdgaNumber" type="text" name="pdgaNumber" placeholder="PDGA Number" value="{{pdgaNumber}}">
+                                <input class="form-control" id="pdgaNumber" type="text" name="pdgaNumber" placeholder="PDGA Number" value="{{pdgaNumber}}" autocomplete="off">
                             </div>
                             <div class="clearfix"></div>
                         </div>

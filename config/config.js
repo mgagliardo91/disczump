@@ -21,6 +21,9 @@ module.exports = {
         'beta': false,
         'passcode': '2015BETADZ',
     },
+    'message': {
+       'alertThresholdMin': 20 
+    },
     'user': {
         'preferences': {
             'colorize': {
@@ -37,7 +40,10 @@ module.exports = {
     	    	{property: 'name',sortAsc: true}
         	],
         	'defaultView': 'inventory',
-        	'galleryCount': '6'
+        	'galleryCount': '6',
+        	'notifications': {
+        	    'newMessage': true
+        	}
         }
     }
 };

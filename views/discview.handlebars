@@ -22,7 +22,6 @@
     <div class="page public-disc-view" id="{{disc._id}}">
         <div class="row">
             <div class="page-btn-container">
-                <span id="view-profile" class="page-title-btn" userId="{{user._id}}"><i class="fa fa-user" title="View Profile"></i></span>
                 <span id="share-disc" class="page-title-btn"><i class="fa fa-facebook-square" title="Share Disc"></i></span>
                 <span id="copy-link" class="page-title-btn"><i class="fa fa-link" title="Copy Public URL"></i></span>
                 <div class="clearfix"></div>
@@ -108,7 +107,7 @@
                             </div>
                             <div class="view-disc-info-row">
                                 <div class="info-label">Owner:</div>
-                                <div class="info-data dz-link" id="disc-owner" userId="{{user._id}}">{{user.local.username}}</div>
+                                <div class="info-data dz-link" id="disc-owner"><a href="/dashboard#view=profile&user_id={{user._id}}">{{user.username}}</a></div>
                             </div>
                         </div>
                     </div>
@@ -130,7 +129,7 @@
             <div class="clearfix"></div>
         </div>
         <div class="row" id="public-disc-table">
-            <div class="row-label">Public Discs<span class="pull-right dz-link" id="show-dashboard">View All</span></div>
+            <div class="row-label">Public Discs<span class="pull-right dz-link" id="show-dashboard"><a href="/dashboard#view=dashboard&user_id={{user._id}}">View All</a></span></div>
             <div class="public-disc-row-container">
                 <div class="public-disc-row">
                 </div>

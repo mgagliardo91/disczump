@@ -6,6 +6,7 @@ var config = require('../../config/config.js');
 var dev = require('../../config/dev.js');
 var gm = require('gm').subClass({ imageMagick: true });
 var _ = require('underscore');
+var fileUtils = require('../utils/file.js');
 
 
 module.exports = {
@@ -21,7 +22,7 @@ function createDiscData(gridfs, userId) {
             }
             
             async.eachSeries(discObj.images, function(image, callback) {
-                    DiscImageController.saveImage(gm, gridfs, dev.dir + '/' + image.image, {
+                    fileUtils.saveImage(gm, gridfs, dev.dir + '/' + image.image, {
                         mimetype: image.mimetype,
                         filename: image.image,
                         maxSize: config.images.maxSize

@@ -120,12 +120,14 @@ var ZumpValidate = function(opt) {
     var handleEvent = function(e) {
         if (e.keyCode == 9 || e.keyCode == 16) return;
         var $this = $(this);
-        var delayInterval = e.type == 'keyup' ? 500 : 0;
         
-        delay(function() {
+        if (e.type == 'keyup') {
+            delay(function() {
+                validate($this.attr('id'), $this, e.type);
+            }, 500 );
+        } else {
             validate($this.attr('id'), $this, e.type);
-        }, delayInterval );
-        
+        }
     }
     
     var validate = function(id, $input, eventType) {
@@ -204,13 +206,11 @@ var ZumpValidate = function(opt) {
                 isValid = val.length == 0 ? undefined : zipCodeRegex.test(val);
                 
                 if (isValid) {
-                    if (eventType == 'keyup') {
-                        shouldCb = false;
-                        getCityState(val, function(success, cityState) {
-                            $('#' + item.output).text(cityState);
-                            callback($input, success);
-                        });
-                    }
+                    shouldCb = false;
+                    getCityState(val, function(success, cityState) {
+                        $('#' + item.output).text(cityState);
+                        callback($input, success);
+                    });
                 } else {
                     $('#' + item.output).text('');
                 }

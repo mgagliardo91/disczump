@@ -1,0 +1,10 @@
+<body>
+    <p>Hello, <strong>{{user.local.username}}</strong>!</p>
+    <br />
+    <p>You have received a new message from <a href="{{serverURL}}/dashboard#view=profile&user_id={{origUser._id}}">{{origUser.local.username}}</a>!</p>
+    <p style="max-width: 300px; margin: auto; background-color: #EFEFEF; padding: 10px; border-radius: 5px; border: 1px solid #9E9E9E">"{{message.body}}"</p>
+    <p style="text-align: center"><a href="{{serverURL}}/dashboard#view=inbox&thread_id={{message.threadId}}">View Message</a></p>
+    <br />
+    <p>Happy Zumping!</p>
+    <strong>disc|zump Staff</strong>
+</body>

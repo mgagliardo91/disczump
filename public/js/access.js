@@ -1,4 +1,11 @@
 $(document).ready(function(){
+    
+    if (window.location.hash.length) {
+        var hash = window.location.hash;
+        var $redirect = $('input[name="redirect"]');
+        $redirect.val($redirect.val() + hash);
+        window.location.hash = '';
+    }
        
     var signUpValidate = new ZumpValidate({
         items: [
@@ -20,6 +27,10 @@ $(document).ready(function(){
         } 
     });
     
+    $('#auth-facebook').click(function() {
+       $('#facebook-login').submit(); 
+    });
+    
     var loginValidate = new ZumpValidate({
         items: [
             {id:'login-username', type:'email'},
@@ -34,3 +45,8 @@ $(document).ready(function(){
     });
     
 });
+
+
+function convertHash(hash) {
+    return "~" + hash.substring(1);
+}

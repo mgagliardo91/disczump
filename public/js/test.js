@@ -1,5 +1,12 @@
 
 $(document).ready(function(){
+    var linker = new ZumpLink({
+        selector: '.clicker',
+        path: function(item) {
+            return 'disc/test';
+        }
+    });
+    
     $('#dashboard-view-switch').dzTriSwitch({
         change: function(value) {
             console.log(value);
@@ -67,6 +74,64 @@ $(document).ready(function(){
     
     
 });
+
+var ZumpLink = function(opt) {
+    var grabPath;
+    var linkerWidth = 200;
+    var linkerHeight = 200;
+    
+    var $linker;
+    
+    this.init = function(opt) {
+        $(document).on('click', opt.selector, showLinker);
+        $(document).on('click', '.link-btn', copyLink);
+        grabPath = opt.path;
+    }
+    
+    var copyLink = function(event) {
+        window.open($(this).attr('href'), '_blank');
+    }
+    
+    var createLinker = function(path) {
+        if ($linker && $linker.length) {
+            $linker.siblings('.link-active').removeClass('link-active');
+            $linker.remove();
+        }
+        
+        $linker = $('<div class="link-container remove-on-close"></div>');
+        $linker.append('<button class="link-btn" type="button" href="http://www.disczump.com/' + path + '"><span><i class="fa fa-retweet"></i></span></button>' +
+            '<input class="link-input" type="text" value="http://www.disczump.com/' + path + '"/>');
+        return $linker;
+    }
+    
+    var showLinker = function(event) {
+        var $this = $(this);
+        
+        var left;
+        var top;
+        
+        if ($(window).width() - $this.offset().left - $this.outerWidth() >= linkerWidth) {
+            left = $this.position().left + $this.outerWidth();
+        } else {
+            left =  $this.position().left - linkerWidth;
+        }
+        
+        if ($(document).height() - $this.offset().top - $this.outerHeight() >= linkerHeight) {
+            top = $this.position().top + $this.outerHeight();
+        } else {
+            top = $this.position().top - linkerHeight;
+        }
+        
+        createLinker(grabPath($this)).css({
+            left: left,
+            top: top
+        }).insertAfter($this);
+        $this.addClass('link-active');
+        $linker.find('.link-input').select();
+    }
+    
+    this.init(opt);
+}
 
 // transform cropper dataURI output to a Blob which Dropzone accepts
 function dataURItoBlob(dataURI) {

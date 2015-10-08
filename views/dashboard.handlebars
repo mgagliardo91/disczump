@@ -12,7 +12,7 @@
 </head>
 <body>
     {{#if info.text}}
-    <div class="alert alert-info page-alert" role="alert">
+    <div class="alert {{#if info.error}}alert-danger{{else}}alert-info{{/if}} page-alert" role="alert">
     	<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
     	<div class="alert-body">
     	    {{#if info.title}}<strong>{{info.title}}:</strong> {{/if}}{{info.text}}
@@ -292,6 +292,8 @@
                 <div class="page" id="pg-disc-view">
                     <div class="row">
                         <div class="page-btn-container">
+                            <span id="view-disc-share" class="page-title-btn share-disc-item"><i class="fa fa-facebook-square" title="Share Disc"></i></span>
+                            <span id="view-disc-link" class="page-title-btn disc-copy-link"><i class="fa fa-link fa-copy-link" title="Share Disc"></i></span>
                             <span id="view-disc-edit" class="page-title-btn" discId=""><i class="fa fa-pencil" title="Edit Disc"></i></span>
                             <span class="page-title-btn dz-page-back"><i class="fa fa-times" title="Return"></i></span>
                             <div class="clearfix"></div>
@@ -757,14 +759,12 @@
                             <div class="form-group">
                                 <div class="col-sm-12">
                                     <div class="checkbox pull-left">
-                                        <label>
-                                            <input type="checkbox" id="enable-secondary-sort"> Enable Secondary Sort
-                                            <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="enable-secondary-sort"></i>
-                                        </label>
+                                        <input type="checkbox" id="enable-secondary-sort"> Enable Secondary Sort
+                                        <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="enable-secondary-sort"></i>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group preferences-save">
                                 <div class="col-sm-12">
                                     <button id="default-settings-save" class="btn btn-primary pull-right">Save</button>
                                 </div>
@@ -822,9 +822,35 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group preferences-save">
                                 <div class="col-sm-12">
                                     <button id="colorize-save" class="btn btn-primary pull-right">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="row-label">Notifications</div>
+                        <div class="form-horizontal form-small" id="notifications-form">
+    					<table>
+    						<tr class="table-header-row">
+    							<th></th>
+    							<th>Email</th>
+    						</tr>
+    						<tr>
+                				<td class="notifications-label">New Message Alerts
+                				    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="notify-new-messages"></i>
+                				</td>
+                				<td class="notifications-checkbox">
+                				    <div>
+                                        <input type="checkbox" id="enable-message-alerts-email">
+                                    </div>
+                                </td>
+                			</tr>
+    					</table>
+                            <div class="form-group preferences-save">
+                                <div class="col-sm-12">
+                                    <button id="notifications-save" class="btn btn-primary pull-right">Save</button>
                                 </div>
                             </div>
                         </div>

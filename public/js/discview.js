@@ -25,10 +25,6 @@ $(document).ready(function() {
         	'&display=popup&ref=plugin&src=share_button', 'sharer', 'top=' + winTop + ',left=' + winLeft + ',toolbar=0,status=0,width=' + 600 + ',height=' + 300);
 	});
 	
-	$('#disc-owner').click(showProfile);
-	$('#show-profile').click(showProfile);
-	$('#show-dashboard').click(showDashboard);
-	
 	$(document).on('mouseenter','.disc-gallery-item', function() {
 	    $(this).find('.disc-gallery-overlay').show();
 	}).on('mouseleave', '.disc-gallery-item', function() {
@@ -43,14 +39,6 @@ $(document).ready(function() {
     
     initialize();
 });
-
-function showProfile(e) {
-    var userId = $(this).attr('userId');
-}
-
-function showDashboard(e) {
-    
-}
 
 function resize() {
     $('.public-disc-item').each(function() {

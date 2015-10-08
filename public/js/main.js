@@ -24,6 +24,13 @@ function isDef(obj) {
 	return typeof obj !== 'undefined';
 }
 
+var shareFacebook = function(discId) {
+	var winTop = ($(window).height() / 2) - (300 / 2);
+	var winLeft = ($(window).width() / 2) - (600 / 2);
+    window.open('http://www.facebook.com/sharer/sharer.php?app_id=' + dzID + '&u=disczump.com/disc/' + discId + 
+    	'&display=popup&ref=plugin&src=share_button', 'sharer', 'top=' + winTop + ',left=' + winLeft + ',toolbar=0,status=0,width=' + 600 + ',height=' + 300);
+}
+
 function getUserImage(user) {
 	return isDef(user.image) ? user.image : '/static/logo/logo_high_nobg.svg';
 }
@@ -59,7 +66,9 @@ function handleError(serverObj) {
 */
 function generateInfo(message, title) {
 	
-	return generateMessage('info', message, title);
+	$('.page-alert').remove();
+	$('body').prepend(generateMessage('info', message, title));
+	$('.page-alert').slideDown(300);
 }
 
 /*
@@ -67,7 +76,9 @@ function generateInfo(message, title) {
 */
 function generateError(message, title) {
 	
-	return generateMessage('danger', message, title);
+	$('.page-alert').remove();
+	$('body').prepend(generateMessage('danger', message, title));
+	$('.page-alert').slideDown(300);
 }
 
 /*
@@ -75,7 +86,9 @@ function generateError(message, title) {
 */
 function generateSuccess(message, title) {
 	
-	return generateMessage('success', message, title);
+	$('.page-alert').remove();
+	$('body').prepend(generateMessage('success', message, title));
+	$('.page-alert').slideDown(300);
 }
 
 /*
@@ -83,19 +96,12 @@ function generateSuccess(message, title) {
 */
 function generateMessage(type, message, title) {
     
-    return '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' +
+    return '<div class="alert alert-' + type + ' alert-dismissible page-alert" role="alert">' +
         		'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
         		'<div class="alert-body">' +
-        			'<h4><strong>' + (title ? title + '!' : '') + '</strong></h4>' +
-	        		'<p>' + message + '</p>' +
+        			'<strong>' + (title ? title + '!' : '') + '</strong>' + message +
         		'</div>' +
     		'</div>';
-	
-	// return '<div class="alert alert-' + type + ' alert-dismissible fade in" role="alert">' +
- //       		'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
- //       		'<h4><strong>' + (title ? title + '!' : '') + '</strong></h4>' +
- //       		'<p>' + message + '</p>' +
- //   		'</div>';
 }
 
 /*

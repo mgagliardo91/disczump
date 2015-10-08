@@ -7,6 +7,12 @@ var ThreadLocal = require('../models/threadLocal');
 var _ = require('underscore');
 var async = require('async');
 var socketManager = require('../objects/socketCache.js');
+var Mailer = require('../utils/mailer.js');
+var fs = require('fs');
+var XDate = require('xdate');
+var MessageConfig = require('../../config/config.js').message;
+var LocalConfig = require('../../config/localConfig.js');
+var Handlebars = require('handlebars');
 
 module.exports = {
     getThreadState: getThreadState,
@@ -166,15 +172,56 @@ function sendMessage(userId, threadId, messageObj, callback) {
 }
 
 function notifyUsers(message, userId) {
-    ThreadLocal.find({threadId: message.threadId, userId: {$ne: userId}}, 'userId', function(err, localThreads) {
-        _.each(localThreads, function(localThread) {
-            var socket = socketManager.getSocket(localThread.userId);
+    var origUser;
+    
+    async.series([
+        function(cb) {
+            UserController.getUser(userId, function(err, user) {
+                if (err) {
+                    return cb(err);
+                }
+                
+                origUser = user;
+                cb();
+            });
+        }
+    ],
+    function(err, results) {
+        if (err)
+            return;
             
-            if (typeof(socket) !== 'undefined') {
-                Socket.sendNotification(socket, Socket.TypeMsg, message);
-            }
+        ThreadLocal.find({threadId: message.threadId, userId: {$ne: origUser._id}}, function(err, localThreads) {
+            _.each(localThreads, function(localThread) {
+                var socket = socketManager.getSocket(localThread.userId);
+                
+                if (typeof(socket) !== 'undefined') {
+                    Socket.sendNotification(socket, Socket.TypeMsg, message);
+                } else {
+                    UserController.getUser(localThread.userId, function(err, user) {
+                        if (!err && user && user.preferences.notifications.newMessage) {
+                            if (localThread.lastAlert) {
+                                var lastAlert = new XDate(localThread.lastAlert);
+                                if (lastAlert.diffMinutes(new XDate()) < MessageConfig.alertThresholdMin) {
+                                    return;
+                                }   
+                            }
+                            
+                            localThread['lastAlert'] = Date.now();
+                            localThread.save();
+                            var alert = generateEmailNotification(user, origUser, message);
+                            Mailer.sendMail(user.local.email, 'disc|zump Message Alert', alert);
+                        }
+                    });
+                }
+            });
         });
-    });
+    });  
+}
+
+function generateEmailNotification(user, origUser, message) {
+    var html = fs.readFileSync('./private/html/messageAlert.handlebars', 'utf8');
+    var template = Handlebars.compile(html);
+    return template({user: user, origUser: origUser, message : message, serverURL: LocalConfig.serverURL});
 }
 
 function getPrivateThreads(userId, callback) {

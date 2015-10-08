@@ -15,6 +15,12 @@
             {{/if}}
         </div>
         <div class="page-body">
+            {{#if message.error}}
+            <div class="alert alert-danger" role="alert">
+                <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <strong>Error: </strong>{{message.error}}
+            </div>
+            {{/if}}
             {{#if unlink}}
             <strong>We are sorry to see you go!</strong>
             {{else}}

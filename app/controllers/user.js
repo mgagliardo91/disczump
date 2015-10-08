@@ -211,6 +211,14 @@ function updatePreferences(userId, prefs, callback) {
 		if (!user)
 	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
 		
+		if (_.has(prefs, 'notifications')) {
+			var notifications = prefs.notifications;
+			
+			if (_.has(notifications, 'newMessage') && validatePreference('notifications.newMessage', notifications.newMessage)) {
+				user.preferences.notifications.newMessage = notifications.newMessage;
+			}
+		}
+		
 		if (_.has(prefs, 'colorize') && validatePreference('colorize', prefs.colorize)) {
 		    user.preferences.colorize = prefs.colorize;
 		}
@@ -379,6 +387,10 @@ function validatePreference(preference, value) {
 		});
 		
 		return (typeof failed === 'undefined');
+	}
+	
+	if (preference == 'notifications.newMessage') {
+		return _.contains(enables, value);
 	}
 	
 	if (preference == 'colorizeVisibility') {

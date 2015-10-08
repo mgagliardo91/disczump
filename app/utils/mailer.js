@@ -21,7 +21,7 @@ var smtpTransport = nodemailer.createTransport(
 module.exports = {
     sendMail : function(paramTo, paramSubject, paramHtml, callback) {
         var mailOptions = {
-            from: 'DiscZump Staff <' + config.user + '>',
+            from: 'disc|zump Staff <' + config.user + '>',
             to: paramTo,
             subject: paramSubject,
             generateTextFromHTML: true,
@@ -29,10 +29,12 @@ module.exports = {
         }
         
         smtpTransport.sendMail(mailOptions, function(error, response){
-            if(error)
-                return callback(Error.createError(error, Error.internalError));
+            if(error) {
+                if (callback) callback(Error.createError(error, Error.internalError));
+                return;
+            }
             
-            callback(null);
+            if (callback) callback(null);
         });
     }
 }

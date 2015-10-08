@@ -51,12 +51,19 @@ var userSchema = mongoose.Schema({
             default: UserConfig.defaultSort
         },
         defaultView  : {type: String, default: UserConfig.defaultView},
-        galleryCount : {type: String, default: UserConfig.galleryCount}
+        galleryCount : {type: String, default: UserConfig.galleryCount},
+        notifications : {
+            newMessage: {type: Boolean, default: UserConfig.notifications.newMessage}
+        }
     },
     internal         : {
         eventLog     : [mongoose.Schema.Types.Mixed]
     }
 });
+
+userSchema.methods.pref = function(preference) {
+    return this.preferences[preference];
+}
 
 userSchema.methods.totalAccessCount = function() {
     return this.local.accessCount.desktop + this.local.accessCount.mobile;

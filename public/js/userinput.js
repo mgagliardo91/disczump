@@ -13,13 +13,13 @@ $(document).ready(function(){
     });
     
     $('#submit').click(function() {
-        $inputForm.find('.alert').remove();
+        $('.page-alert').remove();
         $inputForm.submit();
     });
     
     $inputForm.submit(function() {
         if (!inputValidate.isAllValid()) {
-            $inputForm.prepend(generateError('Invalid data.', 'ERROR'));
+            generateError('Invalid data.', 'ERROR');
             return false;
         } 
     });

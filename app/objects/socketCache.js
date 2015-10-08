@@ -47,5 +47,5 @@ function getSocket(userId) {
 }
 
 function removeSocket(socketId) {
-    socketTable = _.reject(socketTable, function(socketEntry) { return socketEntry.socketId = socketId; });
+    socketTable = _.reject(socketTable, function(socketEntry) { return socketEntry.socketId == socketId; });
 }
