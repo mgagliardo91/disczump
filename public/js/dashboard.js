@@ -406,16 +406,17 @@ $(document).ready(function(){
 		    		initializeTooltips();
 		    		zumpLibraryInit();
     				setLoading(true);
-		    		getAllDiscs(function(success, discsFromServer){
-						if (success) {
-							discs = discsFromServer;
-    						setLoading(false);
-							myDashboard.setDiscList(discs);
-						} else {
-							alert('Unable to intialize');
-						}
-					});
-		    		initializePage();
+		    		initializePage(function() {
+		    			getAllDiscs(function(success, discsFromServer){
+							if (success) {
+								discs = discsFromServer;
+	    						setLoading(false);
+								myDashboard.initDiscList(discs);
+							} else {
+								alert('Unable to intialize');
+							}
+						});
+		    		});
 		     	}
 		    });
     	}	
@@ -707,27 +708,29 @@ function triggerPageChange(sender, page, callback) {
 /*
 * Initialize based on search params
 */
-function initializePage() {
+function initializePage(callback) {
     var params = getSearchParameters();
     
     if (isDef(params.view)) {
     	if (params.view == 'disc') {
-    		initViewDisc(params);
+    		initViewDisc(params, callback);
     	} else if (params.view == 'profile') {
-    		initViewProfile(params);
+    		initViewProfile(params, callback);
     	} else if (params.view == 'dashboard') {
-    		initViewDashboard(params);
+    		initViewDashboard(params, callback);
     	} else if (params.view == 'inbox') {
-    		initViewInbox(params);
+    		initViewInbox(params, callback);
     	} else {
     		changePage('#pg-' + params.view);
+    		callback();
     	}
     } else {
     	changePage('#pg-dashboard');
+    	callback();
     }
 }
 
-function initViewProfile(params) {
+function initViewProfile(params, callback) {
 	if (isDef(params.user_id)) {
 		mySocial.showProfile(params.user_id, function(err) {
 			changePage('#pg-dashboard');
@@ -736,9 +739,10 @@ function initViewProfile(params) {
 	} else {
     	changePage('#pg-dashboard');
     }
+    callback();
 }
 
-function initViewDisc(params) {
+function initViewDisc(params, callback) {
 	if (isDef(params.disc_id)) {
 		myDashboard.showPublicDisc(params.disc_id, function(err) {
 			changePage('#pg-dashboard');
@@ -747,9 +751,10 @@ function initViewDisc(params) {
 	} else {
     	changePage('#pg-dashboard');
     }
+    callback();
 }
 
-function initViewInbox(params) {
+function initViewInbox(params, callback) {
 	if (isDef(params.thread_id)) {
 		myMessenger.openThreadById(params.thread_id, function(err) {
 			changePage('#pg-dashboard');
@@ -758,9 +763,10 @@ function initViewInbox(params) {
 	} else {
     	changePage('#pg-dashboard');
     }
+    callback();
 }
 
-function initViewDashboard(params) {
+function initViewDashboard(params, callback) {
 	if (isDef(params.user_id) && params.user_id != userAccount._id) {
 		setLoading(true);
 		getUser(params.user_id, function(success, user) {
@@ -770,16 +776,19 @@ function initViewDashboard(params) {
 						setLoading(false);
 						myDashboard.setDiscList(discs, user);	
 						changePage('#pg-dashboard');
+						callback();
 					}
 				});
 			} else {
 				changePage('#pg-dashboard');
 				generateError('Unknown user identifier.', 'Navigation Error');
 				setLoading(false);
+				callback();
 			}
 		});
 	} else {
     	changePage('#pg-dashboard');
+    	callback();
     }
 }
 
@@ -1561,6 +1570,48 @@ function generateConfirmationModal(title, bodyText, btnText, confirmFn) {
 		body: body, 
 		footer: footer, 
 		fns: fns
+	});
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*                    Notification Popup                             */
+/*                                                                   */
+/*===================================================================*/
+function showNotification(title, content, action) {
+	$('.notification-popup').remove();
+	var $not = $('<div class="notification-popup">' +
+			        '<div class="notification-container">' +
+			            '<div class="notification-title">' +
+			                '<span class="close-btn close"><i class="fa fa-close"></i></span>' +
+			                title +
+			            '</div>' +
+			            '<div class="notification-body">' +
+			                '<div class="notification-content">' +
+			                    content +
+			                '</div>' +
+			            '</div>' +
+			        '</div>' +
+			    '</div>');
+	$('body').append($not);
+	$not.find('.close').click(function() {
+		$not.animate({
+			opacity: 0
+		}, 1000, function() {
+			$not.remove();
+		});
+	});
+	
+	if (action) {
+		$not.find('.notification-body').click(function() {
+			action();
+		});
+	}
+	
+	$not.animate({
+		opacity: 1
+	}, 1000, function() {
+		autoCloseAlert($not, '.close', 3000);
 	});
 }
 
@@ -2771,6 +2822,12 @@ var ZumpDashboard = function(opt) {
 	
 	this.showPublicDisc = function(discId, fail) {
 		showDiscView(discId, fail);
+	}
+	
+	this.initDiscList = function(discs) {
+		if (!publicList) {
+			zumpDashboard.setDiscList(discs);
+		}
 	}
 	
 	this.setDiscList = function(discs, user) {
@@ -4297,7 +4354,7 @@ var ZumpMessenger = function(opt) {
     
 	var zumpMessenger = this;
 	var threadCache = {};
-	var userPhotoCache = {};
+	var userCache = {};
 	var newMessageCount = 0;
 	var activeThread;
 	var activateThread;
@@ -4394,6 +4451,9 @@ var ZumpMessenger = function(opt) {
 			thread.modifiedDate = message.createDate;
 			$('li.thread-container[threadId="' + thread.threadId + '"]').remove();
 			prependThread(thread);
+			showNotification('Thread: ' + thread.threadTag, 'You have receieved a new message!', function() {
+				myMessenger.openThreadById(thread.threadId);
+			});
 		}
 	}
 	
@@ -4538,7 +4598,7 @@ var ZumpMessenger = function(opt) {
                             '<div class="thread-details-container">' +
                                 '<div class="thread-details">' +
                                     '<div class="thread-details-inner">' +
-                                        '<div class="thread-tag-label">' + thread.threadTag + '</div>' +
+                                        '<div class="thread-tag-label"></div>' +
                                         '<div class="thread-date">' + date.toLocaleString() + '</div>' +
                                    '</div>' +
                                 '</div>' +
@@ -4547,17 +4607,23 @@ var ZumpMessenger = function(opt) {
                             
        	var recUser = _.without(thread.users, userAccount._id)[0];
        	
-        var userPhoto = userPhotoCache[recUser];
-        if (typeof(userPhoto) !== 'undefined') {
-        	if (userPhoto != '') $threadContainer.find('.thread-image').css('background-image', 'url("' + userPhoto + '")');
+        var user = userCache[recUser];
+        if (typeof(user) !== 'undefined') {
+        	if (user.photo != '') $threadContainer.find('.thread-image').css('background-image', 'url("' + user.photo + '")');
         } else {
-        	userPhotoCache[recUser] = '';
+        	userCache[recUser] = {photo: '', username: ''};
         	getUser(recUser, function(success, user) {
         		if (success) {
         			if (!isDef(user.image)) return;
         			
-        			userPhotoCache[user._id] = getUserImage(user);
-        			$threadContainer.find('.thread-image').css('background-image', 'url("' + userPhotoCache[user._id] + '")');
+        			userCache[user._id].photo = getUserImage(user);
+        			userCache[user._id].username = user.username;
+        			$threadContainer.find('.thread-image').css('background-image', 'url("' + userCache[user._id].photo + '")');
+        			$threadContainer.find('.thread-tag-label').text(userCache[user._id].username);
+        			thread.threadTag = userCache[user._id].username;
+        			if (activeThread.threadId == thread.threadId) {
+						$threadTitle.text(thread.threadTag);
+        			}
         		}
         	});
         }                    
@@ -4725,21 +4791,22 @@ var ZumpMessenger = function(opt) {
                             '</div>' +
                             '<div class="clearfix"></div>');
         
-        var userPhoto = userPhotoCache[message.userId];
-        if (typeof(userPhoto) !== 'undefined') {
-        	if (userPhoto != '') $message.find('.message-user').css('background-image', 'url("' + userPhoto + '")');
+        var user = userCache[message.userId];
+        if (typeof(user) !== 'undefined') {
+        	if (user != '') $message.find('.message-user').css('background-image', 'url("' + user.photo + '")');
         } else {
-        	userPhotoCache[message.userId] = '';
+        	userCache[message.userId] = {photo: '', username: ''};
         	getUser(message.userId, function(success, user) {
         		if (success) {
         			if (!isDef(user.image)) return;
         			
-        			userPhotoCache[user._id] = getUserImage(user);
+        			userCache[user._id].photo = getUserImage(user);
+        			userCache[user._id].username = user.username;
         			
         			var messageList = getThread(activeThread.threadId).messages;
         			var msgByUser = _.where(messageList, {userId: user._id});
         			_.each(msgByUser, function(msg) {
-        				$messageContainer.find('.thread-message[messageId="' + msg._id + '"]').find('.message-user').css('background-image', 'url("' + userPhotoCache[user._id] + '")');
+        				$messageContainer.find('.thread-message[messageId="' + msg._id + '"]').find('.message-user').css('background-image', 'url("' + userCache[user._id].photo + '")');
         			});
         		}
         	})

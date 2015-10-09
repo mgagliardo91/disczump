@@ -107,10 +107,15 @@ function generateMessage(type, message, title) {
 /*
 * Automatically closes an alert based on delay time
 */
-function autoCloseAlert($element, delay) {
-	setTimeout(function() {
-		$element.children('.close').trigger('click');
+function autoCloseAlert($element, selector, delay) {
+	var id = setTimeout(function() {
+		$element.find(selector).trigger('click');
 	}, delay);
+	$element.on('mouseenter', function() {
+		clearTimeout(id);	
+	}).on('mouseleave', function() {
+		$element.find(selector).trigger('click');
+	});
 }
 
 function getCityState(zipcode, callback) {

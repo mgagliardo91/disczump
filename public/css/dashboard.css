@@ -379,6 +379,73 @@
 
 /*===================================================================*/
 /*                                                                   */
+/*                    Notification Popups                            */
+/*                                                                   */
+/*===================================================================*/
+.notification-popup {
+    opacity: 0;
+    position: absolute;
+    bottom: 5%;
+    right: 5%;
+    min-width: 200px;
+    max-width: 300px;
+    max-height: 100px;
+    background-color: #008EDD;
+    z-index: 2000;
+    border: 2px solid #656565;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px 5px rgba(84,84,84,0.5);
+    overflow: hidden;
+}
+
+.notification-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background-color: #fff;
+}
+
+.notification-title .close-btn {
+    float: right;
+    cursor: pointer;
+}
+
+.notification-title {
+    padding: 5px 10px;
+    background-color: #008EDD;
+    color: #FFFFFF;
+    font-weight: bold;
+    border-bottom: 1px solid #757575;
+    line-height: 1.3em;
+    font-size: 1em;
+    height: 30px;
+    position: absolute;
+    width: 100%;
+}
+
+.notification-body {
+    height: 100%;
+}
+
+.notification-content {
+    display: -webkit-box;
+    max-height: 85.4px;
+    margin: 0 auto;
+    font-size: 12px;
+    line-height: 1.4;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 35px 10px 10px 10px;
+}
+
+.notification-body:hover {
+    background-color: rgba(175,220,245,0.5);
+    cursor: pointer;
+}
+/*===================================================================*/
+/*                                                                   */
 /*                           Account Page                            */
 /*                                                                   */
 /*===================================================================*/
