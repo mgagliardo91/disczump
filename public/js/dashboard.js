@@ -4672,10 +4672,12 @@ var ZumpMessenger = function(opt) {
     
     var showThread = function(threadId, fail) {
     	
-		if (userCache[userAccount._id] != getUserImage(userAccount)) {
-			userCache[userAccount._id] = getUserImage(userAccount);
+    	if (userCache[userAccount._id] && userCache[userAccount._id].photo != getUserImage(userAccount)) {
+    		userCache[userAccount._id].photo = getUserImage(userAccount);
 			forceUpdate = true;
-		}
+    	} else {
+    		userCache[userAccount._id] = {photo: getUserImage(userAccount), username: userAccount.username};
+    	}
 		
     	if (!forceUpdate && typeof(activeThread) !== 'undefined' && activeThread.threadId == threadId) return false;
     	
