@@ -30,7 +30,7 @@ DataItem.find({'label': 'Feedback'}, function(err, dataItems) {
         }
      }); 
    	  
-   	  Mailer.sendMail("mike@disczump.com", 'DiscZump Data', file, function(err, result) {
+   	  Mailer.sendMail("mike@disczump.com", 'disc|zump Data', file, function(err, result) {
            if (err) console.log(err);
            mongoose.disconnect();
         });

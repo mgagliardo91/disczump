@@ -854,6 +854,10 @@
 /*                           Messaging                               */
 /*                                                                   */
 /*===================================================================*/
+#delete-thread:hover {
+    color: #E85947;
+}
+
 .thread-container-list {
     padding-left: 0px;
 }
@@ -2779,116 +2783,84 @@ img.fit-parent {
 
 /*===================================================================*/
 /*                                                                   */
-/*                            Tutorial                               */
+/*                            Tutorial                              */
 /*                                                                   */
 /*===================================================================*/
 
-#tutorial {
-    display: none;
+body.tutorial-active {
+    overflow: hidden !important;
+}
+
+.tutorial-backdrop {
     position: absolute;
-    top: 0;
     left: 0;
-    z-index: 3500;
+    top: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,78,130,1);
-    background: -moz-linear-gradient(top, rgba(0,78,130,1) 0%, rgba(0,78,130,1) 12%, rgba(0,78,130,0.48) 100%);
-    background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(0,78,130,1)), color-stop(12%, rgba(0,78,130,1)), color-stop(100%, rgba(0,78,130,0.48)));
-    background: -webkit-linear-gradient(top, rgba(0,78,130,1) 0%, rgba(0,78,130,1) 12%, rgba(0,78,130,0.48) 100%);
-    background: -o-linear-gradient(top, rgba(0,78,130,1) 0%, rgba(0,78,130,1) 12%, rgba(0,78,130,0.48) 100%);
-    background: -ms-linear-gradient(top, rgba(0,78,130,1) 0%, rgba(0,78,130,1) 12%, rgba(0,78,130,0.48) 100%);
-    background: linear-gradient(to bottom, rgba(0,78,130,1) 0%, rgba(0,78,130,1) 12%, rgba(0,78,130,0.48) 100%);
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#004e82', endColorstr='#004e82', GradientType=0 );
+    z-index: 3500;
+}
+
+.tutorial-animator {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+    z-index: 3501;
 }
 
 .tutorial-container {
-    max-width: 70%;
-    width: 70%;
-    margin: auto;
-    height: 100%;
+    position: absolute;
+    width: 300px;
+    max-height: 300px;
+    right: 10%;
+    bottom: 10%;
+    background-color: #FFF;
+    border: 1px solid black;
+    border-radius: 5px;
+    box-shadow: 5px 5px 10px 0px rgba(0, 0, 0, 0.8);
+    -webkit-box-shadow: 5px 5px 10px 0px rgba(0, 0, 0, 0.8);
+    -moz-box-shadow: 5px 5px 10px 0px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+    z-index: 3502;
 }
 
-.tutorial-title, .tutorial-footer {
-    height: 15%;
-    text-align: center;
-    display: table;
-    width: 100%;
-}
-
-.tutorial-title > div {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 2.5em;
-    font-weight: bold;
-    color: white;
-    display: table-cell;
-    vertical-align: middle;
-}
-
-.tutorial-close { 
-    float: right;
+.tutorial-section i {
     cursor: pointer;
 }
 
-.tutorial-close:hover {
-    color: black;
+.tutorial-section i:hover {
+    color: #A97B00;
 }
 
-.tutorial-content {
-    height: 70%;
-    overflow: hidden;
-}
-
-.tutorial-screen {
-    display: none;
+.tutorial-section {
+    display: table;
     width: 100%;
-    height: 100%;
-    background-repeat: no-repeat;
-    background-size: 100% auto;
-    background-position: 50% 50%;
+    height: 40px;
 }
 
-.tutorial-footer > div {
+.tutorial-section > div {
     display: table-cell;
+    width: 100%;
     vertical-align: middle;
-}
-
-.tutorial-indicators {
-    margin: auto;
-    color: white;
-}
-
-.tutorial-indicators i {
-    margin-right: 10px;
-    font-size: 1.2em;
+    font-size: 1.4em;
     font-weight: bold;
+    padding: 0px 10px;
 }
 
-.tutorial-indicators i:last-child {
-    margin-right: 0px;
+.tutorial-header {
+    border-bottom: 1px solid #C18D00;
 }
 
-.tutorial-button {
-    width: 150px;
-    font-weight: bold;
+.tutorial-body {
+    max-height: 220px;
+    overflow: auto;
+    padding: 10px;
 }
 
-.tutorial-button.back {
-    float: left;
-    visibility: hidden;
-}
-
-.tutorial-button.forward {
-    float: right;
-}
-
-.tutorial-button.finish {
-    background-color: rgb(19, 164, 245);
-    color: white;
-    border-color: #0085CF;
-}
-
-.tutorial-button.finish:hover {
-    background-color: #0085CF;
+.tutorial-footer {
+    height: 40px;
 }
 
 /*===================================================================*/

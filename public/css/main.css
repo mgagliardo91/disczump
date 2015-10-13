@@ -263,6 +263,11 @@
 
 .page-btn-container {
     float: right;
+    cursor: default;
+}
+
+.page-btn-container i:hover {
+	cursor: pointer;
 }
 
 .page-title-tri-btn {
@@ -405,7 +410,7 @@ a.btn-facebook:hover {
 
 @media (max-width: 767px) {
 	.page-container {
-		max-width: 300px !important;
+		max-width: 500px !important;
 	}
 	
 	.page-container .btn {

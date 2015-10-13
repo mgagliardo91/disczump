@@ -1,10 +1,21 @@
 <!doctype html>
 <html>
+{{#section 'head'}}
 <head>
-    <title>DiscZump - {{notify.pageHeader}}</title>
+    <title>disc|zump - {{notify.pageHeader}}</title>
+    {{#if notify.popup}}
+        <script>
+            $(document).ready(function() {
+                $('#close-popup').click(function() {
+                    window.close();
+                });
+            });
+        </script>
+    {{/if}}
 </head>
+{{/section}}
 <body>
-    <div class="page-container container">
+    <div class="page-container container" style="max-width: 500px !important;">
         <div class="page-header">
             <img src="/static/logo/logo_small_round.svg">
             <h1>{{notify.header}}</h1>
@@ -28,8 +39,13 @@
             {{/if}}
         </div>
         <div style="text-align: right">
+            {{#if notify.popup}}
+            <a class="btn btn-wide btn-primary" id="close-popup">
+                <i class="fa fa-close pull-left"></i>Close Window</a>
+            {{else}}
             <a class="btn btn-wide btn-primary" href="{{notify.buttonLink}}">
                 {{#if notify.buttonIcon}}<i class="fa {{notify.buttonIcon}} pull-left"></i> {{/if}}{{notify.buttonText}}</a>
+            {{/if}}
         </div>
     </div>
 </body>

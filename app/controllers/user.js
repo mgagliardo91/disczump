@@ -6,6 +6,8 @@ var _ = require('underscore');
 var async = require('async');
 var UserConfig = require('../../config/config.js').user.preferences;
 var FileUtil = require('../utils/file.js');
+var Socket = require('../../config/socket.js');
+var socketManager = require('../objects/socketCache.js');
 
 module.exports = {
 	query: query,
@@ -330,6 +332,12 @@ function resetPassword(userId, password, callback) {
         user.save(function(err){
             if (err)
                 return callback(err);
+                
+            var socket = socketManager.getSocket(user._id);
+                
+            if (typeof(socket) !== 'undefined') {
+                Socket.sendCallback(socket, 'ResetPassword', 'Your password has been successfully changed.');
+            }
             
             callback(null, user);
         });

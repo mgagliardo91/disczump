@@ -21,6 +21,7 @@ var pageEvents = {};
 var modifyHandler = {type: 'Add', discId: undefined};
 var accountDropzone;
 var cropLock;
+var serverCallback = {};
 
 // Library Instances
 var myZumpColorPicker;
@@ -108,25 +109,11 @@ $(document).ready(function(){
     	});
     });
     
-    $('#account-change-pwd').click(function() {
-    	window.location.href = '/reset';
-    });
-    
     $('#account-delete').click(function() {
     	var text = 'Are you sure you want to delete your account?';
     	generateConfirmationModal('WARNING!', text, 'Delete', function() {
 			window.location.href = '/profile/delete';
 		});
-    });
-    
-    $('#password-accordion-label').click(function(e) {
-        var $chevron = $(this).find('.fa');
-        if ($chevron.hasClass('fa-chevron-right')) {
-            $chevron.removeClass('fa-chevron-right').addClass('fa-chevron-down');
-        } else {
-            $chevron.removeClass('fa-chevron-down').addClass('fa-chevron-right');
-        }
-        $('#expand-change-password').collapse('toggle');
     });
     
     /*===================================================================*/
@@ -391,11 +378,7 @@ $(document).ready(function(){
    	$('.page').hide();
     resizeSidebar();
     
-    getSession(function(success, data) {
-    	if (success) {
-    		initSocket(data.sessionId);
-    	}
-    });
+    getSocketSession();
     
     getAccount(function(success, account) {
     	if (success) {
@@ -422,23 +405,41 @@ $(document).ready(function(){
     	}	
     });
     
-	if ($('#menu-tutorial').hasClass('prog-click')) {
-		$('#menu-tutorial').trigger('click');
-	}
-    
     $('.page-alert').slideDown(300);
 });
 
+function openPopup(url, name) {
+	var winTop = ($(window).height() / 2) - (500 / 2);
+	var winLeft = ($(window).width() / 2) - (800 / 2);
+	
+	if (serverCallback[name]) {
+		serverCallback[name]();
+	}
+	
+	var popupWindow = window.open(url + '?popup=true', name, 'top=' + winTop + ',left=' + winLeft + ',toolbar=0,status=0,width=' + 800 + ',height=' + 500);
+	
+	serverCallback[name] = function() {
+		if (popupWindow) popupWindow.close();
+	}
+	
+}
+
 function setupFrameworkListeners() {
+	$('#facebook-link').click(function() {
+		var resetWindow = openPopup('/account/link', 'FacebookLink');
+	});
+	
+	$('#account-change-pwd').click(function() {
+		var resetWindow = openPopup('/reset', 'ResetPassword');
+		
+		$(resetWindow).load(function() {
+			$(resetWindow.document).find('#user-input-form').prepend('<input type="hidden" name="popup" value="true"></input>');	
+		});
+	});
+	
    	$('#menu-tutorial').click(function(e) {
    	    e.stopImmediatePropagation();
-   	    
-   	    var zumpTutorial = new ZumpTutorial({
-        	screens: ['dashboard', 'account', 'discview', 'sort', 'filter', 'add', 'tutorial']
-        });
-        
-        zumpTutorial.showTutorial();
-   	    
+   	    new ZumpTutorial().showTutorial();
    	    return false;
    	});
    	
@@ -514,16 +515,55 @@ function setupFrameworkListeners() {
 *
 */
 function initSocket(sessionId) {
-	socket = io.connect('https://disczumpserver-mgagliardo.c9.io', {'forceNew': true});
-	socket.on('notification', function (notification) {
-	    parseNotification(notification);
+	socket = io.connect('https://disczumpserver-mgagliardo.c9.io', {
+		'forceNew': true,
+		reconnection: false
 	});
-	socket.emit('initialize', {sessionId: sessionId});
+	
+	socket.on('connect', function() {
+		socket.emit('initialize', {sessionId: sessionId});
+	}).on('notification', function (notification) {
+	    parseNotification(notification);
+	}).on('disconnect', function() {
+		generateError('Disconnected from disc|zump. Reconnecting...', 'Connection Error');
+		setTimeout(getSocketSession, 1000);
+	}).on('connect_error', function() {
+		getSocketSession();
+	});
+}
+
+function getSocketSession() {
+	getSession(function(success, data) {
+    	if (success) {
+    		initSocket(data.sessionId);
+    	} else {
+    		generateError('Unable to connect to server. Please <refresh> your page.', 'Connection Error', ['/dashboard']);
+    	}
+    });
 }
 
 function parseNotification(notification) {
 	if (notification.type == 'MessageNotification') {
 		myMessenger.handleMessage(notification.data)
+	} else if (notification.type == 'InfoNotification') {
+		generateInfo(notification.data, 'disc|zump Message');
+	} else if (notification.type == 'CallbackNotification') {
+		parseCallback(notification.data);
+	}
+}
+
+function parseCallback(callbackNotification) {
+	var cbName = callbackNotification.callbackName;
+	var cbMessage = callbackNotification.message;
+	
+	if (serverCallback[cbName]) {
+		serverCallback[cbName]();
+	}
+	
+	if (cbName == 'ResetPassword') {
+		generateInfo(cbMessage, 'Password Update');
+	} else if (cbName == 'FacebookLink') {
+		generateInfo(cbMessage + ' Page refresh required to view current state.', 'Facebook Link Update');
 	}
 }
 
@@ -607,6 +647,10 @@ function changePage(page, callback) {
 	triggerPageChange(undefined, page, callback);
 }
 
+function hideAllPages(callback) {
+	triggerPageChange('dz-hide-all', callback);
+}
+
 /*
 * Changes the current dashboard page
 */
@@ -615,7 +659,7 @@ function triggerPageChange(sender, page, callback) {
    	var $curPage = $('.page:visible');
    	var $navItem = $('.nav-sidebar li.sidebar-select[pg-select="' + page + '"]');
    	
-   	if (!$page.length) {
+   	if (!$page.length && sender != 'dz-hide-all') {
    		return;
    	}
    	
@@ -710,6 +754,11 @@ function triggerPageChange(sender, page, callback) {
 */
 function initializePage(callback) {
     var params = getSearchParameters();
+    
+    if ((isDef(params.firstUse) && params.firstUse == 'true') || $('body').hasClass('first-use')) {
+    	 new ZumpTutorial().showTutorial();
+		 return callback();
+    }
     
     if (isDef(params.view)) {
     	if (params.view == 'disc') {
@@ -959,9 +1008,9 @@ function setUserPrefs() {
 }
 
 function initializeTooltips() {
-	var ttDefaultView = generateTooltipOptions('top', 'hover', 'Select a default view to show every time your DiscZump account loads.', '200px');
-	var ttDisplayCount = generateTooltipOptions('top', 'hover', 'Select a default number of discs to show per page when your DiscZump account loads the dashboard view.', '200px');
-	var ttItemsPerRow = generateTooltipOptions('top', 'hover', 'Select a default number of discs to show per row when DiscZump loads the gallery view.', '200px');
+	var ttDefaultView = generateTooltipOptions('top', 'hover', 'Select a default view to show every time your disc|zump account loads.', '200px');
+	var ttDisplayCount = generateTooltipOptions('top', 'hover', 'Select a default number of discs to show per page when your disc|zump account loads the dashboard view.', '200px');
+	var ttItemsPerRow = generateTooltipOptions('top', 'hover', 'Select a default number of discs to show per row when disc|zump loads the gallery view.', '200px');
 	var ttPrimarySort = generateTooltipOptions('top', 'hover', 'Select a default primary sort property. This applies to any view.', '200px');
 	var ttSecondarySort = generateTooltipOptions('top', 'hover', 'Select a default secondary sort property. This applies to any view and will sort within your primary property.', '200px');
 	var ttEnableSecondarySort = generateTooltipOptions('top', 'hover', 'When checked, the secondary sort property will be used.', '200px');
@@ -1100,7 +1149,8 @@ function zumpLibraryInit() {
 		searchInbox: '#search-inbox',
 		activateThread: function() {
 			changePage('#pg-inbox');
-		}
+		},
+		deleteThread: '#delete-thread'
 	});
 	
 	accountValidation = new ZumpValidate({
@@ -1451,7 +1501,9 @@ function resizeModal() {
 	var windowHeight = $(window).height();
 	var headerHeight = $('.modal-header').outerHeight();
 	var footerHeight = $('.modal-footer').outerHeight();
-	var height = Math.max((windowHeight - headerHeight - footerHeight - 62), 120);
+	var marginTop = parseInt($('.modal-dialog').css("margin-top"), 10);
+	var marginBottom = parseInt($('.modal-dialog').css("margin-bottom"), 10);
+	var height = Math.max((windowHeight - headerHeight - footerHeight - marginTop - marginBottom), 120);
 	
 	$('.modal-body').css({
 		maxHeight: height + 'px',
@@ -1506,7 +1558,7 @@ function exportList() {
 						if (fileName == '') {
 							var dt = new Date();
 							var time = dt.getHours() + '_' + dt.getMinutes() + '_' + dt.getSeconds();
-							fileName = 'DiscZump_' + time;
+							fileName = 'disc|zump_' + time;
 						}
 						
 						var csvContent = "data:text/csv;charset=utf-8,";
@@ -2805,7 +2857,7 @@ var ZumpDashboard = function(opt) {
 	}
 	
 	this.setView = function(view) {
-		changeView(view);
+		$('.dz-switch-opt[value="' + view + '"]').trigger('click');
 	}
 	
 	this.Gallery = function() {
@@ -3844,7 +3896,7 @@ var ZumpDashboard = function(opt) {
 	*/
 	function getChartData(type, propName, isSingleCol, isSingleUnit) {
 		var properties = { 
-			exportFileName: "DiscZump - Discs by " + propName,
+			exportFileName: "disc|zump - Discs by " + propName,
 			exportEnabled: true,
 			title: { 
 				text: "Discs by " + propName,
@@ -3892,163 +3944,384 @@ var ZumpDashboard = function(opt) {
 }
 
 /*
-* Name: ZumpTutorial
-* Date: 05/01/2015
+* Name: ZumpTutorial v2.0
+* DAte: 10/13/15
 */
 var ZumpTutorial = function(opt) {
 	
-	this.screens = [];
-	var $tutorial;
-	
-	this.init = function(opt) {
-		
-		if (isDef(opt.screens)) {
-			this.screens = opt.screens;
-		}
-		
-		$(document).on('click', '.tutorial-close', function() {
-		   if ($tutorial.length) {
-		       $tutorial.fadeOut(500, function() {
-		          $tutorial.remove(); 
-				  $('body').append($tutorial).css('overflow', 'auto');
-		       });
-		   } 
-		});
-	}
-	
-	this.showTutorial = function() {
-		$('#tutorial').remove();
-		
-		$tutorial = $('<div id="tutorial"></div>');
-		
-		var $tutorialCont = $('<div class="tutorial-container"></div>');
-		$tutorialCont.append('<div class="tutorial-title"><div>Tutorial<span><i class="fa fa-times-circle tutorial-close"></i></span></div></div>');
-		
-		var $content = $('<div class="tutorial-content"></div>');
-		var $indicators = $('<div></div>');
-		
-		_.each(this.screens, function(screen) {
-			$content.append($('<div class="tutorial-screen" style="background-image: url(\'/static/img/tutorial/tut_' + screen +  '.svg\')"></div>'));
-			$indicators.append('<i class="fa fa-square-o"></i>');
-		});
-		
-		
-		// add screens
-		
-		$tutorialCont.append($content);
-		
-		$tutorialCont.append('<div class="tutorial-footer">' + 
-				'<div>' + 
-					'<button type="button" class="btn btn-default tutorial-button back">Back</button>' + 
-					'<button type="button" class="btn btn-default tutorial-button forward">Next</button>' + 
-					'<div class="tutorial-indicators"><span>' + $indicators.html() + '</span></div>' + 
-					'<div class="clearfix"></div>' + 
-				'</div>' + 
-			'</div>');
-			
-		$tutorial.append($tutorialCont);
-		
-    	setActive(0);
-		$content.children('.tutorial-screen:first-child').show();
-		
-		// Listeners
-		bindListeners();
-		
-		$('body').append($tutorial).css('overflow', 'hidden');
-		$tutorial.css({
-			top: $(window).scrollTop()
-		});
-		
-		$tutorial.fadeIn(500);
-	}
-	
-	var setActive = function(index) {
-		var $screen = $tutorial.find('.tutorial-screen').eq(index);
-		
-		if ($screen.length) {
-			$screen.addClass('active').siblings().removeClass('active');
-			
-			var $indicator = $tutorial.find('.tutorial-indicators i').eq(index);
-			$indicator.siblings().removeClass('fa-square').addClass('fa-square-o');
-			$indicator.removeClass('fa-square-o').addClass('fa-square');
-		}
-	}
-	
-	var transition = function(forward) {
-		var $activeScreen = $tutorial.find('.tutorial-screen.active');
-		var $nextScreen;
-		
-		if (forward) {
-			$nextScreen = $activeScreen.next();
-			
-			if ($nextScreen.length) {
-			    unbindListeners();
-			    $nextScreen.css('margin-top','-' + $activeScreen.height()*2 + 'px').show();
-		    
-    		    $activeScreen.animate({marginTop: $activeScreen.height() + 'px'}, 500, function() {
-    		        $nextScreen.css('margin-top', '0px');
-    		        $activeScreen.hide();
-    		        setActive($nextScreen.index());
-    		        updateButtons();
-    		    });
-			} else {
-			    $tutorial.fadeOut(500, function() {
-		          $tutorial.remove(); 
-				  $('body').append($tutorial).css('overflow', 'auto');
-		       });
+	//----------------------\
+    // Javascript Objects
+    //----------------------/
+	var zumpTutorial = this;
+	var currentPage = 0;
+	var pageCache = {};
+	var pageData = [
+		{
+			title: 'Welcome!',
+			body: 'Welcome to <b>disc|zump</b>! This tutorial will give you a brief introduction' +
+				' into the user interface so that you can become familiar with each feature.' + 
+				' You can skip this tutorial by clicking the \'X\'.' + 
+				'<br\><br\>' + 
+				'<b>Hint:</b> You may access this tutorial at any time in the dropdown menu at the' + 
+				' upper right corner.',
+			bgColor: '#ffba00',
+			position: 'bottom-right',
+			open: function() {
+				highlightNone();
+			},
+			close: function() {
+				
 			}
-			
-		} else {
-		    $nextScreen = $activeScreen.prev();
-		    
-		    if ($nextScreen.length) {
-		        unbindListeners();
-			    $nextScreen.css('margin-top', $activeScreen.height() + 'px').show();
-			    $activeScreen.css('margin-top','-' + 2*$activeScreen.height() + 'px').show();
-                
-                $nextScreen.animate({marginTop: '0px'}, 500, function() {
-    		        $activeScreen.hide();
-    		        setActive($nextScreen.index());
-    		        updateButtons();
-    		    });
+		},
+		{
+			title: 'Home Menu',
+			body: 'Use the home tab on the left panel to access your personal <b>dashboard</b>, <b>add new' +
+				' discs</b>, and update your account <b>settings</b> and <b>preferences</b>.',
+			bgColor: '#ffba00',
+			position: 'bottom-right',
+			open: function() {
+				highlightSidePanel()
+			},
+			close: function() {
+				
+			}
+		},
+		{
+			title: 'Dashboard',
+			body: 'Use the dashboard to view an inventory. Here you will have access' + 
+				' to viewing a collection in three different ways - <b>list view</b>,' +
+				' <b>gallery view</b> and <b>statistics view</b>. You can also modify ' +
+				' the way your list is viewed by <b>sorting</b> and <b>filtering</b> any way' + 
+				' you\'d like.',
+			bgColor: '#ffba00',
+			position: 'bottom-left',
+			open: function() {
+				changePage('#pg-dashboard');
+				myDashboard.setView('inventory');
+				highlightPage();
+				getCache().animIndex = 1;
+				getCache().animId = setInterval(function() {
+					var id = getCache().animIndex;
+					
+					if (id == 0) {
+						myDashboard.setView('inventory');
+						id++;
+					} else if (id == 1) {
+						myDashboard.setView('gallery');
+						id++;
+					} else if (id == 2) {
+						myDashboard.setView('statistics');
+						id = 0;
+					}
+					
+					getCache().animIndex = id;
+				}, 2000);
+			},
+			close: function() {
+				clearInterval(getCache().animId);
+				myDashboard.setView('inventory');
+			}
+		},
+		{
+			title: 'Sorting',
+			body: 'You can adjust the order in which an inventory is displayed' + 
+				' through the sort menu. Add more complex sorts to organize the data' +
+				' to your preference and drag current sorts to reorder.',
+			bgColor: '#ffba00',
+			position: 'bottom-left',
+			open: function() {
+				highlightPage();
+				changePage('#pg-dashboard', function() {
+					$('#results-header-sort').trigger('click');
+				});
+			},
+			close: function() {
+				$('#results-header-sort').trigger('click');
+			}
+		},
+		{
+			title: 'Filtering',
+			body: 'You can reduce the discs displayed in an inventory by filtering' +
+				' on a variety of properties associated with a collection. Browse through' +
+				' the many options available within the filter tab.' + 
+				'<br/><br/>' +
+				'<b>Hint:</b> Take advantage of <i>tagging</i> your discs to create a quick' +
+				' way to see groupings of discs through the tag filter.',
+			bgColor: '#ffba00',
+			position: 'bottom-right',
+			open: function() {
+				highlightSidePanel();
+				toggleSidebar('#sidebar-filter');
+				getCache().animIndex = 0;
+				getCache().animId = setInterval(function() {
+					var id = getCache().animIndex;
+					
+					if (id == 0) {
+						if (!getCache().$filter) {
+							getCache().$filter = $('.filter-item-container:first-child');
+						}
+						getCache().$filter.children('.filter-item').trigger('click');
+						id++;
+					} else if (id == 1) {
+						getCache().$filter.find('.filter-option').first().trigger('click');
+						id++;
+					} else if (id == 2) {
+						myDashboard.Filter().clearFilters();
+						getCache().$filter.children('.filter-item').trigger('click');
+						id = 0;
+					}
+					
+					getCache().animIndex = id;
+				}, 1000);
+			},
+			close: function() {
+				clearInterval(getCache().animId);
+				myDashboard.Filter().clearFilters();
+				toggleSidebar('#sidebar-filter');
+			}
+		},
+		{
+			title: 'Searching',
+			body: 'Use the search panel as an alternative to the filter for a quick' +
+				' way to filter on a single property (i.e. the disc name).',
+			bgColor: '#ffba00',
+			position: 'bottom-right',
+			open: function() {
+				highlightSidePanel()
+				toggleSidebar('#sidebar-search');
+				getCache().animIndex = 0;
+				getCache().animId = setInterval(function() {
+					var id = getCache().animIndex;
+					
+					if (id == 0) {
+						$('#search-all').val('d').trigger('keyup');
+						id++;
+					} else if (id == 1) {
+						$('#search-all').val('dr').trigger('keyup');
+						id++;
+					} else if (id == 2) {
+						$('#search-all').val('dri').trigger('keyup');
+						id++;
+					} else if (id == 3) {
+						$('#search-all').val('').trigger('keyup');
+						id = 0;
+					}
+					
+					getCache().animIndex = id;
+				}, 1000);
+			},
+			close: function() {
+				clearInterval(getCache().animId);
+				$('#search-all').val('').trigger('keyup');
+				toggleSidebar('#sidebar-search');
+			}
+		},
+		{
+			title: 'Social: Inbox',
+			body: 'Send and receive messages to other disc|zump users. Use the inbox' + 
+				' panel to access current message threads.',
+			bgColor: '#ffba00',
+			position: 'bottom-right',
+			open: function() {
+				highlightSidePanel();
+				toggleSidebar('#sidebar-inbox');
+			},
+			close: function() {
+				toggleSidebar('#sidebar-inbox');
+			}
+		},
+		{
+			title: 'Social: Profiles',
+			body: 'Use the profile panel to search for other disc|zump users. Search' +
+				' by username or first/last name. View profiles and access the ability' +
+				' to send another user a message or view the user\'s public disc inventory.',
+			bgColor: '#ffba00',
+			position: 'bottom-right',
+			open: function() {
+				highlightSidePanel();
+				toggleSidebar('#sidebar-profile');
+			},
+			close: function() {
+				toggleSidebar('#sidebar-profile');
+			}
+		},
+		{
+			title: 'Enjoy!',
+			body: 'That completes the tutorial. If you ever need to access the tutorial' +
+				' in the future, you can restart it by clicking the <b>Tutorial</b> item' +
+				' in the upper right navigation menu.<br/><br/><a class="tut-close" style="cursor: pointer">Continue to Dashboard!</a>',
+			bgColor: '#ffba00',
+			position: 'bottom-left',
+			open: function() {
+				highlightPage();
+			},
+			close: function() {
 			}
 		}
-	}
-	
-	var bindListeners = function() {
-		$(document).on('click', '.tutorial-button.back', function(e) {
-			transition(false);
-		});
 		
-		$(document).on('click', '.tutorial-button.forward', function(e) {
-			transition(true);
-		});
-	}
+	];
 	
-	var unbindListeners = function() {
-	    $(document).off('click', '.tutorial-button.back');
-	    $(document).off('click', '.tutorial-button.forward');
-	}
+	//----------------------\
+    // JQuery Objects
+    //----------------------/
+    var $tutorialContainer;
+    var $tutorialBackdrop;
+    var $tutorialAnimator;
+    var $tutorialBack;
+    var $tutorialNext;
+    var $tutorialClose;
 	
-	var updateButtons = function() {
-	    var $nextScreen = $('.tutorial-screen.active');
-	    
-	    if ($nextScreen.is(':last-child')) {
-			$('.tutorial-button.forward').text('Finish!').addClass('finish');
-			$('.tutorial-button.back').css('visibility', 'visible');
-		} else if ($nextScreen.is(':first-child')) {
-			$('.tutorial-button.forward').text('Next').removeClass('finish');
-			$('.tutorial-button.back').css('visibility', 'hidden');
-		} else {
-			$('.tutorial-button.forward').text('Next').removeClass('finish');
-			$('.tutorial-button.back').css('visibility', 'visible');
-		}
-		
-		bindListeners();
-	}
+	//----------------------\
+    // Protoype Functions
+    //----------------------/
+    this.init = function(opt) {
+    	initTutorial();
+    	
+    	return zumpTutorial;
+    }
+    
+    this.showTutorial = function() {
+    	$('body').addClass('tutorial-active').append($tutorialBackdrop);
+    	updateContent();
+    }
+    
+    //----------------------\
+    // Private Functions
+    //----------------------/
+    var initTutorial = function() {
+    	$tutorialBackdrop = $('<div class="tutorial-backdrop"></div>');
+    	$tutorialAnimator = $('<div class="tutorial-animator"></div>');
+    	$tutorialContainer = $('<div class="tutorial-container">' +
+            '<div class="tutorial-section tutorial-header">' +
+                '<div><span class="tut-header"> </span><span class="pull-right"><i class="fa fa-close tut-close" title="Exit Tutorial"></i></span></div>' +
+            '</div>' +
+            '<div class="tutorial-body">' +
+            '</div>' +
+            '<div class="tutorial-section tutorial-footer">' +
+                '<div><span><i class="fa fa-arrow-left tut-back" title="Back"></i></span><span class="float-right"><i class="fa fa-arrow-right tut-next" title="Next"></i></span></div>' +
+            '</div>' +
+        '</div>');
+    	
+    	$tutorialBackdrop.append($tutorialAnimator);
+    	$tutorialBackdrop.append($tutorialContainer);
+    	
+    	$tutorialBack = $tutorialContainer.find('.tut-back');
+    	$tutorialNext = $tutorialContainer.find('.tut-next');
+    	$tutorialClose = $tutorialContainer.find('.tut-close');
+    	initializeListeners();
+    }
+    
+    var initializeListeners = function() {
+    	$tutorialBack.click(function() {
+    		pageBack();
+    	});
+    	
+    	$tutorialNext.click(function() {
+    		pageNext();
+    	});
+    	
+    	$(document).on('click', '.tut-close', function() {
+    		exitTutorial();
+    	});
+    }
+    
+    var exitTutorial = function() {
+    	pageData[currentPage].close();
+    	$('body').removeClass('tutorial-active');
+    	$tutorialBackdrop.remove();
+    	myDashboard.doResize();
+    	
+    }
+    
+    var pageNext = function() {
+    	if (currentPage < pageData.length - 1) {
+    		pageData[currentPage].close();
+    		currentPage++;
+    		
+    		updateContent();
+    	}
+    }
+    
+    var pageBack = function() {
+    	if (currentPage > 0) {
+    		pageData[currentPage].close();
+    		currentPage--;
+    		
+    		updateContent();
+    	}
+    }
+    
+    var updateContent = function() {
+    	if (currentPage == 0) {
+    		$tutorialBack.hide();
+    		$tutorialNext.show();
+    	} else if (currentPage == pageData.length - 1) {
+    		$tutorialBack.show();
+    		$tutorialNext.hide();
+    	} else {
+    		$tutorialBack.show();
+    		$tutorialNext.show();
+    	}
+    	
+    	var page = pageData[currentPage];
+    	
+    	$tutorialContainer.find('.tutorial-header').css('background-color', page.bgColor);
+    	$tutorialContainer.find('.tut-header').text(page.title);
+    	$tutorialContainer.find('.tutorial-body').empty().append(page.body);
+    	
+    	if (page.position == 'bottom-left') {
+    		$tutorialContainer.css({
+    			left: '10%',
+    			right: 'auto',
+    			bottom: '10%',
+    			top: 'auto'
+    		});
+    	} else if (page.position == 'bottom-right') {
+    		$tutorialContainer.css({
+    			left: 'auto',
+    			right: '10%',
+    			bottom: '10%',
+    			top: 'auto'
+    		});
+    	}
+    	
+    	page.open();
+    }
+    
+    var highlightNone = function() {
+    	$tutorialAnimator.css({
+    		right: 'auto',
+    		left: 0,
+    		width: '100%'
+    	});
+    }
+    
+    var highlightSidePanel = function() {
+    	$tutorialAnimator.css({
+    		right: 0,
+    		left: 'auto',
+    		width: $(window).width() - $sidebar.outerWidth()
+    	});
+    }
+    
+    var highlightPage = function() {
+    	$tutorialAnimator.css({
+    		right: 'auto',
+    		left: 0,
+    		width: $sidebar.outerWidth()
+    	});
+    }
+    
+    var getCache = function() {
+    	if (!pageCache[currentPage]) {
+    		pageCache[currentPage] = {};
+    	}
+    	
+    	return pageCache[currentPage];
+    }
+    
+    this.init(opt);
 	
-	
-	this.init(opt);
 }
 
 /*
@@ -4379,6 +4652,7 @@ var ZumpMessenger = function(opt) {
     var $newMessage;
     var $sendOnEnter;
     var $searchInbox;
+    var $deleteThread;
     
     //----------------------\
     // Prototype Functions
@@ -4400,6 +4674,7 @@ var ZumpMessenger = function(opt) {
 			$sendOnEnter = $(opt.sendOnEnter);
 			$inboxList = $(opt.inboxList);
 			$searchInbox = $(opt.searchInbox);
+			$deleteThread = $(opt.deleteThread);
 		
 		initializeInboxList();
 		setupListeners();
@@ -4506,6 +4781,10 @@ var ZumpMessenger = function(opt) {
 		});
 		
 		$newMessage.on('keydown', onKeyDown);
+		
+		$deleteThread.click(function() {
+			deleteThreadItem(activeThread.threadId);
+		});
     }
     
     /*
@@ -4538,6 +4817,24 @@ var ZumpMessenger = function(opt) {
     	_.each(matchList, function(threadCacheObj) {
     		$('li.thread-container[threadId="' + threadCacheObj.thread.threadId + '"]').show();
     	});
+    }
+    
+    var deleteThreadItem = function(threadId) {
+		if (threadId) {
+			deleteThread(threadId, function(success, retData) {
+				if (success) {
+					delete threadCache[threadId];
+					$inboxList.find('li[threadid="' + threadId + '"]').remove();
+					if (_.keys(threadCache).length) {
+						$inboxList.find('li:first-child').trigger('click');
+					} else {
+						changePage('#pg-dashboard');
+					}
+				} else if (retData) {
+					handleError(retData);
+				}
+			});
+		}
     }
     
     var getThread = function(id) {
@@ -4610,18 +4907,17 @@ var ZumpMessenger = function(opt) {
         var user = userCache[recUser];
         if (typeof(user) !== 'undefined') {
         	if (user.photo != '') $threadContainer.find('.thread-image').css('background-image', 'url("' + user.photo + '")');
+        	if (user.username != '') $threadContainer.find('.thread-tag-label').text(user.username);
         } else {
         	userCache[recUser] = {photo: '', username: ''};
         	getUser(recUser, function(success, user) {
         		if (success) {
-        			if (!isDef(user.image)) return;
-        			
         			userCache[user._id].photo = getUserImage(user);
         			userCache[user._id].username = user.username;
         			$threadContainer.find('.thread-image').css('background-image', 'url("' + userCache[user._id].photo + '")');
         			$threadContainer.find('.thread-tag-label').text(userCache[user._id].username);
         			thread.threadTag = userCache[user._id].username;
-        			if (activeThread.threadId == thread.threadId) {
+        			if (activeThread && activeThread.threadId == thread.threadId) {
 						$threadTitle.text(thread.threadTag);
         			}
         		}

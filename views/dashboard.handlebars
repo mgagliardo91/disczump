@@ -1,7 +1,8 @@
 <!doctype html>
 <html>
+{{#section 'head'}}
 <head>
-    <title>DiscZump - Dashboard</title>
+    <title>disc|zump - Dashboard</title>
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/dropzone.css">
     <link rel="stylesheet" href="https://cdn.rawgit.com/fengyuanchen/cropper/v0.11.1/dist/cropper.min.css">
@@ -10,7 +11,8 @@
     <link href='https://fonts.googleapis.com/css?family=Orbitron:400,900' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Play:400,700' rel='stylesheet' type='text/css'>
 </head>
-<body>
+{{/section}}
+<body{{#if firstUse}} class="first-use"{{/if}}>
     {{#if info.text}}
     <div class="alert {{#if info.error}}alert-danger{{else}}alert-info{{/if}} page-alert" role="alert">
     	<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
@@ -270,7 +272,13 @@
                 </div>
                 <div class="page" id="pg-inbox">
                     <div class="row">
-                        <div class="page-title">Thread: <span id="thread-title"></span></div><hr>
+                        <div class="page-btn-container">
+                            <span id="delete-thread" class="page-title-btn"><i class="fa fa-trash" title="Delete Message Thread"></i></span>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="page-title">Thread: <span id="thread-title"></span></div>
+                        <hr>
+                        <div class="clearfix"></div>
                     </div>
                     <div id="message-container">
                         <div id="load-messages">Load More...</div>
@@ -538,11 +546,7 @@
                                 </div>
                                 <div class="data-row">
                                     <div class="data-label">Facebook:</div>
-                                    {{#if user.facebook.id}}
-                                    <div class="data-value">Linked</div>
-                                    {{else}}
-                                    <div class="data-value">Not Linked</div>
-                                    {{/if}}
+                                    <div class="data-value" id="facebook-link-status">{{#unless user.facebook.id}}Not {{/unless}}Linked</div>
                                 </div>
                             </div>
                         </div>
@@ -630,12 +634,14 @@
                         <div class="row-label">Actions</div>
                         <div class="account-actions-container">
                             <span class="account-btn">
-                                <a href="/account/link">
+                                {{!--<a href="/account/link">--}}
                                     <button id="facebook-link" class="btn btn-primary"><span><i class="fa fa-facebook-square fa-tools"></i></span>Manage Facebook</button>
-                                </a>
+                                {{!--</a>--}}
                             </span>
                             <span class="account-btn">
+                                {{!--<a href="/reset" target="_blank">--}}
                                 <button id="account-change-pwd" class="btn btn-default"><span><i class="fa fa-key fa-tools"></i></span>Change Password</button>
+                                {{!--</a>--}}
                             </span>
                             <span class="account-btn">
                                 <button id="account-delete" class="btn btn-danger"><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete Account</button>

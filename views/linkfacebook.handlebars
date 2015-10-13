@@ -2,7 +2,7 @@
 <!doctype html>
 <html>
 <head>
-    <title>DiscZump - Link Account</title>
+    <title>disc|zump - Link Account</title>
 </head>
 <body>
     <div class="page-container container">
@@ -24,11 +24,11 @@
             {{#if unlink}}
             <strong>We are sorry to see you go!</strong>
             {{else}}
-            <strong>Join the DiscZump Community!</strong>
+            <strong>Join the disc|zump Community!</strong>
             {{/if}}
             <br />
             <br />
-            Linking your DiscZump account to Facebook allows you to access many 
+            Linking your disc|zump account to Facebook allows you to access many 
             features including sharing with friends, posting to groups and more! Once your 
             account has been linked, you can then login with a single click in addition to 
             the standard method of using your email and password.
@@ -41,13 +41,17 @@
             {{#if unlink}}
             <a class="btn btn-wide btn-primary btn-facebook" href="/account/unlink/facebook">
                 <i class="fa fa-frown-o pull-left"></i> Unlink!</a>
+            {{#unless popup}}
             <a class="btn btn-wide btn-default" href="/dashboard">
                 <i class="fa fa-smile-o pull-left"></i> Nevermind!</a>
+            {{/unless}}
             {{else}}
             <a class="btn btn-wide btn-primary btn-facebook" href="/account/link/facebook">
                 <i class="fa fa-facebook-square pull-left"></i> Link!</a>
+            {{#unless popup}}
             <a class="btn btn-wide btn-default" href="/dashboard">
                 <i class="fa fa-home pull-left"></i> Take Me Home!</a>
+            {{/unless}}
             {{/if}}
         </div>
     </div>

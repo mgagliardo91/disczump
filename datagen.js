@@ -29,7 +29,7 @@ User.remove({}, function(err) {
 });
 
 ClientModel.remove({}, function(err) {
-    var client = new ClientModel({ name: "DiscZump Mobile", clientId: "DiscZumpMV1", clientSecret:"password!" });
+    var client = new ClientModel({ name: "disc|zump Mobile", clientId: "disc|zumpMV1", clientSecret:"password!" });
     client.save(function(err, client) {
         if(err) return console.log(err);
         else console.log("New client - %s:%s",client.clientId,client.clientSecret);

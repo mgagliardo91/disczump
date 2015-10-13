@@ -57,8 +57,8 @@ var delay = (function(){
 /*
 * Handles a standard server error
 */
-function handleError(serverObj) {
-	generateError(serverObj.error.type, serverObj.error.message);
+function handleError(error) {
+	generateError(error.message, error.type);
 }
 
 /*
@@ -74,32 +74,49 @@ function generateInfo(message, title) {
 /*
 * Generates an error message
 */
-function generateError(message, title) {
+function generateError(message, title, links) {
 	
 	$('.page-alert').remove();
-	$('body').prepend(generateMessage('danger', message, title));
+	$('body').prepend(generateMessage('danger', message, title, links));
 	$('.page-alert').slideDown(300);
 }
 
 /*
 * Generates a success message
 */
-function generateSuccess(message, title) {
+function generateSuccess(message, title, links) {
 	
 	$('.page-alert').remove();
-	$('body').prepend(generateMessage('success', message, title));
+	$('body').prepend(generateMessage('success', message, title, links));
 	$('.page-alert').slideDown(300);
 }
 
 /*
 * Generates a standard message based on arguments
 */
-function generateMessage(type, message, title) {
+function generateMessage(type, message, title, links) {
+    var endMessage = '';
+    
+    if (links && links.length) {
+	    var j = 0;
+	    var parsed = message.split('<');
+	    endMessage = parsed[0];
+	    for (var i = 1; i < parsed.length; i++) {
+	    	var linkParsed = parsed[i].split('>');
+	    	if (linkParsed.length != 2 || j > links.length) {
+	    		endMessage += parsed[i];
+	    	} else {
+	    		endMessage += '<a href="' + links[j++] + '">' + linkParsed[0] + '</a>' + linkParsed[1]; 
+	    	}
+	    }
+    } else {
+    	endMessage = message;
+    }
     
     return '<div class="alert alert-' + type + ' alert-dismissible page-alert" role="alert">' +
         		'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
         		'<div class="alert-body">' +
-        			'<strong>' + (title ? title + '!' : '') + '</strong>' + message +
+        			'<strong>' + (title ? title + '!' : '') + '</strong>' + endMessage +
         		'</div>' +
     		'</div>';
 }
@@ -163,9 +180,8 @@ function doAjax(param) {
 		},
 		error: function (request, textStatus, errorThrown) {
 		   console.log(request.responseText);
-		   console.log(textStatus);
-		   console.log(errorThrown);
-		   retData = {'error' : {message : request.responseText, type : 'Server Communication Error'}};
+		   retData = undefined;
+    		generateError('Unable to connect to disc|zump. Please <refresh> your page and try again.', 'Connection Error', ['/dashboard']);
 		},
 		complete: function(){
 		   if (param.callback) {
@@ -261,6 +277,14 @@ function postThread(receivingUser, callback) {
 		path: '/threads', 
 		type: 'POST',
 		data: {receivingUser: receivingUser},
+		callback: callback
+	});
+}
+
+function deleteThread(threadId, callback) {
+	doAjax({
+		path: '/threads/' + threadId,
+		type: 'DELETE',
 		callback: callback
 	});
 }

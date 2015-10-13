@@ -9,6 +9,8 @@ var DevController = require('../app/controllers/development.js')
 var configRoutes = require('../config/config.js').routes;
 var development = require('../config/config.js').development;
 var fbGraph = require('fbgraph');
+var Socket = require('../config/socket.js');
+var socketManager = require('../app/objects/socketCache.js');
 
 // app/routes.js
 module.exports = function(app, passport, gridFs) {
@@ -46,7 +48,7 @@ module.exports = function(app, passport, gridFs) {
                         notify : {
                             pageHeader: 'Join Successful',
                             header: 'Join Successful',
-                            strong: 'Your email has been successfully submitted to DiscZump!',
+                            strong: 'Your email has been successfully submitted to disc|zump!',
                             text: 'When we enter beta, you will receive instructions on how to create' + 
                                 ' your personalized account.',
                             buttonIcon: 'fa-home',
@@ -63,14 +65,14 @@ module.exports = function(app, passport, gridFs) {
 
     app.get('/dashboard', isLoggedIn, function(req, res) {
         UserController.updateActivity(req.user._id);
-        if (req.device.isMobile) {
-            return res.render('mobile/dashboard', {
-                user : req.user,
-                image : req.user.accountToString().image,
-                isDashboard : true,
-                isMobile: true
-            });
-        } else {
+        // // if (req.device.isMobile) {
+        //     return res.render('mobile/dashboard', {
+        //         user : req.user,
+        //         image : req.user.accountToString().image,
+        //         isDashboard : true,
+        //         isMobile: true
+        //     });
+        // } else {
             var firstUse = false;
             
             if (typeof req.user.local.accessCount !== 'undefined') {
@@ -92,7 +94,7 @@ module.exports = function(app, passport, gridFs) {
                     error: req.flash('infoError')
                 }
             });
-        }
+        // }
         
         
     });
@@ -151,21 +153,21 @@ module.exports = function(app, passport, gridFs) {
                    });
                 }
                 
-                if (req.device.isMobile) {
-                    return res.render('mobile/viewdisc', {
-                        disc: disc,
-                        user: user.accountToString(),
-                        isPublicPage: true,
-                        isMobile: true
-                    });
-                } else {
+                // if (req.device.isMobile) {
+                //     return res.render('mobile/viewdisc', {
+                //         disc: disc,
+                //         user: user.accountToString(),
+                //         isPublicPage: true,
+                //         isMobile: true
+                //     });
+                // } else {
                     return res.render('discview', {
                         disc: disc,
                         user: user.accountToString(),
                         isPublicPage: true,
                         isLoggedIn: req.isAuthenticated()
                     });
-                }
+                // }
                 
             });
         }) ;
@@ -289,7 +291,20 @@ module.exports = function(app, passport, gridFs) {
                         return res.redirect('/reset');
                      }
                      
-                     res.redirect('/login');
+                    return res.render('notification', {
+                        isMobile: req.device.isMobile,
+                        notify : {
+                           pageHeader: 'Reset Password',
+                           header: 'Reset Password',
+                           strong: 'Your password has been reset successfully!',
+                           text: 'You may not close this window or click the button' + 
+                                ' below to go to your dashboard.',
+                           buttonIcon: 'fa-home',
+                           buttonText: 'Return Home',
+                           buttonLink: '/dashboard',
+                           popup: req.body.popup
+                       }
+                    });
                  });
         })
         .get(isLoggedIn, function(req, res) {
@@ -450,11 +465,13 @@ module.exports = function(app, passport, gridFs) {
         if (req.user.facebook.id) {
             res.render('linkfacebook', {
                 isMobile: req.device.isMobile,
-                unlink: true
+                unlink: true,
+                popup: req.query.popup
            });
         } else {
             res.render('linkfacebook', {
-                isMobile: req.device.isMobile
+                isMobile: req.device.isMobile,
+                popup: req.query.popup
             });
         }
     });
@@ -469,8 +486,16 @@ module.exports = function(app, passport, gridFs) {
         user.facebook.image = undefined;
         user.save(function(err) {
             EventController.createEvent(user._id, EventController.types.AccountUnlink);
-            req.flash('infoTitle', 'Unlink Successful');
-            req.flash('infoText', 'Your Facebook account is no longer linked.');
+            
+            var socket = socketManager.getSocket(user._id);
+                
+            if (typeof(socket) !== 'undefined') {
+                Socket.sendCallback(socket, 'FacebookLink', 'Your Facebook account is no longer linked.');
+            } else {
+                req.flash('infoTitle', 'Unlink Successful');
+                req.flash('infoText', 'Your Facebook account is no longer linked.');
+            }
+            
             res.redirect('/dashboard');
         });
     });
@@ -518,6 +543,14 @@ function doLogIn(req, res, next, err, user, info) {
               }
               
               UserController.updateAccessCount(req.user._id, (req.device.isMobile ? 'mobile' : 'desktop'));
+              
+                var socket = socketManager.getSocket(req.user._id);
+                    
+                if (typeof(socket) !== 'undefined') {
+                    req.flash('infoTitle', undefined);
+                    req.flash('infoText', undefined);
+                    Socket.sendCallback(socket, 'FacebookLink', 'Your Facebook account is now linked.');
+                }
               
               if (redirect) {
                   return res.redirect(redirect);

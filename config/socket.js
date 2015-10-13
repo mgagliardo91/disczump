@@ -14,8 +14,22 @@ module.exports = {
     },
     
     TypeMsg: 'MessageNotification',
+    TypeInfo: 'InfoNotification',
+    TypeCallback: 'CallbackNotification',
     
-    sendNotification: function(socket, type, data) {
-        socket.emit('notification', { type: type, data: data});
-    }
+    sendInfo: sendInfo,
+    sendCallback: sendCallback,
+    sendNotification: sendNotification,
+}
+
+function sendCallback(socket, name, data) {
+    sendNotification(socket, 'CallbackNotification', {callbackName: name, message: data});
+}
+
+function sendInfo(socket, data) {
+    sendNotification(socket, 'InfoNotification', data);
+}
+
+function sendNotification(socket, type, data) {
+    socket.emit('notification', { type: type, data: data});
 }

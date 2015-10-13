@@ -22,7 +22,7 @@ DataItem.find({label: 'BetaEmail'}, function(err, dataItems) {
    	  async.each(dataItems, function(email, callback) {
    	      
         var message = generateConfirmationEmail(email.data);
-        Mailer.sendMail(email.data, 'DiscZump is Online!', message, function(err, result) {
+        Mailer.sendMail(email.data, 'disc|zump is Online!', message, function(err, result) {
            if (err) console.log(err);
            callback();
         });
