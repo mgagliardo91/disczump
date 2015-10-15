@@ -1,5 +1,4 @@
 var DiscController = require('./controllers/disc');
-var DiscImageController = require('./controllers/discImage');
 var passport = require('passport');
 var logger = require('../config/logger.js').logger;
 var mongoose = require('mongoose');

@@ -211,11 +211,12 @@ module.exports = function(passport) {
                 return done(err);
 
             if (!user) {
-                return done(null, false, req.flash('loginMessage', 'No user found.'));
+        
+                return done(null, false, req.flash('error', 'Invalid username or password. Please try again.'));
             }                
 
             if (!user.validPassword(password))
-                return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.'));
+                return done(null, false, req.flash('error', 'Invalid username or password. Please try again.'));
 
             logger.info('User login accepted for %s', user.local.email);
             return done(null, user);

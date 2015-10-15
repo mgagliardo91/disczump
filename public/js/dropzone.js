@@ -1205,6 +1205,10 @@
       }
       return option;
     };
+    
+    Dropzone.prototype.updateIndex = function(from, to) {
+      this.files.splice(to, 0, this.files.splice(from, 1)[0]);
+    }
 
     Dropzone.prototype.uploadFile = function(file) {
       return this.uploadFiles([file]);
