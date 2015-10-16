@@ -2202,6 +2202,10 @@ select, option {
     box-shadow: inset 2px 2px 10px 1px rgba(92,92,92,1);
 }
 
+.image-list-container.dz-drag-hover {
+    background-color: rgb(175, 220, 245);
+}
+
 .image-list-container-simple {
     border: 0px;
      -webkit-box-shadow: none;
@@ -2232,12 +2236,17 @@ select, option {
     padding-bottom: 5px;
 }
 
+.image-item-placeholder {
+    background-color: rgb(192, 214, 255);
+}
+
 .image-item {
     border: 1px solid rgb(166, 166, 166);
     -webkit-box-shadow: 3px 3px 10px 1px rgba(140, 140, 140, 0.67);
     -moz-box-shadow: 3px 3px 10px 1px rgba(140, 140, 140, 0.67);
     box-shadow: 3px 3px 10px 1px rgba(140, 140, 140, 0.67);
     position: relative;
+    background-color: white;
 }
 
 .image-preview { 

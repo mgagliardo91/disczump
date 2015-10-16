@@ -349,16 +349,12 @@ function getAllDiscImages(discId, callback) {
 	});
 }
 
-function getPrimaryDiscImage(imageId, callback) {
-	if (!isDef(imageId)) {
-		return callback(false);
+function getPrimaryDiscImage(disc) {
+	if (disc.primaryImage) {
+		return _.findWhere(disc.imageList, {_id: disc.primaryImage});
+	} else {
+		return undefined;
 	}
-	
-	doAjax({
-		path: '/images/' + imageId,
-		type: 'GET',
-		callback: callback
-	});
 }
 
 function getAllDiscs(callback) {
@@ -449,9 +445,9 @@ function deleteDisc(discId, callback) {
 	});
 }
 
-function deleteImage(imageId, callback) {
+function deleteImage(discId, imageId, callback) {
 	doAjax({
-		path: '/images/' + imageId,
+		path: '/discs/' + discId + '/images/' + imageId,
 		type: 'DELETE',
 		callback: callback
 	});

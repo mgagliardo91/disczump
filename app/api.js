@@ -2,7 +2,6 @@ var Error = require('./utils/error');
 var UserController = require('./controllers/user');
 var MessageController = require('./controllers/message');
 var DiscController = require('./controllers/disc');
-var DiscImageController = require('./controllers/discImage');
 var DataItemController = require('./controllers/dataItem');
 var passport = require('passport');
 var logger = require('../config/logger.js').logger;
@@ -358,16 +357,11 @@ module.exports = function(app, passport, gridFs) {
             var userId = undefined;
             if (req.user) userId = req.user._id;
             
-            DiscController.getDisc(userId, req.params.discId, function(err, disc) {
+            DiscController.getDiscImages(userId, req.params.discId, function(err, discImages) {
                 if (err)
                     return res.json(err);
                 
-                DiscImageController.getDiscImages(userId, disc._id, function(err, discImages) {
-                    if (err)
-                        return res.json(err);
-                    
-                    return res.json(discImages);
-                })
+                return res.json(discImages);
             });
         })
         .post(hasAccess, function(req, res) {
@@ -392,17 +386,10 @@ module.exports = function(app, passport, gridFs) {
                             filename: filename,
                             maxSize: config.images.maxSize
                             }, function(newFile) {
-                                DiscImageController.postDiscImage(req.user._id, disc._id, newFile._id, function(err, discImage) {
+                                DiscController.postDiscImage(gm, gfs, req.user._id, disc._id, newFile._id, function(err, discImage) {
                                     if (err)
                                         return res.json(err);
-                                    
-                                    DiscImageController.createThumbnail(gm, gfs, discImage, function(err, image) {
-                                        if (err)
-                                            return res.json(err);
                                         
-                                        return res.json(image);
-                                    });
-                                    
                                     return res.json(discImage);
                                 });
                         });
@@ -420,13 +407,10 @@ module.exports = function(app, passport, gridFs) {
                 req.pipe(busboy);
             });
         });
-    
-    app.route('/images/:imageId')
+        
+    app.route('/discs/:discId/images/:imageId')
         .get(function(req, res) {
-            var userId = undefined;
-            if (req.user) userId = req.user._id;
-            
-            DiscImageController.getDiscImage(userId, req.params.imageId, function(err, discImage) {
+            DiscController.getDiscImage(req.user._id, req.params.discId, req.params.imageId, function(err, discImage) {
                 if (err)
                     return res.json(err);
                     
@@ -434,13 +418,13 @@ module.exports = function(app, passport, gridFs) {
             });
         })
         .delete(hasAccess, function(req, res){
-            DiscImageController.deleteDiscImage(req.user._id, req.params.imageId, gfs, function(err, discImage) {
+            DiscController.deleteDiscImage(req.user._id, req.params.discId, req.params.imageId, gfs, function(err, discImage) {
                 if (err)
                     return res.json(err);
                     
                 return res.json(discImage);
             });
-        })
+        });
     
     app.get('*', function(req, res){
        res.json(401, 'Unknown path'); 

@@ -1,5 +1,4 @@
 var DiscController = require('./disc');
-var DiscImageController = require('./discImage');
 var async = require('async');
 var fs = require('fs');
 var config = require('../../config/config.js');
@@ -27,16 +26,11 @@ function createDiscData(gridfs, userId) {
                         filename: image.image,
                         maxSize: config.images.maxSize
                         }, function(newFile) {
-                            DiscImageController.postDiscImage(userId, disc._id, newFile._id, function(err, discImage) {
+                            DiscController.postDiscImage(gm, gridfs, userId, disc._id, newFile._id, function(err, discImage) {
                                 if (err)
                                     return callback(err);
                                 
-                                DiscImageController.createThumbnail(gm, gridfs, discImage, function(err, imageThumb) {
-                                    if (err)
-                                        return callback(err);
-                                    
-                                    callback();
-                                });
+                                callback();
                             });
                     });
                 }, function(err) {

@@ -76,7 +76,7 @@ module.exports = function(app, passport, gridFs) {
             var firstUse = false;
             
             if (typeof req.user.local.accessCount !== 'undefined') {
-                firstUse = req.user.local.accessCount.desktop <= 1;
+                firstUse = req.user.local.accessCount.desktop < 1;
                 if (firstUse) {
                     UserController.updateAccessCount(req.user._id, 'desktop');
                 }
@@ -522,8 +522,6 @@ function doLogIn(req, res, next, err, user, info) {
         return next(err);
         
     if (!user) {
-        req.flash('error', 'Invalid username or password. Please try again.');
-        
         return res.redirect('/login');
     } else {
         if (!user.local.active) {
