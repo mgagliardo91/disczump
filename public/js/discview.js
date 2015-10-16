@@ -59,26 +59,36 @@ function initialize() {
             
             // Get disc images
             getAllDiscImages(currentDisc._id, function(success, images) {
-                if (success && images.length > 0) {
-                    imageArray = images;
-                    generateImageList();
+                if (success) {
+                    if (images.length > 0) {
+                        imageArray = images;
+                        generateImageList();
+                    }
+                } else {
+                    handleError(images);
                 }
             });
             
             getPublicPreview(currentDisc.userId, currentDisc._id, function(success, retData) {
-                if (success && retData.discs.count > 0) {
-                    userPublicDiscs = _.reject(retData.discs.preview, function(disc) {
-                        return disc._id == currentDisc._id;
-                    });
-                    
-                    for (var i = 0; i < 5; i++) {
-                        if (userPublicDiscs.length > i) {
-                            $discRow.append(publicDisc(userPublicDiscs[i]));
+                if (success) {
+                    if (retData.discs.count > 0) {
+                        userPublicDiscs = _.reject(retData.discs.preview, function(disc) {
+                            return disc._id == currentDisc._id;
+                        });
+                        
+                        for (var i = 0; i < 5; i++) {
+                            if (userPublicDiscs.length > i) {
+                                $discRow.append(publicDisc(userPublicDiscs[i]));
+                            }
                         }
+                        resize();
                     }
-                    resize();
+                } else {
+                    handleError(retData);
                 }
             });
+        } else {
+            handleError(disc);
         }
     });   
 }
@@ -123,6 +133,8 @@ function publicDisc(disc) {
         getPrimaryDiscImage(disc.primaryImage, function(success, primaryImage) {
             if (success) {
                 $('.public-disc-item[discid="' + primaryImage.discId + '"]').find('.disc-gallery-image > img').attr('src', '/files/' + primaryImage.thumbnailId);
+            } else {
+                handleError(primaryImage);
             }
         });
     }

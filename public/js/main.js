@@ -58,37 +58,46 @@ var delay = (function(){
 * Handles a standard server error
 */
 function handleError(error) {
-	generateError(error.message, error.type);
+	generateError(error.message, error.type, false);
 }
 
 /*
 * Generates a information message
 */
-function generateInfo(message, title) {
+function generateInfo(message, title, autoClose, links) {
 	
 	$('.page-alert').remove();
 	$('body').prepend(generateMessage('info', message, title));
 	$('.page-alert').slideDown(300);
+	if (autoClose) {
+		autoCloseAlert($('.page-alert'), '.close', 3000);
+	}
 }
 
 /*
 * Generates an error message
 */
-function generateError(message, title, links) {
+function generateError(message, title, autoClose, links) {
 	
 	$('.page-alert').remove();
 	$('body').prepend(generateMessage('danger', message, title, links));
 	$('.page-alert').slideDown(300);
+	if (autoClose) {
+		autoCloseAlert($('.page-alert'), '.close', 3000);
+	}
 }
 
 /*
 * Generates a success message
 */
-function generateSuccess(message, title, links) {
+function generateSuccess(message, title, autoClose, links) {
 	
 	$('.page-alert').remove();
 	$('body').prepend(generateMessage('success', message, title, links));
 	$('.page-alert').slideDown(300);
+	if (autoClose) {
+		autoCloseAlert($('.page-alert'), '.close', 3000);
+	}
 }
 
 /*
@@ -126,7 +135,11 @@ function generateMessage(type, message, title, links) {
 */
 function autoCloseAlert($element, selector, delay) {
 	var id = setTimeout(function() {
-		$element.find(selector).trigger('click');
+		if ($element.hasClass('page-alert')) {
+			$element.slideUp(300);
+		} else {
+			$element.find(selector).trigger('click');
+		}
 	}, delay);
 	$element.on('mouseenter', function() {
 		clearTimeout(id);	
@@ -181,7 +194,7 @@ function doAjax(param) {
 		error: function (request, textStatus, errorThrown) {
 		   console.log(request.responseText);
 		   retData = undefined;
-    		generateError('Unable to connect to disc|zump. Please <refresh> your page and try again.', 'Connection Error', ['/dashboard']);
+    		generateError('Unable to connect to disc|zump. Please <refresh> your page and try again.', 'Connection Error', false, ['/dashboard']);
 		},
 		complete: function(){
 		   if (param.callback) {

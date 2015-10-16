@@ -100,11 +100,11 @@ $(document).ready(function(){
     			$('#account-last-name').val(retData.lastName);
     			$('#account-zip-code').val(retData.zipCode);
     			$('#account-pdga').val(retData.pdgaNumber);
-    			generateSuccess('Account successfully updated.', 'Success');
+    			generateSuccess('Account successfully updated.', 'Success', true);
     			
     			accountValidation.updateItem('account-username', 'data', retData.username);
     		} else {
-    			generateError(retData.message, retData.type);
+    			handleError(retData);
     		}
     	});
     });
@@ -137,7 +137,7 @@ $(document).ready(function(){
     	
     	if (enableSecondarySort) {
     		if (primarySort == secondarySort) {
-	    		generateError('Sort properties must be different.', 'ERROR');
+	    		generateError('Sort properties must be different.', 'ERROR', false);
 	    		return;
 	    	} else {
 	    		defaultSortArray = [{property : primarySort, sortAsc : primarySortDirection}, {property : secondarySort, sortAsc : secondarySortDirection}];
@@ -153,8 +153,10 @@ $(document).ready(function(){
     		galleryCount : galleryCount
     	}, function(success, retData) {
     		if (success) {
-    			generateSuccess('Default settings saved successfully. Changes will take effect when page is <a href="/dashboard">reloaded</a>.', 'Success');
+    			generateSuccess('Default settings saved successfully. Changes will take effect when page is <reloaded>.', 'Success', false, ['/dashboard']);
     			userPrefs = retData;
+    		} else {
+    			handleError(retData);
     		}
     	});
     });
@@ -164,8 +166,10 @@ $(document).ready(function(){
     	generateConfirmationModal('Warning!', text, 'Restore', function() {
 			updatePreferences(undefined, function(success, retData) {
 	    		if (success) {
-	    			generateSuccess('Default settings have been restored. Changes will take effect when page is <a href="/dashboard">reloaded</a>.', 'Success');
+	    			generateSuccess('Default settings have been restored. Changes will take effect when page is <reloaded>.', 'Success', false, ['/dashboard']);
 	    			userPrefs = retData;
+	    		} else {
+	    			handleError(retData);
 	    		}
 	    	});
 		});
@@ -192,9 +196,11 @@ $(document).ready(function(){
     		}
     	}, function(success, retData) {
     		if (success) {
-    			generateSuccess('Colorize settings saved successfully.', 'Success');
+    			generateSuccess('Colorize settings saved successfully.', 'Success', true);
     			userPrefs = retData;
     			myDashboard.showDiscs(true);
+    		} else {
+    			handleError(retData);
     		}
     	});
     });
@@ -209,8 +215,10 @@ $(document).ready(function(){
     		}
     	}, function(success, retData) {
     		if (success) {
-    			generateSuccess('Notification settings saved successfully.', 'Success');
+    			generateSuccess('Notification settings saved successfully.', 'Success', true);
     			userPrefs = retData;
+    		} else {
+    			handleError(retData);
     		}
     	});
     });
@@ -228,7 +236,11 @@ $(document).ready(function(){
 	$('.colorize-item').click(function() {
 		var $this = $(this);
 		myZumpColorPicker.getColor($this, function(success, color) {
-			$this.css('backgroundColor', color);
+			if (success) {
+				$this.css('backgroundColor', color);
+			} else {
+				handleError(color);
+			}
 		});
 	});
 
@@ -396,12 +408,16 @@ $(document).ready(function(){
 	    						setLoading(false);
 								myDashboard.initDiscList(discs);
 							} else {
-								alert('Unable to intialize');
+								handleError(discsFromServer);
 							}
 						});
 		    		});
+		     	} else {
+		     		handleError(prefs);
 		     	}
 		    });
+    	} else {
+    		handleError(account);
     	}	
     });
     
@@ -447,7 +463,7 @@ function setupFrameworkListeners() {
    		e.stopImmediatePropagation();
    		generateFeedbackModal('Feedback Form', 'Submit', function() {
    			if ($('#feedback-textarea').val().length < 1) {
-   				return generateError('You must enter information into the text box before submitting the form.', 'ERROR');
+   				return generateError('You must enter information into the text box before submitting the form.', 'ERROR', false);
    			} else {
    				$('.page-alert').remove();
    				var text = $('#feedback-textarea').val();
@@ -455,7 +471,7 @@ function setupFrameworkListeners() {
    					if (success) {
    						$('.custom-modal').modal('hide');
    					} else {
-   						console.log('Error submitting feedback.');
+   						handleError(retData);
    					}
    				});
    			}
@@ -525,7 +541,7 @@ function initSocket(sessionId) {
 	}).on('notification', function (notification) {
 	    parseNotification(notification);
 	}).on('disconnect', function() {
-		generateError('Disconnected from disc|zump. Reconnecting...', 'Connection Error');
+		generateError('Disconnected from disc|zump. Reconnecting...', 'Connection Error', true);
 		setTimeout(getSocketSession, 1000);
 	}).on('connect_error', function() {
 		getSocketSession();
@@ -537,7 +553,7 @@ function getSocketSession() {
     	if (success) {
     		initSocket(data.sessionId);
     	} else {
-    		generateError('Unable to connect to server. Please <refresh> your page.', 'Connection Error', ['/dashboard']);
+    		generateError('Unable to connect to server. Please <refresh> your page.', 'Connection Error', false, ['/dashboard']);
     	}
     });
 }
@@ -546,7 +562,7 @@ function parseNotification(notification) {
 	if (notification.type == 'MessageNotification') {
 		myMessenger.handleMessage(notification.data)
 	} else if (notification.type == 'InfoNotification') {
-		generateInfo(notification.data, 'disc|zump Message');
+		generateInfo(notification.data, 'disc|zump Message', true);
 	} else if (notification.type == 'CallbackNotification') {
 		parseCallback(notification.data);
 	}
@@ -561,9 +577,9 @@ function parseCallback(callbackNotification) {
 	}
 	
 	if (cbName == 'ResetPassword') {
-		generateInfo(cbMessage, 'Password Update');
+		generateInfo(cbMessage, 'Password Update', true);
 	} else if (cbName == 'FacebookLink') {
-		generateInfo(cbMessage + ' Page refresh required to view current state.', 'Facebook Link Update');
+		generateInfo(cbMessage + ' Page refresh required to view current state.', 'Facebook Link Update', true);
 	}
 }
 
@@ -622,6 +638,7 @@ function toggleSidebar(nav, complete) {
 	   	}
 	   	
 	   	pageSettings.panelNav.curPanel = '#' + $nav.attr('id');
+	   	pageSettings.panelNav = _.without(pageSettings.panelNav, pageSettings.panelNav.curPanel);
 	   	
    		$curNav.fadeOut(0, function() {
    			$('.sidebar-nav-indicator').removeClass('active');
@@ -710,7 +727,7 @@ function triggerPageChange(sender, page, callback) {
 	       	});
 	   		pageSettings.pageNav.push('#' + $curPage.attr('id'));
    		}
-   		console.log(pageSettings.pageNav);
+   		
    		$curPage.fadeOut(100, function() {
    			
            	if (isDef(curPageEvents)) {
@@ -783,7 +800,7 @@ function initViewProfile(params, callback) {
 	if (isDef(params.user_id)) {
 		mySocial.showProfile(params.user_id, function(err) {
 			changePage('#pg-dashboard');
-			generateError(err, 'Navigation Error');
+			generateError(err, 'Navigation Error', true);
 		});
 	} else {
     	changePage('#pg-dashboard');
@@ -795,7 +812,7 @@ function initViewDisc(params, callback) {
 	if (isDef(params.disc_id)) {
 		myDashboard.showPublicDisc(params.disc_id, function(err) {
 			changePage('#pg-dashboard');
-			generateError(err, 'Navigation Error');
+			generateError(err, 'Navigation Error', true);
 		});
 	} else {
     	changePage('#pg-dashboard');
@@ -807,7 +824,7 @@ function initViewInbox(params, callback) {
 	if (isDef(params.thread_id)) {
 		myMessenger.openThreadById(params.thread_id, function(err) {
 			changePage('#pg-dashboard');
-			generateError(err, 'Navigation Error');
+			generateError(err, 'Navigation Error', true);
 		});
 	} else {
     	changePage('#pg-dashboard');
@@ -826,11 +843,13 @@ function initViewDashboard(params, callback) {
 						myDashboard.setDiscList(discs, user);	
 						changePage('#pg-dashboard');
 						callback();
+					} else {
+						handleError(discs);
 					}
 				});
 			} else {
 				changePage('#pg-dashboard');
-				generateError('Unknown user identifier.', 'Navigation Error');
+				generateError('Unknown user identifier.', 'Navigation Error', true);
 				setLoading(false);
 				callback();
 			}
@@ -879,7 +898,7 @@ function initSettings() {
 					if (success) {
 						userAccount = retData;
 						resetUserImage();
-						generateSuccess('Account image successfully updated', 'Update Successful');
+						generateSuccess('Account image successfully updated', 'Update Successful', true);
 					} else {
 						handleError(retData);
 					}
@@ -959,7 +978,7 @@ function initSettings() {
 						userAccount = response;
 						resetUserImage();
 						$('#profile-image-local-clear').trigger('click');
-						generateSuccess('Account image successfully updated', 'Update Successful');
+						generateSuccess('Account image successfully updated', 'Update Successful', true);
 					} else {
 						handleError(response);
 					}
@@ -1089,7 +1108,10 @@ function zumpLibraryInit() {
 		},
 		gallery: {
 			galleryContainer: '#gallery-container',
-			galleryCount: userPrefs.galleryCount
+			galleryCount: userPrefs.galleryCount,
+			gallerySlider: '#gallery-slider',
+			galleryMenu: '#gallery-menu',
+			galleryRowCount: '#gallery-row-count',
 		},
 		statistics: {
 			statPlot: '#statistics-plot',
@@ -2193,7 +2215,7 @@ var ZumpEditor = function(opt) {
 		    		errorLength = errorLength - 1;
 		    	});
 				
-				return generateError('Invalid data in the following fields: ' + errorText + '.', 'ERROR');
+				return generateError('Invalid data in the following fields: ' + errorText + '.', 'ERROR', false);
 				
 			} else if (modifyHandler.type == 'Add' || modifyHandler.type == 'Clone') {
 	    		saveNewDisc();
@@ -2430,23 +2452,27 @@ var ZumpEditor = function(opt) {
 				if (dropzone && dropzone.getAcceptedFiles().length > 0) {
 					dropzone.options.url = '/api/discs/' + retData._id + '/images';
 					dropzone.on('queuecomplete', function() {
-						generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success');
-						getDiscById(retData._id, function(err, disc) {
-							isProcessing = false;
-							onNewDisc(disc);
+						generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success', true);
+						getDiscById(retData._id, function(success, disc) {
+							if (success) {
+								isProcessing = false;
+								onNewDisc(disc);
+							} else {
+								handleError(disc);
+							}
 						});
 						clearDropzone();
 						dropzone.off('queuecomplete');
 					});
 					dropzone.processQueue();
 				} else {
-					generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success');
+					generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success', true);
 					isProcessing = false;
 					onNewDisc(retData);
 				}
 			} else {
 				isProcessing = false;
-				generateError(retData.message, 'ERROR');
+				handleError(retData);
 			}
 		});
 	}
@@ -2468,27 +2494,33 @@ var ZumpEditor = function(opt) {
 							if (dropzone && dropzone.getAcceptedFiles().length > 0) {
 								dropzone.options.url = '/api/discs/' + retData._id + '/images';
 								dropzone.on('queuecomplete', function() {
-									generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success');
-									getDiscById(retData._id, function(err, disc) {
-										isProcessing = false;
-										onUpdatedDisc(disc);
+									getDiscById(retData._id, function(success, disc) {
+										if (success) {
+											isProcessing = false;
+											onUpdatedDisc(disc);
+											stageModifyDiscPage(modifyHandler.type, modifyHandler.discId);
+											generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success', true);
+										} else {
+											handleError(disc);
+										}
 									});
 									dropzone.off('queuecomplete');
-								})
+								});
 								dropzone.processQueue();
 							} else {
-								generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success');
 								isProcessing = false;
 								onUpdatedDisc(retData);
+								stageModifyDiscPage(modifyHandler.type, modifyHandler.discId);
+								generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success', true);
 							}
 						} else {
-							generateError(retData.message, 'ERROR');
+							handleError(retData);
 							isProcessing = false;
 						}
 					});
 				});
 			} else {
-				generateError(retData.message, 'ERROR');
+				handleError(retData);
 				isProcessing = false;
 			}
 		});
@@ -2796,6 +2828,9 @@ var ZumpDashboard = function(opt) {
     var $searchPanel;
     var $searchResults;
 	var $imageArea;
+	var $paginateNav;
+	var $galleryMenu;
+	var $dashboardViewArea;
 
 	//----------------------\
     // Prototype Functions
@@ -2815,7 +2850,9 @@ var ZumpDashboard = function(opt) {
 		$searchToggle = $(opt.searchToggle);
 		$searchPanel = $(opt.searchPanel);
 		$searchResults = $(opt.searchResults);
+		$paginateNav = $('#paginate-nav');
 		$imageArea = $('#view-disc-image-container');
+		$dashboardViewArea = $('#dashboard-view-area');
 		onUpdateDisc = opt.onUpdateDisc;
 		onDeleteDisc = opt.onDeleteDisc;
 		onDisplayProfile = opt.onDisplayProfile;
@@ -2887,10 +2924,18 @@ var ZumpDashboard = function(opt) {
 		myGallery = new ZumpGallery({
 			galleryContainer: opt.gallery.galleryContainer,
 			galleryCount: opt.gallery.galleryCount,
+			gallerySlider: opt.gallery.gallerySlider,
+			galleryMenu: opt.gallery.galleryMenu,
+			galleryRowCount: opt.gallery.galleryRowCount,
 			onItemClick: function(id) {
 				showDiscView(id);
+			},
+			onGalleryChange: function() {
+				resizeResultHeader();
 			}
 		});
+		
+		$galleryMenu = $(opt.gallery.galleryMenu);
 		
 		/*
 		* Initialize Listeners
@@ -3116,6 +3161,7 @@ var ZumpDashboard = function(opt) {
 	   
 	   		if (!$view.is(':visible')) {
 	   			$curView.fadeOut(100, function() {
+	   				preViewChange(view);
 		            $view.fadeIn(100, function() {
 						resizeDashboard();
 	        			onViewChange(view);
@@ -3126,9 +3172,27 @@ var ZumpDashboard = function(opt) {
 	   	}
 	}
 	
+	var preViewChange = function(view) {
+		if (view == 'gallery') {
+			$inventoryHeader.show();
+			$paginateNav.hide();
+			$galleryMenu.show();
+			$paginateCount.attr('disabled', 'disabled');
+		} else if (view == 'inventory') {
+			$inventoryHeader.show();
+			$paginateNav.show();
+			$galleryMenu.hide();
+			$paginateCount.removeAttr('disabled');
+		} else if (view == 'statistics') {
+			$inventoryHeader.hide();
+		}
+	}
+	
 	var onViewChange = function(view) {
 		if (view == 'gallery') {
     	    zumpDashboard.showDiscGallery();
+		} else if (view == 'inventory') {
+		} else if (view == 'statistics') {
 		}
 	}
 	
@@ -3279,7 +3343,7 @@ var ZumpDashboard = function(opt) {
 					if (success) {
 						onDeleteDisc(data);
 					} else {
-						generateError(data.message, 'ERROR');
+						handleError(data);
 					}
 				});
 			});
@@ -3305,7 +3369,7 @@ var ZumpDashboard = function(opt) {
 				if (success) {
 					onUpdateDisc(retData);
 				} else {
-					generateError(retData.message, 'ERROR');
+					handleError(retData);
 				}
 			});
 		});
@@ -3396,9 +3460,9 @@ var ZumpDashboard = function(opt) {
 	* Ensures the header width maintains the result view width
 	*/
 	var resizeResultHeader = function() {
-		if ($inventoryContainer.is(':visible')) {
+		if ($dashboardViewArea.is(':visible')) {
 			$inventoryHeader.css({
-				'width': $inventoryContainer.outerWidth()
+				'width': $dashboardViewArea.outerWidth()
 			});
 		}
 	}
@@ -3512,7 +3576,9 @@ var ZumpDashboard = function(opt) {
 				if (success) {
 					userCache[discUser._id] = discUser;
 					setDiscOwner(discUser);
-				}	
+				} else {
+					handleError(discUser);
+				}
 			});
 		}
 		
@@ -3617,7 +3683,7 @@ var ZumpDashboard = function(opt) {
 	* Updates the sort header
 	*/
 	var updateHeader = function(count) {
-		$('#results-header-count').text('Results: ' + count);
+		$('#results-header-count').text('/ ' + count);
 		
 		var $paginate = $('#paginate-nav');
 		var $pageInsert = $('#page-back');
@@ -4452,6 +4518,8 @@ var ZumpSocial = function(opt) {
 								appendNoResults();
 							}
 							$profileLoading.css('display', 'none');
+						} else {
+							handleError(queryResult);
 						}
 					});
 				}, 500 );
@@ -4483,7 +4551,9 @@ var ZumpSocial = function(opt) {
     				var user = userCache[curUser];
     				myDashboard.setDiscList(discs, user);
     				changePage('#pg-dashboard');
-    			}	
+    			} else {
+    				handleError(discs);
+    			}
     		});
     	});
     	
@@ -4522,17 +4592,21 @@ var ZumpSocial = function(opt) {
     var getPreview = function(user) {
     	$discRow.empty();
     	 getProfilePreview(user._id, function(success, retData) {
-            if (success && retData.discs.count > 0) {
+            if (success) {
+            	if (retData.discs.count > 0) {
             	
-            	$profileDiscCount.text(retData.discs.count);
-            	var previewDiscs = retData.discs.preview;
-                
-                for (var i = 0; i < 5; i++) {
-                    if (previewDiscs.length > i) {
-                        $discRow.append(publicDisc(previewDiscs[i]));
-                    }
-                }
-                resize();
+	            	$profileDiscCount.text(retData.discs.count);
+	            	var previewDiscs = retData.discs.preview;
+	                
+	                for (var i = 0; i < 5; i++) {
+	                    if (previewDiscs.length > i) {
+	                        $discRow.append(publicDisc(previewDiscs[i]));
+	                    }
+	                }
+	                resize();
+            	}
+            } else {
+            	handleError(retData);
             }
         });
     }
@@ -4593,6 +4667,8 @@ var ZumpSocial = function(opt) {
 	        	if (success) {
 	        		$('.city-state[value="' + user.zipCode + '"]').text(retData);
 	        		zipCodeCache[user.zipCode] = retData;
+	        	} else {
+	        		handleError(retData);
 	        	}
 	        });
         }
@@ -4624,6 +4700,8 @@ var ZumpSocial = function(opt) {
 	        getPrimaryDiscImage(disc, function(success, primaryImage) {
 	            if (success) {
 	                $('.public-disc-item[discid="' + primaryImage.discId + '"]').find('.disc-gallery-image > img').attr('src', '/files/' + primaryImage.thumbnailId);
+	            } else {
+	            	handleError(primaryImage);
 	            }
 	        });
 	    }
@@ -4817,7 +4895,10 @@ var ZumpMessenger = function(opt) {
     				threadCache[thread.threadId] = {thread: thread, messages: [], lastId: undefined};
     				appendThread(thread);
     			});
+    		} else {
+    			handleError(threadList);
     		}
+    		
     		initialized = true;
     		if (typeof(postFunction) !== 'undefined') {
     			postFunction();
@@ -4849,7 +4930,7 @@ var ZumpMessenger = function(opt) {
 					} else {
 						changePage('#pg-dashboard');
 					}
-				} else if (retData) {
+				} else {
 					handleError(retData);
 				}
 			});
@@ -4939,12 +5020,11 @@ var ZumpMessenger = function(opt) {
         			if (activeThread && activeThread.threadId == thread.threadId) {
 						$threadTitle.text(thread.threadTag);
         			}
+        		} else {
+        			handleError(user);
         		}
         	});
         }                    
-        
-        
-        
         
     	setThreadState($threadContainer, isNew);
     }
@@ -4980,6 +5060,8 @@ var ZumpMessenger = function(opt) {
 					prependThread(thread);
 	    			showThread(thread.threadId);
 					changeSidebar('#sidebar-inbox');
+    			} else {
+    				handleError(thread);
     			}
     		});
     	}
@@ -5062,9 +5144,12 @@ var ZumpMessenger = function(opt) {
     var pullMessages = function(threadCacheObj, callback) {
     	getMessages(threadCacheObj.thread.threadId, getParams(threadCacheObj), function(success, messages) {
     		if (success) {
-    			threadCacheObj.messages = threadCacheObj.messages.concat(messages);
-    			threadCacheObj.lastId = messages[messages.length - 1]._id;
-    			threadCacheObj.sepId = messages[0]._id;
+    			
+    			if (messages.length) {
+	    			threadCacheObj.messages = threadCacheObj.messages.concat(messages);
+	    			threadCacheObj.lastId = messages[messages.length - 1]._id;
+	    			threadCacheObj.sepId = messages[0]._id;
+    			}
     			
     			if (threadCacheObj.messages.length == threadCacheObj.thread.currentMessageCount) {
 	    			$loadMessages.hide();
@@ -5079,6 +5164,8 @@ var ZumpMessenger = function(opt) {
     			});
     			
     			callback();
+    		} else {
+    			handleError(messages);
     		}
     	});
     }
@@ -5125,6 +5212,8 @@ var ZumpMessenger = function(opt) {
         			_.each(msgByUser, function(msg) {
         				$messageContainer.find('.thread-message[messageId="' + msg._id + '"]').find('.message-user').css('background-image', 'url("' + userCache[user._id].photo + '")');
         			});
+        		} else {
+        			handleError(user);
         		}
         	})
         }
@@ -5165,7 +5254,7 @@ var ZumpMessenger = function(opt) {
 				thread.modifiedDate = message.createDate;
 				updateThread(thread);
 			} else {
-				console.log(err);
+				handleError(message);
 			}
 		});
     }
@@ -5206,6 +5295,7 @@ var ZumpGallery = function(opt) {
 	var itemsPerRow;
 	var itemClick;
 	var objList = [];
+	var onGalleryChange;
 	
     //----------------------\
     // JQuery Objects
@@ -5215,6 +5305,7 @@ var ZumpGallery = function(opt) {
 	var $galleryTable;
 	var $gallerySlider;
 	var $galleryMenu;
+	var $galleryRowCount;
 	
 	//----------------------\
     // Prototype Functions
@@ -5225,11 +5316,28 @@ var ZumpGallery = function(opt) {
     */
 	this.init = function(opt) {
 		
+		if (isDef(opt.onGalleryChange)) {
+			onGalleryChange = opt.onGalleryChange;
+		}
+		
+		if (isDef(opt.galleryMenu)) {
+			$galleryMenu = $(opt.galleryMenu);
+		}
+		
+		if (isDef(opt.gallerySlider)) {
+			$gallerySlider = $(opt.gallerySlider);
+		}
+		
+		if (isDef(opt.galleryRowCount)) {
+			$galleryRowCount = $(opt.galleryRowCount);
+		}
+		
 		if (isDef(opt.galleryContainer)) {
 			$galleryContainer = $(opt.galleryContainer);
 			createGallery();
 			setupListeners();
 		}
+		
 		
 		if (isDef(opt.galleryCount)) {
 			itemsPerRow = opt.galleryCount;
@@ -5299,18 +5407,11 @@ var ZumpGallery = function(opt) {
     */
 	var createGallery = function() {
 		$galleryContainer.append(
-			'<div class="gallery-menu">' +
-	            '<span class="gallery-zoom-icon"><i class="fa fa-search-plus fa-lg"></i></span>' +
-	            '<input class="gallery-slider" type="text">' +
-	            '<span class="gallery-zoom-text">Items Per Row: </span><span class="gallery-row-count"></span>' +
-	        '</div>' +
 	        '<table class="gallery-table">' +
 	        '</table>'
 		);
 		
 		$galleryTable = $galleryContainer.find('.gallery-table');
-		$galleryMenu = $galleryContainer.find('.gallery-menu');
-		$gallerySlider = $galleryContainer.find('.gallery-slider');
 		$gallerySlider.slider({
 			min: 2,
 			max: 12,
@@ -5330,7 +5431,7 @@ var ZumpGallery = function(opt) {
 	var gallerySetup = function() {
 		var total = 0;
 		$galleryTable.empty();
-		$galleryMenu.find('.gallery-row-count').text(itemsPerRow);
+		$galleryRowCount.text(itemsPerRow);
 		
 		var rowCount = Math.ceil(objCount/itemsPerRow);
 		var colCount = itemsPerRow;
@@ -5356,6 +5457,7 @@ var ZumpGallery = function(opt) {
 								'</tr>');
 		}
 		resizeGallery();
+		onGalleryChange();
 	}
 	
 	/*

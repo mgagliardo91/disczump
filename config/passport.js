@@ -225,8 +225,7 @@ module.exports = function(passport) {
     }));
     
     /// API OAUTH STRATEGY
-    passport.use('api-login', new BasicStrategy(
-        function(username, password, done) {
+    passport.use('api-login', new BasicStrategy(function(username, password, done) {
 
             Client.findOne({ clientId: username }, function(err, client) {
                 if (err) { return done(err); }

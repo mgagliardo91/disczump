@@ -1,6 +1,9 @@
 {
-  "name": "disc-zump",
+  "name": "disczump",
   "main": "server.js",
+  "scripts": {
+    "test": "make test"
+  },
   "dependencies" : {
     "express" : "~4.0.0",
     "express-handlebars": "^1.1.0",
@@ -39,6 +42,10 @@
     "shortid": "~2.2.2",
     "mongoose-shortid": "~0.4.2",
     "mongodb": "~2.0",
-    "xdate": "~0.8.0"
+    "xdate": "~0.8.0",
+    "should": "~7.1.0",
+    "assert": "~1.3.0",
+    "supertest": "~1.1.0",
+    "mocha": "~2.3.3"
   }
 }

@@ -30,8 +30,6 @@ module.exports = {
                     if (err)
     			        return callback(Error.createError(err, Error.internalError));
                     
-                    console.log(JSON.stringify(recover));
-                    
                     user.addEvent('Password recovery initialized [' + recover._id + '].');
                     callback(null, generateRecoveryEmail(user, recover));
                 });

@@ -19,7 +19,7 @@ $(document).ready(function(){
     
     $inputForm.submit(function() {
         if (!inputValidate.isAllValid()) {
-            generateError('Invalid data.', 'ERROR');
+            generateError('Invalid data.', 'ERROR', false);
             return false;
         } 
     });

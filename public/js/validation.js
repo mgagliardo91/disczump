@@ -191,11 +191,15 @@ var ZumpValidate = function(opt) {
                     if (eventType == 'keyup') {
                         shouldCb = false;
                         queryUser('username', val, function(success, retData) {
-                            var isCurrent = item.data && item.data == val;
-                            var available = !retData.count || isCurrent;
-                            var availableText = isCurrent ? 'Current Username' : (available ? 'Available' : 'Unavailable');
-                            $('#' + item.output).text(availableText);
-                            callback($input, available);
+                            if (success) {
+                                var isCurrent = item.data && item.data == val;
+                                var available = !retData.count || isCurrent;
+                                var availableText = isCurrent ? 'Current Username' : (available ? 'Available' : 'Unavailable');
+                                $('#' + item.output).text(availableText);
+                                callback($input, available);
+                            } else {
+                                handleError(retData);
+                            }
                         });
                     }
                 } else {
@@ -208,8 +212,12 @@ var ZumpValidate = function(opt) {
                 if (isValid) {
                     shouldCb = false;
                     getCityState(val, function(success, cityState) {
-                        $('#' + item.output).text(cityState);
-                        callback($input, success);
+                        if (success) {
+                            $('#' + item.output).text(cityState);
+                            callback($input, success);
+                        } else {
+                            handleError(cityState);
+                        }
                     });
                 } else {
                     $('#' + item.output).text('');
