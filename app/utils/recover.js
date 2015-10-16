@@ -18,7 +18,7 @@ module.exports = {
 			    return callback(Error.createError(err, Error.internalError));
             
             if (!user)
-                return callback('No account associated email address found.');
+                return callback(Error.createError('No account associated email address found.', Error.invalidDataError));
             
             TemporaryLink.remove({ userId: user._id, route: 'recover' }, function (err) {
                 if (err)
