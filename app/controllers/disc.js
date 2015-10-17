@@ -176,7 +176,7 @@ function postDisc(userId, data, callback) {
 
 /// Update disc
 function putDisc(userId, discId, data, callback) {
-    getDisc(userId, discId, function(err, disc){
+    getDiscInternal(userId, discId, function(err, disc){
         if (err)
             return callback(Error.createError(err, Error.internalError));
             
@@ -186,11 +186,11 @@ function putDisc(userId, discId, data, callback) {
         if (disc.userId != userId)
             return callback(Error.createError('Unauthorized to modify disc.', Error.unauthorizedError));
         
-        if (typeof data.brand !== 'undefined') {
-            disc.brand = data.brand;
+        if (typeof data.brand !== 'undefined' && data.brand.trim().length) {
+            disc.brand = data.brand.trim();
         }
         
-        if (typeof data.name !== 'undefined') {
+        if (typeof data.name !== 'undefined' && data.name.trim().length) {
             disc.name = data.name.trim();
         }
         
@@ -432,7 +432,7 @@ function postDiscImage(gm, gfs, userId, discId, fileId, callback) {
     			if (err)
     				return callback(Error.createError(err, Error.internalError));
     				
-    			return callback(null, discImage);
+    			return callback(null, disc);
     		});
     	});
     });
@@ -445,7 +445,7 @@ function putDiscImage(userId, discId, data, callback) {
 
 /// Delete Image by Id
 function deleteDiscImage(userId, discId, imageId, gfs, callback) {
-	getDisc(userId, discId, function(err, disc) {
+	getDiscInternal(userId, discId, function(err, disc) {
 		if (err)
 			return callback(err);
 			
@@ -463,8 +463,14 @@ function deleteDiscImage(userId, discId, imageId, gfs, callback) {
 			disc.primaryImage = disc.imageList.length ? disc.imageList[0]._id : undefined;
 		}
 		
-		disc.save();
-		deleteDiscImageObj(discImage, gfs, callback);
+		disc.save(function(err) {
+		    if (err)
+		        return callback(Error.createError(err, Error.internalError));
+		    
+		    deleteDiscImageObj(discImage, gfs, function(err, discImage) {
+		        return callback(null, disc);
+		    });
+		});
 	});
 }
 

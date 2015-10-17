@@ -13,6 +13,7 @@ module.exports = {
 	query: query,
 	queryUsers: queryUsers,
 	getPreview: getPreview,
+	createUser: createUser,
 	getUser: getUser,
 	updateActivity: updateActivity,
 	updateAccessCount: updateAccessCount,
@@ -122,6 +123,30 @@ function getPreview(userId, refDiscId, callback) {
 			return callback(err);
 			
 		return callback(null, {userId: userId, discs: preview});
+	});
+}
+
+function createUser(info, callback) {
+	query('local.email', info.email, function(err, users) {
+		if (err)
+			return callback(Error.createError(err, Error.internalError));
+		
+		if (users && users.length) {
+			return callback(Error.createError('A user with that email already exists.', Error.invalidDataError));
+		}
+		
+		var user = new User({
+			local: info
+		});
+		
+		user.local.password = user.generateHash(user.local.password);
+		
+		user.save(function(err) {
+			if (err)
+				return callback(Error.createError(err, Error.internalError));
+			
+			return callback(null, user);
+		});
 	});
 }
 
@@ -353,7 +378,7 @@ function tryResetPassword(userId, currentPw, newPw, callback) {
 	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
         
         if (!user.validPassword(currentPw))
-        	return callback(Error.createError('The current password is incorrect.', Error.unauthorizedError));
+        	return callback(Error.createError('The current password is incorrect.', Error.invalidDataError));
         	
         if (user.validPassword(newPw))
         	return callback(Error.createError('The new password must differ from your previous one.', Error.invalidDataError));
@@ -410,7 +435,7 @@ function validatePreference(preference, value) {
 			return !_.contains(sortProp, sort.property) || !_.isBoolean(sort.sortAsc);
 		});
 		
-		return (typeof failed === 'undefined');
+		return (value.length > 0 && typeof failed === 'undefined');
 	}
 	
 	if (preference == 'defaultView') {
