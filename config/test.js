@@ -126,7 +126,7 @@ module.exports = {
             speed : '12',
             glide : '5',
             turn : '-1',
-            fade : '3',
+            fade : '-10',
             notes : '2010 Disc Nation Halloween Collection - Bottom Stamped S/DS',
             tagList : ['Demo Disc', 'Hanger', 'Halloween Collection'],
             condition : '10',
@@ -135,9 +135,10 @@ module.exports = {
         'Fail' : {
             brand : '',
             name : '',
+            visible: 'wrong',
             weight : 'seven',
-            speed : 'eight',
-            glide : 'nine',
+            speed : '11g',
+            glide : 'test23',
             turn : 'eighteen',
             fade : 'eleven',
             condition : 'twelve'

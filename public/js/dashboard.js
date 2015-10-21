@@ -2496,6 +2496,7 @@ var ZumpEditor = function(opt) {
 		if (isProcessing) return;
 		
 		isProcessing = true;
+		setLoading(true);
 		
 		var disc = createDisc();
 	    
@@ -2508,6 +2509,7 @@ var ZumpEditor = function(opt) {
 						getDiscById(retData._id, function(success, disc) {
 							if (success) {
 								isProcessing = false;
+								setLoading(false);
 								onNewDisc(disc);
 							} else {
 								handleError(disc);
@@ -2520,10 +2522,12 @@ var ZumpEditor = function(opt) {
 				} else {
 					generateSuccess(retData.brand + ' ' + retData.name + ' was successfully added.', 'Success', true);
 					isProcessing = false;
+					setLoading(false);
 					onNewDisc(retData);
 				}
 			} else {
 				isProcessing = false;
+				setLoading(false);
 				handleError(retData);
 			}
 		});
@@ -2535,6 +2539,7 @@ var ZumpEditor = function(opt) {
 	var saveExistingDisc = function() {
 		if (isProcessing) return;
 		isProcessing = true;
+		setLoading(true);
 		
 		var disc = createDisc(changeObject.curDisc);
 	    
@@ -2549,6 +2554,7 @@ var ZumpEditor = function(opt) {
 									getDiscById(retData._id, function(success, disc) {
 										if (success) {
 											isProcessing = false;
+											setLoading(false);
 											onUpdatedDisc(disc);
 											stageModifyDiscPage(modifyHandler.type, modifyHandler.discId);
 											generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success', true);
@@ -2561,19 +2567,22 @@ var ZumpEditor = function(opt) {
 								dropzone.processQueue();
 							} else {
 								isProcessing = false;
+								setLoading(false);
 								onUpdatedDisc(retData);
 								stageModifyDiscPage(modifyHandler.type, modifyHandler.discId);
 								generateSuccess(retData.brand + ' ' + retData.name + ' was successfully updated.', 'Success', true);
 							}
 						} else {
-							handleError(retData);
 							isProcessing = false;
+							setLoading(false);
+							handleError(retData);
 						}
 					});
 				});
 			} else {
-				handleError(retData);
 				isProcessing = false;
+				setLoading(false);
+				handleError(retData);
 			}
 		});
 	}
@@ -2848,6 +2857,7 @@ var ZumpDashboard = function(opt) {
 	var onDisplayProfile;
 	var publicList = false;
 	var currentUser;
+	var forceRefresh = false;
 	
 	var paginateOptions = {displayCount: 20, currentPage: 1, lastPage: 1};
 	var chartData = {};
@@ -3062,7 +3072,7 @@ var ZumpDashboard = function(opt) {
 			$('.dashboard-title').hide();
 		}
 		
-		discViewId = undefined;
+		forceRefresh = true;
 		myFilter.clearFilters();
 		this.updateFilter(true);
 	}
@@ -3073,7 +3083,7 @@ var ZumpDashboard = function(opt) {
 		});
 		unfilteredList.push(upDisc);
 		updateDiscItem(upDisc);
-		if (discViewId == upDisc._id) discViewId = undefined;
+		if (discViewId == upDisc._id) forceRefresh = true;
 	}
 	
 	/*
@@ -3598,11 +3608,12 @@ var ZumpDashboard = function(opt) {
 	}
 	
 	var showDisc = function(disc) {
-		if (discViewId == disc._id) {
+		if (discViewId == disc._id && !forceRefresh) {
 			changePage('#pg-disc-view');
 			return;
 		}
 		
+		forceRefresh = false;
 		discViewId = disc._id;
 		
 		var discString = stringifyDisc(disc);
@@ -3615,6 +3626,7 @@ var ZumpDashboard = function(opt) {
 		
 		setDiscViewItem($('#view-disc-type'), discString.type, '', '-');
 		setDiscViewItem($('#view-disc-material'), discString.material, '', '-');
+		setDiscViewItem($('#view-disc-color'), discString.color, '', '-');
 		setDiscViewItem($('#view-disc-weight'), discString.weight, 'g', '-');
 		setDiscViewItem($('#view-disc-condition'), discString.condition, '/10', '-');
 		setDiscViewItem($('#view-disc-speed'), discString.speed, '', '--');

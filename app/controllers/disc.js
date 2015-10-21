@@ -109,11 +109,19 @@ function postDisc(userId, data, callback) {
     var disc = new Disc();
     disc.userId = userId;
     
-    disc.brand = data.brand;
-    disc.name = data.name;
-    disc.material = data.material;
-    disc.type = data.type;
-    disc.color = data.color;
+    if (typeof data.brand === 'undefined' || !data.brand.trim().length) {
+        return callback(Error.createError('Creating a disc requires providing a brand.', Error.invalidDataError));
+    }
+    
+    if (typeof data.name === 'undefined' || !data.name.trim().length) {
+        return callback(Error.createError('Creating a disc requires providing a name.', Error.invalidDataError));
+    }
+    
+    disc.brand = data.brand.trim();
+    disc.name = data.name.trim();
+    disc.material = data.material.trim();
+    disc.type = data.type.trim();
+    disc.color = data.color.trim();
     disc.notes = data.notes;
     
     if (_.has(data, 'visible')) {
@@ -123,7 +131,7 @@ function postDisc(userId, data, callback) {
     if (_.has(data, 'weight')) {
         if (data.weight == '') {
             disc.weight = undefined;
-        } else if ( _.isNumber(parseInt(data.weight)) && !(_.isNaN(parseInt(data.weight)))){
+        } else if (/^\d{1,3}$/.test(data.weight)){
             disc.weight = data.weight;
         }
     }
@@ -131,7 +139,7 @@ function postDisc(userId, data, callback) {
     if (_.has(data, 'speed')) {
         if (data.speed == '') {
             disc.speed = undefined;
-        } else if ( _.isNumber(parseInt(data.speed)) && !(_.isNaN(parseInt(data.speed)))){
+        } else if (/^[-]?\d{1,2}$/.test(data.speed)){
             disc.speed = data.speed;
         }
     }
@@ -139,7 +147,7 @@ function postDisc(userId, data, callback) {
     if (_.has(data, 'glide')) {
         if (data.glide == '') {
             disc.glide = undefined;
-        } else if ( _.isNumber(parseInt(data.glide)) && !(_.isNaN(parseInt(data.glide)))){
+        } else if (/^[-]?\d{1,2}$/.test(data.glide)){
             disc.glide = data.glide;
         }
     }
@@ -147,7 +155,7 @@ function postDisc(userId, data, callback) {
     if (_.has(data, 'turn')) {
         if (data.turn == '') {
             disc.turn = undefined;
-        } else if ( _.isNumber(parseInt(data.turn)) && !(_.isNaN(parseInt(data.turn)))){
+        } else if (/^[-]?\d{1,2}$/.test(data.turn)){
             disc.turn = data.turn;
         }
     }
@@ -155,7 +163,7 @@ function postDisc(userId, data, callback) {
     if (_.has(data, 'fade')) {
         if (data.fade == '') {
             disc.fade = undefined;
-        } else if ( _.isNumber(parseInt(data.fade)) && !(_.isNaN(parseInt(data.fade)))){
+        } else if (/^[-]?\d{1,2}$/.test(data.fade)){
             disc.fade = data.fade;
         }
     }
@@ -163,7 +171,7 @@ function postDisc(userId, data, callback) {
     if (_.has(data, 'condition')) {
         if (data.condition == '') {
             disc.condition = undefined;
-        } else if ( _.isNumber(parseInt(data.condition)) && !(_.isNaN(parseInt(data.condition)))){
+        } else if (/^\d{1,2}$/.test(data.condition)){
             disc.condition = data.condition;
         }
     }
@@ -221,14 +229,14 @@ function putDisc(userId, discId, data, callback) {
             disc.notes = data.notes.trim();
         }
         
-        if (_.has(data, 'visible')) {
+        if (_.has(data, 'visible') && _.isBoolean(data.visible)) {
             disc.visible = data.visible;
         }
         
         if (_.has(data, 'weight')) {
             if (data.weight == '') {
                 disc.weight = undefined;
-            } else if ( _.isNumber(parseInt(data.weight)) && !(_.isNaN(parseInt(data.weight)))){
+            } else if (/^\d{1,3}$/.test(data.weight)){
                 disc.weight = data.weight;
             }
         }
@@ -236,7 +244,7 @@ function putDisc(userId, discId, data, callback) {
         if (_.has(data, 'speed')) {
             if (data.speed == '') {
                 disc.speed = undefined;
-            } else if ( _.isNumber(parseInt(data.speed)) && !(_.isNaN(parseInt(data.speed)))){
+            } else if (/^[-]?\d{1,2}$/.test(data.speed)){
                 disc.speed = data.speed;
             }
         }
@@ -244,7 +252,7 @@ function putDisc(userId, discId, data, callback) {
         if (_.has(data, 'glide')) {
             if (data.glide == '') {
                 disc.glide = undefined;
-            } else if ( _.isNumber(parseInt(data.glide)) && !(_.isNaN(parseInt(data.glide)))){
+            } else if (/^[-]?\d{1,2}$/.test(data.glide)){
                 disc.glide = data.glide;
             }
         }
@@ -252,7 +260,7 @@ function putDisc(userId, discId, data, callback) {
         if (_.has(data, 'turn')) {
             if (data.turn == '') {
                 disc.turn = undefined;
-            } else if ( _.isNumber(parseInt(data.turn)) && !(_.isNaN(parseInt(data.turn)))){
+            } else if (/^[-]?\d{1,2}$/.test(data.turn)){
                 disc.turn = data.turn;
             }
         }
@@ -260,7 +268,7 @@ function putDisc(userId, discId, data, callback) {
         if (_.has(data, 'fade')) {
             if (data.fade == '') {
                 disc.fade = undefined;
-            } else if ( _.isNumber(parseInt(data.fade)) && !(_.isNaN(parseInt(data.fade)))){
+            } else if (/^[-]?\d{1,2}$/.test(data.fade)){
                 disc.fade = data.fade;
             }
         }
@@ -268,7 +276,7 @@ function putDisc(userId, discId, data, callback) {
         if (_.has(data, 'condition')) {
             if (data.condition == '') {
                 disc.condition = undefined;
-            } else if ( _.isNumber(parseInt(data.condition)) && !(_.isNaN(parseInt(data.condition)))){
+            } else if (/^\d{1,2}$/.test(data.condition)){
                 disc.condition = data.condition;
             }
         }

@@ -49,7 +49,7 @@ function queryUsers(query, callback) {
 		var nameQuery = query.split(' ');
 		User.find({ $and : [{'local.firstName': new RegExp(nameQuery[0], 'i')}, 
 						{'local.lastName': new RegExp(nameQuery[1], 'i')},
-						{'local.active': true}]},
+						{'local.active': true}]}).limit(50).exec(
 			function(err, users) {
 				if (err) 
 					return callback(Error.createError(err, Error.internalError));
@@ -70,7 +70,7 @@ function queryUsers(query, callback) {
 					{$or:[ {'local.username': regExp}, 
 						{'local.firstName': regExp}, 
 						{'local.lastName': regExp} ]}
-					]}, 
+					]}).limit(50).exec( 
 			function(err, users) {
 				if (err) 
 					return callback(Error.createError(err, Error.internalError));
