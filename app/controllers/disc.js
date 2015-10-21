@@ -1,5 +1,6 @@
 var Error = require('../utils/error');
 var Disc = require('../models/disc');
+var UserController = require('./user.js');
 var _ = require('underscore');
 var async = require('async');
 var mongoose = require('mongoose');
@@ -7,7 +8,7 @@ var config = require('../../config/config.js');
 var FileUtil = require('../utils/file.js');
 
 module.exports = {
-    getPublicPreview: getPublicPreview,
+    getPreview: getPreview,
     getDiscs: getDiscs,
     getDisc: getDisc,
     postDisc: postDisc,
@@ -19,14 +20,15 @@ module.exports = {
     postDiscImage: postDiscImage,
     putDiscImage: putDiscImage,
     deleteDiscImage: deleteDiscImage,
-    deleteDiscImages: deleteDiscImages
+    deleteDiscImages: deleteDiscImages,
+    deleteUserDiscs: deleteUserDiscs
 }
 
 /* Public Access
  * ----------------------
  */
 
-function getPublicPreview(userId, refDiscId, callback) {
+function getPreview(userId, refDiscId, callback) {
     var retDiscs = [];
     var hasRefDisc = typeof(refDiscId) !== 'undefined';
     var index = 0;
@@ -50,22 +52,26 @@ function getPublicPreview(userId, refDiscId, callback) {
 }
  
 function getDiscs(reqUserId, userId, callback) {
-    
-    if (typeof(reqUserId) !== 'undefined' && reqUserId == userId) {
-        Disc.find({userId: userId}, function (err, discs){
-            if (err)
-                return callback(Error.createError(err, Error.internalError));
-            
-            return callback(null, discs);
-        });
-    } else {
-        Disc.find({userId: userId, visible: true}, function (err, discs){
-            if (err)
-                return callback(Error.createError(err, Error.internalError));
-            
-            return callback(null, discs);
-        });
-    }
+    UserController.getActiveUser(userId, function(err, user) {
+		if (err)
+			return callback(err);
+			
+		if (typeof(reqUserId) !== 'undefined' && reqUserId == userId) {
+            Disc.find({userId: userId}, function (err, discs){
+                if (err)
+                    return callback(Error.createError(err, Error.internalError));
+                
+                return callback(null, discs);
+            });
+        } else {
+            Disc.find({userId: userId, visible: true}, function (err, discs){
+                if (err)
+                    return callback(Error.createError(err, Error.internalError));
+                
+                return callback(null, discs);
+            });
+        }
+	});
 }
 
 function getDisc(userId, discId, callback) {
@@ -82,15 +88,20 @@ function getDisc(userId, discId, callback) {
 }
 
 function getDiscInternal(userId, discId, callback) {
-    Disc.findOne({_id: discId}, function(err, disc) {
-        if (err)
-            return callback(Error.createError(err, Error.internalError));
-        
-        if (!disc)
-            return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
-        
-        return callback(null, disc);
-    });
+    UserController.getActiveUser(userId, function(err, user) {
+		if (err)
+			return callback(err);
+		
+		Disc.findOne({_id: discId}, function(err, disc) {
+            if (err)
+                return callback(Error.createError(err, Error.internalError));
+            
+            if (!disc)
+                return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
+            
+            return callback(null, disc);
+        });
+     });
 }
 
 /// Create Disc
@@ -511,4 +522,21 @@ function deleteDiscImages(userId, discId, gfs, callback) {
 		});
 		
 	});
+}
+
+function deleteUserDiscs(userId, gfs, callback) {
+    getDiscs(userId, userId, function(err, discs) {
+        if (err)
+            return callback(err);
+        
+        async.each(discs, function(disc, cb) {
+            deleteDiscImages(userId, disc._id, gfs, function(err, discImages) {
+                disc.remove(function (err, disc) {
+                    return cb();
+                });
+            });
+        }, function(err) {
+            callback();
+        });
+    });
 }

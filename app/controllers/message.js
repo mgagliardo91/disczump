@@ -7,11 +7,11 @@ var ThreadLocal = require('../models/threadLocal');
 var _ = require('underscore');
 var async = require('async');
 var socketManager = require('../objects/socketCache.js');
-var Mailer = require('../utils/mailer.js');
 var fs = require('fs');
 var XDate = require('xdate');
 var MessageConfig = require('../../config/config.js').message;
 var LocalConfig = require('../../config/localConfig.js');
+var Mailer = require('../utils/mailer.js');
 var Handlebars = require('handlebars');
 
 module.exports = {
@@ -21,7 +21,8 @@ module.exports = {
     getMessages: getMessages,
     sendMessage: sendMessage,
     getPrivateThreads: getPrivateThreads,
-    createPrivateThread: createPrivateThread
+    createPrivateThread: createPrivateThread,
+    deleteUserThreads: deleteUserThreads
 }
 
 function getLocalThreadObj(localThread, callback) {
@@ -78,19 +79,23 @@ function putThreadState(userId, threadId, threadState, callback) {
         
         getLocalThreadObj(localThread, function(err, localThreadObj) {
             if (err) return callback(err);
-        
-            if (typeof(messageCount) === 'undefined' || messageCount < localThreadObj.messageCount || messageCount > localThreadObj.currentMessageCount) {
-                return callback(null, localThreadObj);
-            } else {
-                localThread.messageCount = messageCount;
-                localThread.save(function(err) {
-                    if (err) return callback(Error.createError(err, Error.internalError));
-                    
-                    localThreadObj.messageCount = localThread.messageCount;
-                    
-                    return callback(null, localThreadObj);
-                });
+            
+            if (typeof(threadState.threadTag) !== 'undefined') {
+                localThread.threadTag = threadState.threadTag;
             }
+        
+            if (typeof(messageCount) !== 'undefined' && messageCount < localThreadObj.messageCount && messageCount > localThreadObj.currentMessageCount) {
+                localThread.messageCount = messageCount;
+            }
+            
+            localThread.save(function(err) {
+                if (err) return callback(Error.createError(err, Error.internalError));
+                
+                localThreadObj.messageCount = localThread.messageCount;
+                localThreadObj.threadTag = localThread.threadTag;
+                
+                return callback(null, localThreadObj);
+            });
         });
     });
 }
@@ -192,27 +197,37 @@ function notifyUsers(message, userId) {
             
         ThreadLocal.find({threadId: message.threadId, userId: {$ne: origUser._id}}, function(err, localThreads) {
             _.each(localThreads, function(localThread) {
-                var socket = socketManager.getSocket(localThread.userId);
                 
-                if (typeof(socket) !== 'undefined') {
-                    Socket.sendNotification(socket, Socket.TypeMsg, message);
-                } else {
-                    UserController.getUser(localThread.userId, function(err, user) {
-                        if (!err && user && user.preferences.notifications.newMessage) {
-                            if (localThread.lastAlert) {
-                                var lastAlert = new XDate(localThread.lastAlert);
-                                if (lastAlert.diffMinutes(new XDate()) < MessageConfig.alertThresholdMin) {
-                                    return;
-                                }   
+                async.series([
+                    function(cb) {
+                        if (!localThread.active) {
+                            localThread.active = true;
+                            localThread.save(cb);
+                        } else cb();
+                    }
+                ], function(err, results) {
+                    var socket = socketManager.getSocket(localThread.userId);
+                
+                    if (typeof(socket) !== 'undefined') {
+                        Socket.sendNotification(socket, Socket.TypeMsg, message);
+                    } else {
+                        UserController.getUser(localThread.userId, function(err, user) {
+                            if (!err && user && user.preferences.notifications.newMessage) {
+                                if (localThread.lastAlert) {
+                                    var lastAlert = new XDate(localThread.lastAlert);
+                                    if (lastAlert.diffMinutes(new XDate()) < MessageConfig.alertThresholdMin) {
+                                        return;
+                                    }   
+                                }
+                                
+                                localThread['lastAlert'] = Date.now();
+                                localThread.save();
+                                var alert = generateEmailNotification(user, origUser, message);
+                                Mailer.sendMail(user.local.email, 'disc|zump Message Alert', alert);
                             }
-                            
-                            localThread['lastAlert'] = Date.now();
-                            localThread.save();
-                            var alert = generateEmailNotification(user, origUser, message);
-                            Mailer.sendMail(user.local.email, 'disc|zump Message Alert', alert);
-                        }
-                    });
-                }
+                        });
+                    }
+                });
             });
         });
     });  
@@ -238,7 +253,7 @@ function getPrivateThreads(userId, callback) {
             });
         }, function(err) {
             if (err) return callback(err);
-            _.sortBy(retThreads, 'modifiedDate');
+            retThreads = _.sortBy(retThreads, function(element) { return element.modifiedDate; }).reverse();
             return callback(null, retThreads);
         });
         
@@ -246,8 +261,6 @@ function getPrivateThreads(userId, callback) {
 }
 
 function createPrivateThread(userId, receivingUserId, callback) {
-    
-    // See if thread already exists
     Thread.findOne({$and: [{isPrivate: true},{users: userId},{users: receivingUserId}]}, function(err, thread) {
         if (err)
             return callback(Error.createError(err, Error.internalError));
@@ -358,5 +371,14 @@ function createThread(users, isPrivate, callback) {
         if (err) return callback(Error.createError(err, Error.internalError));
         
         callback(null, t);
+    });
+}
+
+function deleteUserThreads(userId, callback) {
+    ThreadLocal.remove({userId: userId}, function(err) {
+        if (err)
+            console.log(err);
+        
+        callback();
     });
 }

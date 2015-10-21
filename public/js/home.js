@@ -52,7 +52,7 @@ $(document).ready(function(){
     });
     
     $('#submit-email').submit(function(e) {
-       if (!emailValidate.isAllValid()) {
+       if (!emailValidate.doValidate()) {
            return false;
        } 
     });

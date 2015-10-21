@@ -1,4 +1,5 @@
-var ZumpValidate = function(opt) {
+var ZumpValidate = function(opt) { 
+    var zumpValidate = this;
     var items = [];
     var clientCb;
     var feedbackOnInit = false;
@@ -27,6 +28,8 @@ var ZumpValidate = function(opt) {
         _.each(items, function(item) {
             validate(item.id, undefined, 'keyup'); 
         });
+        
+        return zumpValidate.isAllValid();
     }
     
     this.isAllValid = function() {
@@ -188,20 +191,18 @@ var ZumpValidate = function(opt) {
                 isValid = val.length == 0 ? undefined : usernameRegex.test(val);
                 
                 if (isValid) {
-                    if (eventType == 'keyup') {
-                        shouldCb = false;
-                        queryUser('username', val, function(success, retData) {
-                            if (success) {
-                                var isCurrent = item.data && item.data == val;
-                                var available = !retData.count || isCurrent;
-                                var availableText = isCurrent ? 'Current Username' : (available ? 'Available' : 'Unavailable');
-                                $('#' + item.output).text(availableText);
-                                callback($input, available);
-                            } else {
-                                handleError(retData);
-                            }
-                        });
-                    }
+                    shouldCb = false;
+                    queryUser('username', val, function(success, retData) {
+                        if (success) {
+                            var isCurrent = isDef(item.data) ? item.data && item.data == val : false;
+                            var available = !retData.count || isCurrent;
+                            var availableText = isCurrent ? 'Current Username' : (available ? 'Available' : 'Unavailable');
+                            $('#' + item.output).text(availableText);
+                            callback($input, available);
+                        } else {
+                            handleError(retData);
+                        }
+                    });
                 } else {
                     $('#' + item.output).text('');
                 }
@@ -214,11 +215,11 @@ var ZumpValidate = function(opt) {
                     getCityState(val, function(success, cityState) {
                         if (success) {
                             $('#' + item.output).text(cityState);
-                            callback($input, success);
                         } else {
-                            handleError(cityState);
+                            //Ignore error in the case that zip code is not found.
                         }
                     });
+                    callback($input, isValid);
                 } else {
                     $('#' + item.output).text('');
                 }

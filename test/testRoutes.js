@@ -34,7 +34,7 @@ describe('Routing', function() {
     * a test user to be used within the subsequent testing calls.
     */
     before(function(done) {
-        
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
         logger.info('Initializing tests.');
         mongoose.connect('mongodb://' + config.database.host + ':' +
             config.database.port + '/' + config.database.db);
@@ -126,7 +126,7 @@ describe('Routing', function() {
     });
 
     describe('Account', function() {
-        it('should fail to retrieve account without access token', function(done) {
+        it('should fail to retrieve account without an access token', function(done) {
             request(url)
                 .get('/api/account')
                 .accept('application/json')
@@ -175,7 +175,7 @@ describe('Routing', function() {
                 });
         });
         
-        it('should fail to update the user\s username due to format', function(done) {
+        it('should fail to update the user\'s username due to format', function(done) {
             request(url)
                 .put('/api/account')
                 .set('Authorization', 'Bearer ' + accessToken)
@@ -191,7 +191,7 @@ describe('Routing', function() {
                 });
         });
         
-        it('should fail to update the user\s username due to it being in use', function(done) {
+        it('should fail to update the user\'s username due to it being in use', function(done) {
             request(url)
                 .put('/api/account')
                 .set('Authorization', 'Bearer ' + accessToken)
@@ -246,7 +246,7 @@ describe('Routing', function() {
                 .end(function(err, res) {
                     if (err)
                         throw err;
-                        
+                    
                     res.body.should.containEql(testConfig.Preferences.Default);
                     done();
                 });

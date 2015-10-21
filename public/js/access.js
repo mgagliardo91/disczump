@@ -13,7 +13,7 @@ $(document).ready(function(){
             {id:'password', type: 'text', min: 6, hint: 'Password must be at least 6 characters in length.'},
             {id:'verify-password', type:'compare', refId:'password'},
             {id:'username', type:'username', output: 'username-feedback', min: 6, max: 15, hint: 'Username must be 6-15 characters and can only consist of letters, numbers, and underscore.'},
-            {id:'zipCode', type:'zipcode', output: 'citystate'},
+            {id:'zipCode', type:'zipcode', output: 'citystate', hint: 'Enter 5 digit zip code.'},
             {id:'firstName', optional: true, type:'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }, hint: 'Enter your first name to help people find you. (Cannot contain spaces)'},
             {id:'lastName', optional: true,  type:'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }, hint: 'Enter your last name to help people find you. (Cannot contain spaces)'},
             {id:'pdgaNumber', optional: true, type:'function', fn: function(val) { return val.length == 0 ? undefined : /^[0-9]*$/.test(val) }, max: 6}
@@ -22,9 +22,13 @@ $(document).ready(function(){
     });
     
     $('#signup-form').submit(function() {
-        if (!signUpValidate.isAllValid()) {
+        if (!signUpValidate.doValidate()) {
+            var invalidItems = signUpValidate.getInvalidItems();
+            if (invalidItems.length) {
+				generateInvalidDataError(invalidItems);
+            }
             return false;
-        } 
+        }
     });
     
     $('#auth-facebook').click(function() {
@@ -39,7 +43,7 @@ $(document).ready(function(){
     });
     
     $('#login-form').submit(function() {
-        if (!loginValidate.isAllValid()) {
+        if (!loginValidate.doValidate()) {
             return false;
         } 
     });

@@ -12,15 +12,15 @@ module.exports = {
     createDiscData: createDiscData
 }
 
-function createDiscData(gridfs, userId) {
+function createDiscData(gridfs, userId, callback) {
     
     async.eachSeries(dev.data, function(discObj, devCallback) {
         DiscController.postDisc(userId, discObj.disc, function(err, disc) {
             if (err) {
-                return console.log(err); 
+                return devCallback(err); 
             }
             
-            async.eachSeries(discObj.images, function(image, callback) {
+            async.eachSeries(discObj.images, function(image, cb) {
                     fileUtils.saveImage(gm, gridfs, dev.dir + '/' + image.image, {
                         mimetype: image.mimetype,
                         filename: image.image,
@@ -28,26 +28,23 @@ function createDiscData(gridfs, userId) {
                         }, function(newFile) {
                             DiscController.postDiscImage(gm, gridfs, userId, disc._id, newFile._id, function(err, discImage) {
                                 if (err)
-                                    return callback(err);
+                                    return cb(err);
+                                    
                                 
-                                callback();
+                                return cb();
                             });
                     });
                 }, function(err) {
                     if (err) {
-                        console.log('Error creating BETA account: ' + err);
+                        return devCallback(err);
                     }
                     
-                    console.log('Finished creating disc [' + disc._id + ']');
-                    
-                    devCallback();
+                    return devCallback();
                 });
-        }, function(err) {
-            if (err) {
-                console.log('Error creating BETA account: ' + err);
-            }
-            
-            return;
         });
+    }, function(err) {
+        if (callback) {
+            return callback(err ? 'Error creating BETA account: ' + err : undefined);
+        }
     });
 }

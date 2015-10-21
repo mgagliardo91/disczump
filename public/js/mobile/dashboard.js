@@ -198,7 +198,7 @@ $(document).on("pagecreate", "#disc-inventory", function () {
     
     $(document).on('vclick', '#add-disc-submit', function(e) {
         e.stopPropagation();
-        if (addDiscValidate.isAllValid()) {
+        if (addDiscValidate.doValidate()) {
             showBackdrop(true, true);
             var disc = createDisc($('.mobile-add-disc-container'));
             zumpAPI.postDisc(disc, function(success, retData) {

@@ -46,7 +46,6 @@ app.use(function (req, res, next) {
   next();
 });
 
-
 var hbs = exphbs.create({
     defaultLayout: 'main',
     helpers: {

@@ -382,7 +382,7 @@
 /*===================================================================*/
 .notification-popup {
     opacity: 0;
-    position: absolute;
+    position: fixed;
     bottom: 5%;
     right: 5%;
     min-width: 200px;
@@ -605,6 +605,16 @@
     padding-top: 2.5em;
 }
 
+#add-custom-tag.has-text {
+    background-color: rgba(0, 142, 221, 0.25);
+	color: #000;
+}
+
+#add-custom-tag:hover {
+    background-color: rgb(0, 142, 221);
+	color: #fff;
+}
+
 @media (min-width: 1151px) and (max-width: 1500px) {
     .modify-form-section {
         max-width: 650px;
@@ -638,6 +648,10 @@
     margin: 0px;
 }
 
+.modal-header {
+    padding: 5px 10px;
+}
+
 .modal-body {
     overflow-y: auto;
 }
@@ -645,6 +659,19 @@
 .modal-footer {
     padding: 15px;
     margin: 0px;
+}
+
+.modal-title {
+    float: left;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 40px;
+}
+
+.modal-header-logo {
+    float: right;
+    height: 40px;
+    width: 40px;
 }
 
 .popup-body > table {
@@ -883,7 +910,7 @@
     height: 100%;
     width: 100px;
     text-align: center;
-    background-color: #ffffff;
+    background-color: #fff;
     border-right: 1px solid #D4D4D4;
     background-position: center center;
     background-size: cover;
@@ -945,7 +972,7 @@
 .thread-date {
     color: #828282;
     font-style: italic;
-    max-width: 180px;
+    max-width: 184px;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -960,7 +987,7 @@
     width: 100%;
     font-size: 1.2em;
     font-weight: normal;
-    max-width: 180px;
+    max-width: 184px;
     overflow: hidden;
     text-overflow: ellipsis;
     margin-bottom: 5px;
@@ -981,13 +1008,22 @@
 
 @media (max-width: 1500px) and (min-width: 1151px) {
     .thread-tag-label {
-        max-width: 135px;
+        max-width: 119px;
         font-size: 1em;
     }
     
     .thread-date {
-        max-width: 135px;
+        max-width: 119px;
         font-size: 0.8em;
+    }
+    
+    .thread-details-container {
+        padding-left: 80px;
+        padding-right: 30px;
+    }
+    
+    .thread-icon {
+        width: 30px;
     }
     
     .thread-container {
@@ -998,10 +1034,6 @@
         width: 75px;
     }
     
-    .thread-details-container {
-        padding-left: 80px;
-    }
-    
     .thread-image > span > i {
         font-size: 3em;
     }
@@ -1009,13 +1041,22 @@
 
 @media (max-width: 1150px) {
     .thread-tag-label {
-        max-width: 70px;
+        max-width: 65px;
         font-size: 0.8em;
     }
     
     .thread-date {
-        max-width: 70px;
+        max-width: 65px;
         font-size: 0.6em;
+    }
+    
+    .thread-details-container {
+        padding-left: 55px;
+        padding-right: 20px;
+    }
+    
+    .thread-icon {
+        width: 20px;
     }
     
     .thread-container {
@@ -1024,10 +1065,6 @@
     
     .thread-image {
         width: 50px;
-    }
-    
-    .thread-details-container {
-        padding-left: 55px;
     }
     
     .thread-image > span > i {
@@ -1319,22 +1356,28 @@
     font-size: 5em;
 }
 
-.profile-item-details {
+.profile-item-details-container {
     height: 100%;
+    padding-left: 105px;
+    padding-right: 20px;
+}
+
+.profile-item-details {
     display: table;
+    width: 100%;
+    height: 100%;
 }
 
 .profile-item-details-inner {
     display: table-cell;
     vertical-align: middle;
-    padding: 5px 10px;
 }
 
 .profile-item-label {
     width: 100%;
     font-size: 1.2em;
     font-weight: bold;
-    max-width: 229px;
+    max-width: 224px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1344,7 +1387,7 @@
     width: 100%;
     color: #828282;
     font-style: italic;
-    max-width: 229px;
+    max-width: 224px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1439,13 +1482,17 @@
 
 @media (max-width: 1500px) and (min-width: 1151px) {
     .profile-item-label {
-        max-width: 154px;
+        max-width: 149px;
         font-size: 1em;
     }
     
     .profile-item-text {
-        max-width: 154px;
+        max-width: 149px;
         font-size: 0.8em;
+    }
+    
+    .profile-item-details-container {
+        padding-left: 80px;
     }
     
     .profile-item {
@@ -1496,13 +1543,17 @@
 
 @media (max-width: 1150px) {
     .profile-item-label {
-        max-width: 104px;
+        max-width: 85px;
         font-size: 0.8em;
     }
     
     .profile-item-text {
-        max-width: 104px;
+        max-width: 85px;
         font-size: 0.5em;
+    }
+    
+    .profile-item-details-container {
+        padding-left: 55px;
     }
     
     .profile-item {

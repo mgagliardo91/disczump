@@ -148,6 +148,25 @@ function autoCloseAlert($element, selector, delay) {
 	});
 }
 
+/*
+* Generates an error message containing a list of invalid fields.
+*/
+function generateInvalidDataError(invalidItems) {
+		var errorLength = invalidItems.length;
+		var errorText = '';
+		
+		_.each(invalidItems, function(item) {
+    		if (errorLength > 1) {
+    			errorText = errorText + $('#' + item.id).attr('param') + ', ';
+    		} else {
+    			errorText = errorText + $('#' + item.id).attr('param');
+    		}
+    		errorLength = errorLength - 1;
+    	});
+		
+		return generateError('Invalid data in the following fields: ' + errorText + '.', 'ERROR', false);
+}
+
 function getCityState(zipcode, callback) {
 	var success = false;
 	var retData;

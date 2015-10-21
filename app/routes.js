@@ -99,15 +99,56 @@ module.exports = function(app, passport, gridFs) {
         
     });
     
-    app.get('/profile/delete', isLoggedIn, function(req, res) {
-        UserController.deleteUser(req.user._id, gridFs, function(err, user) {
-            if (err) {
-                console.log(err);
-                return res.redirect('/');
-            }
+    app.get('/account/delete', isLoggedIn, function(req, res) {
+        Confirm.initializeConfirmDelete(req.user._id, function(err, user, message) {
+            if (err)
+                return res.send(err);
             
-            req.logout();
-            return res.redirect('/');
+            Mailer.sendMail(user.local.email, 'disc|zump Account Deletion', message, function(err, result) {
+              if (err)
+                    return res.send(err);
+                    
+                return res.render('notification', {
+                    isMobile: req.device.isMobile,
+                    notify : {
+                        pageHeader: 'Confirm Deletion',
+                        header: 'Delete Account',
+                        strong: 'We\'re sorry to see you go, but you\'re not there yet!',
+                        text: 'An email has been sent to your address' + 
+                            ' with a link to confirm the request to delete your account.',
+                        strong2: 'Why do we require email confirmation? ',
+                        text2: 'Accidents can happen. Your request to delete your account has been submitted and is pending your confirmation. ' + 
+                            'You will need to confirm the request by clicking on the link that you will receive at the email address associated ' + 
+                            'with this account. The request will automatically revert in one hour.',
+                       buttonIcon: 'fa-home',
+                       buttonText: 'Dashboard',
+                       buttonLink: '/dashboard'
+                   }
+                });
+            });
+        });
+    });
+    
+    app.get('/account/delete/:authorizationId', function(req, res) {
+        Confirm.confirmDelete(req.params.authorizationId, gridFs, function(err, user){
+            if (err) {
+                req.flash('error', err.error.message);
+                return res.redirect('/login');
+            } else {
+                EventController.createEvent(user._id, EventController.types.AccountDeletion);
+                return res.render('notification', {
+                    isMobile: req.device.isMobile,
+                    notify : {
+                        pageHeader: 'Confirm Deletion',
+                        header: 'Account Deleted',
+                        strong: 'You\'re account has been deleted!',
+                        text: 'We hope you have enjoyed using disc|zump.',
+                       buttonIcon: 'fa-home',
+                       buttonText: 'Return Home',
+                       buttonLink: '/'
+                   }
+                });
+            }
         });
     });
     
@@ -163,6 +204,7 @@ module.exports = function(app, passport, gridFs) {
                 // } else {
                     return res.render('discview', {
                         disc: disc,
+                        primaryImage: disc.getImage(),
                         user: user.accountToString(),
                         isPublicPage: true,
                         isLoggedIn: req.isAuthenticated()
@@ -201,7 +243,7 @@ module.exports = function(app, passport, gridFs) {
         });
     
     app.get('/confirm/user/:userId', function(req, res){
-             Confirm.initializeConfirm(req.params.userId, function(err, user, message) {
+             Confirm.initializeConfirmAccount(req.params.userId, function(err, user, message) {
                 if (err)
                     return res.send(err);
                 
@@ -409,6 +451,7 @@ module.exports = function(app, passport, gridFs) {
         // render the page and pass in any flash data if it exists
         res.render('signup', {
             isMobile: req.device.isMobile,
+            email: req.flash('email'),
             username: req.flash('username'),
             zipCode: req.flash('zipCode'),
             alias: req.flash('alias'),
@@ -432,6 +475,7 @@ module.exports = function(app, passport, gridFs) {
             // validate passcode 
             if (!req.body.passcode || (req.body.passcode != development.passcode)) {
                 req.flash('error', 'Invalid passcode. Please try again.');
+                req.flash('email', req.body.email);
                 req.flash('username', req.body.username);
                 req.flash('zipCode', req.body.zipCode);
                 req.flash('alias', req.body.alias);
@@ -441,6 +485,7 @@ module.exports = function(app, passport, gridFs) {
         }
         
         passport.authenticate('local-signup', function(err, user, info) {
+            req.flash('email', req.body.email);
             req.flash('username', req.body.username);
             req.flash('zipCode', req.body.zipCode);
             req.flash('alias', req.body.alias);

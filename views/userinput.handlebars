@@ -32,7 +32,7 @@
                 {{#each userinput.input}}
                 <div class="input-group">
                     <span class="input-group-addon"><i class="fa {{this.icon}} fa-fw"></i></span>
-                    <input class="form-control" id="{{this.id}}" {{#if this.name}}name="{{this.name}}" {{/if}}type="{{this.type}}" placeholder="{{this.placeholder}}">
+                    <input class="form-control" id="{{this.id}}" {{#if this.name}}name="{{this.name}}" {{/if}}type="{{this.type}}" placeholder="{{this.placeholder}}" param="{{this.placeholder}}">
                 </div>
                 {{/each}}
                 <button id="submit" class="btn btn-primary pull-right" type="submit">{{userinput.btnText}}</button>

@@ -1,6 +1,5 @@
 var Error = require('../utils/error');
 var User = require('../models/user');
-var DiscController = require('./disc.js');
 var EventController = require('./event.js');
 var _ = require('underscore');
 var async = require('async');
@@ -12,9 +11,9 @@ var socketManager = require('../objects/socketCache.js');
 module.exports = {
 	query: query,
 	queryUsers: queryUsers,
-	getPreview: getPreview,
 	createUser: createUser,
 	getUser: getUser,
+	getActiveUser: getActiveUser,
 	updateActivity: updateActivity,
 	updateAccessCount: updateAccessCount,
     checkPassword: checkPassword,
@@ -49,7 +48,8 @@ function queryUsers(query, callback) {
 	if (query.indexOf(' ') >= 0) { // name query
 		var nameQuery = query.split(' ');
 		User.find({ $and : [{'local.firstName': new RegExp(nameQuery[0], 'i')}, 
-						{'local.lastName': new RegExp(nameQuery[1], 'i')}]},
+						{'local.lastName': new RegExp(nameQuery[1], 'i')},
+						{'local.active': true}]},
 			function(err, users) {
 				if (err) 
 					return callback(Error.createError(err, Error.internalError));
@@ -66,9 +66,11 @@ function queryUsers(query, callback) {
 				return callback(null, {query: query, results: userInfoArr});
 			});
 	} else {
-		User.find({ $or:[ {'local.username': regExp}, 
+		User.find({$and: [{'local.active': true},
+					{$or:[ {'local.username': regExp}, 
 						{'local.firstName': regExp}, 
-						{'local.lastName': regExp} ]}, 
+						{'local.lastName': regExp} ]}
+					]}, 
 			function(err, users) {
 				if (err) 
 					return callback(Error.createError(err, Error.internalError));
@@ -117,15 +119,6 @@ function getUserInfo(userId, callback) {
 	});
 }
 
-function getPreview(userId, refDiscId, callback) {
-	DiscController.getPublicPreview(userId, refDiscId, function(err, preview) {
-		if (err)
-			return callback(err);
-			
-		return callback(null, {userId: userId, discs: preview});
-	});
-}
-
 function createUser(info, callback) {
 	query('local.email', info.email, function(err, users) {
 		if (err)
@@ -140,6 +133,7 @@ function createUser(info, callback) {
 		});
 		
 		user.local.password = user.generateHash(user.local.password);
+		user.local.active = true;
 		
 		user.save(function(err) {
 			if (err)
@@ -158,6 +152,18 @@ function getUser(userId, callback) {
 		if (!user) return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
 		
 		return callback(null, user);	
+	});
+}
+
+function getActiveUser(userId, callback) {
+	getUser(userId, function(err, user) {
+		if (err)
+			return callback(err);
+		
+		if (!user.local.active)
+			return callback(Error.createError('Unknown user identifier.', Error.invalidDataError));
+		
+		return callback(null, user);
 	});
 }
 
@@ -188,37 +194,28 @@ function checkUsername(username) {
 }
 
 function getAccount(userId, callback) {
-	User.findOne({_id: userId}, function(err, user) {
+	getActiveUser(userId, function(err, user) {
        if (err) 
-			return callback(Error.createError(err, Error.internalError));
-		
-		if (!user)
-	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
+			return callback(err);
 		
 		return callback(null, user.accountToString());
     });
 }
 
 function getPreferences(userId, callback) {
-    User.findOne({_id: userId}, function(err, user) {
+	getActiveUser(userId, function(err, user) {
        if (err) 
-			return callback(Error.createError(err, Error.internalError));
-		
-		if (!user)
-	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
+			return callback(err);
 		
 		return callback(null, user.preferences);
     });
 }
 
 function restorePreferences(userId, callback) {
-	User.findOne({_id: userId}, function(err, user) {
+	getActiveUser(userId, function(err, user) {
        if (err) 
-			return callback(Error.createError(err, Error.internalError));
+			return callback(err);
 		
-		if (!user)
-	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-	   	
 	   	user.preferences = UserConfig;
 	   	
 	   	user.save(function(err) {
@@ -227,18 +224,15 @@ function restorePreferences(userId, callback) {
     		else
     			return callback(null, user.preferences);
 		});
-	});
+    });
 }
 
 function updatePreferences(userId, prefs, callback) {
-    User.findOne({_id: userId}, function(err, user) {
+	getActiveUser(userId, function(err, user) {
        if (err) 
-			return callback(Error.createError(err, Error.internalError));
+			return callback(err);
 		
-		if (!user)
-	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-		
-		if (_.has(prefs, 'notifications')) {
+	   	if (_.has(prefs, 'notifications')) {
 			var notifications = prefs.notifications;
 			
 			if (_.has(notifications, 'newMessage') && validatePreference('notifications.newMessage', notifications.newMessage)) {
@@ -280,14 +274,11 @@ function updatePreferences(userId, prefs, callback) {
 }
 
 function updateAccount(userId, account, callback) {
-	User.findOne({_id: userId}, function(err, user) {
+	getActiveUser(userId, function(err, user) {
        if (err) 
-			return callback(Error.createError(err, Error.internalError));
+			return callback(err);
 		
-		if (!user)
-	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-		
-		if (_.has(account, 'firstName')) {
+	   	if (_.has(account, 'firstName')) {
 			user.local.firstName = account.firstName;
 		}
 		
@@ -339,21 +330,17 @@ function updateAccount(userId, account, callback) {
 }
 
 function resetPassword(userId, password, callback) {
-        
-    if (!password || !checkPassword(password)) {
-        
-		return callback(Error.createError('Password must be 6 or more characters.',
-		    Error.invalidDataError));
-    }
-	
-	 User.findOne({_id: userId}, function(err, user) {
-        if (err)
-			return callback(Error.createError(err, Error.internalError));
-        
-        if (!user)
-	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-        
-        user.local.password = user.generateHash(password);
+	getActiveUser(userId, function(err, user) {
+       if (err) 
+			return callback(err);
+		
+	   	 if (!password || !checkPassword(password)) {
+	        
+			return callback(Error.createError('Password must be 6 or more characters.',
+			    Error.invalidDataError));
+	    }
+	    
+	    user.local.password = user.generateHash(password);
         user.save(function(err){
             if (err)
                 return callback(err);
@@ -370,14 +357,11 @@ function resetPassword(userId, password, callback) {
 }
 
 function tryResetPassword(userId, currentPw, newPw, callback) {
-	 User.findOne({_id: userId}, function(err, user) {
-        if (err)
-			return callback(Error.createError(err, Error.internalError));
-        
-        if (!user)
-	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-        
-        if (!user.validPassword(currentPw))
+	getActiveUser(userId, function(err, user) {
+       if (err) 
+			return callback(err);
+		
+	   	if (!user.validPassword(currentPw))
         	return callback(Error.createError('The current password is incorrect.', Error.invalidDataError));
         	
         if (user.validPassword(newPw))
@@ -388,18 +372,8 @@ function tryResetPassword(userId, currentPw, newPw, callback) {
 }
 
 function deleteUser(userId, gfs, callback) {
-	User.findOne({_id: userId}, function(err, user) {
-		if (err)
-			return callback(Error.createError(err, Error.internalError));
-			
-		if (!user)
-			return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-			
-		user.local.active = false;
-		user.save(function(err) {
-			user.addEvent("Account deactiated");
-			callback(null, user.accountToString());
-		});
+	deleteUserImage(userId, gfs, function(err, user) {
+		User.remove({_id: userId}, callback);
 	});
 }
 
@@ -453,13 +427,10 @@ function validatePreference(preference, value) {
 }
 
 function deleteUserImage(userId, gfs, callback) {
-	User.findOne({_id: userId}, function(err, user) {
-		if (err)
-			return callback(Error.createError(err, Error.internalError));
-        
-        if (!user)
-	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-	   		
+	getActiveUser(userId, function(err, user) {
+       if (err) 
+			return callback(err);
+		
 	   	if (typeof(user.local.image) !== 'undefined') {
 	   		FileUtil.deleteImage(user.local.image, gfs, function() {
 	   			user.local.image = undefined;
@@ -473,17 +444,14 @@ function deleteUserImage(userId, gfs, callback) {
 	   	} else {
 	   		callback(null, user.accountToString());
 	   	}
-	});
+    });
 }
 
 function postUserImage(userId, fileId, gfs, callback) {
-	User.findOne({_id: userId}, function(err, user) {
-		if (err)
-			return callback(Error.createError(err, Error.internalError));
-        
-        if (!user)
-	   		return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-	   	
+	getActiveUser(userId, function(err, user) {
+       if (err) 
+			return callback(err);
+		
 	   	async.series([
 	   		function(cb) {
 	   			if (typeof(user.local.image) !== 'undefined') {
@@ -499,5 +467,5 @@ function postUserImage(userId, fileId, gfs, callback) {
 				return callback(null, user.accountToString());
 		   	});
 	   	});
-	});
+    });
 }

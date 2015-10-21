@@ -12,15 +12,13 @@ $(document).ready(function(){
         ]
     });
     
-    $('#submit').click(function() {
-        $('.page-alert').remove();
-        $inputForm.submit();
-    });
-    
     $inputForm.submit(function() {
         if (!inputValidate.isAllValid()) {
-            generateError('Invalid data.', 'ERROR', false);
+            var invalidItems = inputValidate.getInvalidItems();
+            if (invalidItems.length) {
+				generateInvalidDataError(invalidItems);
+            }
             return false;
-        } 
+        }
     });
 });

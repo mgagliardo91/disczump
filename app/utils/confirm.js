@@ -1,7 +1,10 @@
 var TemporaryLink = require('../models/temporaryLink');
 var User = require('../models/user');
 var UserController = require('../controllers/user');
+var DiscController = require('../controllers/disc');
+var MessageController = require('../controllers/message');
 var crypto              = require('crypto');
+var async = require('async');
 var Handlebars = require('handlebars');
 var fs = require('fs');
 var configRoutes = require('../../config/config').routes;
@@ -9,15 +12,12 @@ var localConfig = require('../../config/localConfig');
 var Error = require('../utils/error');
 
 module.exports = {
-    initializeConfirm : function(userId, callback) {
-        User.findOne({_id: userId}, function(err, user) {
+    initializeConfirmAccount : function(userId, callback) {
+        UserController.getUser(userId, function(err, user) {
            if (err)
-			    return callback(Error.createError(err, Error.internalError));
+                return callback(err);
             
-            if (!user)
-                return callback(Error.createError('The account does not exist.', Error.objectNotFoundError));
-            
-            TemporaryLink.remove({ userId: user._id, route: configRoutes.confirmAccount }, function (err) {
+            TemporaryLink.remove({ userId: user._id, route: 'confirm' }, function (err) {
                 if (err)
 			        console.log(err);
 			        
@@ -30,7 +30,7 @@ module.exports = {
                     if (err)
     			        return callback(Error.createError(err, Error.internalError));
                     
-                    callback(null, user, generateConfirmationEmail(user, confirm));
+                    callback(null, user, confirmAccountEmail(user, confirm));
                 });
             });
         });
@@ -44,13 +44,9 @@ module.exports = {
             if (!confirm)
                 return callback(Error.createError('The confirmation request does not exist.', Error.objectNotFoundError));
             
-            User.findOne({_id: confirm.userId}, function(err, user) {
+            UserController.getUser(confirm.userId, function(err, user) {
                 if (err)
-	                return callback(Error.createError(err, Error.internalError));
-                    
-                if (!user)
-                    return callback(Error.createError('The user associated with ' + 
-                        'the confirmation request does not exist.', Error.objectNotFoundError));
+	                return callback(err);
                 
                 user.local.active = true;
                 user.save(function(err){
@@ -61,11 +57,68 @@ module.exports = {
                 });
             });
         });
+    },
+    
+    initializeConfirmDelete : function(userId, callback) {
+        UserController.getActiveUser(userId, function(err, user) {
+           if (err)
+                return callback(err);
+            
+            TemporaryLink.remove({ userId: user._id, route: 'delete' }, function (err) {
+                if (err)
+			        console.log(err);
+			 
+                var confirm = new TemporaryLink({userId: user._id, route : 'delete'});
+                
+                confirm.save(function(err) {
+                    if (err)
+    			        return callback(Error.createError(err, Error.internalError));
+                    
+                    user.addEvent('Account deletion request initialized [' + confirm._id + '].');
+                    callback(null, user, confirmDeleteEmail(user, confirm));
+                });
+            });
+        });
+    },
+    
+    confirmDelete : function(authorizationId, gfs, callback) {
+        TemporaryLink.findOne({_id: authorizationId, route: 'delete' }, function (err, confirm) {
+            if (err)
+	            return callback(Error.createError(err, Error.internalError));
+            
+            if (!confirm)
+                return callback(Error.createError('The confirmation request does not exist.', Error.objectNotFoundError));
+            
+            UserController.getActiveUser(confirm.userId, function(err, user) {
+                if (err)
+	                return callback(err);
+	                
+	            async.series([
+                    function(cb) {
+                        MessageController.deleteUserThreads(user._id, cb);
+                    },
+                    function(cb) {
+                        DiscController.deleteUserDiscs(user._id, gfs, cb);
+                    },
+                    function(cb) {
+                        UserController.deleteUser(user._id, gfs, cb);
+                    }
+                ], function(err, results) {
+                    return callback(null, user);
+                });
+            });
+        });
     }
 }
 
-function generateConfirmationEmail(user, confirm) {
+function confirmAccountEmail(user, confirm) {
     var html = fs.readFileSync('./private/html/confirmAccount.handlebars', 'utf8');
+    var template = Handlebars.compile(html);
+    return template({user: user, confirm : confirm, serverURL: localConfig.serverURL});
+}
+
+function confirmDeleteEmail(user, confirm) {
+    var html = fs.readFileSync('./private/html/confirmDelete.handlebars', 'utf8');
     var template = Handlebars.compile(html);
     return template({user: user, confirm : confirm, serverURL: localConfig.serverURL});
 }

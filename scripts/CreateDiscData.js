@@ -10,7 +10,7 @@ Grid.mongo = mongoose.mongo;
 var conn = mongoose.createConnection('mongodb://' + configDB.database.host + ':' + 
     configDB.database.port + '/' + configDB.database.db);
     
-conn.once('open', function() {
+conn.on('open', function() {
    var gfs = Grid(conn.db) 
    console.log('started');
    DevController.createDiscData(gfs, 1, function() {

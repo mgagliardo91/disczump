@@ -22,6 +22,7 @@ var modifyHandler = {type: 'Add', discId: undefined};
 var accountDropzone;
 var cropLock;
 var serverCallback = {};
+var connectTries = 0;
 
 // Library Instances
 var myZumpColorPicker;
@@ -77,7 +78,7 @@ $(document).ready(function(){
     	
     	$('.page-alert').remove();
     	
-    	if (!accountValidation.isAllValid()) {
+    	if (!accountValidation.doValidate()) {
     		return false;
     	}
     	
@@ -110,9 +111,11 @@ $(document).ready(function(){
     });
     
     $('#account-delete').click(function() {
-    	var text = 'Are you sure you want to delete your account?';
-    	generateConfirmationModal('WARNING!', text, 'Delete', function() {
-			window.location.href = '/profile/delete';
+    	var body = {
+    		text: 'Are you sure you want to delete your account?'
+    	}
+    	generateConfirmationModal('Wait!', body, 'Confirm', function() {
+			window.location.href = '/account/delete';
 		});
     });
     
@@ -161,9 +164,11 @@ $(document).ready(function(){
     	});
     });
     $('#default-settings-restore').click(function() {
-    	var text = 'Are you sure you want to restore your preferences?';
+    	var body = {
+    		text: 'Are you sure you want to restore your preferences?'
+    	};
     	
-    	generateConfirmationModal('Warning!', text, 'Restore', function() {
+    	generateConfirmationModal('Warning!', body, 'Restore', function() {
 			updatePreferences(undefined, function(success, retData) {
 	    		if (success) {
 	    			generateSuccess('Default settings have been restored. Changes will take effect when page is <reloaded>.', 'Success', false, ['/dashboard']);
@@ -422,6 +427,7 @@ $(document).ready(function(){
     });
     
     $('.page-alert').slideDown(300);
+    autoCloseAlert($('.page-alert'), '.close', 3000);
 });
 
 function openPopup(url, name) {
@@ -544,7 +550,10 @@ function initSocket(sessionId) {
 		generateError('Disconnected from disc|zump. Reconnecting...', 'Connection Error', true);
 		setTimeout(getSocketSession, 1000);
 	}).on('connect_error', function() {
-		getSocketSession();
+		connectTries++;
+		if (connectTries < 10) {
+			setTimeout(getSocketSession, 1000);
+		}
 	});
 }
 
@@ -619,7 +628,7 @@ function setLoading(visible) {
 }
 
 function changeSidebar(nav) {
-	if (nav == pageSettings.panelNav.curPanel) return;
+	if (nav == pageSettings.curPanel) return;
 	
 	toggleSidebar(nav);
 }
@@ -637,8 +646,8 @@ function toggleSidebar(nav, complete) {
 	   		pageSettings.panelNav.push('#' + $curNav.attr('id'));
 	   	}
 	   	
-	   	pageSettings.panelNav.curPanel = '#' + $nav.attr('id');
-	   	pageSettings.panelNav = _.without(pageSettings.panelNav, pageSettings.panelNav.curPanel);
+	   	pageSettings.curPanel = '#' + $nav.attr('id');
+	   	pageSettings.panelNav = _.without(pageSettings.panelNav, pageSettings.curPanel);
 	   	
    		$curNav.fadeOut(0, function() {
    			$('.sidebar-nav-indicator').removeClass('active');
@@ -893,7 +902,10 @@ function initSettings() {
 		});
 		
 		$('#profile-image-fb-submit').click(function() {
-			generateConfirmationModal('Confirm Changes', 'This will remove your current account image, if one exists. Continue?', 'Confirm', function() {
+			var body = {
+				text: 'This will remove your current account image, if one exists. Continue?'
+			};
+			generateConfirmationModal('Confirm Changes', body, 'Confirm', function() {
 				deleteAccountImage(function(success, retData) {
 					if (success) {
 						userAccount = retData;
@@ -967,8 +979,8 @@ function initSettings() {
 			        var reader = new FileReader();
 			        reader.onloadend = function() {
 			        	showPhotoCrop(file.name, reader.result, function(newFile) {
-			        		if (newFile) accountDropzone.addFile(newFile);
 							cropLock = false;
+			        		if (newFile) accountDropzone.addFile(newFile);
 			        	});
 	        		};
 			        
@@ -1260,7 +1272,7 @@ function collapseSidebar() {
 * Generates a modal popup for users to submit feedback
 */
 function generateFeedbackModal(title, btnText, submitFn) {
-	var header = '<h4 class="modal-title">' + title + '</h4>';
+	var header = '<div class="modal-title">' + title + '</div>';
           
 	var body =  '<p><b>We would love to hear from you!</b></p>' +
 				'<br />' +
@@ -1296,7 +1308,7 @@ function generateFeedbackModal(title, btnText, submitFn) {
 * Generates a modal popup to help users understand the Add/Edit disc page
 */
 function generateHelpModal(title, bodyHTML) {
-	var header = '<h4 class="modal-title"><span><i class="fa fa-info-circle fa-tools"></i></span>' + title + '</h4>';
+	var header = '<div class="modal-title"><span><i class="fa fa-info-circle fa-tools"></i></span>' + title + '</div>';
           
 	var body = '<div class="popup-body">' +
 					'<table>' +
@@ -1440,6 +1452,7 @@ function generateModal(opt) {
 	var headerText = '';
 	var bodyText = '';
 	var footerText = '';
+	var width = '';
 	
 	// Get modal building blocks
 	if (isDef(opt.header)) {
@@ -1454,11 +1467,19 @@ function generateModal(opt) {
 		footerText = opt.footer;
 	}
 	
+	if (isDef(opt.width)) {
+		width = opt.width;
+	}
+	
 	// Create modal
 	var $modal = $('<div class="modal custom-modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>');
 	$modal.html('<div class="modal-dialog">' + 
             '<div class="modal-content">' + 
               '<div class="modal-header">' + headerText +
+              	'<div class="modal-header-logo">' +
+              		'<img class="fit-parent" src="https://disczumpserver-mgagliardo.c9.io/static/logo/logo_high_nobg.svg">' +
+              	'</div>' +
+              	'<div class="clearfix"></div>' +
               '</div>' + 
               '<div class="modal-body">' + bodyText + 
               '</div>' + 
@@ -1502,6 +1523,11 @@ function generateModal(opt) {
 	  	if (isDef(opt.onShow)) {
 			opt.onShow($modal.find('.modal-body'));
 		}
+	});
+	
+	// On show event
+	$modal.on('show.bs.modal', function (e) {
+		$('.modal-dialog').css('width', width + 'px');
 	});
 	
 	// On create event
@@ -1617,9 +1643,17 @@ function exportList() {
 * Alerts the user that a disc will be deleted
 */
 function generateConfirmationModal(title, bodyText, btnText, confirmFn) {
-	var header = '<h4 class="modal-title">' + title + '</h4>';
-          
-	var body =  '<p>' + bodyText + '</p>';
+	var header = '<div class="modal-title">' + title + '</div>';
+	
+	var body = '';
+    
+    if (isDef(bodyText.strong)) {
+    	body = '<p><strong>' + bodyText.strong + '</strong></p><br/>';
+    }
+    
+    if (isDef(bodyText.text)) {
+    	body = body + '<p>' + bodyText.text + '</p>';
+    }
 			
 	var footer = '<button type="button" class="btn btn-default" fn-title="cancel">Cancel</button>' +
 		'<button type="button" class="btn btn-danger" fn-title="confirm"><span><i class="fa fa-minus-circle fa-tools"></i></span>' + btnText + '</button>';
@@ -1644,7 +1678,8 @@ function generateConfirmationModal(title, bodyText, btnText, confirmFn) {
 		header: header, 
 		body: body, 
 		footer: footer, 
-		fns: fns
+		fns: fns,
+		width: '500'
 	});
 }
 
@@ -2101,12 +2136,13 @@ var ZumpEditor = function(opt) {
     var $saveDisc;
     var $cloneDisc;
     var $tagInput;
+    var $addCustomTag;
     var $dropzoneArea;
     var $discVisibility;
     var $pgTitle;
     var $imageContainer;
-    var $clearForm;
     var $curImagesSection;
+    var $discNotes;
     
     //----------------------\
     // Prototype Functions
@@ -2127,12 +2163,13 @@ var ZumpEditor = function(opt) {
     	$modifyForm = $('#modify-disc-form');
     	$tagContainer = $('#tag-list-container');
     	$tagInput = $('#add-disc-tag');
+    	$addCustomTag = $('#add-custom-tag');
     	$dropzoneArea = $('#dropzone-area');
     	$discVisibility = $('#disc-visibility');
     	$pgTitle = $('#pg-modify-disc').find('.page-title');
     	$imageContainer = $('#existing-image-list');
-    	$clearForm = $('#clear-modify-disc-form');
     	$curImagesSection = $('#current-images-section');
+    	$discNotes = $('#disc-notes');
     	
     	setupListeners();
     }
@@ -2165,7 +2202,10 @@ var ZumpEditor = function(opt) {
     	items: [
     		{id: 'disc-brand', type: 'text', min: 1},
     		{id: 'disc-name', type: 'text', min: 1},
-    		{id: 'disc-weight', optional: true, type: 'number'},
+    		{id: 'disc-type', optional: true, type: 'function', fn: function(val) {return val.length == 0 ? undefined : true}},
+    		{id: 'disc-material', optional: true, type: 'function', fn: function(val) {return val.length == 0 ? undefined : true}},
+    		{id: 'disc-weight', optional: true, type: 'number', max: 3},
+    		{id: 'disc-color', optional: true, type: 'function', fn: function(val) {return val.length == 0 ? undefined : true}},
     		{id: 'disc-speed', optional: true, type: 'number'},
     		{id: 'disc-glide', optional: true, type: 'number'},
     		{id: 'disc-turn', optional: true, type: 'number'},
@@ -2197,9 +2237,19 @@ var ZumpEditor = function(opt) {
 				$tagContainer.empty();
 			}
 		});
+		
+		$(document).on('keyup paste change leave focusin focusout', $tagInput, function() {
+			if ($tagInput.val().length > 0) {
+				if (!$addCustomTag.hasClass('has-text')) $addCustomTag.addClass('has-text');
+			} else {
+				if ($addCustomTag.hasClass('has-text')) $addCustomTag.removeClass('has-text');
+			}
+		});
 	    
 	    $saveDisc.click(function() {
 			$('.page-alert').remove();
+			
+			discEditorValidation.doValidate();
 			
 			var invalidItems = discEditorValidation.getInvalidItems();
 			if (invalidItems.length) {
@@ -2230,10 +2280,11 @@ var ZumpEditor = function(opt) {
 	    	changePage('#pg-modify-disc');
 	    });
 	    
-	    $('#add-custom-tag').click(function(){
+	    $addCustomTag.click(function(){
 	    	if ($tagInput.val().length > 0) {
 				$tagContainer.append(generateTagItem($tagInput.val()));
 	    		$tagInput.val('');
+	    		$addCustomTag.removeClass('has-text');
 	    	}
 	    });
 	    
@@ -2386,10 +2437,11 @@ var ZumpEditor = function(opt) {
 		$modifyForm.find('.has-success').removeClass('has-success');
 		$('.page-alert').remove();
 		$tagContainer.empty();
+		$addCustomTag.removeClass('has-text');
+		$discNotes.removeAttr('style');
 		$imageContainer.empty();
 		$discVisibility.bootstrapSwitch('state', true);
 		clearDropzone();
-		// setAccordions($modifyForm, 'hide');
 	}
 	
 	/*
@@ -3017,7 +3069,7 @@ var ZumpDashboard = function(opt) {
 	
 	this.updateSingleDisc = function(upDisc) {
 		unfilteredList = _.filter(unfilteredList, function(disc){
-			return disc._id != unfilteredList._id;
+			return disc._id != upDisc._id;
 		});
 		unfilteredList.push(upDisc);
 		updateDiscItem(upDisc);
@@ -3337,8 +3389,10 @@ var ZumpDashboard = function(opt) {
 	   	
 	   	$(document).on('click', '.fa-delete-disc-item', function() {
 			var discId = $(this).parents('.disc-item').attr('discid');
-			var text = 'Are you sure you want to delete this disc and all of its data?';
-			generateConfirmationModal('WARNING!', text, 'Delete', function() {
+			var body = {
+				text: 'Are you sure you want to delete this disc and all of its data?'
+			};
+			generateConfirmationModal('WARNING!', body, 'Delete', function() {
 				deleteDisc(discId, function(success, data) {
 					if (success) {
 						onDeleteDisc(data);
@@ -4627,7 +4681,7 @@ var ZumpSocial = function(opt) {
     	$profilePictureContainer.find('img').attr('src','');
     	$profileLocation.text('');
     	$profileJoinDate.text('');
-    	$profileDiscCount.text('');
+    	$profileDiscCount.text('0');
     }
     
     var appendNoResults = function() {
@@ -4645,14 +4699,16 @@ var ZumpSocial = function(opt) {
     	var $profileItem = $('<li class="profile-item hover-active no-select" userId="' + user._id + '"></li>');
     	
     	$profileItem.append('<div class="profile-item-image" style="background-image:url(' + getUserImage(user) + ');"></div>' +
-                            '<div class="profile-item-details">' +
-                                '<div class="profile-item-details-inner">' +
-                                    '<div class="profile-item-label">' + fullName + '</div>' +
-                                    '<div class="profile-item-text">' + user.username + '</div>' +
-                                    '<div class="profile-item-text">' + (pdga.length ? '#' + pdga : '') + '</div>' +
-                                    '<div class="profile-item-text city-state" value="' + user.zipCode + '"></div>' +
-                                '</div>' +
-                            '</div>' +
+    						'<div class="profile-item-details-container">' +
+	                            '<div class="profile-item-details">' +
+	                                '<div class="profile-item-details-inner">' +
+	                                    '<div class="profile-item-label">' + fullName + '</div>' +
+	                                    '<div class="profile-item-text">' + user.username + '</div>' +
+	                                    '<div class="profile-item-text">' + (pdga.length ? '#' + pdga : '') + '</div>' +
+	                                    '<div class="profile-item-text city-state" value="' + user.zipCode + '"></div>' +
+	                                '</div>' +
+	                            '</div>' +
+	                        '</div>' +
                             '<div class="clearfix"></div>');
         
         var cityState = zipCodeCache[user.zipCode];
@@ -4668,7 +4724,7 @@ var ZumpSocial = function(opt) {
 	        		$('.city-state[value="' + user.zipCode + '"]').text(retData);
 	        		zipCodeCache[user.zipCode] = retData;
 	        	} else {
-	        		handleError(retData);
+	        		//Ignore error in the case that zip code is not found.
 	        	}
 	        });
         }
@@ -4734,6 +4790,7 @@ var ZumpMessenger = function(opt) {
 	var forceUpdate = false;
 	var initialized = false;
 	var postFunction;
+	var isShowing = false;
 	
     //----------------------\
     // JQuery Objects
@@ -4778,7 +4835,7 @@ var ZumpMessenger = function(opt) {
 	}
 	
 	this.CurrentThread = function() {
-		return activeThread.threadId;
+		return activeThread ? activeThread.threadId : undefined;
 	}
 	
 	this.openThread = function(receivingUser) {
@@ -4795,43 +4852,56 @@ var ZumpMessenger = function(opt) {
 	
 	this.threadLeft = function() {
 		$('.thread-container').removeClass('thread-open');
-		activeThread = undefined;
 		$(window).off('resize', resizeMessageArea);
+		isShowing = false;
 	}
 	
 	this.initPage = function() {
 		resizeMessageArea();
 		$(window).on('resize', resizeMessageArea);
+		isShowing = true;
+		if (typeof(activeThread) !== 'undefined') {
+			var $threadContainer = $('.thread-container[threadId="' + activeThread.threadId + '"]');
+			$threadContainer.addClass('thread-open').siblings().removeClass('thread-open');
+		}
 	}
 	
 	this.handleMessage = function(message) {
-		if (pageSettings.activePage == '#pg-inbox' && activeThread.threadId == message.threadId) {
-			var thread = getThread(message.threadId).thread;
-			thread.messageCount += 1;
-			thread.currentMessageCount += 1;
-			thread.modifiedDate = message.createDate;
-			
-			putThreadState(thread.threadId, {messageCount: thread.messageCount});
-			$inboxList.prepend($('li.thread-container[threadId="' + message.threadId + '"]'));
-			appendMessage(message);
-	    	$messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
-	    	updateThread(thread);
-	    	
+		var threadObj = getThread(message.threadId);
+		if (!threadObj) {
+			getThreadState(message.threadId, function(success, thread) {
+				if (success) {
+    				threadCache[thread.threadId] = {thread: thread, messages: [], lastId: undefined};
+					pushThreadUpdate(thread, message);
+				}
+			})
 		} else {
-			var thread = getThread(message.threadId).thread;
-			thread.currentMessageCount += 1;
-			thread.modifiedDate = message.createDate;
-			$('li.thread-container[threadId="' + thread.threadId + '"]').remove();
-			prependThread(thread);
-			showNotification('Thread: ' + thread.threadTag, 'You have receieved a new message!', function() {
-				myMessenger.openThreadById(thread.threadId);
-			});
+			threadObj.thread.currentMessageCount += 1;
+			threadObj.thread.modifiedDate = message.createDate;
+			pushThreadUpdate(threadObj.thread, message);
 		}
 	}
 	
 	//----------------------\
     // Private Functions
     //----------------------/
+    
+    var pushThreadUpdate = function(thread, message) {
+    	if (isShowing && activeThread.threadId == message.threadId) {
+    		thread.messageCount += 1;
+			$inboxList.prepend($('li.thread-container[threadId="' + message.threadId + '"]'));
+			appendMessage(message);
+	    	$messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
+	    	putThreadState(thread.threadId, {messageCount: thread.messageCount});
+	    	updateThread(thread);
+		} else {
+			$('li.thread-container[threadId="' + thread.threadId + '"]').remove();
+			prependThread(thread);
+			showNotification('Thread: ' + thread.threadTag, 'You have receieved a new message!', function() {
+				myMessenger.openThreadById(thread.threadId);
+			});
+		}
+    }
     
     var resizeMessageArea = function() {
     	var height = $(window).height() - $messageContainer.offset().top - $addMessageContainer.outerHeight() - 20;
@@ -4892,8 +4962,11 @@ var ZumpMessenger = function(opt) {
     		if (success) {
     			newMessageCount = 0;
     			_.each(threadList, function(thread) {
-    				threadCache[thread.threadId] = {thread: thread, messages: [], lastId: undefined};
-    				appendThread(thread);
+    				
+    				if (thread.currentMessageCount > 0) {
+	    				threadCache[thread.threadId] = {thread: thread, messages: [], lastId: undefined};
+	    				appendThread(thread);
+    				}
     			});
     		} else {
     			handleError(threadList);
@@ -4956,6 +5029,16 @@ var ZumpMessenger = function(opt) {
     	return params;
     }
     
+    var reorderThreads = function() {
+    	var threads = _.pluck(_.values(threadCache), 'thread');
+    	threads = _.sortBy(threads, function(element) { return new Date(element.modifiedDate); });
+    	
+    	_.each(threads, function(thread) {
+    		var $thread = $('li.thread-container[threadId="' + thread.threadId + '"]');
+    		$inboxList.prepend($thread.detach());
+    	});
+    }
+    
     var updateThread = function(thread) {
     	var $thread = $('li.thread-container[threadId="' + thread.threadId + '"]');
     	var isActive = $thread.hasClass('active');
@@ -4965,6 +5048,7 @@ var ZumpMessenger = function(opt) {
     		if (isActive) $thread.addClass('active');
     	}
     	updateMessageCount();
+    	reorderThreads();
     }
     
     var prependThread = function(thread) {
@@ -5015,13 +5099,21 @@ var ZumpMessenger = function(opt) {
         			userCache[user._id].photo = getUserImage(user);
         			userCache[user._id].username = user.username;
         			$threadContainer.find('.thread-image').css('background-image', 'url("' + userCache[user._id].photo + '")');
-        			$threadContainer.find('.thread-tag-label').text(userCache[user._id].username);
-        			thread.threadTag = userCache[user._id].username;
+        			
+        			if (thread.threadTag != userCache[user._id].username) {
+        				putThreadState(thread.threadId, {threadTag: userCache[user._id].username});
+        				thread.threadTag = userCache[user._id].username;
+        			}
+        			
+        			$threadContainer.find('.thread-tag-label').text(thread.threadTag);
         			if (activeThread && activeThread.threadId == thread.threadId) {
 						$threadTitle.text(thread.threadTag);
         			}
         		} else {
-        			handleError(user);
+        			$threadContainer.find('.thread-tag-label').text(thread.threadTag);
+        			if (activeThread && activeThread.threadId == thread.threadId) {
+						$threadTitle.text(thread.threadTag);
+        			}
         		}
         	});
         }                    
@@ -5068,6 +5160,14 @@ var ZumpMessenger = function(opt) {
     }
     
     var showThread = function(threadId, fail) {
+    	var threadCacheObj = getThread(threadId);
+    	
+		if (!threadCacheObj) {
+			if (fail) fail('Unknown thread identifier.');
+			return;
+		}
+		
+		var thread = threadCacheObj.thread;
     	
     	if (userCache[userAccount._id] && userCache[userAccount._id].photo != getUserImage(userAccount)) {
     		userCache[userAccount._id].photo = getUserImage(userAccount);
@@ -5075,29 +5175,23 @@ var ZumpMessenger = function(opt) {
     	} else {
     		userCache[userAccount._id] = {photo: getUserImage(userAccount), username: userAccount.username};
     	}
-		
-    	if (!forceUpdate && typeof(activeThread) !== 'undefined' && activeThread.threadId == threadId) return false;
     	
-    	var threadCacheObj = getThread(threadId);
-		if (!threadCacheObj) {
-			if (fail) fail('Unknown thread identifier.');
-			return;
-		}
+    	threadCacheObj.thread.messageCount = threadCacheObj.thread.currentMessageCount;
 		
-		var thread = threadCacheObj.thread;
-		
-		activeThread = thread;
 		var $threadContainer = $('.thread-container[threadId="' + threadId + '"]');
-		
+		setThreadState($threadContainer, false);
 		$threadContainer.addClass('thread-open').siblings().removeClass('thread-open');
 		$threadTitle.text(thread.threadTag);
-		
-		threadCacheObj.thread.messageCount = threadCacheObj.thread.currentMessageCount;
-		
+    	
+    	if (forceUpdate || typeof(activeThread) === 'undefined' || activeThread.threadId != threadId) {
+			setThread(threadCacheObj);
+    	} else {
+    		putThreadState(threadCacheObj.thread.threadId, {messageCount: threadCacheObj.thread.currentMessageCount});
+    		updateMessageCount();
+    	}
+    	
+    	activeThread = thread;
 		activateThread();
-		setThreadState($threadContainer, false);
-		setThread(threadCacheObj);
-		
 		forceUpdate = false;
     }
     
@@ -5130,9 +5224,10 @@ var ZumpMessenger = function(opt) {
     
     var showMessages = function(threadCacheObj, callback) {
 	    $loadMessages.hide();
-    	if (threadCacheObj.messages.length == 0) {
+    	if (threadCacheObj.messages.length < Math.min(pullCount, threadCacheObj.thread.currentMessageCount)) {
     		pullMessages(threadCacheObj, callback);
     	} else {
+			putThreadState(threadCacheObj.thread.threadId, {messageCount: threadCacheObj.thread.currentMessageCount});
 			_.each(threadCacheObj.messages, function(message) {
 				prependMessage(message);
 			});
@@ -5213,7 +5308,7 @@ var ZumpMessenger = function(opt) {
         				$messageContainer.find('.thread-message[messageId="' + msg._id + '"]').find('.message-user').css('background-image', 'url("' + userCache[user._id].photo + '")');
         			});
         		} else {
-        			handleError(user);
+        			//handleError(user);
         		}
         	})
         }

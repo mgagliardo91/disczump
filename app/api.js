@@ -271,7 +271,7 @@ module.exports = function(app, passport, gridFs) {
         
     app.route('/users/:userId/preview')
         .get(optAccess, function(req, res) {
-            UserController.getPreview(req.params.userId, req.query.refDiscId, function(err, preview) {
+            DiscController.getPreview(req.params.userId, req.query.refDiscId, function(err, preview) {
               if (err)
                     return res.json(err);
                     

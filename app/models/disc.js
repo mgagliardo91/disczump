@@ -2,6 +2,7 @@
 
 var mongoose = require('mongoose');
 var shortId = require('shortid');
+var _ = require('underscore');
 
 var discSchema = mongoose.Schema({
     _id: {
@@ -37,5 +38,13 @@ var discSchema = mongoose.Schema({
     createDate      : {type: Date, default: Date.now}
     
 });
+
+discSchema.methods.getImage = function() {
+    if (this.primaryImage) {
+        return _.findWhere(this.imageList, {_id:this.primaryImage});
+    } else {
+        return undefined;
+    }
+}
 
 module.exports = mongoose.model('Disc', discSchema);
