@@ -223,6 +223,14 @@ function doAjax(param) {
 	});
 }
 
+function getTemplates(callback) {
+	doAjax({
+		path: '/templates', 
+		type: 'GET',
+		callback: callback
+	});
+}
+
 function queryUser(type, text, callback) {
 	doAjax({
 		path: '/validate/' + type + '?q=' + text, 

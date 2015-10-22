@@ -4,6 +4,7 @@ var MessageController = require('./controllers/message');
 var DiscController = require('./controllers/disc');
 var ImageController = require('./controllers/imageCache');
 var DataItemController = require('./controllers/dataItem');
+var DiscTemplateController = require('./controllers/discTemplate');
 var passport = require('passport');
 var logger = require('../config/logger.js').logger;
 var config = require('../config/config.js');
@@ -411,6 +412,16 @@ module.exports = function(app, passport, gridFs) {
                 }
             });
             req.pipe(busboy);
+        });
+        
+    app.route('/templates')
+        .get(hasAccess, function(req, res) {
+            DiscTemplateController.getTemplates(function(err, templates) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json(templates);
+            });
         });
     
     app.get('*', function(req, res){

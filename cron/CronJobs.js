@@ -2,7 +2,20 @@ var ImageController = require('../app/controllers/imageCache');
 var mongoose = require('mongoose');
 var configDB = require('../config/config.js');
 var Grid = require('gridfs-stream');
+var winston = require('winston');
+var path = require('path');
 
+var logger = new (winston.Logger)({
+    transports: [
+      new (winston.transports.File)({
+            json: false,
+            datePattern: '.yyyy-MM-dd-HH-mm',
+            filename: path.join(__dirname, "../logs", "CronJobOutput.log") 
+      })
+    ]
+});
+
+logger.info('Cron job started.')
 Grid.mongo = mongoose.mongo;
 
 mongoose.connect('mongodb://' + configDB.database.host + ':' + 
@@ -13,11 +26,12 @@ mongoose.connection.on('connected', function() {
    
    ImageController.clearUnusedImages(gfs, function(err) {
        if (err) {
-            console.log('Error clearing image cache: ' + err.error.message);
+            logger.error('Error clearing image cache: ' + err.error.message);
        } else {
-            console.log('Image cache cleared.');
+            logger.info('Image cache cleared.');
        }
         
+        logger.info('Cron job completed.')
         mongoose.disconnect();
    });
 });

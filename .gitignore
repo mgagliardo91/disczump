@@ -5,3 +5,4 @@ node_modules/
 mongod
 config/localConfig.js
 testlogs/
+logs/

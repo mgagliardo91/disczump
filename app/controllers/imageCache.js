@@ -63,7 +63,7 @@ function deleteImageCache(imageId, callback) {
 
 function clearUnusedImages(gfs, callback) {
     var cutoff = new XDate();
-    cutoff.addMinutes(-1);
+    cutoff.addHours(-1);
     
     
     ImageCache.remove({createDate: {$lt: cutoff.toDate()}}, function(err) {

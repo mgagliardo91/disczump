@@ -365,24 +365,26 @@ $(document).ready(function(){
 	
 	pageEvents['pg-modify-disc'] = {
 		beforeShow: function() {
+			myEditor.beforeShow();
 		},
 		onShow: function() {
 			myEditor.onShow();
 			clearHash();
 		},
 		onHide: function() {
-			if (myEditor.ModifyType == "Edit") {
+			if (myEditor.ModifyType() == "Edit") {
 				myEditor.setModifyType("Add");
 				myEditor.setDiscId(undefined);
 				myEditor.clearForm();
 			}
 		},
 		isShowing: function() {
-			if (myEditor.ModifyType == "Edit") {
+			if (myEditor.ModifyType() == "Edit") {
 				myEditor.clearForm();
 				myEditor.setModifyType("Add");
 				myEditor.setDiscId(undefined);
 			}
+			myEditor.beforeShow();
 			myEditor.onShow();
 		},
 		canLeave: function() {
@@ -2119,8 +2121,9 @@ var ZumpEditor = function(opt) {
     //----------------------/
 	var textAssistArr = [];
 	var dropzoneImageHandle = [];
+	var templateCache = [];
 	var curDisc = {};
-	var modifyHandler = {type: 'Add', discId: undefined};
+	var modifyHandler = {lastType: undefined, type: 'Add', discId: undefined};
 	var dropzone;
 	var onNewDisc;
 	var onUpdatedDisc;
@@ -2172,6 +2175,12 @@ var ZumpEditor = function(opt) {
     	$curImagesSection = $('#current-images-section');
     	$discNotes = $('#disc-notes');
     	
+    	getTemplates(function(success, retData) {
+    		if (success) {
+    			templateCache = retData;
+    		}
+    	});
+    	
     	setupListeners();
     }
     
@@ -2195,17 +2204,20 @@ var ZumpEditor = function(opt) {
     	return isProcessing;
     }
     
-    this.onShow = function() {
+    this.beforeShow = function() {
     	if (!isInitialized) {
     		initialize();
     		isInitialized = true;
     	}
     	
+    	stageModifyDiscPage();
+    }
+    
+    this.onShow = function() {
     	_.each(textAssistArr, function(textAssist) {
 			textAssist.triggerResize();
 		});
 		
-		stageModifyDiscPage();
     }
     
     this.clearForm = function() {
@@ -2223,10 +2235,10 @@ var ZumpEditor = function(opt) {
     		{id: 'disc-material', optional: true, type: 'function', fn: function(val) {return val.length == 0 ? undefined : true}},
     		{id: 'disc-weight', optional: true, type: 'number', max: 3},
     		{id: 'disc-color', optional: true, type: 'function', fn: function(val) {return val.length == 0 ? undefined : true}},
-    		{id: 'disc-speed', optional: true, type: 'number'},
-    		{id: 'disc-glide', optional: true, type: 'number'},
-    		{id: 'disc-turn', optional: true, type: 'number'},
-    		{id: 'disc-fade', optional: true, type: 'number'},
+    		{id: 'disc-speed', optional: true, type: 'number', max: 2},
+    		{id: 'disc-glide', optional: true, type: 'number', max: 2},
+    		{id: 'disc-turn', optional: true, type: 'number', max: 2},
+    		{id: 'disc-fade', optional: true, type: 'number', max: 2},
     		{id: 'disc-condition', optional: true, type:'function', fn: function(val) { return val.length == 0 ? undefined : /^(10|[0-9])$/.test(val) }, max: 2}
     	]
     });
@@ -2351,10 +2363,12 @@ var ZumpEditor = function(opt) {
     var initialize = function() {
 		
     	$modifyForm.find('.text-assist').each(function(index) {
+    		var param = $(this).attr('param');
+    		
 			var textAssist = new ZumpTextAssist({
 		        inputElement: $(this),
-		        searchProp: $(this).attr('param'),
-		        items: function() { return discs; }, 
+		        searchProp: param,
+		        items: function() { return _.union(discs, templateCache)},
 		        onSelection: function(item) {}
 		    }); 
 		    textAssistArr.push(textAssist);
@@ -2415,7 +2429,10 @@ var ZumpEditor = function(opt) {
 	* Setup for the modify disc page each time it's opened
 	*/
 	var stageModifyDiscPage = function() {
-		if (modifyHandler.type == 'Add') {
+		var lastType = modifyHandler.lastType;
+		modifyHandler.lastType = modifyHandler.type;
+		
+		if (modifyHandler.type == 'Add' && lastType != 'Add') {
 			$pgTitle.text('Add Disc');
 			$curImagesSection.hide();
 			$clearForm.show();
@@ -2432,12 +2449,15 @@ var ZumpEditor = function(opt) {
 			populateDiscForm(modifyHandler.discId);
 		} else if (modifyHandler.type == 'Clone') {
 			$pgTitle.text('Add Disc');
-			$('.page-alert').remove();
 			$curImagesSection.hide();
+			$clearForm.show();
 			$cloneDisc.hide();
 			$imageContainer.empty();
+			clearDiscForm();
 			clearDropzone();
 			populateDiscForm(modifyHandler.discId, true);
+			modifyHandler.type = 'Add';
+			modifyHandler.discId = undefined;
 		}
 	}
 	
@@ -7277,7 +7297,9 @@ var ZumpTextAssist = function(opt) {
     		return curItem.toLowerCase().indexOf(val.toLowerCase()) >= 0;	
     	});
     	
-    	return filtered.sort();
+    	return filtered.sort(function(a,b) {
+    		return a.toLowerCase() > b.toLowerCase();
+    	});
     }
     
     /*
