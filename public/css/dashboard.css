@@ -62,7 +62,6 @@
     color: rgb(0, 142, 221);
     cursor: default;  
     background-color: rgb(238, 238, 238);
-    /*border-bottom: 1px solid rgb(238, 238, 238);*/
     z-index: 1000;
 }
 
@@ -149,14 +148,6 @@
     margin-left: 350px;
 }
 
-#view-disc-edit:hover {
-    color: rgb(255, 190, 73);    
-}
-
-#clone-disc:hover {
-    color: rgb(0, 142, 221);    
-}
-
 .page-title-btn .fa-times:hover {
     color: #C3C3C3;
 }
@@ -190,82 +181,6 @@
     margin-bottom: 30px;
 }
 
-.profile-image {
-    width: 170px;
-    height: 170px;
-    text-align: center;
-    border: 1px solid rgb(163, 163, 163);
-    background-color: rgb(238, 238, 238);
-    padding: 9px 8px 8px 9px;
-    border-radius: 3px;
-}
-
-.profile-image.float {
-    float: left;
-}
-
-.profile-image.upload {
-    margin: auto;
-    margin-bottom: 10px;
-    position: relative;
-}
-
-.profile-image > img {
-    max-width: 150px;
-    max-height: 150px;
-    border: 1px solid rgb(163, 163, 163);
-}
-
-.profile-image > .user-default-image > i {
-    width: 150px;
-    height: 150px;
-    background-color: #fff;
-    border: 1px solid rgb(163, 163, 163);
-    font-size: 100px;
-    display: table-cell;
-    vertical-align: middle;
-}
-
-.profile-status {
-    width: auto;
-    height: 170px;
-    margin-left: 170px;
-    padding-left: 20px;
-    display: table;
-}
-
-.profile-actions {
-    padding-left: 25px;
-    list-style: none;
-    color: rgb(0, 142, 221);
-}
-
-.profile-actions > li {
-    padding: 2px 0px;
-}
-
-.data-table {
-    display: table-cell;
-    vertical-align: middle;
-}
-
-.data-row {
-    font-size: 1.1em;
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-
-.data-label {
-    float: left;
-    width: 150px;
-    text-align: right;
-    font-weight: bold;
-}
-
-.data-value {
-    margin-left: 160px;
-}
-
 .row {
 	margin-right: 0px;
 	margin-left: 0px;
@@ -280,25 +195,49 @@
     text-align: center;
 }
 
-#password-accordion-label {
-    text-align: center;
-}
-
-#password-accordion-label:hover {
-    cursor: pointer;
-    text-decoration: underline;
-}
-
 .lh-input {
     line-height: 34px;
 }
 
-#accountCityState {
-    font-weight: bold;
-}
-
 .dashboard-view {
     display: none;
+}
+
+@media (min-width: 1151px) and (max-width: 1500px) {
+    .sidebar {
+        width: 250px;
+    }
+
+    .page-view {
+        margin-left: 250px;
+    }
+}
+
+@media (max-width: 1150px) {
+    .sidebar {
+        width: 161px;
+    }
+
+    .page-view {
+        margin-left: 161px;
+    }
+    
+    .sidebar-select {
+        text-align: center;
+    }
+    
+    .sidebar-select > span {
+        float: none;
+        padding: 0px;
+    }
+    
+    .sidebar-select-text {
+        display: none;
+    }
+    
+    .fa-sidebar-icon {
+        font-size: 4em;
+    }
 }
 
 /*===================================================================*/
@@ -510,6 +449,87 @@
     top: 0;
     left: 0;
 }
+
+#accountCityState {
+    font-weight: bold;
+}
+
+.profile-image {
+    width: 170px;
+    height: 170px;
+    text-align: center;
+    border: 1px solid rgb(163, 163, 163);
+    background-color: rgb(238, 238, 238);
+    padding: 9px 8px 8px 9px;
+    border-radius: 3px;
+}
+
+.profile-image.float {
+    float: left;
+}
+
+.profile-image.upload {
+    margin: auto;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.profile-image > img {
+    max-width: 150px;
+    max-height: 150px;
+    border: 1px solid rgb(163, 163, 163);
+}
+
+.profile-image > .user-default-image > i {
+    width: 150px;
+    height: 150px;
+    background-color: #fff;
+    border: 1px solid rgb(163, 163, 163);
+    font-size: 100px;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.profile-status {
+    width: auto;
+    height: 170px;
+    margin-left: 170px;
+    padding-left: 20px;
+    display: table;
+}
+
+.profile-actions {
+    padding-left: 25px;
+    list-style: none;
+    color: rgb(0, 142, 221);
+}
+
+.profile-actions > li {
+    padding: 2px 0px;
+}
+
+.data-table {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.data-row {
+    font-size: 1.1em;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.data-label {
+    float: left;
+    width: 150px;
+    text-align: right;
+    font-weight: bold;
+}
+
+.data-value {
+    margin-left: 160px;
+}
+
 /*===================================================================*/
 /*                                                                   */
 /*                           Statistics                              */
@@ -529,6 +549,10 @@
 #disc-action-container {
     max-width: 1000px;
     margin: 10px auto;
+}
+
+#clone-disc:hover {
+    color: rgb(0, 142, 221);    
 }
 
 .modify-form-section {
@@ -1889,7 +1913,7 @@ select, option {
 
 /*===================================================================*/
 /*                                                                   */
-/*                      Filtered View                                */
+/*                      Dashboard List View                          */
 /*                                                                   */
 /*===================================================================*/
 
@@ -2108,7 +2132,9 @@ select, option {
     font-size: 1.6em;
     line-height: 1.1em;
 	font-variant: small-caps;
-	text-overflow: ellipsis;
+	white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .disc-info-name:hover {
@@ -2121,7 +2147,9 @@ select, option {
 	color: #666666;
 	font-style: italic;
 	font-variant: small-caps;
-	text-overflow: ellipsis;
+	white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .disc-info-numbers {
@@ -2167,6 +2195,7 @@ select, option {
 
 .disc-info-name-container {
     height: inherit;
+    max-width: 355px;
 }
 
 .disc-info-condition {
@@ -2258,6 +2287,18 @@ select, option {
 
 .text-collapse {
     text-overflow: ellipsis;
+}
+
+@media (min-width: 1151px) and (max-width: 1500px) {
+    .disc-info-name-container {
+        max-width: 139px;
+    }
+}
+
+@media (max-width: 1150px) {
+    .disc-info-name-container {
+        max-width: 139px;
+    }
 }
 
 /*===================================================================*/
@@ -2953,7 +2994,7 @@ body.tutorial-active {
 
 /*===================================================================*/
 /*                                                                   */
-/*                        Link Container:      ;                     */
+/*                        Link Container                             */
 /*                                                                   */
 /*===================================================================*/
 .link-container {
@@ -3072,6 +3113,10 @@ body.tutorial-active {
 /*                          View Disc Page                           */
 /*                                                                   */
 /*===================================================================*/
+
+#view-disc-edit:hover {
+    color: rgb(255, 190, 73);    
+}
 
 .view-info-container {
     margin-left: 350px;
@@ -3277,48 +3322,4 @@ body.tutorial-active {
 
 .crop-control .btn:last-child {
     margin-right: 0px;
-}
-
-
-/*===================================================================*/
-/*                                                                   */
-/*                          Responsive CSS                           */
-/*                                                                   */
-/*===================================================================*/
-
-@media (min-width: 1151px) and (max-width: 1500px) {
-    .sidebar {
-        width: 250px;
-    }
-
-    .page-view {
-        margin-left: 250px;
-    }
-}
-
-@media (max-width: 1150px) {
-    .sidebar {
-        width: 161px;
-    }
-
-    .page-view {
-        margin-left: 161px;
-    }
-    
-    .sidebar-select {
-        text-align: center;
-    }
-    
-    .sidebar-select > span {
-        float: none;
-        padding: 0px;
-    }
-    
-    .sidebar-select-text {
-        display: none;
-    }
-    
-    .fa-sidebar-icon {
-        font-size: 4em;
-    }
 }

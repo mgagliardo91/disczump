@@ -1667,7 +1667,7 @@
   };
 
   drawImageIOSFix = function(o, ctx, img, sx, sy, sw, sh, dx, dy, dw, dh) {
-    console.log('Just used orientation: ' + o);
+    // console.log('Just used orientation: ' + o);
     var vertSquashRatio;
     vertSquashRatio = detectVerticalSquash(img);
     dh = dh / vertSquashRatio; ctx.translate( dx+dw/2, dy+dh/2 ); ctx.rotate(-1*o*Math.PI/180); dx = -dw/2; dy = -dh/2;

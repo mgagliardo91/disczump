@@ -24,7 +24,7 @@ describe('Routing', function() {
               name: 'file',
               json: false,
               datePattern: '.yyyy-MM-dd-HH-mm',
-              filename: path.join(__dirname, "../testlogs", "TestRoute.log")
+              filename: path.join(__dirname, "../logs", "TestRoute.log")
             })
         ]
     });
@@ -404,13 +404,14 @@ describe('Routing', function() {
                         throw err;
                         
                     res.body.should.containEql(testConfig.Disc.Update);
+                    curDisc = res.body;
                     done();
                 });
         });
         
         it('should successfully retrieve a public disc from a user who is not the owner', function(done) {
             request(url)
-                .get('/api/discs/' + discId)
+                .get('/api/discs/' + curDisc._id)
                 .set('Authorization', 'Bearer ' + accessToken2)
                 .accept('application/json')
                 .end(function(err, res) {
@@ -433,6 +434,7 @@ describe('Routing', function() {
                         throw err;
                         
                     res.body.should.containEql(testConfig.Disc.Update);
+                    curDisc = res.body;
                     done();
                 });
         });
@@ -454,64 +456,114 @@ describe('Routing', function() {
         });
         
         it('should fail to post an image for a disc by a user who is not the owner', function(done) {
-            request(url)
-                    .post('/api/discs/' + discId + '/images')
+            var imageObj;
+            var tempDisc = curDisc;
+            async.series([
+               function(cb) {
+                   request(url)
+                    .post('/api/images')
                     .set('Authorization', 'Bearer ' + accessToken2)
                     .attach('discImage', path.join(__dirname, "../private/images", "Axiom_Crave_Halloween_Back.jpg"))
                     .accept('application/json')
                     .end(function(err, res) {
                         if (err)
                             throw err;
-                            
+                        
+                        res.body.should.have.property('_id');
+                        imageObj = res.body;
+                        cb();
+                    });
+               },
+               function(cb) {
+                tempDisc.imageList.push(imageObj);
+                
+                request(url)
+                    .put('/api/discs/' + curDisc._id)
+                    .set('Authorization', 'Bearer ' + accessToken2)
+                    .send(tempDisc)
+                    .accept('application/json')
+                    .end(function(err, res) {
+                        if (err)
+                            throw err;
+                        
                         res.body.should.have.property('error');
                         res.body.error.should.have.property('type', Error.unauthorizedError);
+                        cb();
+                    });
+               }
+            ], function(err, results) {
+                request(url)
+                    .get('/api/discs/' + discId)
+                    .set('Authorization', 'Bearer ' + accessToken)
+                    .accept('application/json')
+                    .end(function(err, res) {
+                        if (err)
+                            throw err;
+                            
+                        curDisc = res.body;
                         done();
                     });
+            });
         });
         
         it('should successfully post two images for a disc', function(done) {
+            var imageObj1, imageObj2;
+            
             async.series([
-                function(cb) {
-                    request(url)
-                    .post('/api/discs/' + discId + '/images')
+               function(cb) {
+                   request(url)
+                    .post('/api/images')
                     .set('Authorization', 'Bearer ' + accessToken)
                     .attach('discImage', path.join(__dirname, "../private/images", "Axiom_Crave_Halloween_Back.jpg"))
                     .accept('application/json')
                     .end(function(err, res) {
                         if (err)
                             throw err;
-                            
-                        res.body.should.have.property('imageList');
-                        res.body.should.have.property('primaryImage');
-                        res.body.imageList.should.have.length(1);
-                        res.body.primaryImage.should.be.String;
-                        res.body.primaryImage.should.eql(res.body.imageList[0]._id);
+                        
+                        res.body.should.have.property('_id');
+                        imageObj1 = res.body;
                         cb();
                     });
-                },
-                function(cb) {
-                    request(url)
-                    .post('/api/discs/' + discId + '/images')
+               },
+               function(cb) {
+                   request(url)
+                    .post('/api/images')
                     .set('Authorization', 'Bearer ' + accessToken)
-                    .attach('discImage', path.join(__dirname, "../private/images", "Axiom_Crave_Halloween_Front.jpg"))
+                    .attach('discImage', path.join(__dirname, "../private/images", "Axiom_Crave_Halloween_Back.jpg"))
                     .accept('application/json')
                     .end(function(err, res) {
                         if (err)
                             throw err;
-                            
-                        res.body.should.have.property('imageList');
-                        res.body.should.have.property('primaryImage');
-                        res.body.imageList.should.have.length(2);
-                        curDisc = res.body;
+                        
+                        res.body.should.have.property('_id');
+                        imageObj2 = res.body;
                         cb();
                     });
-                }
+               } 
             ], function(err, results) {
-                done();
-            })
+                curDisc.imageList.push(imageObj1);
+                curDisc.imageList.push(imageObj2);
+                curDisc.primaryImage = imageObj2._id;
+                
+                request(url)
+                    .put('/api/discs/' + curDisc._id)
+                    .set('Authorization', 'Bearer ' + accessToken)
+                    .send(curDisc)
+                    .accept('application/json')
+                    .end(function(err, res) {
+                        if (err)
+                            throw err;
+                        
+                        res.body.should.have.property('_id');
+                        res.body.imageList.should.have.length(2);
+                        res.body.primaryImage.should.eql(imageObj2._id);
+                        curDisc = res.body;
+                        done();
+                    });
+            });
             
         });
-        
+            
         it('should reorder a disc image list and set the opposite image to primary', function(done) {
             var image = curDisc.imageList.shift();
             curDisc.imageList.push(image);
@@ -533,32 +585,45 @@ describe('Routing', function() {
                 });
         });
         
-        it('should delete an image from the disc', function(done) {
+        it('should fail to update a disc with a non-existent image', function(done) {
+            var image = curDisc.imageList[0];
+            curDisc.imageList.push({
+                _id: 'A' + image._id.substring(1)
+            });
+            
             request(url)
-                .delete('/api/discs/' + discId + '/images/' + curDisc.primaryImage)
+                .put('/api/discs/' + discId)
                 .set('Authorization', 'Bearer ' + accessToken)
+                .send(curDisc)
+                .accept('application/json')
+                .end(function(err, res) {
+                    if (err)
+                        throw err;
+                        
+                    res.body.imageList.should.have.length(2);
+                    res.body.imageList[0].should.eql(curDisc.imageList[0]);
+                    res.body.imageList[1].should.eql(curDisc.imageList[1]);
+                    curDisc = res.body;
+                    done();
+                });
+        });
+        
+        it('should remove an image from the disc', function(done) {
+            curDisc.imageList.shift();
+            
+            request(url)
+                .put('/api/discs/' + discId)
+                .set('Authorization', 'Bearer ' + accessToken)
+                .send(curDisc)
                 .accept('application/json')
                 .end(function(err, res) {
                     if (err)
                         throw err;
                         
                     res.body.imageList.should.have.length(1);
-                    res.body.primaryImage.should.eql(res.body.imageList[0]._id);
-                    done();
-                });
-        });
-        
-        it('should fail to delete an image from the disc due to access', function(done) {
-            request(url)
-                .delete('/api/discs/' + discId + '/images/' + curDisc.primaryImage)
-                .set('Authorization', 'Bearer ' + accessToken2)
-                .accept('application/json')
-                .end(function(err, res) {
-                    if (err)
-                        throw err;
-                        
-                    res.body.should.have.property('error');
-                    res.body.error.should.have.property('type', Error.unauthorizedError);
+                    res.body.imageList[0].should.eql(curDisc.imageList[0]);
+                    res.body.primaryImage.should.eql(curDisc.imageList[0]._id);
+                    curDisc = res.body;
                     done();
                 });
         });

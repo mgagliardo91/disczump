@@ -1,3 +1,5 @@
+var testDropzone;
+var discPhotoCrop = false;
 
 $(document).ready(function(){
     var linker = new ZumpLink({
@@ -72,8 +74,112 @@ $(document).ready(function(){
         });
     });
     
-    
+    createDropZone($('#dropzone-area'));
 });
+
+var createDropZone = function($div) {
+	var template = '<div class="image-item-container image-template">' +
+                        '<div class="image-item">' +
+                            '<div class="image-entity">' +
+                                '<img data-dz-thumbnail />' +
+                            '</div>' +
+                            '<div class="image-progress" data-dz-uploadprogress></div>' +
+                            '<div class="image-overlay">' +
+                                '<span class="image-remove" data-dz-remove><i class="fa fa-times fa-lg"></i></span>' +
+                                '<div class="image-title"><span data-dz-name></span></div>' +
+                                '<div class="image-size" data-dz-size></div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+    
+    var $imageAdd = $div.find('.image-add');
+    var $container = $div.find('.image-list-container');
+	var $table = $div.find('.image-list-table');
+	var imageArr = [];
+    
+	testDropzone = new Dropzone('#' + $div.attr('id'), {
+		url: "/api/images",
+		method: "POST",
+		thumbnailWidth: 100,
+		thumbnailHeight: 100,
+		parallelUploads: 10,
+		maxFiles: 10,
+		paramName: 'discImage',
+		previewTemplate: template,
+		acceptedFiles: "image/*",
+		autoProcessQueue: true,
+		previewsContainer: '#' + $table.attr('id'),
+		clickable: '#' + $imageAdd.attr('id'),
+		accept: function(file, done) {
+			done();
+		},
+		init: function() {
+			this.on("addedfile", function(file) {
+			    console.log('on added');
+				if (this.files[10] != null){
+					this.removeFile(this.files[10]);
+				} else {
+					$imageAdd.insertAfter('#dropzone-previews > .image-item-container:last-child');
+					$container.stop().animate({scrollLeft: $table.innerWidth()}, 2000);
+				}
+				
+				if (file.cropped || file.width < 200) {
+                    return;
+                }
+                
+        	 	dropzoneImageHandle.push(file);
+        	 	if (!discPhotoCrop) {
+        	 		handleDropzoneImage();
+        	 	}
+			}).on('complete', function(file, response){
+			    console.log('on complete');
+			}).on('processing', function(file) {
+			    console.log('on processing');
+			}).on('removedfile', function(file) {
+			    console.log('on removed file');
+			}).on('drop', function(e) {
+			    console.log('file dropped');
+			});
+		}
+	});
+}
+
+var dropzoneImageHandle = [];
+
+var handleDropzoneImage = function() {
+	var file = dropzoneImageHandle.shift();
+	
+	if (!file) {
+		return;
+	}
+    
+    discPhotoCrop = true;
+    
+    var cachedFilename = file.name;
+    testDropzone.removeFile(file);
+    
+    //do cropping
+    console.log('cropping....');
+    testDropzone.addFile(file);
+    discPhotoCrop = false;
+    
+//     var reader = new FileReader();
+//     reader.onloadend = function() {
+//     	showPhotoCrop(file.name, reader.result, function(newFile) {
+//     		if (newFile) {
+//     			testDropzone.addFile(newFile);
+//     		}
+			
+// 			discPhotoCrop = false;
+			
+// 			if (dropzoneImageHandle.length) {
+// 				handleDropzoneImage();
+// 			}
+//     	});
+//     };
+    
+//     reader.readAsDataURL(file);
+}
 
 var ZumpLink = function(opt) {
     var grabPath;

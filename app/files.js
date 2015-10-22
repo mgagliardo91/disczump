@@ -2,6 +2,7 @@ var DiscController = require('./controllers/disc');
 var passport = require('passport');
 var logger = require('../config/logger.js').logger;
 var mongoose = require('mongoose');
+var Error = require('./utils/error');
 var gfs;
 var gm = require('gm').subClass({ imageMagick: true });
 
@@ -14,10 +15,10 @@ module.exports = function(app, gridFs) {
             
             gfs.files.find({_id:mongoose.Types.ObjectId(req.params.fileId)}).toArray(function(err, files) {
                 if(err)
-                    return res.send(err);
+                    return res.status(404).send(Error.createError(err, Error.internalError));
                 
                 if(files.length === 0){
-                  return res.send(new Error('File metadata does not exist'));
+                    return res.status(404).send(Error.createError('Unknown file identifier.', Error.objectNotFoundError));
                 }
                 
                 var file = files[0];

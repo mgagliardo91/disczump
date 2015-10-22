@@ -2,6 +2,7 @@ var Error = require('./utils/error');
 var UserController = require('./controllers/user');
 var MessageController = require('./controllers/message');
 var DiscController = require('./controllers/disc');
+var ImageController = require('./controllers/imageCache');
 var DataItemController = require('./controllers/dataItem');
 var passport = require('passport');
 var logger = require('../config/logger.js').logger;
@@ -333,7 +334,7 @@ module.exports = function(app, passport, gridFs) {
         })
         
         .put(hasAccess, function(req, res) {
-            DiscController.putDisc(req.user._id, req.params.discId, req.body, function(err, disc) {
+            DiscController.putDisc(req.user._id, req.params.discId, req.body, gfs, function(err, disc) {
                 if (err)
                   return res.json(err);
             
@@ -363,49 +364,6 @@ module.exports = function(app, passport, gridFs) {
                 
                 return res.json(discImages);
             });
-        })
-        .post(hasAccess, function(req, res) {
-            DiscController.getDisc(req.user._id, req.params.discId, function(err, disc) {
-                if (err)
-                  return res.json(err);
-                 
-                if (disc.userId != req.user._id)
-                    return res.json(Error.createError('Unauthorized to modify disc.', Error.unauthorizedError));
-            
-                var sendResponse = false;
-                var busboy = new Busboy({
-                      headers: req.headers
-                  });
-                 
-                busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
-                    if (fieldname == 'discImage' && /^image\//.test(mimetype)) {
-                        console.log("Fieldname: " + fieldname + "; Filename: " + filename + "; Encoding: " + encoding + "; MIME: " + mimetype);
-                        
-                        FileUtil.saveImage(gm, gfs, file, {
-                            mimetype: mimetype,
-                            filename: filename,
-                            maxSize: config.images.maxSize
-                            }, function(newFile) {
-                                DiscController.postDiscImage(gm, gfs, req.user._id, disc._id, newFile._id, function(err, disc) {
-                                    if (err)
-                                        return res.json(err);
-                                        
-                                    return res.json(disc);
-                                });
-                        });
-                    } else {
-                        sendResponse = true;
-                        file.resume();
-                    }
-                    
-                });
-                busboy.on('finish', function() {
-                    if (sendResponse) {
-                        return res.json({});
-                    }
-                });
-                req.pipe(busboy);
-            });
         });
         
     app.route('/discs/:discId/images/:imageId')
@@ -416,14 +374,43 @@ module.exports = function(app, passport, gridFs) {
                     
                 return res.json(discImage);
             });
-        })
-        .delete(hasAccess, function(req, res){
-            DiscController.deleteDiscImage(req.user._id, req.params.discId, req.params.imageId, gfs, function(err, disc) {
-                if (err)
-                    return res.json(err);
+        });
+    
+    app.route('/images')
+        .post(hasAccess, function(req, res) {
+            var sendResponse = false;
+            var busboy = new Busboy({
+                  headers: req.headers
+              });
+             
+            busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
+                if (fieldname == 'discImage' && /^image\//.test(mimetype)) {
+                    console.log("Fieldname: " + fieldname + "; Filename: " + filename + "; Encoding: " + encoding + "; MIME: " + mimetype);
                     
-                return res.json(disc);
+                    FileUtil.saveImage(gm, gfs, file, {
+                        mimetype: mimetype,
+                        filename: filename,
+                        maxSize: config.images.maxSize
+                        }, function(newFile) {
+                            ImageController.pushImageCache(gm, gfs, req.user._id, newFile._id, function(err, imageObj) {
+                                if (err)
+                                    return res.json(err);
+                                    
+                                return res.json(imageObj);
+                            });
+                    });
+                } else {
+                    sendResponse = true;
+                    file.resume();
+                }
+                
             });
+            busboy.on('finish', function() {
+                if (sendResponse) {
+                    return res.json({});
+                }
+            });
+            req.pipe(busboy);
         });
     
     app.get('*', function(req, res){

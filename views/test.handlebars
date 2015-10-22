@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/static/css/dropzone.css">
     <link  href="https://cdn.rawgit.com/fengyuanchen/cropper/v0.11.1/dist/cropper.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/test.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
 </head>
 <body>
     <div class="dz-tri-switch" id="dashboard-view-switch">
@@ -34,6 +35,21 @@
     <br>
     <span class="clicker"><i class="fa fa-link fa-lg fa-dim fa-copy-link" title="Copy Public URL"></i></span>
     <span class="clicker" style="position: absolute; right: 0"><i class="fa fa-link fa-lg fa-dim fa-copy-link" title="Copy Public URL"></i></span>
+    <br>
+    <br>
+    <div style="width:1200px;background-color:gray;margin:auto" class="image-list" id="dropzone-area">
+      <div class="image-list-container" id="dropzone-container">
+          <div class="image-list-table ui-sortable" id="dropzone-previews">
+              <div class="image-item-container image-add dz-clickable" id="dropzone-trigger">
+                  <div class="image-item">
+                      <div class="image-entity">
+                          <span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+    </div>
     <br>
     <br>
     <br>

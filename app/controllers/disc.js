@@ -1,10 +1,9 @@
 var Error = require('../utils/error');
 var Disc = require('../models/disc');
 var UserController = require('./user.js');
+var ImageController = require('./imageCache.js');
 var _ = require('underscore');
 var async = require('async');
-var mongoose = require('mongoose');
-var config = require('../../config/config.js');
 var FileUtil = require('../utils/file.js');
 
 module.exports = {
@@ -14,12 +13,8 @@ module.exports = {
     postDisc: postDisc,
     putDisc: putDisc,
     deleteDisc: deleteDisc,
-    createThumbnail: createThumbnail,
     getDiscImages: getDiscImages,
     getDiscImage: getDiscImage,
-    postDiscImage: postDiscImage,
-    putDiscImage: putDiscImage,
-    deleteDiscImage: deleteDiscImage,
     deleteDiscImages: deleteDiscImages,
     deleteUserDiscs: deleteUserDiscs
 }
@@ -177,24 +172,56 @@ function postDisc(userId, data, callback) {
     }
     
     disc.tagList = [];
-    if (_.has(data, 'tagList')) {
+    if (_.has(data, 'tagList') && _.isArray(data.tagList)) {
         _.each(data.tagList, function(tag) {
             if (tag !== "" && !_.contains(disc.tagList, tag)) {
                 disc.tagList.push(tag);
             }
         });
     }
-
-    disc.save(function(err){
-        if (err)
-            return callback(Error.createError(err, Error.internalError));
-        else
-            return callback(null, disc);
+    
+    async.series([
+        function(cb) {
+             if (_.has(data, 'imageList') && _.isArray(data.imageList)) {
+                async.eachSeries(data.imageList, function(imageId, imgCb) {
+                    ImageController.getImageCache(imageId, function(err, imageObj) {
+                        if (!err && imageObj) {
+                            disc.imageList.push(imageObj);
+                        }
+                        
+                        imgCb();
+                    });
+                }, function(err) {
+                    cb();
+                });
+            } else {
+                cb();
+            }
+        },
+        function(cb) {
+            if (_.has(data, 'primaryImage')) {
+                var imageObj = _.findWhere(disc.imageList, {_id: data.primaryImage});
+                if (imageObj) {
+                    disc.primaryImage = imageObj._id;
+                }
+                
+                cb();
+            } else {
+                cb();
+            }
+        }
+    ], function(err, results){
+        disc.save(function(err){
+            if (err)
+                return callback(Error.createError(err, Error.internalError));
+            else
+                return callback(null, disc);
+        });
     });
 }
 
 /// Update disc
-function putDisc(userId, discId, data, callback) {
+function putDisc(userId, discId, data, gfs, callback) {
     getDiscInternal(userId, discId, function(err, disc){
         if (err)
             return callback(Error.createError(err, Error.internalError));
@@ -290,40 +317,76 @@ function putDisc(userId, discId, data, callback) {
             });
         }
         
-        if (typeof data.imageList !== 'undefined' && typeof disc.imageList !== 'undefined') {
-            var imageArray = [];
-            
-            while (data.imageList.length) {
-                var discImage = data.imageList.shift();
-                var serverImage = _.findWhere(disc.imageList, {_id: discImage._id});
-                if (serverImage) {
-                    imageArray.push(serverImage);
+        
+        var curImageArray = disc.imageList;
+        async.series([
+            function(cb) {
+                 if (_.has(data, 'imageList') && _.isArray(data.imageList)) {
+                    var imageArray = [];
+                     
+                    async.eachSeries(data.imageList, function(imageItem, imgCb){
+                        if (typeof (imageItem._id) === 'undefined') return imgCb();
+                        
+                        var index = _.findIndex(curImageArray, {_id: imageItem._id});
+                        
+                        if (index > -1) {
+                            imageArray.push(curImageArray.splice(index, 1)[0]);
+                            return imgCb();
+                        }
+                        
+                        ImageController.getImageCache(imageItem._id, function(err, imageObj) {
+                            if (!err && imageObj) {
+                                imageArray.push(imageObj);
+                            }
+                            
+                            return imgCb();
+                        });
+                    }, function(err) {
+                        disc.imageList = imageArray;
+                        console.log(disc.imageList);
+                        return cb();
+                    });
+                 } else {
+                     cb();
+                 }
+            },
+            function(cb) {
+                if (curImageArray.length) {
+                    _.each(curImageArray, function(imageObj) {
+                        if (disc.primaryImage == imageObj._id) {
+                            disc.primaryImage = disc.imageList.length ? disc.imageList[0]._id : undefined;
+                        }
+                        
+                        deleteDiscImageObj(imageObj, gfs, function(err, imageObj) {
+                            if (err)
+                                console.log(err);
+                        });
+                    });
+                    
+                    cb();
+                } else {
+                    cb();
+                }
+            }
+        ], function(err, results) {
+            if (_.has(data, 'primaryImage')) {
+                var discImage = _.findWhere(disc.imageList, {_id: data.primaryImage});
+                if (discImage) {
+                    disc.primaryImage = discImage._id;
                 }
             }
             
-            if (imageArray.length != disc.imageList.length) {
-                _.each(disc.imageList, function(discImage) {
-                    if (!_.findWhere(imageArray, {_id: discImage._id})) {
-                        imageArray.push(discImage);
-                    }
-                });
+            if (typeof (disc.primaryImage) === 'undefined' && disc.imageList.length) {
+                disc.primaryImage = disc.imageList[0]._id;
             }
             
-            disc.imageList = imageArray;
-        }
-        
-        if (typeof data.primaryImage !== 'undefined') {
-            var discImage = _.findWhere(disc.imageList, {_id: data.primaryImage});
-            if (discImage) {
-                disc.primaryImage = discImage._id;
-            }
-        }
-        
-        disc.save(function(err){
-            if (err)
-                return callback(Error.createError(err, Error.internalError));
-            else
-                return callback(null, disc);
+            disc.save(function(err, disc){
+                if (err)
+                    return callback(Error.createError(err, Error.internalError));
+                
+               console.log(disc.imageList); 
+               return callback(null, disc);
+            });
         });
     });
 }
@@ -368,35 +431,6 @@ function shuffle(array) {
   return array;
 }
 
-
-/*
-* Disc images
-*/
-function createThumbnail(gm, gfs, discImage, callback) {
-	gfs.files.find({_id: mongoose.Types.ObjectId(discImage.fileId)}).toArray(function(err, files) {
-        if(err)
-            return callback(err);
-        
-        if(files.length === 0){
-          return callback(Error.createError('File metadata does not exist.', Error.invalidDataError));
-        }
-        
-        var file = files[0];
-        
-        var rs = gfs.createReadStream({
-          _id: discImage.fileId
-        });
-        
-        FileUtil.saveImage(gm, gfs, rs, {
-        	mimetype: file.contentType, 
-        	filename: file.filename, 
-        	maxSize: config.images.thumbnailSize
-        }, function(newFile) {
-        	return callback(null, newFile._id);
-        });
-    });
-}
-
 /// Get All Images by User for a disc
 function getDiscImages(userId, discId, callback) {
 	getDisc(userId, discId, function(err, disc) {
@@ -419,77 +453,6 @@ function getDiscImage(userId, discId, imageId, callback) {
 			return callback(Error.createError('Unknown disc image identifier.', Error.invalidDataError));
 		
 		return callback(null, discImage);
-	});
-}
-
-/// Create Image
-function postDiscImage(gm, gfs, userId, discId, fileId, callback) {
-    if (!userId || !discId || !fileId) {
-    	return callback(Error.createError('Invalid disc image parameters.', Error.invalidDataError));
-    }
-    
-    getDiscInternal(userId, discId, function(err, disc) {
-    	if (err)
-    		return callback(err);
-    	
-        if (disc.userId != userId)
-            return callback(Error.createError('Unauthorized to modify disc.', Error.unauthorizedError));
-    	
-    	disc.imageList.push({ fileId : fileId });
-    	var discImage = _.last(disc.imageList);
-    	if (!disc.primaryImage) {
-	    	disc.primaryImage = discImage._id;
-    	}
-    	
-    	createThumbnail(gm, gfs, discImage, function(err, thumbnailId) {
-    		if (err)
-    			return callback(err);
-    			
-    		discImage.thumbnailId = thumbnailId;
-    		
-    		disc.save(function(err) {
-    			if (err)
-    				return callback(Error.createError(err, Error.internalError));
-    				
-    			return callback(null, disc);
-    		});
-    	});
-    });
-}
-
-/// Update Image
-function putDiscImage(userId, discId, data, callback) {
-	callback(Error.createError('Unable to update disc image.', Error.unauthorizedError));
-}
-
-/// Delete Image by Id
-function deleteDiscImage(userId, discId, imageId, gfs, callback) {
-	getDiscInternal(userId, discId, function(err, disc) {
-		if (err)
-			return callback(err);
-			
-        if (disc.userId != userId)
-            return callback(Error.createError('Unauthorized to modify disc.', Error.unauthorizedError));
-			
-		var discImage = _.findWhere(disc.imageList, {_id: imageId});
-		
-		if (!discImage)
-			return callback(Error.createError('Unknown image identifier.', Error.objectNotFoundError));
-		
-		disc.imageList = _.reject(disc.imageList, function(image) { return image._id == discImage._id });
-		
-		if (disc.primaryImage == discImage._id) {
-			disc.primaryImage = disc.imageList.length ? disc.imageList[0]._id : undefined;
-		}
-		
-		disc.save(function(err) {
-		    if (err)
-		        return callback(Error.createError(err, Error.internalError));
-		    
-		    deleteDiscImageObj(discImage, gfs, function(err, discImage) {
-		        return callback(null, disc);
-		    });
-		});
 	});
 }
 
