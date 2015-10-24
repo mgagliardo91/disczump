@@ -115,7 +115,7 @@
                             <div class="clearfix"></div>
                         </div>
                         <div class="row" id="public-disc-table">
-                            <div class="row-label">Public Discs<span class="pull-right dz-link" id="show-dashboard">View All</span></div>
+                            <div class="row-label">Public Discs<span class="pull-right dz-link dz-color" id="show-dashboard">View All</span></div>
                             <div class="public-disc-row-container">
                                 <div class="public-disc-row">
                                 </div>
@@ -148,7 +148,7 @@
                 	                </div>
                 	                <label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>
                 	                <div class="col-sm-4">
-                	                    <input type="text" id="disc-name" class="form-control text-assist" param="name" placeholder="ex. Destroyer">
+                	                    <input type="text" id="disc-name" class="form-control text-assist-name" param="name" placeholder="ex. Destroyer">
                 	                </div>
                 	            </div>
                 	             <div class="form-group">
@@ -561,13 +561,17 @@
                         <div class="row-label">Personal Information</div>
                         <div class="form-horizontal form-small" id="account-form">
                             <div class="form-group">
-                                <label for="account-first-name" class="col-sm-3 control-label">First Name</label>
+                                <label for="account-first-name" class="col-sm-3 control-label">First Name
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="account-first-name"></i>
+                                </label>
                                 <div class="col-sm-9">
                                     <input type="text" class="form-control" id="account-first-name" placeholder="First Name" value="{{user.local.firstName}}">
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="account-last-name" class="col-sm-3 control-label">Last Name</label>
+                                <label for="account-last-name" class="col-sm-3 control-label">Last Name
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="account-last-name"></i>
+                                </label>
                                 <div class="col-sm-9">
                                     <input type="text" class="form-control" id="account-last-name" placeholder="Last Name" value="{{user.local.lastName}}">
                                 </div>
@@ -583,7 +587,9 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="account-zip-code" class="col-sm-3 control-label">Zip Code</label>
+                                <label for="account-zip-code" class="col-sm-3 control-label">Zip Code
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="account-zip-code"></i>
+                                </label>
                                 <div class="col-sm-5">
                                     <input type="text" class="form-control" id="account-zip-code" placeholder="Zip Code" value="{{user.local.zipCode}}">
                                 </div>
@@ -741,6 +747,14 @@
                                 </div>
                             </div>
                             <div class="form-group">
+                                <label for="items-per-row" class="col-sm-3 control-label">Use Secondary
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="enable-secondary-sort"></i>
+                                </label>
+                                <div class="col-sm-5">
+                                    <input type="checkbox" id="enable-secondary-sort">
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <label for="sort-order-secondary" class="col-sm-3 control-label">Secondary Sort
                                     <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="secondary-sort"></i>
                                 </label>
@@ -768,12 +782,20 @@
                                     </select>
                                 </div>
                             </div>
+                            {{!--<div class="form-group">--}}
+                            {{!--    <div class="col-sm-12">--}}
+                            {{!--        <div class="checkbox pull-left">--}}
+                            {{!--            <input type="checkbox" id="enable-secondary-sort"> Enable Secondary Sort--}}
+                            {{!--            <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="enable-secondary-sort"></i>--}}
+                            {{!--        </div>--}}
+                            {{!--    </div>--}}
+                            {{!--</div>--}}
                             <div class="form-group">
-                                <div class="col-sm-12">
-                                    <div class="checkbox pull-left">
-                                        <input type="checkbox" id="enable-secondary-sort"> Enable Secondary Sort
-                                        <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="enable-secondary-sort"></i>
-                                    </div>
+                                <label for="items-per-row" class="col-sm-3 control-label">Use Templates
+                                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="show-template-picker"></i>
+                                </label>
+                                <div class="col-sm-5">
+                                    <input type="checkbox" id="show-template-picker">
                                 </div>
                             </div>
                             <div class="form-group preferences-save">

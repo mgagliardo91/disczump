@@ -492,12 +492,11 @@ a.btn-facebook:hover {
     background-color: transparent;
 }
 
-
-.dz-link {
-    color: rgb(0, 142, 221)
-}
-
 .dz-link:hover {
     text-decoration: underline;
     cursor: pointer;
+}
+
+.dz-color {
+    color: #008EDD;
 }

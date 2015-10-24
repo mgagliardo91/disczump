@@ -134,7 +134,8 @@ $(document).ready(function(){
     	var primarySortDirection = $('#sort-order-primary-direction').val() == 'Ascending' ? true : false;
     	var secondarySort	= $('#sort-order-secondary').val();
     	var secondarySortDirection = $('#sort-order-secondary-direction').val() == 'Ascending' ? true : false;
-    	var enableSecondarySort = $('#enable-secondary-sort').is(':checked');
+    	var enableSecondarySort = $('#enable-secondary-sort').bootstrapSwitch('state');
+    	var showTemplatePicker = $('#show-template-picker').bootstrapSwitch('state');
     	var defaultSortArray;
     	
     	if (enableSecondarySort) {
@@ -152,16 +153,18 @@ $(document).ready(function(){
     		displayCount : displayCount,
     		defaultSort : defaultSortArray,
     		defaultView : defaultView,
-    		galleryCount : galleryCount
+    		galleryCount : galleryCount,
+    		showTemplatePicker: showTemplatePicker
     	}, function(success, retData) {
     		if (success) {
-    			generateSuccess('Default settings saved successfully. Changes will take effect when page is <reloaded>.', 'Success', false, ['/dashboard']);
+    			generateSuccess('Default settings saved successfully. <Reload> page to view default settings.', 'Success', true, ['/dashboard']);
     			userPrefs = retData;
     		} else {
     			handleError(retData);
     		}
     	});
     });
+    
     $('#default-settings-restore').click(function() {
     	var body = {
     		text: 'Are you sure you want to restore your preferences?'
@@ -170,7 +173,7 @@ $(document).ready(function(){
     	generateConfirmationModal('Warning!', body, 'Restore', function() {
 			updatePreferences(undefined, function(success, retData) {
 	    		if (success) {
-	    			generateSuccess('Default settings have been restored. Changes will take effect when page is <reloaded>.', 'Success', false, ['/dashboard']);
+	    			generateSuccess('Default settings have been restored. <Reload> page to view default settings.', 'Success', true, ['/dashboard']);
 	    			userPrefs = retData;
 	    		} else {
 	    			handleError(retData);
@@ -227,8 +230,8 @@ $(document).ready(function(){
     	});
     });
     
-    $('#enable-secondary-sort').change(function() {
-		if ($(this).is(':checked')) {
+    $('#enable-secondary-sort').on('switchChange.bootstrapSwitch', function(event, state) {
+		if (state) {
 			$('#sort-order-secondary').removeAttr('disabled');
 			$('#sort-order-secondary-direction').removeAttr('disabled');
 		} else {
@@ -458,6 +461,20 @@ function setupFrameworkListeners() {
 		$(resetWindow).load(function() {
 			$(resetWindow.document).find('#user-input-form').prepend('<input type="hidden" name="popup" value="true"></input>');	
 		});
+	});
+	
+	$(document).on('click', 'div.checkbox', function(e){
+		var $cb = $(this).find('input[type="checkbox"]');
+		if (e.target == $cb.get(0)) {
+			return;
+		}
+		
+		var val = $cb.is(':checked');
+		if (val) {
+			$cb.prop('checked', false).trigger('change');
+		} else {
+			$cb.prop('checked', true).trigger('change');
+		}
 	});
 	
    	$('#menu-tutorial').click(function(e) {
@@ -1014,11 +1031,11 @@ function setUserPrefs() {
 	if (userPrefs.defaultSort.length > 0) {
 		$('#sort-order-primary').val(userPrefs.defaultSort[0].property);
 		userPrefs.defaultSort[0].sortAsc ? $('#sort-order-primary-direction').val("Ascending") : $('#sort-order-primary-direction').val("Descending");
-		$('#enable-secondary-sort').removeAttr('checked');
 		$('#sort-order-secondary').attr('disabled', 'disabled');
 		$('#sort-order-secondary-direction').attr('disabled', 'disabled');
+		$('#enable-secondary-sort').bootstrapSwitch('state', false);
 		if (userPrefs.defaultSort.length == 2) {
-			$('#enable-secondary-sort').attr('checked', 'checked');
+			$('#enable-secondary-sort').bootstrapSwitch('state', true);
 			$('#sort-order-secondary').removeAttr('disabled');
 			$('#sort-order-secondary-direction').removeAttr('disabled');
 			$('#sort-order-secondary').val(userPrefs.defaultSort[1].property);
@@ -1026,6 +1043,8 @@ function setUserPrefs() {
 		}
 	}
 	$('#colorize-visibility').bootstrapSwitch('state', userPrefs.colorizeVisibility);
+	$('#show-template-picker').bootstrapSwitch('state', userPrefs.showTemplatePicker);
+	
 	if (isDef(userPrefs.colorize)) {
 		$('#colorize-distance-driver').css('background-color', userPrefs.colorize.distance);
 		$('#colorize-fairway-driver').css('background-color', userPrefs.colorize.fairway);
@@ -1046,9 +1065,13 @@ function initializeTooltips() {
 	var ttItemsPerRow = generateTooltipOptions('top', 'hover', 'Select a default number of discs to show per row when disc|zump loads the gallery view.', '200px');
 	var ttPrimarySort = generateTooltipOptions('top', 'hover', 'Select a default primary sort property. This applies to any view.', '200px');
 	var ttSecondarySort = generateTooltipOptions('top', 'hover', 'Select a default secondary sort property. This applies to any view and will sort within your primary property.', '200px');
-	var ttEnableSecondarySort = generateTooltipOptions('top', 'hover', 'When checked, the secondary sort property will be used.', '200px');
+	var ttEnableSecondarySort = generateTooltipOptions('top', 'hover', 'This switch toggles the secondary sort property.', '200px');
+	var ttTemplatePicker = generateTooltipOptions('top', 'hover', 'Select whether the template auto-fill dialog is shown when a disc name is selected.', '200px');
 	var ttColorizeVisibility = generateTooltipOptions('top', 'hover', 'Show or hide the color strips seen in the dashboard view.', '200px');
+	var ttAccountFirstName = generateTooltipOptions('top', 'hover', 'Enter your first name to help people find you. (Cannot contain spaces)', '200px');
+	var ttAccountLastName = generateTooltipOptions('top', 'hover', 'Enter your last name to help people find you. (Cannot contain spaces)', '200px');
 	var ttAccountUsername = generateTooltipOptions('top', 'hover', 'This is how your name is displayed publicly. Username must be 6-15 characters and can only consist of letters, numbers, and underscore.', '200px');
+	var ttAccountZipCode = generateTooltipOptions('top', 'hover', 'Enter 5 digit zip code.', '200px');
 	var ttGraphBy = generateTooltipOptions('right', 'hover', 'This property will be used to generate the data in the graph.', '200px');
 	var ttGraphType = generateTooltipOptions('right', 'hover', 'Select the type of grah to generate.', '200px');
 	var ttNotifyNewMessages = generateTooltipOptions('right', 'hover', 'Use this option to be alerted when you receive a new message.', '200px');
@@ -1059,8 +1082,12 @@ function initializeTooltips() {
 	$('i[tt="primary-sort"]').tooltip(ttPrimarySort);
 	$('i[tt="secondary-sort"]').tooltip(ttSecondarySort);
 	$('i[tt="enable-secondary-sort"]').tooltip(ttEnableSecondarySort);
+	$('i[tt="show-template-picker"]').tooltip(ttTemplatePicker);
 	$('i[tt="colorize-visibility"]').tooltip(ttColorizeVisibility);
+	$('i[tt="account-first-name"]').tooltip(ttAccountFirstName);
+	$('i[tt="account-last-name"]').tooltip(ttAccountLastName);
 	$('i[tt="account-username"]').tooltip(ttAccountUsername);
+	$('i[tt="account-zip-code"]').tooltip(ttAccountZipCode);
 	$('i[tt="graph-base"]').tooltip(ttGraphBy);
 	$('i[tt="graph-type"]').tooltip(ttGraphType);
 	$('i[tt="notify-new-messages"]').tooltip(ttNotifyNewMessages);
@@ -1751,7 +1778,7 @@ var repositionPhotoCrop = function() {
 var showPhotoCrop = function(name, blob, callback) {
 	$('body').css('overflow', 'hidden');
 	
-	$photoCrop = $('<div class="backdrop photo-crop"></div>');
+	$photoCrop = $('<div class="backdrop backdrop-dark photo-crop"></div>');
 	$photoCrop.append('<div class="crop-container">' + 
 						'<div class="crop-area">' + 
 							'<img filename="' + name + '" src="' + blob +'" />' + 
@@ -1803,8 +1830,6 @@ var showPhotoCrop = function(name, blob, callback) {
 	  cropBoxMovable: false,
 	  cropBoxResizable: false
     });
-    
-	console.log($(document).scrollTop());
 }
 
 /*
@@ -2010,6 +2035,232 @@ function getMonth(month) {
 /*===================================================================*/
 
 /*
+* Name: ZumpTemplatePicker
+* Date: 10/23/15
+*/
+var ZumpTemplatePicker = function(opt) {
+	
+	//----------------------\
+    // Javascript Objects
+    //----------------------/
+    var zumpTemplatePicker = this;
+    var items = [];
+    var templates = [];
+    var onSelect;
+    var activeTemplate = undefined;
+    var primaryParam = 'name';
+    var compareParams = [
+    		'brand',
+    		'material',
+    		'type',
+    		'speed',
+    		'glide',
+    		'turn',
+    		'fade'
+    	];
+    
+    //----------------------\
+    // JQuery Objects
+    //----------------------/
+    var $templatePicker;
+    var $templatePickerContainer;
+    var $templateLoading;
+    var $templateList;
+    
+    //----------------------\
+    // Prototype Functions
+    //----------------------/
+	this.init = function(opt) {
+		
+	}
+	
+	this.setItems = function(itemSet) {
+		items = itemSet;
+		return zumpTemplatePicker;
+	}
+	
+	this.show = function(value, callback) {
+		onSelect = callback;
+		templates = [];
+		activeTemplate = undefined;
+		$('body').css('overflow', 'hidden');
+		$('body').append(createTemplatePicker(value));
+		$(window).on('resize', resizeTemplatePicker);
+		resizeTemplatePicker();
+		getTemplates(value);
+		generateTemplateItems();
+		$templateLoading.hide();
+		$templateList.find('.template-item').first().trigger('click');
+	}
+	
+	//----------------------\
+    // Private Functions
+    //----------------------/
+    var resizeTemplatePicker = function() {
+    	$templatePicker.css({
+			top: $(document).scrollTop()
+		});
+		
+		var top = ($(window).height() - $templatePickerContainer.outerHeight())/2;
+		var left = ($(window).width() - $templatePickerContainer.outerWidth())/2;
+		$templatePickerContainer.css({
+			top: top,
+			left: left
+		});
+		
+		$templateLoading.css({
+			width: $templateList.outerWidth(),
+			height: $templateList.outerHeight(),
+			top: $templateList.position().top,
+			left: $templateList.position().left
+		});
+    }
+    
+    var createTemplatePicker = function(value) {
+    	$templatePicker = $('<div class="backdrop backdrop-light"></div>');
+    	$templatePicker.append('<div class="template-picker">' +
+						        '<div class="template-title">' +
+						          'Auto|<span class="dz-color">Fill</span>' +
+						        '</div>' +
+						        '<div class="template-container-label">Templates Matching: <span id="template-name">' + value + '</span></div>' +
+						        '<div class="template-loading"><div class="template-loading-icon"><i class="fa fa-spinner fa-spin"></i></div></div>' +
+						        '<ul class="template-container" id="template-list">' +
+						        '</ul>' +
+						        '<div class="template-button-container">' +
+						          '<button type="button" class="btn btn-default pull-left" id="template-skip"><span><i class="fa fa-reply fa-tools"></i></span>Skip</button>' +
+						          '<button type="button" class="btn btn-primary pull-right" id="template-select"><span><i class="fa fa-upload fa-tools"></i></span>Select</button>' +
+						          '<div class="checkbox"><input type="checkbox" id="template-never-show"></input>Don\'t show again</div>' +
+						          '<div class="clearfix"></div></div>' +
+						        '</div>' +
+						      '</div>');
+		$templatePickerContainer = $templatePicker.find('.template-picker');
+		$templateLoading = $templatePicker.find('.template-loading');
+		$templateList = $templatePicker.find('#template-list');
+		startListeners();
+		return $templatePicker;
+    }
+    
+    var startListeners = function() {
+    	$templatePicker.find('#template-select').click(function() {
+    		if (typeof activeTemplate === 'undefined') {
+    			return false;
+    		}
+    		
+    		if (onSelect) {
+    			onSelect(_.findWhere(templates, {_id : activeTemplate}));
+    		}
+    		
+    		if ($templatePicker.find('#template-never-show').is(':checked')) {
+    			updatePreferences({showTemplatePicker: false}, function(success, prefs) {
+    				if (success) {
+    					userPrefs = prefs;
+						$('#show-template-picker').bootstrapSwitch('state', userPrefs.showTemplatePicker);
+    				}
+    			});
+    		}
+    		
+    		closeTemplatePicker();
+    	});
+    	
+    	$templatePicker.find('#template-skip').click(function() {
+    		if ($templatePicker.find('#template-never-show').is(':checked')) {
+    			updatePreferences({showTemplatePicker: false}, function(success, prefs) {
+    				if (success) {
+    					userPrefs = prefs;
+						$('#show-template-picker').bootstrapSwitch('state', userPrefs.showTemplatePicker);
+    				}
+    			});
+    		}
+    		
+    		closeTemplatePicker();
+    	});
+    	
+    	$templatePicker.on('click', '.template-item', function() {
+    		$(this).addClass('active').siblings().removeClass('active');
+    		activeTemplate = $(this).attr('tempId');
+    	});
+    }
+	
+	var closeTemplatePicker = function() {
+		$('body').css('overflow', 'auto');
+		$(window).off('resize', resizeTemplatePicker);
+		$templatePicker.remove();
+	}
+	
+	var generateTemplateItems = function() {
+		_.each(templates, function(template) {
+			$templateList.append(generateTemplateItem(template));
+		});
+	}
+	
+	var generateTemplateItem = function(template) {
+		return '<li class="template-item" tempId="' + template._id + '">' +
+            '<table class="template-data-table table-main">' +
+              '<tr>' +
+                '<td>Brand: <span class="template-data-value">' + getSafe(template.brand, 'N/A') + '</span></td>' +
+                '<td>Type: <span class="template-data-value">' + getSafe(template.type, 'N/A') + '</span></td>' +
+                '<td>Material: <span class="template-data-value">' + getSafe(template.material, 'N/A') + '</span></td>' +
+              '</tr>' +
+            '</table>' +
+            '<table class="template-data-table table-flight">' +
+              '<tr>' +
+                '<td>Speed: <span class="template-data-value">' + getSafe(template.speed, 'N/A') + '</span></td>' +
+                '<td>Glide: <span class="template-data-value">' + getSafe(template.glide, 'N/A') + '</span></td>' +
+                '<td>Turn: <span class="template-data-value">' + getSafe(template.turn, 'N/A') + '</span></td>' +
+                '<td>Fade: <span class="template-data-value">' + getSafe(template.fade, 'N/A') + '</span></td>' +
+              '</tr>' +
+            '</table>' +
+          '</li>';
+	}
+	
+	var getTemplates = function(value) {
+		var matches = _.filter(items, function(item) {
+			var prop = item[primaryParam];
+			
+			return typeof prop !== 'undefined' && prop == value;
+		});
+		
+		_.each(matches, function(match) {
+			if (checkUnique(match)) {
+				templates.push(createTemplateCopy(match));
+			}
+		});
+	}
+	
+	var createTemplateCopy = function(match) {
+		var copy = {_id: match._id};
+		
+		_.each(compareParams, function(param) {
+			copy[param] = match[param];
+		});
+		
+		return copy;
+	}
+	
+	var checkUnique = function(match) {
+		_.each(templates, function(template) {
+			if (compareTemplate(template, match)) {
+				return false;
+			}
+		});
+		
+		return true;
+	}
+	
+	var compareTemplate = function(template, match) {
+		_.each(compareParams, function(param) {
+			if (template[param] != match[param]) {
+				return false;
+			}
+		});
+		
+		return true;
+	}
+	
+	this.init(opt);
+}
+
+/*
 * Name: ZumpLink
 * Date: 10/06/15
 */
@@ -2124,6 +2375,7 @@ var ZumpEditor = function(opt) {
 	var templateCache = [];
 	var curDisc = {};
 	var modifyHandler = {lastType: undefined, type: 'Add', discId: undefined};
+	var templatePicker;
 	var dropzone;
 	var onNewDisc;
 	var onUpdatedDisc;
@@ -2361,7 +2613,8 @@ var ZumpEditor = function(opt) {
     }
     
     var initialize = function() {
-		
+	    templatePicker = new ZumpTemplatePicker();
+
     	$modifyForm.find('.text-assist').each(function(index) {
     		var param = $(this).attr('param');
     		
@@ -2370,6 +2623,22 @@ var ZumpEditor = function(opt) {
 		        searchProp: param,
 		        items: function() { return _.union(discs, templateCache)},
 		        onSelection: function(item) {}
+		    }); 
+		    textAssistArr.push(textAssist);
+		});
+		
+		$modifyForm.find('.text-assist-name').each(function(index) {
+    		var param = $(this).attr('param');
+    		
+			var textAssist = new ZumpTextAssist({
+		        inputElement: $(this),
+		        searchProp: param,
+		        items: function() { return _.union(discs, templateCache)},
+		        onSelection: function(item) {
+		        	if (userPrefs.showTemplatePicker) {
+						templatePicker.setItems(_.union(discs, templateCache)).show(item, autoFillTemplate);
+		        	}
+		        }
 		    }); 
 		    textAssistArr.push(textAssist);
 		});
@@ -2423,6 +2692,18 @@ var ZumpEditor = function(opt) {
 		        updateLoc(curDisc.imageList, newIndex, oldIndex);
 		    }
 		});
+    }
+    
+    var autoFillTemplate = function(template) {
+    	$('#disc-brand').val(getSafe(template.brand, ''));
+		$('#disc-material').val(getSafe(template.material, ''));
+		$('#disc-type').val(getSafe(template.type, ''));
+		$('#disc-speed').val(getSafe(template.speed, ''));
+		$('#disc-glide').val(getSafe(template.glide, ''));
+		$('#disc-turn').val(getSafe(template.turn, ''));
+		$('#disc-fade').val(getSafe(template.fade, ''));
+		discEditorValidation.doValidate();
+		generateInfo('Template has been applied to form.', 'Template Applied', true);
     }
 	
 	/*
@@ -3645,7 +3926,7 @@ var ZumpDashboard = function(opt) {
 	
 	var setDiscOwner = function(user) {
 		var $owner = $('#view-disc-owner');
-		$owner.text(user.username).attr('userId', user._id).addClass('dz-link');
+		$owner.text(user.username).attr('userId', user._id).addClass('dz-link dz-color');
 	}
 	
 	var setDiscViewItem = function($elem, val, append, def) {
@@ -4483,6 +4764,7 @@ var ZumpSocial = function(opt) {
     var $profileJoinDate;
     var $profileDiscCount;
     var $profileViewDashboard;
+    var $profileViewAll;
     var $profilSendMessage;
     var $profileLoading;
     var $discRow;
@@ -4503,6 +4785,7 @@ var ZumpSocial = function(opt) {
 		$profileJoinDate = $('#profile-join-date');
 		$profileDiscCount = $('#profile-disc-count');
 		$profileViewDashboard = $('#profile-view-dashboard');
+		$profileViewAll = $('#show-dashboard');
 		$profilSendMessage = $('#profile-send-message');
 		$profileLoading = $('#profile-loading');
 		$discRow = $('.public-disc-row');
@@ -4591,19 +4874,23 @@ var ZumpSocial = function(opt) {
     		myMessenger.openThread(curUser);
     	});
     	
-    	$profileViewDashboard.click(function() {
-    		getAllPublicDiscsByUser(curUser, function(success, discs) {
-    			if (success) {
-    				var user = userCache[curUser];
-    				myDashboard.setDiscList(discs, user);
-    				changePage('#pg-dashboard');
-    			} else {
-    				handleError(discs);
-    			}
-    		});
-    	});
+    	$profileViewAll.click(showDashboard);
+    	
+    	$profileViewDashboard.click(showDashboard);
     	
     	$(window).on('resize', resize);
+    }
+    
+    var showDashboard = function() {
+    	getAllPublicDiscsByUser(curUser, function(success, discs) {
+			if (success) {
+				var user = userCache[curUser];
+				myDashboard.setDiscList(discs, user);
+				changePage('#pg-dashboard');
+			} else {
+				handleError(discs);
+			}
+		});
     }
     
     var populateProfile = function(user) {
@@ -4639,10 +4926,10 @@ var ZumpSocial = function(opt) {
     	$discRow.empty();
     	 getProfilePreview(user._id, function(success, retData) {
             if (success) {
-            	if (retData.discs.count > 0) {
+            	if (retData.count > 0) {
             	
-	            	$profileDiscCount.text(retData.discs.count);
-	            	var previewDiscs = retData.discs.preview;
+	            	$profileDiscCount.text(retData.count);
+	            	var previewDiscs = retData.preview;
 	                
 	                for (var i = 0; i < 5; i++) {
 	                    if (previewDiscs.length > i) {
@@ -4729,6 +5016,7 @@ var ZumpSocial = function(opt) {
     }
     
     var publicDisc = function(disc) {
+	    var discImage = getPrimaryDiscImage(disc);
 	    var $disc = $('<div class="public-disc-item disc-gallery-item" discid="' + disc._id + '"></div>');
 	    $disc.append('<div class="disc-gallery-overlay" style="display: none;">' +
 	                            '<div class="disc-gallery-text-container">' +
@@ -4740,20 +5028,9 @@ var ZumpSocial = function(opt) {
 	                        '</div>' +
 	                        '<div class="disc-gallery-image-container">' +
 	                            '<div class="disc-gallery-image">' +
-	                                '<img src="/static/logo/logo_small.svg">' +
+	                                '<img src="' + (discImage ? '/files/' + discImage.fileId : '/static/logo/logo_small.svg') + '">' +
 	                            '</div>' +
 	                        '</div>');
-	    
-	    if (disc.primaryImage) {
-	        getPrimaryDiscImage(disc, function(success, primaryImage) {
-	            if (success) {
-	                $('.public-disc-item[discid="' + primaryImage.discId + '"]').find('.disc-gallery-image > img').attr('src', '/files/' + primaryImage.thumbnailId);
-	            } else {
-	            	handleError(primaryImage);
-	            }
-	        });
-	    }
-	    
 	    return $disc;
 	}
     
@@ -5672,6 +5949,14 @@ var ZumpLightbox = function(opt) {
 	var imgArray = new Array();
 	
 	//----------------------\
+    // JQuery Objects
+    //----------------------/
+    var $lightbox;
+    var $imageViewList;
+    var $imageViewListItemContainer;
+    var $imageViewListContainer;
+	
+	//----------------------\
     // Prototype Functions
     //----------------------/
     
@@ -5703,8 +5988,11 @@ var ZumpLightbox = function(opt) {
 	
 	this.showLightbox = function() {
 		$('.lightbox').remove();
-		var $lightbox = $('<div class="lightbox backdrop click-to-close no-select"></div>');
+		$lightbox = $('<div class="lightbox backdrop backdrop-dark click-to-close no-select"></div>');
 		$lightbox.html(generateLightboxHtml());
+		$imageViewListContainer = $lightbox.find('.image-view-list-container');
+		$imageViewListItemContainer = $lightbox.find('.image-view-list-item-container');
+		$imageViewList = $lightbox.find('.image-view-list');
 		$lightbox.hide();
     	$('body').append($lightbox);
     	
@@ -5723,9 +6011,6 @@ var ZumpLightbox = function(opt) {
     	});
     	
     	resizeLightbox();
-    	
-		$(window).on('resize', resizeLightbox);
-		$(document).on('keyup', closeLightbox);
 	} 
 	
 	/*
@@ -5769,11 +6054,9 @@ var ZumpLightbox = function(opt) {
 		                '<img class="image-view-main" src="/files/' + defaultFileId + '" />' +
 		            '</div>' +
 		            '<div class="image-view-list-container">' +
-		                '<div class="image-view-list-scroll scroll-left absolute-left" style="display: none;">' +
-		                    '<i class="fa fa-3x fa-chevron-left"></i>' +
+		            	'<div class="image-view-list-scroll scroll-left absolute-left">' +
 		                '</div>' +
-		                '<div class="image-view-list-scroll scroll-right absolute-right" style="display: none;">' +
-		                    '<i class="fa fa-3x fa-chevron-right"></i>' +
+		                '<div class="image-view-list-scroll scroll-right absolute-right">' +
 		                '</div>' +
 		                '<div class="image-view-list-item-container">' +
 		                    '<div class="image-view-list">' +
@@ -5788,27 +6071,23 @@ var ZumpLightbox = function(opt) {
 		
 		$(document).on('click', '.lightbox.backdrop', backdropCloseEvent);
 		$(document).on('click', '.image-view-list-item', changeMainImageEvent);
-		$(document).on('click', '.image-view-list-scroll', scrollImageListEvent);
 		$(document).on('keydown', arrowKeyScrollEvent);
 		$(document).on('click', '.lightbox-close', backdropCloseEvent);
-		
-		$('.image-view-list-container, .image-view-list-scroll').mouseover(function() {
-			if ($('.image-view-list').width() > $('.image-view-list-item-container').width()) {
-				$('.image-view-list-scroll').show();
-			}	
-		});
-		
-		$('.image-view-list-container').mouseout(function() {
-			$('.image-view-list-scroll').hide();
-		});
+		$(window).on('resize', resizeLightbox);
+		$(document).on('keyup', closeLightbox);
+		$(document).on('mouseenter', '.image-view-list-scroll', scrollImageListEvent);
+		$(document).on('mouseleave', '.image-view-list-scroll', stopScrollImageListEvent);
 	}
 	
 	function stopListeners() {
 		$(document).off('click', backdropCloseEvent);
 		$(document).off('click', changeMainImageEvent);
-		$(document).off('click', scrollImageListEvent);
 		$(document).off('keydown', arrowKeyScrollEvent);
 		$(document).off('click', backdropCloseEvent);
+		$(window).off('resize', resizeLightbox);
+		$(document).off('keyup', closeLightbox);
+		$(document).off('mouseenter', scrollImageListEvent);
+		$(document).off('mouseleave', stopScrollImageListEvent);
 	}
 	
 	var backdropCloseEvent = function(e) {
@@ -5836,21 +6115,23 @@ var ZumpLightbox = function(opt) {
 	
 	var scrollImageListEvent = function(e) {
 	    var $scrollButton = $(this);
-	    var $imageViewList = $('.image-view-list');
+	    var delta = $imageViewList.width() - $imageViewListContainer.width();
 	    if ($scrollButton.hasClass('scroll-left')) {
-	    	scrollLeft($imageViewList);
-	    }
-	    if ($scrollButton.hasClass('scroll-right')) {
-	    	scrollRight($imageViewList);
+	    	scrollLeft(delta);
+	    } else if ($scrollButton.hasClass('scroll-right')) {
+	    	scrollRight(delta);
 	    }
 	};
 	
+	var stopScrollImageListEvent = function(e) {
+		$imageViewList.stop();
+	};
+	
 	var arrowKeyScrollEvent = function(e) {
-			var $imageViewList = $('.image-view-list');
 			var $selectedImage = $('.image-view-thumbnail-selected').first().parent();
 			var $nextImage = $selectedImage.next();
 			var $prevImage = $selectedImage.prev();
-			var rightMin = $('.image-view-list-container').width() - 100;
+			var rightMin = $imageViewListContainer.width() - 100;
 			
 			if (e.which == 37) { // left arrow key
 				if ($prevImage.length) {
@@ -5874,15 +6155,18 @@ var ZumpLightbox = function(opt) {
 			}
 		};
 	
-	function scrollLeft($imageViewList) {
-		var leftPos = Math.min($imageViewList.position().left + 103, 0);
-		$imageViewList.css('left', leftPos);
+	function scrollLeft(delta) {
+		var scroll = Math.min(-1 * $imageViewList.position().left, 50);
+		$imageViewList.stop().animate({left:'+=' + scroll}, 500, 'linear', function() {
+			scrollLeft(delta);
+		});
 	}
 	
-	function scrollRight($imageViewList) {
-		var rightDelta = $imageViewList.width() - $('.image-view-list-item-container').width();
-    	var newPos = Math.max(-1 * rightDelta, $imageViewList.position().left - 103);
-    	$imageViewList.css('left', newPos);
+	function scrollRight(delta) {
+		var scroll = Math.min(delta + $imageViewList.position().left, 50);
+		$imageViewList.stop().animate({left:'-=' + scroll}, 500, 'linear', function() {
+			scrollRight(delta);
+		});
 	}
 	
 	function getNewImage(id) {
@@ -5942,16 +6226,16 @@ var ZumpLightbox = function(opt) {
 			maxWidth: lbWidth
 		});
 		
-		$('.image-view-list-container').css({
+		$imageViewListContainer.css({
 		   	width: lbWidth
 		});
 		
-		$('.image-view-list-item-container').css({
+		$imageViewListItemContainer.css({
 			width: lbWidth,
 			maxWidth: lbWidth
 		});
 		
-		$('.lightbox').css('top', $(document).scrollTop());
+		$lightbox.css('top', $(document).scrollTop());
 	}
 	
 	//----------------------\

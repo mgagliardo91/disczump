@@ -41,6 +41,7 @@ module.exports = {
         	],
         	'defaultView': 'inventory',
         	'galleryCount': '6',
+        	'showTemplatePicker': true,
         	'notifications': {
         	    'newMessage': true
         	}

@@ -264,6 +264,10 @@ function updatePreferences(userId, prefs, callback) {
 		    user.preferences.displayCount = prefs.displayCount;
 		}
 		
+		if (_.has(prefs, 'showTemplatePicker') && validatePreference('showTemplatePicker', prefs.showTemplatePicker)) {
+		    user.preferences.showTemplatePicker = prefs.showTemplatePicker;
+		}
+		
 		user.save(function(err) {
 		    if (err)
     			return callback(Error.createError(err, Error.internalError));
@@ -401,6 +405,10 @@ function validatePreference(preference, value) {
 	}
 	
 	if (preference == 'colorizeVisibility') {
+		return _.contains(enables, value);
+	}
+	
+	if (preference == 'showTemplatePicker') {
 		return _.contains(enables, value);
 	}
 	

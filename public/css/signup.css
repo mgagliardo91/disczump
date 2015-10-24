@@ -87,7 +87,7 @@
      clear: both;
 }
 
-.input-group-inline + button {
+.signup-btn-container {
      margin-left: 25px;
 }
 

@@ -52,6 +52,7 @@ var userSchema = mongoose.Schema({
         },
         defaultView  : {type: String, default: UserConfig.defaultView},
         galleryCount : {type: String, default: UserConfig.galleryCount},
+        showTemplatePicker: {type: Boolean, default: UserConfig.showTemplatePicker},
         notifications : {
             newMessage: {type: Boolean, default: UserConfig.notifications.newMessage}
         }
