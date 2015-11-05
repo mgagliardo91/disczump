@@ -1714,6 +1714,10 @@
     font-size: 0.8em;
 }
 
+#dashboard-filter-toggle.filtering i {
+    color: red;
+}
+
 .results-header-button:hover {
     cursor: pointer;
     background-color: rgba(0, 142, 221, 0.38);
@@ -2381,10 +2385,15 @@ select, option {
     padding-bottom: 5px;
 }
 
-.image-item-placeholder {
+.image-item-placeholder, .tag-item-placeholder {
     background-color: rgb(192, 214, 255);
 }
 
+.image-item-placeholder {
+    margin-right: 10px;
+    margin-bottom: 5px;
+}
+    
 .image-item {
     border: 1px solid rgb(166, 166, 166);
     -webkit-box-shadow: 3px 3px 10px 1px rgba(140, 140, 140, 0.67);
@@ -2425,6 +2434,10 @@ select, option {
     text-align: center;
     vertical-align: middle;
     display: table-cell;
+}
+
+#existing-image-container .image-overlay {
+    cursor: move;
 }
 
 .image-overlay {
@@ -2537,6 +2550,19 @@ img.fit-parent {
     max-height: 70px;
 }
 
+.tag-item-placeholder {
+    border-radius: 2px;
+    margin: 3px;
+    padding-left: 5px;
+    padding-right: 5px;
+    display: inline-block;
+    cursor: default;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
 .tag-item {
     margin: 3px;
     border-radius: 2px;
@@ -2544,7 +2570,7 @@ img.fit-parent {
     background-color: #BEBEBE;
     padding-left: 5px;
     padding-right: 5px;
-    cursor: default;
+    cursor: move;
     -moz-user-select: none;
     -khtml-user-select: none;
     -webkit-user-select: none;
@@ -2761,6 +2787,36 @@ img.fit-parent {
     display: inline-block;
     margin-left: 10px;
     margin-bottom: 0px;
+}
+
+@media (min-width: 1500px) {
+    .template-picker {
+        width: 700px;
+    }
+    
+    .template-container-label {
+        font-size: 1em;
+    }
+    
+    .template-container {
+        height: 400px;
+        max-height: 400px;
+    }
+    
+    .template-data-table {
+        font-size: 1em;
+    }
+    
+    .table-main td {
+        width: 175px;
+        max-width: 175px;
+    }
+    
+    .table-flight td {
+        width: 115px;
+        max-width: 115px;
+        font-size: 0.9em;
+    }
 }
 
 /*===================================================================*/

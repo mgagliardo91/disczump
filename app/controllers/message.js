@@ -236,7 +236,7 @@ function notifyUsers(message, userId) {
 function generateEmailNotification(user, origUser, message) {
     var html = fs.readFileSync('./private/html/messageAlert.handlebars', 'utf8');
     var template = Handlebars.compile(html);
-    return template({user: user, origUser: origUser, message : message, serverURL: LocalConfig.serverURL});
+    return template({user: user, hashId: user.hashId(), origUser: origUser, message : message, serverURL: LocalConfig.serverURL});
 }
 
 function getPrivateThreads(userId, callback) {

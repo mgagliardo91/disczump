@@ -2,7 +2,9 @@
 
 var mongoose = require('mongoose');
 var bcrypt   = require('bcrypt-nodejs');
+var crypto = require('crypto');
 var UserConfig = require('../../config/config.js').user.preferences;
+var CryptoConfig = require('../../config/auth.js').crypto;
 var shortId = require('shortid');
 
 var userSchema = mongoose.Schema({
@@ -126,5 +128,12 @@ userSchema.methods.generateHash = function(password) {
 userSchema.methods.validPassword = function(password) {
     return bcrypt.compareSync(password, this.local.password);
 };
+
+userSchema.methods.hashId = function() {
+    var cipher = crypto.createCipher(CryptoConfig.algorithm, CryptoConfig.password);
+    var crypted = cipher.update(this._id,'utf8','hex');
+    crypted += cipher.final('hex');
+    return crypted;
+}
 
 module.exports = mongoose.model('User', userSchema);

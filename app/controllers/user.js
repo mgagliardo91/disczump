@@ -4,9 +4,11 @@ var EventController = require('./event.js');
 var _ = require('underscore');
 var async = require('async');
 var UserConfig = require('../../config/config.js').user.preferences;
+var CryptoConfig = require('../../config/auth.js').crypto;
 var FileUtil = require('../utils/file.js');
 var Socket = require('../../config/socket.js');
 var socketManager = require('../objects/socketCache.js');
+var crypto   = require('crypto');
 
 module.exports = {
 	query: query,
@@ -27,7 +29,8 @@ module.exports = {
     tryResetPassword: tryResetPassword,
     deleteUser: deleteUser,
     deleteUserImage: deleteUserImage,
-    postUserImage: postUserImage
+    postUserImage: postUserImage,
+    getUserFromHash: getUserFromHash
 }
 
 function query(field, q, callback) {
@@ -476,4 +479,18 @@ function postUserImage(userId, fileId, gfs, callback) {
 		   	});
 	   	});
     });
+}
+
+function getUserFromHash(hashId, callback) {
+	var decipher = crypto.createDecipher(CryptoConfig.algorithm, CryptoConfig.password);
+	var dec = decipher.update(hashId,'hex','utf8');
+	dec += decipher.final('utf8');
+	
+	getUser(dec, function(err, user) {
+		if (err) {
+			return callback(err);
+		}
+		
+		return callback(null, user);
+	});
 }

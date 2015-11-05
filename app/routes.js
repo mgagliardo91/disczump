@@ -392,7 +392,7 @@ module.exports = function(app, passport, gridFs) {
                         input: [
                             {icon: 'fa-key', id : 'new-password', name: 'password', type: 'password', placeholder: 'Password'},
                             {icon: 'fa-key', id : 'verify-password', type: 'password', placeholder: 'Verify Password'}
-                            ]
+                        ]
                    }
                 });
             })
@@ -409,6 +409,41 @@ module.exports = function(app, passport, gridFs) {
                 res.redirect('/login');
             })
         });
+    
+    app.get('/unsubscribe', function(req, res) {
+        UserController.getUserFromHash(req.query.hashId, function(err, user) {
+            if (err) {
+                 return res.render('notification', {
+                    isMobile: req.device.isMobile,
+                    notify : {
+                        pageHeader: err.error.type,
+                        header: err.error.type,
+                        strong: err.error.message,
+                        text: 'Please try again.',
+                        buttonIcon: 'fa-home',
+                        buttonText: 'Return Home',
+                        buttonLink: '/dashboard'
+                   }
+                });
+            }
+            
+            user.preferences.notifications.newMessage = false;
+            user.save();
+            
+            return res.render('notification', {
+                isMobile: req.device.isMobile,
+                notify : {
+                   pageHeader: 'Preferences Updated',
+                   header: 'Preferences Updated',
+                   strong: 'You have been successfully unsubscribed from new message notifications!',
+                   text: 'You can change this preference at any time under the preferences area of your dashboard.',
+                   buttonIcon: 'fa-home',
+                   buttonText: 'Return Home',
+                   buttonLink: '/dashboard'
+               }
+            });
+        });
+    });
     
     
     // show the login form
@@ -567,6 +602,7 @@ function doLogIn(req, res, next, err, user, info) {
         return next(err);
         
     if (!user) {
+        req.flash('redirect', req.session.redirect);
         return res.redirect('/login');
     } else {
         if (!user.local.active) {

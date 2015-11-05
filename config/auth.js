@@ -12,5 +12,9 @@ module.exports = {
         'clientId': '723723683604-s6u02iaupjn5n4u170hh7jvoua4km472.apps.googleusercontent.com',
         'clientSecret': 'xxNzkZ4m3rqU3-GypyaFaPQk',
         'refreshToken': '1/JMhx2AJhcZKVgShKyOSWy0qWfrh4iGKd7scJ02rQhuAMEudVrK5jSpoR30zcRFq6',
+    },
+    'crypto' : {
+        'algorithm': 'aes-256-ctr',
+        'password': 'dd34x7912Id'
     }
 };
