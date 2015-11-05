@@ -1,4 +1,5 @@
 var DiscController = require('./disc');
+var ImageController = require('./imageCache');
 var async = require('async');
 var fs = require('fs');
 var config = require('../../config/config.js');
@@ -20,17 +21,19 @@ function createDiscData(gridfs, userId, callback) {
                 return devCallback(err); 
             }
             
+            var data = disc.toObject();
+            
             async.eachSeries(discObj.images, function(image, cb) {
                     fileUtils.saveImage(gm, gridfs, dev.dir + '/' + image.image, {
                         mimetype: image.mimetype,
                         filename: image.image,
                         maxSize: config.images.maxSize
                         }, function(newFile) {
-                            DiscController.postDiscImage(gm, gridfs, userId, disc._id, newFile._id, function(err, discImage) {
+                            ImageController.pushImageCache(gm, gridfs, userId, newFile._id, function(err, discImage) {
                                 if (err)
                                     return cb(err);
                                     
-                                
+                                data.imageList.push(discImage);
                                 return cb();
                             });
                     });
@@ -39,7 +42,13 @@ function createDiscData(gridfs, userId, callback) {
                         return devCallback(err);
                     }
                     
-                    return devCallback();
+                    DiscController.putDisc(userId, disc._id, data, gridfs, function(err, disc) {
+                        if (err) {
+                            return devCallback(err);
+                        }
+                        
+                        return devCallback();
+                    });
                 });
         });
     }, function(err) {
