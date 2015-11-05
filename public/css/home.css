@@ -194,6 +194,10 @@ ul.horiz > li {
     font-family: 'Lato', sans-serif;
 }
 
+li.clearfix:before {
+    display: inline;
+}
+
 #preview-list li:nth-child(3) {
     border-right: 0px;
 }
@@ -512,7 +516,7 @@ ul.horiz > li {
     }
     
     #preview-list li {
-        width: 80%;
+        width: 100%;
         height: initial;
         border-right: 0px;
         border-bottom: 1px solid #828282;
@@ -526,6 +530,7 @@ ul.horiz > li {
     
     #preview-list {
         padding-left: 10%;
+        padding-right: 10%;
     }
     
     .fscreen {
