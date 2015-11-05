@@ -103,7 +103,7 @@
                         </div>
                         {{else}}
                         <div class="zump-navbar-header float-left">
-                            <a href="/dashboard" rel="external" data-ajax="false"><img src="/static/logo/logo_text.svg" class="nav-logo"></a>
+                            <a href="/" rel="external" data-ajax="false"><img src="/static/logo/logo_text.svg" class="nav-logo"></a>
                         </div>
                         <div class="navbar-btn-container full-height float-right">
                             <div class="navbar-btn-list">
@@ -126,7 +126,7 @@
                                     <a href="/{{route.url}}"><span class="nav-btn">{{route.text}}</span></a>
                                 {{/if}}
                                 {{#if isLoggedIn}}
-                                    <a href="/dashboard" rel="external" data-ajax="false"><span class="nav-btn">Dashboard</span></a>
+                                    <a href="/" rel="external" data-ajax="false"><span class="nav-btn">Dashboard</span></a>
                                 {{else}}
                                 {{#if isPublicPage}}
                                     <a href="/login" rel="external" data-ajax="false"><span class="nav-btn">Sign In</span></a>
