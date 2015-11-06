@@ -138,12 +138,12 @@ module.exports = function(app, passport, gridFs) {
     
     app.route('/feedback')
         .post(hasAccess, function(req,res) {
-        	     DataItemController.createGeneric(req.user._id, req.body.data, 'Feedback', function(err, dataItem) {
+        	     DataItemController.createFeedback(req.user, req.body.data, function(err, dataItem) {
         	          if (err)
                     return res.json(err);
                     
                 return res.json(dataItem);
-        	     });
+        	});
         });
     
     app.route('/account')

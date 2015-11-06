@@ -494,6 +494,7 @@ function setupFrameworkListeners() {
    				postFeedback(text, function(success, retData) {
    					if (success) {
    						$('.custom-modal').modal('hide');
+   						generateInfo('Your feedback has been successfully submitted.', 'Thanks', true);
    					} else {
    						handleError(retData);
    					}

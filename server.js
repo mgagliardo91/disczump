@@ -11,12 +11,12 @@ var cookieParser = require('cookie-parser');
 var bodyParser   = require('body-parser');
 var device       = require('express-device');
 var session      = require('express-session');
-var exphbs = require('express-handlebars');
 var config = require('./config/config.js');
 var oauth2 = require('./config/oauth2.js');
 var socketCache = require('./app/objects/socketCache.js');
 var logger = require('./config/logger.js').logger;
 var localServer = require('./config/localConfig.js');
+var handleConfig = require('./app/utils/handleConfig.js');
 var Grid = require('gridfs-stream');
 
 // configuration ===============================================================
@@ -46,31 +46,7 @@ app.use(function (req, res, next) {
   next();
 });
 
-var hbs = exphbs.create({
-    defaultLayout: 'main',
-    helpers: {
-      section: function(name, options){
-        if(!this._sections) this._sections = {};
-        this._sections[name] = options.fn(this);
-        return null;
-      },
-      or2: function(in1, in2, options){
-        if (in1 || in2) return options.fn(this);
-        return options.inverse(this);
-      },
-      or3: function(in1, in2, in3, options){
-        if (in1 || in2 || in3) return options.fn(this);
-        return options.inverse(this);
-      },
-      exists: function(in1, options) {
-        if (typeof(in1) === 'undefined' || in1.length == 0) {
-           return options.inverse(this);
-        }
-        
-        return options.fn(this);
-      }
-    }
-});
+var hbs = handleConfig.getExpressHandle();
 app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
 

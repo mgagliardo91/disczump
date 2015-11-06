@@ -7,6 +7,11 @@ module.exports = {
         'port': 27017
     },
     'secret': 'c3b6bd821123318539d8660d22f7815fd1dcf9e7e4fa8ee2f4c66dee96',
+    'admins': [
+            'mike@disczump.com',
+            'ben@disczump.com',
+            'disczump@gmail.com'
+        ],
     'tokenTTL': 3600,
     'recoverTTL': 3600,
     'routes': {
