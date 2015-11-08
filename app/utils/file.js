@@ -10,11 +10,16 @@ module.exports = {
         	callback(file);
           });
           
-        gm(readStream).autoOrient().quality(90).size({bufferStream: true}, function(err, size) {
-        	if (err)
-        		console.log(err);
-        	
-        	if (typeof size !== 'undefined') {
+        gm(readStream).autoOrient().identify({bufferStream: true}, function(err, identify) {
+            var filesize = identify.Filesize.match(/^(\d+)([A-Z]{2})$/);
+            console.log(identify);
+            if (filesize.length < 2 || filesize[2] != 'KB' || parseInt(filesize[1]) > 500) {
+                this.quality(90);
+            }
+            
+            var size = identify.size;
+            
+            if (typeof size !== 'undefined') {
         		if (size.width > size.height) {
     	    		this.resize(size.width > fileParams.maxSize ? fileParams.maxSize : size.width);
     	    	} else {

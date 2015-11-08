@@ -1,5 +1,6 @@
 // set up ======================================================================
 var express  = require('express');
+var subdomain = require('express-subdomain');
 var app      = express();
 var port     = process.env.PORT || 80;
 var mongoose = require('mongoose');
@@ -53,6 +54,14 @@ app.set('view engine', 'handlebars');
 var gridFs = new Grid(mongoose.connection.db, mongoose.mongo);
 
 // routes ======================================================================
+var adminRouter = express.Router();
+require('./app/adminRoutes.js')(adminRouter, passport);
+app.use('/admin', adminRouter);
+
+var adminApiRouter = express.Router();
+require('./app/adminApi.js')(adminApiRouter);
+app.use('/admin/api', adminApiRouter);
+
 var mainRouter = express.Router();
 require('./app/routes.js')(mainRouter, passport, gridFs);
 app.use('/', mainRouter);
@@ -72,6 +81,7 @@ app.use('/files', testRouter);
 var connectRouter = express.Router();
 require('./app/connect.js')(connectRouter, passport, socketCache);
 app.use('/connect', connectRouter);
+
 
 app.get('*', function(req, res){
   res.redirect('/'); 

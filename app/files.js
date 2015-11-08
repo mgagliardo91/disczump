@@ -5,11 +5,64 @@ var mongoose = require('mongoose');
 var Error = require('./utils/error');
 var gfs;
 var gm = require('gm').subClass({ imageMagick: true });
+var async = require('async');
 
 module.exports = function(app, gridFs) {
     
     gfs = gridFs;
     
+    // app.route('/stitch')
+    //     .get(function(req, res) {
+    //         var imageList = [];
+    //         var index = 0;
+    //         var rsList = [];
+    //         var length = 0;
+            
+    //         while(typeof(req.query['img' + index]) !== 'undefined') {
+    //             imageList.push(req.query['img' + index++]);
+    //         }
+            
+    //         if (!imageList.length) {
+    //             return res.status(404).send(Error.createError('Unknown file identifier.', Error.objectNotFoundError));
+    //         }
+            
+    //         async.eachSeries(imageList, function(imageItem, cb) {
+    //             getFile(imageItem, function(err, file) {
+    //                 if (err)
+    //                     return cb();
+                        
+    //                 console.log(file.contentType);
+    //                 console.log(file.length);
+    //                 var rs = gfs.createReadStream({
+    //                   _id: imageItem
+    //                 });
+    //                 rsList.push(rs);
+    //                 cb();
+    //             });
+    //         }, function(err, results) {
+    //             if (!rsList.length) {
+    //                 return res.status(404).send(Error.createError('Unknown file identifier.', Error.objectNotFoundError));
+    //             }
+                
+    //             var main = rsList.shift();
+                
+    //             gm(main).append(rsList[0]).filesize({bufferStream: true}, function(err, filesize) {
+    //                 console.log(filesize);
+    //                 if(err)
+    //                     return res.status(404).send(Error.createError(err, Error.internalError));
+                        
+    //                 this.stream('jpg', function (err, stdout, stderr) {
+    //                     res.writeHead(200, {
+    //                       'Content-Type' : 'image/jpg',
+    //                       'Content-Length' : parseInt(filesize)
+    //                     });
+                        
+    //                     stdout.pipe(res);
+    //                 });
+    //             });
+    //         });
+    //     });
+        
     app.route('/:fileId')
         .get(function(req, res) {
             
@@ -50,7 +103,7 @@ module.exports = function(app, gridFs) {
             
             gfs.files.find({_id:mongoose.Types.ObjectId(req.params.fileId)}).toArray(function(err, files) {
                 if(err)
-                    return res.send(err);
+                    return res.send(Error.createError(err, Error.internalError));
                 
                 if(files.length === 0){
                   return res.send(new Error('File metadata does not exist'));
@@ -80,4 +133,17 @@ function hasAccess(req, res, next) {
         req.user = user;
         next();
     })(req, res, next);
+}
+
+function getFile(id, callback) {
+    gfs.files.find({_id:mongoose.Types.ObjectId(id)}).toArray(function(err, files) {
+        if(err)
+            return callback(Error.createError(err, Error.internalError));
+        
+        if(files.length === 0){
+          return callback(Error.createError('File metadata does not exist', Error.invalidDataError));
+        }
+        
+        callback(null, files[0]);
+    });
 }
