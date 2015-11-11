@@ -1,5 +1,3 @@
-// app/models/disc.js
-
 var mongoose = require('mongoose');
 var shortId = require('shortid');
 var _ = require('underscore');
@@ -10,32 +8,32 @@ var discSchema = mongoose.Schema({
 	    unique: true,
 	    default: shortId.generate
 	},
-    userId          : String,
-    brand           : String,
-    name            : String,
-    type            : String,
-    weight          : String,
-    material        : String,
-    color           : String,
-    speed           : String,
-    glide           : String,
-    turn            : String,
-    fade            : String,
-    notes           : String,
-    primaryImage    : String,
-    imageList       : [{
-                        _id: {
-                    	    type: String,
-                    	    unique: true,
-                    	    default: shortId.generate
-                    	},
-                        fileId          : String,
-                        thumbnailId     : String
-                    }],
-    tagList         : [String],
-    visible         : {type:Boolean, default: false},
-    condition       : String,
-    createDate      : {type: Date, default: Date.now}
+    userId: String,
+    brand: String,
+    name: String,
+    type: String,
+    weight: String,
+    material: String,
+    color: String,
+    speed: String,
+    glide: String,
+    turn: String,
+    fade: String,
+    notes: String,
+    primaryImage: String,
+    imageList: [{
+        _id: {
+    	    type: String,
+    	    unique: true,
+    	    default: shortId.generate
+    	},
+        fileId: String,
+        thumbnailId: String
+    }],
+    tagList: [String],
+    visible: {type:Boolean, default: false},
+    condition: String,
+    createDate: {type: Date, default: Date.now}
     
 });
 

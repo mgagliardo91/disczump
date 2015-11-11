@@ -1,14 +1,14 @@
+var _ = require('underscore');
+var async = require('async');
+var fs = require('fs');
+var XDate = require('xdate');
 var Error = require('../utils/error');
 var UserController = require('./user');
 var Message = require('../models/message');
 var Thread = require('../models/thread');
 var Socket = require('../../config/socket.js');
 var ThreadLocal = require('../models/threadLocal');
-var _ = require('underscore');
-var async = require('async');
 var socketManager = require('../objects/socketCache.js');
-var fs = require('fs');
-var XDate = require('xdate');
 var MessageConfig = require('../../config/config.js').message;
 var LocalConfig = require('../../config/localConfig.js');
 var Mailer = require('../utils/mailer.js');
@@ -23,33 +23,6 @@ module.exports = {
     getPrivateThreads: getPrivateThreads,
     createPrivateThread: createPrivateThread,
     deleteUserThreads: deleteUserThreads
-}
-
-function getLocalThreadObj(localThread, callback) {
-    
-    var localThreadObj = localThread.toObject();
-    
-    Thread.findOne({_id: localThread.threadId}, function(err, thread) {
-        if (err)
-            return callback(Error.createError(err, Error.internalError));
-        
-        localThreadObj.currentMessageCount = thread.messageCount;
-        localThreadObj.modifiedDate = thread.modifiedDate;
-        localThreadObj.users = thread.users;
-        callback(null, localThreadObj);
-    });
-}
-
-function getLocalThread(userId, threadId, callback) {
-    ThreadLocal.findOne({userId: userId, threadId: threadId}, function(err, localThread) {
-        if (err)
-            return callback(Error.createError(err, Error.internalError));
-        
-        if (!localThread)
-            return callback(Error.createError('Unauthorized access to the specified message thread.', Error.unauthorizedError));
-           
-        callback(null, localThread);
-    });
 }
 
 function getThreadState(userId, threadId, callback) {
@@ -233,12 +206,6 @@ function notifyUsers(message, userId) {
     });  
 }
 
-function generateEmailNotification(user, origUser, message) {
-    var html = fs.readFileSync('./private/html/messageAlert.handlebars', 'utf8');
-    var template = Handlebars.compile(html);
-    return template({user: user, hashId: user.hashId(), origUser: origUser, message : message, serverURL: LocalConfig.serverURL});
-}
-
 function getPrivateThreads(userId, callback) {
     var retThreads = [];
     ThreadLocal.find({userId: userId, active: true}, function(err, localThreads) {
@@ -307,7 +274,6 @@ function createPrivateThread(userId, receivingUserId, callback) {
 }
 
 function generatePrivateThread(firstUser, secondUser, callback) {
-    
     var curThread = undefined;
     
     async.series([
@@ -340,12 +306,51 @@ function generatePrivateThread(firstUser, secondUser, callback) {
         
         return callback(null, results[1]);
     });
+}
+
+function deleteUserThreads(userId, callback) {
+    ThreadLocal.remove({userId: userId}, function(err) {
+        if (err)
+            console.log(err);
+        
+        callback();
+    });
+}
+
+/* Private Functions */
+function getLocalThreadObj(localThread, callback) {
+    var localThreadObj = localThread.toObject();
     
-    
+    Thread.findOne({_id: localThread.threadId}, function(err, thread) {
+        if (err)
+            return callback(Error.createError(err, Error.internalError));
+        
+        localThreadObj.currentMessageCount = thread.messageCount;
+        localThreadObj.modifiedDate = thread.modifiedDate;
+        localThreadObj.users = thread.users;
+        callback(null, localThreadObj);
+    });
+}
+
+function getLocalThread(userId, threadId, callback) {
+    ThreadLocal.findOne({userId: userId, threadId: threadId}, function(err, localThread) {
+        if (err)
+            return callback(Error.createError(err, Error.internalError));
+        
+        if (!localThread)
+            return callback(Error.createError('Unauthorized access to the specified message thread.', Error.unauthorizedError));
+           
+        callback(null, localThread);
+    });
+}
+
+function generateEmailNotification(user, origUser, message) {
+    var html = fs.readFileSync('./private/html/messageAlert.handlebars', 'utf8');
+    var template = Handlebars.compile(html);
+    return template({user: user, hashId: user.hashId(), origUser: origUser, message : message, serverURL: LocalConfig.serverURL});
 }
 
 function createThreadLocal(userId, refUserId, thread, callback) {
-    
     UserController.getUser(refUserId, function(err, user) {
         
         if (err) return callback(err);
@@ -371,14 +376,5 @@ function createThread(users, isPrivate, callback) {
         if (err) return callback(Error.createError(err, Error.internalError));
         
         callback(null, t);
-    });
-}
-
-function deleteUserThreads(userId, callback) {
-    ThreadLocal.remove({userId: userId}, function(err) {
-        if (err)
-            console.log(err);
-        
-        callback();
     });
 }

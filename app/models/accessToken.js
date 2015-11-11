@@ -1,5 +1,3 @@
-// app/models/accessToken.js
-
 var mongoose = require('mongoose');
 var TTL = require('../../config/config.js').tokenTTL;
 var shortId = require('shortid');

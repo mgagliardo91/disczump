@@ -1185,6 +1185,12 @@ function zumpLibraryInit() {
 			var index = discs.indexOf(getDisc(disc._id));
 			discs[index] = disc;
 			myDashboard.setDiscList(discs);
+		},
+		onDeleteDisc: function(delDisc) {
+			discs = _.filter(discs, function(disc){
+				return disc._id != delDisc._id;
+			});
+			myDashboard.setDiscList(discs);
 		}
 	});
     
@@ -1541,6 +1547,7 @@ function generateModal(opt) {
 		$('body').css('overflow', 'auto');
 	  	$modal.remove();
 	  	$(window).off('resize', resizeModal);
+		myDashboard.doResize();
 	  
 	});
 	
@@ -1548,6 +1555,7 @@ function generateModal(opt) {
 	$modal.on('shown.bs.modal', function (e) {
 		$('body').css('overflow', 'hidden');
 		resizeModal();
+		myDashboard.doResize();
 		
 	  	if (isDef(opt.onShow)) {
 			opt.onShow($modal.find('.modal-body'));
@@ -1974,7 +1982,8 @@ function updateHash(urlHash) {
 		if (hashString.length) hashString += '&';
 		hashString += key + '=' + urlHash[key];
 	});
-	window.history.replaceState(undefined, undefined, '#' + hashString);
+	window.location.hash = '#' + hashString;
+	//window.history.replaceState(undefined, undefined, '#' + hashString);
 }
 
 /*
@@ -2380,6 +2389,7 @@ var ZumpEditor = function(opt) {
 	var dropzone;
 	var onNewDisc;
 	var onUpdatedDisc;
+	var onDeleteDisc;
 	var isProcessing = false;
 	var isInitialized = false;
 	var discPhotoCrop = false;
@@ -2392,6 +2402,7 @@ var ZumpEditor = function(opt) {
     var $clearForm;
     var $saveDisc;
     var $cloneDisc;
+    var $deleteDisc;
     var $tagInput;
     var $addCustomTag;
     var $dropzoneArea;
@@ -2414,9 +2425,14 @@ var ZumpEditor = function(opt) {
     		onUpdatedDisc = opt.onUpdatedDisc;
     	}
     	
+    	if (isDef(opt.onDeleteDisc)) {
+    		onDeleteDisc = opt.onDeleteDisc;
+    	}
+    	
     	$clearForm = $('#clear-modify-disc-form');
     	$saveDisc = $('#save-disc');
     	$cloneDisc = $('#clone-disc');
+    	$deleteDisc = $('#modify-disc-delete');
     	$modifyForm = $('#modify-disc-form');
     	$tagContainer = $('#tag-list-container');
     	$tagInput = $('#add-disc-tag');
@@ -2470,6 +2486,10 @@ var ZumpEditor = function(opt) {
     	_.each(textAssistArr, function(textAssist) {
 			textAssist.triggerResize();
 		});
+		
+		if (modifyHandler.type == 'Edit') {
+			$('.sidebar-select.nav[pg-select="#pg-modify-disc"]').removeClass('active');
+		}
 		
     }
     
@@ -2561,6 +2581,22 @@ var ZumpEditor = function(opt) {
 	    	changePage('#pg-modify-disc');
 	    });
 	    
+	    $deleteDisc.click(function() {
+			var body = {
+				text: 'Are you sure you want to delete this disc and all of its data?'
+			};
+			generateConfirmationModal('WARNING!', body, 'Delete', function() {
+				deleteDisc(modifyHandler.discId, function(success, data) {
+					if (success) {
+						onDeleteDisc(data);
+						changePage('#pg-dashboard');
+					} else {
+						handleError(data);
+					}
+				});
+			});
+	    });
+	    
 	    $addCustomTag.click(function(){
 	    	if ($tagInput.val().length > 0) {
 				$tagContainer.append(generateTagItem($tagInput.val()));
@@ -2622,7 +2658,7 @@ var ZumpEditor = function(opt) {
 			var textAssist = new ZumpTextAssist({
 		        inputElement: $(this),
 		        searchProp: param,
-		        items: function() { return _.union(discs, templateCache)},
+		        items: function() { return {userDiscs: _.union(discs, templateCache), templateDiscs: []}},
 		        onSelection: function(item) {}
 		    }); 
 		    textAssistArr.push(textAssist);
@@ -2634,7 +2670,7 @@ var ZumpEditor = function(opt) {
 			var textAssist = new ZumpTextAssist({
 		        inputElement: $(this),
 		        searchProp: param,
-		        items: function() { return _.union(discs, templateCache)},
+		        items: function() { return {userDiscs: discs, templateDiscs: templateCache}},
 		        onSelection: function(item) {
 		        	if (userPrefs.showTemplatePicker) {
 						templatePicker.setItems(_.union(discs, templateCache)).show(item, autoFillTemplate);
@@ -2743,6 +2779,7 @@ var ZumpEditor = function(opt) {
 			$curImagesSection.hide();
 			$clearForm.show();
 			$cloneDisc.hide();
+			$deleteDisc.hide();
 			clearDiscForm(true);
 			populateDiscForm();
 		} else if (modifyHandler.type == 'Edit') {
@@ -2751,13 +2788,14 @@ var ZumpEditor = function(opt) {
 			$curImagesSection.show();
 			$clearForm.hide();
 			$cloneDisc.show();
-			$('.sidebar-select.nav[pg-select="#pg-modify-disc"]').removeClass('active');
+			$deleteDisc.show();
 			populateDiscForm(modifyHandler.discId);
 		} else if (modifyHandler.type == 'Clone') {
 			$pgTitle.text('Add Disc');
 			$curImagesSection.hide();
 			$clearForm.show();
 			$cloneDisc.hide();
+			$deleteDisc.hide();
 			$imageContainer.empty();
 			clearDiscForm();
 			clearDropzone();
@@ -4155,7 +4193,7 @@ var ZumpDashboard = function(opt) {
 		                            	'</td>' +
 		                                '<td>' +
 		                                	(publicList ? '' :
-		                                	'<span><i class="fa fa-minus-circle fa-lg fa-dim fa-delete-disc-item" title="Delete Disc"></i></span>') +
+		                                	'<span><i class="fa fa-trash fa-lg fa-dim fa-delete-disc-item" title="Delete Disc"></i></span>') +
 		                                '</td>' +
 		                            '</tr>' +
 		                            '<tr class="disc-item-actions-middle">' +
@@ -4497,7 +4535,7 @@ var ZumpTutorial = function(opt) {
 					
 					if (id == 0) {
 						if (!getCache().$filter) {
-							getCache().$filter = $('.filter-item-container:first-child');
+							getCache().$filter = $('#filter-container-tagList');
 						}
 						getCache().$filter.children('.filter-item').trigger('click');
 						id++;
@@ -4522,7 +4560,7 @@ var ZumpTutorial = function(opt) {
 		{
 			title: 'Searching',
 			body: 'Use the search panel as an alternative to the filter for a quick' +
-				' way to filter on a single property (i.e. the disc name).',
+				' way to find discs based on a single property (i.e. the disc name).',
 			bgColor: '#ffba00',
 			position: 'bottom-right',
 			open: function() {
@@ -4669,6 +4707,7 @@ var ZumpTutorial = function(opt) {
     	$('body').removeClass('tutorial-active');
     	$tutorialBackdrop.remove();
     	myDashboard.doResize();
+		changePage('#pg-dashboard');
     	
     }
     
@@ -7589,8 +7628,8 @@ var ZumpTextAssist = function(opt) {
     */
     var generateResult = function(result) {
     	
-        return '<li class="dropdown-list-item" tabindex="0" result="' + result + '">' +
-                    result +
+        return '<li class="dropdown-list-item" tabindex="0" result="' + result.item + '">' +
+                    result.item + (result.type == 'template' ? '<span class="pull-right"><i class="fa fa-globe"></i></span>' : '') + 
                 '</li>';
     }
     
@@ -7600,9 +7639,12 @@ var ZumpTextAssist = function(opt) {
     var getResults = function(val) {
         if (!val || val == '') return [];
         var curItem;
-        var results = getProperties(resultList());
+        var result = resultList();
         
-    	var filtered = _.filter(results, function(item) {
+        var templateResults = getProperties(result.templateDiscs);
+        var userResults = getProperties(result.userDiscs);
+        
+        templateResults = _.filter(templateResults, function(item) {
     		if (typeof item === 'undefined') {
     			return false;
     		}
@@ -7615,8 +7657,35 @@ var ZumpTextAssist = function(opt) {
     		return curItem.toLowerCase().indexOf(val.toLowerCase()) >= 0;	
     	});
     	
-    	return filtered.sort(function(a,b) {
-    		return a.toLowerCase() > b.toLowerCase();
+    	userResults = _.filter(userResults, function(item) {
+    		if (typeof item === 'undefined') {
+    			return false;
+    		}
+    		
+    		if (_.isNumber(item)) {
+    			curItem = String(item);
+    		} else {
+    			curItem = item;
+    		}
+    		return curItem.toLowerCase().indexOf(val.toLowerCase()) >= 0;	
+    	});
+        
+        var results = [];
+        
+        _.each(templateResults, function(templateResult) {
+        	results.push({item: templateResult, type: 'template'});
+        });
+        
+        _.each(userResults, function(userResult) {
+        	var item = _.find(results, {item: userResult});
+        	
+        	if (!item) {
+        		results.push({item: userResult, type: 'user'});
+        	}
+        });
+    	
+    	return results.sort(function(a,b) {
+    		return a.item.toLowerCase() > b.item.toLowerCase();
     	});
     }
     

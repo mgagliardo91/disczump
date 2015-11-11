@@ -7,14 +7,14 @@ var discTemplateSchema = mongoose.Schema({
 	    unique: true,
 	    default: shortId.generate
 	},
-    brand           : String,
-    name            : String,
-    type            : String,
-    material        : String,
-    speed           : String,
-    glide           : String,
-    turn            : String,
-    fade            : String
+    brand: String,
+    name: String,
+    type: String,
+    material: String,
+    speed: String,
+    glide: String,
+    turn: String,
+    fade: String
     
 });
 

@@ -1,5 +1,3 @@
-// app/models/refreshToken.js
-
 var mongoose = require('mongoose');
 var shortId = require('shortid');
 

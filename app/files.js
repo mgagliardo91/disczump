@@ -122,19 +122,6 @@ module.exports = function(app, gridFs) {
         });
 }
 
-function hasAccess(req, res, next) {
-    
-    if (req.isAuthenticated()) return next();
-    passport.authenticate('bearer', { session : false }, function(err, user, info) {
-        if (err) { return next(err); }
-        if (!user) { 
-            return res.send(401, 'Unathorized');
-        }
-        req.user = user;
-        next();
-    })(req, res, next);
-}
-
 function getFile(id, callback) {
     gfs.files.find({_id:mongoose.Types.ObjectId(id)}).toArray(function(err, files) {
         if(err)

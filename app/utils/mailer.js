@@ -1,5 +1,4 @@
 var nodemailer = require("nodemailer");
-var logger = require('../../config/logger.js').logger;
 var config = require('../../config/auth.js').gmailAuth;
 var Error = require('../utils/error');
 
@@ -10,13 +9,12 @@ var generator = require('xoauth2').createXOAuth2Generator({
     refreshToken: config.refreshToken
 });
 
-var smtpTransport = nodemailer.createTransport(
-    {
-        service: "Gmail",
-        auth: {
-            xoauth2: generator
-        }
-    });
+var smtpTransport = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+        xoauth2: generator
+    }
+});
   
 module.exports = {
     sendMail : function(paramTo, paramSubject, paramHtml, callback) {

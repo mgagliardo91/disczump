@@ -10,6 +10,13 @@
     <link rel="stylesheet" href="/static/css/bootstrap-slider.css">
     <link href='https://fonts.googleapis.com/css?family=Orbitron:400,900' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Play:400,700' rel='stylesheet' type='text/css'>
+    <meta property="og:site_name"           content="disc|zump">
+    <meta property="og:title"               content="disc|zump" />
+    <meta property="og:url"                 content="https://disczumpserver-mgagliardo.c9.io/" />
+    <meta property="og:type"                content="product" />
+    <meta property="og:description"         content="A social disc golf inventory network enabling users to organize, maintain and share collections across any internet-enabled device." />
+    <meta property="fb:app_id"              content="1433417853616595" />
+    <meta property="og:image"               content="https://disczumpserver-mgagliardo.c9.io/static/logo/logo_banner_caption.svg" />
 </head>
 {{/section}}
 <body{{#if firstUse}} class="first-use"{{/if}}>
@@ -126,6 +133,7 @@
                 <div class="page" id="pg-modify-disc">
                     <div class="row">
                         <div class="page-btn-container">
+                            <span id="modify-disc-delete" class="page-title-btn"><i class="fa fa-trash" title="Delete Disc"></i></span>
                             <span id="clear-modify-disc-form" class="page-title-btn"><i class="fa fa-eraser" title="Clear Form"></i></span>
                             <span id="clone-disc" class="page-title-btn" discId=""><i class="fa fa-files-o" title="Clone Disc"></i></span>
                             <span class="page-title-btn dz-page-back"><i class="fa fa-times" title="Return"></i></span>
@@ -136,6 +144,12 @@
                         <div class="clearfix"></div>
                     </div>
                     <div id="disc-action-container">
+                        {{#if firstUse}}
+                        <div class="page-info">
+                            <b>Hint:</b> Add a disc quickly by first searching in the <b><u>name</u></b> field and selecting a template. If the disc name is not found, add it manually 
+                            and it will be there next time!
+                        </div>
+                        {{/if}}
                         <form class="form-horizontal" id="modify-disc-form" role="form" discId="" autocomplete="off">
                             <div class="row-label">General
                                 <span><i class="fa fa-question-circle" title="Help" section="general"></i></span>
@@ -265,7 +279,6 @@
     		                    </div>  
                             </div>
             	            <div class="modify-button-container">
-            	                {{!--<a href="#" id="clear-modify-disc-form">Clear Form</a>--}}
     		                    <button type="button" class="btn btn-primary" id="save-disc" discId=''><span><i class="fa fa-save fa-tools"></i></span>Save</button>
                             </div>
                         </form>
@@ -432,13 +445,13 @@
                                     </span>
                                 </div>
                                 <div class="dashboard-header pull-right">
-                                    <div class="results-header-button" id="results-header-sort">
+                                    <div class="results-header-button" id="results-header-sort" title="Sort">
                                         <span><i class="fa fa-sort"></i></span>
                                     </div>
-                                    <div class="results-header-button sidebar-nav-indicator" id="dashboard-filter-toggle" nav-select="#sidebar-filter">
+                                    <div class="results-header-button sidebar-nav-indicator" id="dashboard-filter-toggle" nav-select="#sidebar-filter" title="Filter">
                                         <span><i class="fa fa-filter"></i></span>
                                     </div>
-                                    <div class="results-header-button sidebar-nav-indicator" id="inventory-search-toggle" nav-select="#sidebar-search">
+                                    <div class="results-header-button sidebar-nav-indicator" id="inventory-search-toggle" nav-select="#sidebar-search" title="Search">
                                         <span><i class="fa fa-search"></i></span>
                                     </div>
                                 </div>
@@ -577,7 +590,8 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="account-username" class="col-sm-3 control-label">Username
+                                <label for="account-username" class="col-sm-3 control-label">
+                                    <span class="required-field">* </span>Username
                                     <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="account-username"></i>
                                 </label>
                                 <div class="col-sm-5">
@@ -587,7 +601,8 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="account-zip-code" class="col-sm-3 control-label">Zip Code
+                                <label for="account-zip-code" class="col-sm-3 control-label">
+                                    <span class="required-field">* </span>Zip Code
                                     <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="account-zip-code"></i>
                                 </label>
                                 <div class="col-sm-5">

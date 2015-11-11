@@ -1,11 +1,11 @@
+var fs = require('fs');
+var _ = require('underscore');
 var Feedback = require('../models/feedback');
 var Error = require('../utils/error');
 var LocalConfig = require('../../config/localConfig.js');
 var Config = require('../../config/config.js');
 var Mailer = require('../utils/mailer.js');
 var handleConfig = require('../utils/handleConfig.js');
-var fs = require('fs');
-var _ = require('underscore');
 
 module.exports = {
     createFeedback: createFeedback,

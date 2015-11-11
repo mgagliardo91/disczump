@@ -1,6 +1,6 @@
-var Error = require('../utils/error');
 var DiscArchive = require('../models/discArchive');
 var UserArchive = require('../models/userArchive');
+var Error = require('../utils/error');
 
 module.exports = {
     archiveDisc: archiveDisc,
@@ -50,7 +50,7 @@ function archiveUser(user) {
             }
         },
         internal: {
-            eventLog: user.local.internal.eventLog
+            eventLog: user.internal.eventLog
         }
     });
     

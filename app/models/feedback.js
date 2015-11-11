@@ -1,5 +1,3 @@
-// app/models/feedback.js
-
 var mongoose = require('mongoose');
 var shortId = require('shortid');
 
@@ -9,9 +7,9 @@ var feedback = mongoose.Schema({
 	    unique: true,
 	    default: shortId.generate
 	},
-    feedback            : {type: String},
-    userId          : {type: String},
-    createDate      : {type: Date, default: Date.now}
+    feedback: {type: String},
+    userId: {type: String},
+    createDate: {type: Date, default: Date.now}
     
 });
 

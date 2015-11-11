@@ -1,3 +1,8 @@
+var passport = require('passport');
+var Busboy = require('busboy');
+var gfs;
+var gm = require('gm').subClass({ imageMagick: true });
+var async = require('async');
 var Error = require('./utils/error');
 var EventController = require('./controllers/event');
 var UserController = require('./controllers/user');
@@ -6,13 +11,8 @@ var DiscController = require('./controllers/disc');
 var ImageController = require('./controllers/imageCache');
 var FeedbackController = require('./controllers/feedback');
 var DiscTemplateController = require('./controllers/discTemplate');
-var passport = require('passport');
 var logger = require('../config/logger.js').logger;
 var config = require('../config/config.js');
-var Busboy = require('busboy');
-var gfs;
-var gm = require('gm').subClass({ imageMagick: true });
-var async = require('async');
 var FileUtil = require('./utils/file.js');
 
 // app/api.js
@@ -300,7 +300,7 @@ module.exports = function(app, passport, gridFs) {
     app.route('/discs')
     
         .post(hasAccess, function(req, res) {
-            DiscController.postDisc(req.user._id, req.body, function(err, disc) {
+            DiscController.createDisc(req.user._id, req.body, function(err, disc) {
                 if (err)
                   return res.json(err);
                 
@@ -336,7 +336,7 @@ module.exports = function(app, passport, gridFs) {
         })
         
         .put(hasAccess, function(req, res) {
-            DiscController.putDisc(req.user._id, req.params.discId, req.body, gfs, function(err, disc) {
+            DiscController.updateDisc(req.user._id, req.params.discId, req.body, gfs, function(err, disc) {
                 if (err)
                   return res.json(err);
             
@@ -426,7 +426,7 @@ module.exports = function(app, passport, gridFs) {
         });
     
     app.get('*', function(req, res){
-       res.json(401, 'Unknown path'); 
+       res.json(401, Error.createError('Unknown path', Error.unauthorizedError)); 
     });
 }
 

@@ -1,4 +1,3 @@
-// app/models/admin.js
 var mongoose = require('mongoose');
 var shortId = require('shortid');
 

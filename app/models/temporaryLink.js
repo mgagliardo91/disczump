@@ -1,5 +1,3 @@
-// app/models/temporaryLink.js
-
 var mongoose = require('mongoose');
 var TTL = require('../../config/config.js').recoverTTL;
 var shortId = require('shortid');

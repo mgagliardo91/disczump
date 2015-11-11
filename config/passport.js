@@ -144,8 +144,8 @@ module.exports = function(passport) {
                     return done(null, false, req.flash('error', err.error.message));
                 
                 logger.info('Created new user %s.', user.local.email);
-                user.addEvent(EventController.types.AccountCreation, 'Account created.');
-                EventController.addEvent(user._id, EventController.types.AccountCreation, 'New account created for user [' + user._id + '].');
+                user.addEvent(EventController.Types.AccountCreation, 'Account created.');
+                EventController.addEvent(user._id, EventController.Types.AccountCreation, 'New account created for user [' + user._id + '].');
                 
                 return done(null, user);
             });

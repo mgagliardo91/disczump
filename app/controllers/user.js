@@ -1,18 +1,18 @@
+var _ = require('underscore');
+var async = require('async');
+var crypto = require('crypto');
+var geolib = require('geolib');
 var Error = require('../utils/error');
 var User = require('../models/user');
 var ArchiveController = require('./archive.js');
-var EventController = require('./event.js');
-var _ = require('underscore');
-var async = require('async');
 var GeoConfig = require('../../config/auth.js').geocode;
 var UserConfig = require('../../config/config.js').user.preferences;
 var CryptoConfig = require('../../config/auth.js').crypto;
 var FileUtil = require('../utils/file.js');
 var Socket = require('../../config/socket.js');
 var socketManager = require('../objects/socketCache.js');
-var crypto   = require('crypto');
+
 var geocoder = require("node-geocoder")('google', 'https', {apiKey : GeoConfig.apiKey, formatter: null});
-var geolib = require('geolib');
 
 module.exports = {
 	query: query,
@@ -51,7 +51,7 @@ function query(field, q, callback) {
 }
 
 function queryUsers(query, callback) {
-	var query = query.trim();
+	query = query.trim();
 	if (!query.length) return callback(null, {query: query, results: []});
 	
 	var regExp = new RegExp(query, 'i');
@@ -119,19 +119,7 @@ function queryUsers(query, callback) {
 	}
 }
 
-function getUserInfo(userId, callback) {
-	User.findOne({_id: userId}, function(err, user) {
-       if (err) 
-			return callback(Error.createError(err, Error.internalError));
-			
-		if (!user) return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-		
-		return callback(null, user.accountToString());	
-	});
-}
-
 function createUser(info, callback) {
-	
 	if (!info.email)
 		return callback(Error.createError('A valid email is required to create an account.', Error.invalidDataError));
 	
@@ -140,7 +128,6 @@ function createUser(info, callback) {
 		
 	if (!checkPassword(info.password)) 
 		return callback(Error.createError('A valid password is required to create an account.', Error.invalidDataError));
-	
 	
 	async.series([
 		function(cb) {
@@ -250,14 +237,6 @@ function updateActivity(userId) {
     });
 }
 
-function checkPassword(password) {
-	return password.length >= 6;
-}
-
-function checkUsername(username) {
-	return /^[a-zA-Z0-9\_]{6,15}$/.test(username);
-}
-
 function getAccount(userId, callback) {
 	getActiveUser(userId, function(err, user) {
        if (err) 
@@ -297,39 +276,39 @@ function updatePreferences(userId, prefs, callback) {
        if (err) 
 			return callback(err);
 		
-	   	if (_.has(prefs, 'notifications')) {
+		if (typeof prefs.notifications !== 'undefined') {
 			var notifications = prefs.notifications;
 			
-			if (_.has(notifications, 'newMessage') && validatePreference('notifications.newMessage', notifications.newMessage)) {
+			if (typeof notifications.newMessage !== 'undefined' && validatePreference('notifications.newMessage', notifications.newMessage)) {
 				user.preferences.notifications.newMessage = notifications.newMessage;
 			}
 		}
 		
-		if (_.has(prefs, 'colorize') && validatePreference('colorize', prefs.colorize)) {
+		if (typeof prefs.colorize !== 'undefined' && validatePreference('colorize', prefs.colorize)) {
 		    user.preferences.colorize = prefs.colorize;
 		}
 		
-		if (_.has(prefs, 'colorizeVisibility') && validatePreference('colorizeVisibility', prefs.colorizeVisibility)) {
+		if (typeof prefs.colorizeVisibility !== 'undefined' && validatePreference('colorizeVisibility', prefs.colorizeVisibility)) {
 		    user.preferences.colorizeVisibility = prefs.colorizeVisibility;
 		} 
 		
-		if (_.has(prefs, 'galleryCount') && validatePreference('galleryCount', prefs.galleryCount)) {
+		if (typeof prefs.galleryCount !== 'undefined' && validatePreference('galleryCount', prefs.galleryCount)) {
 		    user.preferences.galleryCount = prefs.galleryCount;
 		}
 		
-		if (_.has(prefs, 'defaultView') && validatePreference('defaultView', prefs.defaultView)) {
+		if (typeof prefs.defaultView !== 'undefined' && validatePreference('defaultView', prefs.defaultView)) {
 		    user.preferences.defaultView = prefs.defaultView;
 		}
 		
-		if (_.has(prefs, 'defaultSort') && validatePreference('defaultSort', prefs.defaultSort)) {
+		if (typeof prefs.defaultSort !== 'undefined' && validatePreference('defaultSort', prefs.defaultSort)) {
 		    user.preferences.defaultSort = prefs.defaultSort;
 		}
 		
-		if (_.has(prefs, 'displayCount') && validatePreference('displayCount', prefs.displayCount)) {
+		if (typeof prefs.displayCount !== 'undefined' && validatePreference('displayCount', prefs.displayCount)) {
 		    user.preferences.displayCount = prefs.displayCount;
 		}
 		
-		if (_.has(prefs, 'showTemplatePicker') && validatePreference('showTemplatePicker', prefs.showTemplatePicker)) {
+		if (typeof prefs.showTemplatePicker !== 'undefined' && validatePreference('showTemplatePicker', prefs.showTemplatePicker)) {
 		    user.preferences.showTemplatePicker = prefs.showTemplatePicker;
 		}
 		
@@ -347,21 +326,21 @@ function updateAccount(userId, account, callback) {
        if (err) 
 			return callback(err);
 		
-	   	if (_.has(account, 'firstName')) {
+		if (typeof account.firstName !== 'undefined') {
 			user.local.firstName = account.firstName;
 		}
 		
-		if (_.has(account, 'lastName')) {
+		if (typeof account.lastName !== 'undefined') {
 			user.local.lastName = account.lastName;
 		}
 		
-		if (_.has(account, 'pdgaNumber')) {
+		if (typeof account.pdgaNumber !== 'undefined') {
 			user.local.pdgaNumber = account.pdgaNumber;
 		}
 		
 		async.series([
 			function(cb) {
-				if (_.has(account, 'username') && checkUsername(account.username)) {
+				if (typeof account.username !== 'undefined' && checkUsername(account.username)) {
 					if (account.username == user.local.username) {
 						return cb();
 					}
@@ -379,7 +358,7 @@ function updateAccount(userId, account, callback) {
 				}
 			},
 			function(cb) {
-				if (_.has(account, 'zipCode') && /^\d{5}$/.test(account.zipCode)) {
+				if (typeof account.zipCode !== 'undefined' && /^\d{5}$/.test(account.zipCode)) {
 					geocoder.geocode(account.zipCode, function(err, res) {
 						if (err)
 							return cb(Error.createError(err, Error.internalError));
@@ -464,8 +443,16 @@ function tryResetPassword(userId, currentPw, newPw, callback) {
 
 function deleteUser(userId, gfs, callback) {
 	deleteUserImage(userId, gfs, function(err, user) {
-		ArchiveController.archiveUser(user);
-		User.remove({_id: userId}, callback);
+		if (err)
+			return callback(err);
+		
+		getUser(userId, function(err, user) {
+			if (err)
+				return callback(Error.createError(err, Error.internalError));
+				
+			ArchiveController.archiveUser(user);
+			User.remove({_id: userId}, callback);
+		});
 	});
 }
 
@@ -523,7 +510,7 @@ function validatePreference(preference, value) {
 }
 
 function deleteUserImage(userId, gfs, callback) {
-	getActiveUser(userId, function(err, user) {
+	getUser(userId, function(err, user) {
        if (err) 
 			return callback(err);
 		
@@ -691,4 +678,13 @@ function getUsersByArea(zipCode, radius, callback) {
 		
 		return callback(null, userList);
 	});
+}
+
+/* Private Functions */
+function checkPassword(password) {
+	return password.length >= 6;
+}
+
+function checkUsername(username) {
+	return /^[a-zA-Z0-9\_]{6,15}$/.test(username);
 }

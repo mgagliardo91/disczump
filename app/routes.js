@@ -112,12 +112,6 @@ module.exports = function(app, passport, gridFs) {
         });
     });
     
-    app.get('/test', function(req, res) {
-      res.render('test', {
-          isIndex: true
-      });
-    });
-    
     app.get('/disc/:discid', function(req, res) {
         var userId = undefined;
         if (req.user) userId = req.user._id;
@@ -175,29 +169,23 @@ module.exports = function(app, passport, gridFs) {
         }) ;
     });
     
-    app.get('/confirm/:authorizationId', function(req, res){
+    app.get('/confirm/:authorizationId', function(req, res, next){
             Confirm.confirmAccount(req.params.authorizationId, function(err, user){
                 if (err) {
                     req.flash('error', err.error.message);
                     return res.redirect('/login');
                 } else {
-                    
-                    if (user.totalAccessCount() == 0) {
-                        DevController.createDiscData(gridFs, user._id);
+                    if (!user.facebook.id) {
+                        req.session.redirect = '/account/link';
                     }
                     
-                    req.login(user, function(err) {
-                        if (err) {
-                            req.flash('error', err);
-                            return res.redirect('/login');
-                        }
-                        
-                        if (!req.user.facebook.id) {
-                            return res.redirect('/account/link');
-                        }
-                        
-                        return res.redirect('/dashboard');
-                    });
+                    if (user.totalAccessCount() == 0) {
+                        DevController.createDiscData(gridFs, user._id, function(err) {
+                            doLogIn(req, res, next, err, user);
+                        });
+                    } else {
+                        doLogIn(req, res, next, err, user);
+                    }
                 }
             });
         });

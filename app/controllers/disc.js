@@ -1,18 +1,19 @@
+var _ = require('underscore');
+var async = require('async');
 var Error = require('../utils/error');
 var Disc = require('../models/disc');
 var UserController = require('./user.js');
 var ArchiveController = require('./archive.js');
 var ImageController = require('./imageCache.js');
-var _ = require('underscore');
-var async = require('async');
 var FileUtil = require('../utils/file.js');
 
 module.exports = {
+    /* Standard Functions */
     getPreview: getPreview,
     getDiscs: getDiscs,
     getDisc: getDisc,
-    postDisc: postDisc,
-    putDisc: putDisc,
+    createDisc: createDisc,
+    updateDisc: updateDisc,
     deleteDisc: deleteDisc,
     getDiscImages: getDiscImages,
     getDiscImage: getDiscImage,
@@ -23,10 +24,7 @@ module.exports = {
     getAllDiscs: getAllDiscs
 }
 
-/* Public Access
- * ----------------------
- */
-
+/* Standard Functions */
 function getPreview(userId, refDiscId, callback) {
     var retDiscs = [];
     var hasRefDisc = typeof(refDiscId) !== 'undefined';
@@ -103,8 +101,7 @@ function getDiscInternal(userId, discId, callback) {
      });
 }
 
-/// Create Disc
-function postDisc(userId, data, callback) {
+function createDisc(userId, data, callback) {
     var disc = new Disc();
     disc.userId = userId;
     
@@ -123,11 +120,11 @@ function postDisc(userId, data, callback) {
     disc.color = data.color.trim();
     disc.notes = data.notes;
     
-    if (_.has(data, 'visible')) {
+    if (typeof data.visible !== 'undefined') {
         disc.visible = data.visible;
     }
     
-    if (_.has(data, 'weight')) {
+    if (typeof data.weight !== 'undefined') {
         if (data.weight == '') {
             disc.weight = undefined;
         } else if (/^\d{1,3}$/.test(data.weight)){
@@ -135,7 +132,7 @@ function postDisc(userId, data, callback) {
         }
     }
     
-    if (_.has(data, 'speed')) {
+    if (typeof data.speed !== 'undefined') {
         if (data.speed == '') {
             disc.speed = undefined;
         } else if (/^[-]?\d{1,2}$/.test(data.speed)){
@@ -143,7 +140,7 @@ function postDisc(userId, data, callback) {
         }
     }
     
-    if (_.has(data, 'glide')) {
+    if (typeof data.glide !== 'undefined') {
         if (data.glide == '') {
             disc.glide = undefined;
         } else if (/^[-]?\d{1,2}$/.test(data.glide)){
@@ -151,7 +148,7 @@ function postDisc(userId, data, callback) {
         }
     }
     
-    if (_.has(data, 'turn')) {
+    if (typeof data.turn !== 'undefined') {
         if (data.turn == '') {
             disc.turn = undefined;
         } else if (/^[-]?\d{1,2}$/.test(data.turn)){
@@ -159,7 +156,7 @@ function postDisc(userId, data, callback) {
         }
     }
     
-    if (_.has(data, 'fade')) {
+    if (typeof data.fade !== 'undefined') {
         if (data.fade == '') {
             disc.fade = undefined;
         } else if (/^[-]?\d{1,2}$/.test(data.fade)){
@@ -167,7 +164,7 @@ function postDisc(userId, data, callback) {
         }
     }
     
-    if (_.has(data, 'condition')) {
+    if (typeof data.condition !== 'undefined') {
         if (data.condition == '') {
             disc.condition = undefined;
         } else if (/^\d{1,2}$/.test(data.condition)){
@@ -176,7 +173,7 @@ function postDisc(userId, data, callback) {
     }
     
     disc.tagList = [];
-    if (_.has(data, 'tagList') && _.isArray(data.tagList)) {
+    if (typeof data.tagList !== 'undefined' && _.isArray(data.tagList)) {
         _.each(data.tagList, function(tag) {
             if (tag !== "" && !_.contains(disc.tagList, tag)) {
                 disc.tagList.push(tag);
@@ -186,7 +183,7 @@ function postDisc(userId, data, callback) {
     
     async.series([
         function(cb) {
-             if (_.has(data, 'imageList') && _.isArray(data.imageList)) {
+             if (typeof data.imageList !== 'undefined' && _.isArray(data.imageList)) {
                 async.eachSeries(data.imageList, function(imageId, imgCb) {
                     ImageController.getImageCache(imageId, function(err, imageObj) {
                         if (!err && imageObj) {
@@ -203,7 +200,7 @@ function postDisc(userId, data, callback) {
             }
         },
         function(cb) {
-            if (_.has(data, 'primaryImage')) {
+            if (typeof data.primaryImage !== 'undefined') {
                 var imageObj = _.findWhere(disc.imageList, {_id: data.primaryImage});
                 if (imageObj) {
                     disc.primaryImage = imageObj._id;
@@ -211,6 +208,9 @@ function postDisc(userId, data, callback) {
                 
                 cb();
             } else {
+                if (disc.imageList.length) {
+                    disc.primaryImage = disc.imageList[0]._id;
+                }
                 cb();
             }
         }
@@ -224,8 +224,7 @@ function postDisc(userId, data, callback) {
     });
 }
 
-/// Update disc
-function putDisc(userId, discId, data, gfs, callback) {
+function updateDisc(userId, discId, data, gfs, callback) {
     getDiscInternal(userId, discId, function(err, disc){
         if (err)
             return callback(Error.createError(err, Error.internalError));
@@ -244,27 +243,27 @@ function putDisc(userId, discId, data, gfs, callback) {
             disc.name = data.name.trim();
         }
         
-        if (_.has(data, 'material')) {
+        if (typeof data.material !== 'undefined') {
             disc.material = data.material.trim();
         }
         
-        if (_.has(data, 'type')) {
+        if (typeof data.type !== 'undefined') {
             disc.type = data.type.trim();
         }
         
-        if (_.has(data, 'color')) {
+        if (typeof data.color !== 'undefined') {
             disc.color = data.color.trim();
         }
         
-        if (_.has(data, 'notes')) {
+        if (typeof data.notes !== 'undefined') {
             disc.notes = data.notes.trim();
         }
         
-        if (_.has(data, 'visible') && _.isBoolean(data.visible)) {
+        if (typeof data.visible !== 'undefined' && _.isBoolean(data.visible)) {
             disc.visible = data.visible;
         }
         
-        if (_.has(data, 'weight')) {
+        if (typeof data.weight !== 'undefined') {
             if (data.weight == '') {
                 disc.weight = undefined;
             } else if (/^\d{1,3}$/.test(data.weight)){
@@ -272,7 +271,7 @@ function putDisc(userId, discId, data, gfs, callback) {
             }
         }
         
-        if (_.has(data, 'speed')) {
+        if (typeof data.speed !== 'undefined') {
             if (data.speed == '') {
                 disc.speed = undefined;
             } else if (/^[-]?\d{1,2}$/.test(data.speed)){
@@ -280,7 +279,7 @@ function putDisc(userId, discId, data, gfs, callback) {
             }
         }
         
-        if (_.has(data, 'glide')) {
+        if (typeof data.glide !== 'undefined') {
             if (data.glide == '') {
                 disc.glide = undefined;
             } else if (/^[-]?\d{1,2}$/.test(data.glide)){
@@ -288,7 +287,7 @@ function putDisc(userId, discId, data, gfs, callback) {
             }
         }
         
-        if (_.has(data, 'turn')) {
+        if (typeof data.turn !== 'undefined') {
             if (data.turn == '') {
                 disc.turn = undefined;
             } else if (/^[-]?\d{1,2}$/.test(data.turn)){
@@ -296,7 +295,7 @@ function putDisc(userId, discId, data, gfs, callback) {
             }
         }
         
-        if (_.has(data, 'fade')) {
+        if (typeof data.fade !== 'undefined') {
             if (data.fade == '') {
                 disc.fade = undefined;
             } else if (/^[-]?\d{1,2}$/.test(data.fade)){
@@ -304,7 +303,7 @@ function putDisc(userId, discId, data, gfs, callback) {
             }
         }
         
-        if (_.has(data, 'condition')) {
+        if (typeof data.condition !== 'undefined') {
             if (data.condition == '') {
                 disc.condition = undefined;
             } else if (/^\d{1,2}$/.test(data.condition)){
@@ -312,7 +311,7 @@ function putDisc(userId, discId, data, gfs, callback) {
             }
         }
         
-        if (typeof data.tagList !== 'undefined') {
+        if (typeof data.tagList !== 'undefined' && _.isArray(data.tagList)) {
             disc.tagList = [];
             _.each(data.tagList, function(tag) {
                 if (tag !== "" && !_.contains(disc.tagList, tag)) {
@@ -325,7 +324,7 @@ function putDisc(userId, discId, data, gfs, callback) {
         var curImageArray = disc.imageList;
         async.series([
             function(cb) {
-                 if (_.has(data, 'imageList') && _.isArray(data.imageList)) {
+                 if (typeof data.imageList !== 'undefined' && _.isArray(data.imageList)) {
                     var imageArray = [];
                      
                     async.eachSeries(data.imageList, function(imageItem, imgCb){
@@ -393,7 +392,6 @@ function putDisc(userId, discId, data, gfs, callback) {
     });
 }
 
-/// Delete Disc
 function deleteDisc(userId, discId, gfs, callback) {
     getDiscInternal(userId, discId, function(err, disc){
         if (err)
@@ -417,23 +415,6 @@ function deleteDisc(userId, discId, gfs, callback) {
     });
 }
 
-function shuffle(array) {
-  var currentIndex = array.length, temporaryValue, randomIndex ;
-
-  while (currentIndex !== 0) {
-
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1;
-
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
-
-  return array;
-}
-
-/// Get All Images by User for a disc
 function getDiscImages(userId, discId, callback) {
 	getDisc(userId, discId, function(err, disc) {
 		if (err) 
@@ -443,7 +424,6 @@ function getDiscImages(userId, discId, callback) {
 	});
 }
 
-/// Get Image
 function getDiscImage(userId, discId, imageId, callback) {
 	getDisc(userId, discId, function(err, disc) {
 		if (err)
@@ -458,7 +438,6 @@ function getDiscImage(userId, discId, imageId, callback) {
 	});
 }
 
-/// Delete Image Object
 function deleteDiscImageObj(discImage, gfs, callback) {
 	var fileId = discImage.fileId;
 	var thumbnailId = discImage.thumbnailId;
@@ -475,7 +454,6 @@ function deleteDiscImageObj(discImage, gfs, callback) {
 	});
 }
 
-/// Delete All Images
 function deleteDiscImages(userId, discId, gfs, callback) {
 	getDiscImages(userId, discId, function(err, discImages){
 		if (err)
@@ -504,6 +482,7 @@ function deleteUserDiscs(userId, gfs, callback) {
         
         async.each(discs, function(disc, cb) {
             deleteDiscImages(userId, disc._id, gfs, function(err, discImages) {
+                ArchiveController.archiveDisc(disc);
                 disc.remove(function (err, disc) {
                     return cb();
                 });
@@ -558,4 +537,21 @@ function getAllDiscs(params, callback) {
         });
     });
 
+}
+
+/* Private Functions */
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex ;
+
+  while (currentIndex !== 0) {
+
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
 }

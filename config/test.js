@@ -10,11 +10,13 @@ module.exports = {
             'username': 'disczumptest',
             'firstName': 'disczump',
             'lastName': 'test',
-            'password': 'password!'
+            'password': 'password!',
+            'zipCode': '28078',
+            'active': true
         },
         'Update' : {
-            'username': 'disczumptest2',
-            'firstName': 'disczump2',
+            'username': 'disczumptest3',
+            'firstName': 'disczump3',
             'lastName': 'test2'
         },
         'Fail' : {
@@ -36,10 +38,12 @@ module.exports = {
     'User2' : {
         'Create' : {
             'email': 'disczump.test2@disczump.com',
-            'username': 'disczumptest_backup',
+            'username': 'disczumptest2',
             'firstName': 'disczump',
             'lastName': 'test',
-            'password': 'password!'
+            'password': 'password!',
+            'zipCode': '28078',
+            'active': true
         },
         'Fail' : {
             'username': 'disczumptest_backup',

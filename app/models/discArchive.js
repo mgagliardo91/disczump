@@ -1,5 +1,3 @@
-// app/models/discArchive.js
-
 var mongoose = require('mongoose');
 var shortId = require('shortid');
 
@@ -9,16 +7,16 @@ var discArchiveSchema = mongoose.Schema({
 	    unique: true,
 	    default: shortId.generate
 	},
-	discId          : String,
-    userId          : String,
-    brand           : String,
-    name            : String,
-    type            : String,
-    weight          : String,
-    material        : String,
-    color           : String,
-    createDate      : Date,
-    archiveDate     : {type: Date, default: Date.now}
+	discId: String,
+    userId: String,
+    brand: String,
+    name: String,
+    type: String,
+    weight: String,
+    material: String,
+    color: String,
+    createDate: Date,
+    archiveDate: {type: Date, default: Date.now}
     
 });
 

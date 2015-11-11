@@ -1,5 +1,4 @@
 var _ = require('underscore');
-var Error = require('../utils/error');
 var shortid = require('shortid');
 var socketTable = [];
 

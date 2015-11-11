@@ -7,10 +7,10 @@ var eventSchema = mongoose.Schema({
 	    unique: true,
 	    default: shortId.generate
 	},
-    userId : {type: String},
-    type : {type: String},
-    message : {type: String},
-    createDate : {type: Date, default: Date.now}
+    userId: {type: String},
+    type: {type: String},
+    message: {type: String},
+    createDate: {type: Date, default: Date.now}
     
 });
 

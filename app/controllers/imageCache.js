@@ -74,6 +74,8 @@ function clearUnusedImages(gfs, callback) {
     });
 }
 
+/* Private Functions */
+
 function createThumbnail(gm, gfs, fileId, callback) {
 	gfs.files.find({_id: mongoose.Types.ObjectId(fileId)}).toArray(function(err, files) {
         if(err)

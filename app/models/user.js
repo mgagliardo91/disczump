@@ -1,5 +1,3 @@
-// app/models/user.js
-
 var mongoose = require('mongoose');
 var bcrypt   = require('bcrypt-nodejs');
 var crypto = require('crypto');
@@ -13,62 +11,62 @@ var userSchema = mongoose.Schema({
 	    unique: true,
 	    default: shortId.generate
 	},
-    local            : {
-        username     : {type: String, unique: true},
-        firstName    : String,
-        lastName     : String,
-        email        : {type: String, unique: true},
-        password     : String,
-        dateJoined  : {type: Date, default: Date.now},
-        lastAccess  : {type: Date, default: Date.now},
-        active       : {type: Boolean, default: false},
-        passcode     : String,
-        image        : String,
-        zipCode      : String,
-        pdgaNumber   : String,
-        location     : {
-            lat      : String,
-            lng      : String,
-            city     : String,
-            state     : String,
-            stateAcr     : String,
-            country     : String,
-            countryCode     : String,
+    local: {
+        username: {type: String, unique: true},
+        firstName: String,
+        lastName: String,
+        email: {type: String, unique: true},
+        password: String,
+        dateJoined: {type: Date, default: Date.now},
+        lastAccess: {type: Date, default: Date.now},
+        active: {type: Boolean, default: false},
+        passcode: String,
+        image: String,
+        zipCode: String,
+        pdgaNumber: String,
+        location: {
+            lat: String,
+            lng: String,
+            city: String,
+            state: String,
+            stateAcr: String,
+            country: String,
+            countryCode: String,
         },
-        accessCount     : {
-            desktop : {type: Number, default: 0},
-            mobile : {type: Number, default: 0},
+        accessCount: {
+            desktop: {type: Number, default: 0},
+            mobile: {type: Number, default: 0},
         }
     },
-    facebook         : {
-        id           : String,
-        token        : String,
-        email        : String,
-        name         : String,
-        image        : String,
+    facebook: {
+        id: String,
+        token: String,
+        email: String,
+        name: String,
+        image: String,
     },
-    preferences      : {
-        colorize     : {
-            putter      : {type: String, default: UserConfig.colorize.putter},
-            mid         : {type: String, default: UserConfig.colorize.mid},
-            fairway     : {type: String, default: UserConfig.colorize.fairway},
-            distance    : {type: String, default: UserConfig.colorize.distance},
-            mini        : {type: String, default: UserConfig.colorize.mini}
+    preferences: {
+        colorize: {
+            putter: {type: String, default: UserConfig.colorize.putter},
+            mid: {type: String, default: UserConfig.colorize.mid},
+            fairway: {type: String, default: UserConfig.colorize.fairway},
+            distance: {type: String, default: UserConfig.colorize.distance},
+            mini: {type: String, default: UserConfig.colorize.mini}
         },
-        colorizeVisibility : {type: Boolean, default: UserConfig.colorizeVisibility},
-        displayCount : {type: String, default: UserConfig.displayCount},
-        defaultSort  : {type: mongoose.Schema.Types.Mixed, 
+        colorizeVisibility: {type: Boolean, default: UserConfig.colorizeVisibility},
+        displayCount: {type: String, default: UserConfig.displayCount},
+        defaultSort: {type: mongoose.Schema.Types.Mixed, 
             default: UserConfig.defaultSort
         },
-        defaultView  : {type: String, default: UserConfig.defaultView},
-        galleryCount : {type: String, default: UserConfig.galleryCount},
+        defaultView: {type: String, default: UserConfig.defaultView},
+        galleryCount: {type: String, default: UserConfig.galleryCount},
         showTemplatePicker: {type: Boolean, default: UserConfig.showTemplatePicker},
-        notifications : {
+        notifications: {
             newMessage: {type: Boolean, default: UserConfig.notifications.newMessage}
         }
     },
-    internal         : {
-        eventLog     : [mongoose.Schema.Types.Mixed]
+    internal: {
+        eventLog: [mongoose.Schema.Types.Mixed]
     }
 });
 
@@ -81,7 +79,6 @@ userSchema.methods.totalAccessCount = function() {
 }
 
 userSchema.methods.addEvent = function(type, event) {
-    
     if (typeof(event) !== 'undefined') {
         this.internal.eventLog.push({
            type: type,
@@ -91,7 +88,6 @@ userSchema.methods.addEvent = function(type, event) {
         
         this.save();
     }
-    
 }
 
 userSchema.methods.accountToString = function() {

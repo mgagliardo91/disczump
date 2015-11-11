@@ -1,10 +1,7 @@
-var Admin = require('../models/admin.js');
+var async = require('async');
 var User = require('../models/user.js');
 var Disc = require('../models/disc.js');
-var DiscTemplate = require('../models/discTemplate.js');
-var Event = require('../models/event.js');
 var socketManager = require('../objects/socketCache.js');
-var async = require('async');
 
 var Error = require('../utils/error.js');
 

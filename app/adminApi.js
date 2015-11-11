@@ -62,6 +62,10 @@ module.exports = function(app, passport) {
                 return res.json(pager);
             });
         });
+        
+    app.get('*', function(req, res){
+       res.json(401, Error.createError('Unknown path', Error.unauthorizedError)); 
+    });
 }
 
 function parsePagination(query) {
