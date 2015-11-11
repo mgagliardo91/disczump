@@ -173,11 +173,11 @@ function getCityState(zipcode, callback) {
 	$.ajax({
 		type: "GET",
 		dataType: "json",
-		url: 'https://api.zippopotam.us/us/' + zipcode,
+		url: 'https://maps.googleapis.com/maps/api/geocode/json?address=' + zipcode,
 		success: function (data) {
-			if (data.places.length) {
-			    var place = data.places[0];
-			    retData = place['place name'] + ", " + place['state abbreviation'];
+			if (data.status == 'OK') {
+				var location = formatGeolocation(data.results[0]);
+			    retData = location.local + ", " + location.admin;
 			} else {
 				retData = 'Unknown';
 			}
@@ -196,6 +196,25 @@ function getCityState(zipcode, callback) {
 	});
 }
 
+function formatGeolocation(results) {
+	var location = {};
+	
+	_.each(results.address_components, function(component) {
+		if (_.contains(component.types, 'locality')) {
+			location.local = component.long_name;
+		} else if (_.contains(component.types, 'administrative_area_level_1')) {
+			location.admin = component.short_name;
+		} else if (_.contains(component.types, 'postal_code')) {
+			location.postal = component.long_name;
+		}
+	});
+	
+	location.lat = results.geometry.location.lat;
+	location.lng = results.geometry.location.lng;
+	
+	return location;
+}
+
 function doAjax(param) {
 	var success = false;
 	var retData;
@@ -211,7 +230,6 @@ function doAjax(param) {
 			retData = retVal.retData;
 		},
 		error: function (request, textStatus, errorThrown) {
-		   console.log(request.responseText);
 		   retData = undefined;
     		generateError('Unable to connect to disc|zump. Please <refresh> your page and try again.', 'Connection Error', false, ['/dashboard']);
 		},

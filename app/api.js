@@ -1,9 +1,10 @@
 var Error = require('./utils/error');
+var EventController = require('./controllers/event');
 var UserController = require('./controllers/user');
 var MessageController = require('./controllers/message');
 var DiscController = require('./controllers/disc');
 var ImageController = require('./controllers/imageCache');
-var DataItemController = require('./controllers/dataItem');
+var FeedbackController = require('./controllers/feedback');
 var DiscTemplateController = require('./controllers/discTemplate');
 var passport = require('passport');
 var logger = require('../config/logger.js').logger;
@@ -138,7 +139,7 @@ module.exports = function(app, passport, gridFs) {
     
     app.route('/feedback')
         .post(hasAccess, function(req,res) {
-        	     DataItemController.createFeedback(req.user, req.body.data, function(err, dataItem) {
+        	     FeedbackController.createFeedback(req.user, req.body.data, function(err, dataItem) {
         	          if (err)
                     return res.json(err);
                     
@@ -242,7 +243,7 @@ module.exports = function(app, passport, gridFs) {
                 if (err)
                     return res.json(err);
                 
-                user.addEvent('User authenticated password reset.');
+                user.addEvent(EventController.Types.AccountPasswordReset, 'User authenticated password reset.');
                 return res.json(user.accountToString());
             })
         });

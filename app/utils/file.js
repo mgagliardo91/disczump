@@ -11,9 +11,8 @@ module.exports = {
           });
           
         gm(readStream).autoOrient().identify({bufferStream: true}, function(err, identify) {
-            var filesize = identify.Filesize.match(/^(\d+)([A-Z]{2})$/);
-            console.log(identify);
-            if (filesize.length < 2 || filesize[2] != 'KB' || parseInt(filesize[1]) > 500) {
+            var filesize = identify.Filesize.match(/^([\d.]+)([A-Z]+)$/);
+            if (filesize && (filesize.length < 2 || filesize[2] != 'KB' || parseInt(filesize[1]) > 500)) {
                 this.quality(90);
             }
             

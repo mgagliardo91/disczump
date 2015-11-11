@@ -1,14 +1,18 @@
 var Error = require('../utils/error');
 var User = require('../models/user');
+var ArchiveController = require('./archive.js');
 var EventController = require('./event.js');
 var _ = require('underscore');
 var async = require('async');
+var GeoConfig = require('../../config/auth.js').geocode;
 var UserConfig = require('../../config/config.js').user.preferences;
 var CryptoConfig = require('../../config/auth.js').crypto;
 var FileUtil = require('../utils/file.js');
 var Socket = require('../../config/socket.js');
 var socketManager = require('../objects/socketCache.js');
 var crypto   = require('crypto');
+var geocoder = require("node-geocoder")('google', 'https', {apiKey : GeoConfig.apiKey, formatter: null});
+var geolib = require('geolib');
 
 module.exports = {
 	query: query,
@@ -30,7 +34,11 @@ module.exports = {
     deleteUser: deleteUser,
     deleteUserImage: deleteUserImage,
     postUserImage: postUserImage,
-    getUserFromHash: getUserFromHash
+    getUserFromHash: getUserFromHash,
+    
+    /* Admin Functions */
+    getAllUsers: getAllUsers,
+    getUsersByArea: getUsersByArea
 }
 
 function query(field, q, callback) {
@@ -123,20 +131,73 @@ function getUserInfo(userId, callback) {
 }
 
 function createUser(info, callback) {
-	query('local.email', info.email, function(err, users) {
-		if (err)
-			return callback(Error.createError(err, Error.internalError));
+	
+	if (!info.email)
+		return callback(Error.createError('A valid email is required to create an account.', Error.invalidDataError));
+	
+	if (!info.username || !checkUsername(info.username))
+		return callback(Error.createError('A valid username is required to create an account.', Error.invalidDataError));
 		
-		if (users && users.length) {
-			return callback(Error.createError('A user with that email already exists.', Error.invalidDataError));
+	if (!checkPassword(info.password)) 
+		return callback(Error.createError('A valid password is required to create an account.', Error.invalidDataError));
+	
+	
+	async.series([
+		function(cb) {
+			query('local.email', info.email, function(err, users) {
+				if (err)
+					return cb(Error.createError(err, Error.internalError));
+				
+				if (users && users.length) {
+					return cb(Error.createError('A user with that email already exists.', Error.invalidDataError));
+				}
+				
+				cb();
+			});
+		},
+		function(cb) {
+			query('local.username', info.username, function(err, users) {
+				if (err)
+					return cb(Error.createError(err, Error.internalError));
+				
+				if (users && users.length) {
+					return cb(Error.createError('A user with that username already exists.', Error.invalidDataError));
+				}
+				
+				cb();
+			});
+		},
+		function(cb) {
+			geocoder.geocode(info.zipCode, function(err, res) {
+				if (err)
+					return cb(Error.createError(err, Error.internalError));
+				
+				if (!res || !res.length)
+					return cb(Error.createError('Unable to locate zip code.', Error.invalidDataError));
+				
+				var loc = res[0];
+				info.location = {
+					lat : loc.latitude,
+				    lng : loc.longitude,
+				    city : loc.city,
+				    state : loc.administrativeLevels.level1long,
+				    stateAcr : loc.administrativeLevels.level1short,
+				    country : loc.country,
+				    countryCode : loc.countryCode
+				};
+			    
+				return cb();
+			});
 		}
-		
+	], function(err, results) {
+		if (err)
+			return callback(err);
+			
 		var user = new User({
 			local: info
 		});
 		
-		user.local.password = user.generateHash(user.local.password);
-		user.local.active = true;
+		user.local.password = user.generateHash(info.password);
 		
 		user.save(function(err) {
 			if (err)
@@ -144,7 +205,7 @@ function createUser(info, callback) {
 			
 			return callback(null, user);
 		});
-	});
+	})
 }
 
 function getUser(userId, callback) {
@@ -174,6 +235,7 @@ function updateAccessCount(userId, platform) {
 	User.findOne({_id: userId}, function(err, user) {
         if (!err && user) {
 			user.local.accessCount[platform] += 1;
+			user.local.lastAccess = Date.now();
 			user.save();
         }
     });
@@ -293,10 +355,6 @@ function updateAccount(userId, account, callback) {
 			user.local.lastName = account.lastName;
 		}
 		
-		if (_.has(account, 'zipCode') && /^\d{5}$/.test(account.zipCode)) {
-			user.local.zipCode = account.zipCode;
-		}
-		
 		if (_.has(account, 'pdgaNumber')) {
 			user.local.pdgaNumber = account.pdgaNumber;
 		}
@@ -319,6 +377,32 @@ function updateAccount(userId, account, callback) {
 				} else {
 					cb(Error.createError('The username does not meet the required criteria.', Error.invalidDataError));
 				}
+			},
+			function(cb) {
+				if (_.has(account, 'zipCode') && /^\d{5}$/.test(account.zipCode)) {
+					geocoder.geocode(account.zipCode, function(err, res) {
+						if (err)
+							return cb(Error.createError(err, Error.internalError));
+						
+						if (!res || !res.length)
+							return cb(Error.createError('Unable to locate zip code.', Error.invalidDataError));
+						
+						var loc = res[0];
+						user.local.zipCode = account.zipCode;
+						user.local.location = {
+							lat : loc.latitude,
+						    lng : loc.longitude,
+						    city : loc.city,
+						    state : loc.administrativeLevels.level1long,
+						    stateAcr : loc.administrativeLevels.level1short,
+						    country : loc.country,
+						    countryCode : loc.countryCode
+						};
+					    
+						return cb();
+					});
+				} else return cb();
+			
 			}],
 			function(err) {
 				if (err) {
@@ -380,6 +464,7 @@ function tryResetPassword(userId, currentPw, newPw, callback) {
 
 function deleteUser(userId, gfs, callback) {
 	deleteUserImage(userId, gfs, function(err, user) {
+		ArchiveController.archiveUser(user);
 		User.remove({_id: userId}, callback);
 	});
 }
@@ -492,5 +577,118 @@ function getUserFromHash(hashId, callback) {
 		}
 		
 		return callback(null, user);
+	});
+}
+
+/* Admin Functions */
+function getUsers(callback) {
+	User.find({}, function(err, users) {
+		if (err)
+            return callback(Error.createError(err, Error.internalError));
+           
+        return callback(null, users);
+	});
+}
+
+function getAllUsers(params, callback) {
+    var filters = [];
+    
+    if (!params.sort.length) {
+        params.sort.push(['username', 1])
+    }
+    
+    _.each(_.keys(params.filter), function(key) {
+        var filter = {};
+        filter[key] = new RegExp(params.filter[key], 'i');
+        filters.push(filter);
+    });
+    
+    User.count(filters.length ? {$and: filters} : {}, function(err, count) {
+        if (err)
+            return callback(Error.createError(err, Error.internalError));
+            
+        if (params.size > count) {
+            params.size = count;
+        }
+        
+        if (params.size * (params.page - 1) > count) {
+            params.page = Math.floor(count / params.size) + 1;
+        }
+        
+        User
+        .find(filters.length ? {$and: filters} : {})
+        .sort(params.sort)
+        .skip(params.size * (params.page - 1))
+        .limit(params.size)
+        .exec(function(err, users) {
+            if (err)
+                return callback(Error.createError(err, Error.internalError));
+                
+            return callback(null, {
+                users: users,
+                total: count,
+                page: params.page,
+                size: params.size
+            });
+        });
+    });
+
+}
+
+function getUsersByArea(zipCode, radius, callback) {
+	var center = {};
+	var userList = [];
+	var radiusMeters = radius * 1609.34;
+	
+	async.series([
+		function(cb) {
+			geocoder.geocode(zipCode, function(err, res) {
+				if (err)
+					return cb(Error.createError(err, Error.internalError));
+				
+				if (!res || !res.length)
+					return cb(Error.createError('Unable to locate zip code.', Error.invalidDataError));
+				
+				var loc = res[0];
+				
+				center.latitude = loc.latitude;
+				center.longitude = loc.longitude;
+			    
+				return cb();
+			});
+		},
+		function(cb) {
+			getUsers(function(err, users) {
+				if (err)
+					return cb(err);
+				
+				async.each(users, function(user, userCb) {
+					var loc = user.local.location;
+					
+					if (!loc.lat || !loc.lng) {
+						return userCb();
+					}
+					
+					var result = geolib.isPointInCircle(
+					    {latitude: loc.lat, longitude: loc.lng},
+					    center,
+					    radiusMeters
+					);
+					
+					if (result) {
+						userList.push(user);
+					}
+					
+					return userCb();
+				}, function(err) {
+					cb();
+				});
+			});
+		}
+	], function(err, results) {
+		if (err)
+			return callback(err);
+		
+		return callback(null, userList);
 	});
 }

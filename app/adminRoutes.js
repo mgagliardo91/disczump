@@ -2,6 +2,8 @@ var Passport;
 var Error = require('./utils/error');
 var AdminController = require('./controllers/admin');
 var StatController = require('./controllers/statistics');
+var UserController = require('./controllers/user');
+var DiscController = require('./controllers/disc');
 
 // app/oauthRoutes.js
 module.exports = function(app, passport) {
@@ -10,7 +12,86 @@ module.exports = function(app, passport) {
     
     app.route('/')
         .get(hasAccess, function(req, res) {
-             return res.render('internal/admin', {
+            
+            StatController.getStats(function(err, stats) {
+                if (err) {
+                    return res.render('notification', {
+                        layout: 'internal',
+                        notify: {
+                            pageHeader: err.error.type,
+                            header: err.error.type,
+                            strong: err.error.message,
+                            buttonIcon: 'fa-wrench',
+                            buttonText: 'Admin Console',
+                            buttonLink: '/admin'
+                        }
+                    });
+                }
+                
+                return res.render('internal/admin', {
+                    layout: 'internal',
+                    user : req.user,
+                    image : req.user.accountToString().image,
+                    stats: stats
+                });
+            });
+        });
+        
+    app.route('/users/:userId')
+        .get(hasAccess, function(req, res) {
+            UserController.getUser(req.params.userId, function(err, user) {
+                if (err) {
+                    return res.render('notification', {
+                        layout: 'internal',
+                        notify: {
+                            pageHeader: err.error.type,
+                            header: err.error.type,
+                            strong: err.error.message,
+                            buttonIcon: 'fa-wrench',
+                            buttonText: 'Admin Console',
+                            buttonLink: '/admin'
+                        }
+                    });
+                }
+                
+                return res.render('internal/user', {
+                    layout: 'internal',
+                    user : user,
+                    image : req.user.accountToString().image
+                });
+            });
+        });
+    
+    app.route('/users')
+        .get(hasAccess, function(req, res) {
+            return res.render('internal/users', {
+                layout: 'internal',
+                user : req.user,
+                image : req.user.accountToString().image
+            });
+        });
+        
+    app.route('/discs')
+        .get(hasAccess, function(req, res) {
+            return res.render('internal/discs', {
+                layout: 'internal',
+                user : req.user,
+                image : req.user.accountToString().image
+            });
+        });
+    
+    app.route('/events')
+        .get(hasAccess, function(req, res) {
+            return res.render('internal/events', {
+                layout: 'internal',
+                user : req.user,
+                image : req.user.accountToString().image
+            });
+        });
+        
+    app.route('/feedback')
+        .get(hasAccess, function(req, res) {
+            return res.render('internal/feedback', {
                 layout: 'internal',
                 user : req.user,
                 image : req.user.accountToString().image

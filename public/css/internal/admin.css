@@ -1,7 +1,8 @@
 .page {
-    max-width: 1000px;
     width: 100%;
     margin: auto;
+    padding-left: 400px;
+    overflow: auto;
 }
 
 .page-title {
@@ -9,6 +10,34 @@
     font-size: 2em;
     font-weight: bold;
     margin-bottom: 20px;
+}
+
+.module-container {
+    display: table;
+    margin: auto;
+}
+
+.module {
+    width: 500px;
+    max-width: 500px;
+    float: left;
+    border: 2px solid #888;
+    background-color: #eee;
+    border-radius: 5px;
+    margin: 20px;
+}
+
+.module-header {
+    font-size: 1.3em;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 1px solid #888;
+    padding: 10px 0px;
+}
+
+.module-body {
+    padding: 10px 0px;
+    background-color: #fff;
 }
 
 #stat-table {
@@ -19,4 +48,51 @@
     font-weight: bold;
     text-align: right;
     padding-right: 20px;
+}
+
+.search-wide {
+    width: 80%;
+    margin: 10px auto;
+}
+
+.search-wide > input {
+    padding: 5px 10px;
+    font-size: 0.8em;
+    color: #000;
+    background-color: #FFF;
+    font-weight: normal;
+    border: 1px solid #888;
+    border-radius: 5px;
+}
+
+#query-result {
+    font-size: 1em;
+    color: #888;
+    text-align: center;
+    padding: 10px;
+}
+
+#query-result > a {
+    text-decoration: none;
+}
+
+#object-table {
+    margin: auto;
+    width: 80%;
+}
+
+#object-table thead th {
+    font-weight: bold;
+}
+
+#object-table td, th {
+    padding: 5px 10px;
+}
+
+.pg-link {
+    cursor: pointer;
+}
+
+.pg-link:hover {
+    text-decoration: underline;
 }

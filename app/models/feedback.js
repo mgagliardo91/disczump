@@ -1,19 +1,18 @@
-// app/models/dataItem.js
+// app/models/feedback.js
 
 var mongoose = require('mongoose');
 var shortId = require('shortid');
 
-var dataItem = mongoose.Schema({
+var feedback = mongoose.Schema({
     _id: {
 	    type: String,
 	    unique: true,
 	    default: shortId.generate
 	},
-    data            : {type: String},
-    label           : {type: String},
+    feedback            : {type: String},
     userId          : {type: String},
     createDate      : {type: Date, default: Date.now}
     
 });
 
-module.exports = mongoose.model('DataItem', dataItem);
+module.exports = mongoose.model('Feedback', feedback);

@@ -24,9 +24,17 @@ var userSchema = mongoose.Schema({
         active       : {type: Boolean, default: false},
         passcode     : String,
         image        : String,
-        alias        : String,
         zipCode      : String,
         pdgaNumber   : String,
+        location     : {
+            lat      : String,
+            lng      : String,
+            city     : String,
+            state     : String,
+            stateAcr     : String,
+            country     : String,
+            countryCode     : String,
+        },
         accessCount     : {
             desktop : {type: Number, default: 0},
             mobile : {type: Number, default: 0},
@@ -72,12 +80,13 @@ userSchema.methods.totalAccessCount = function() {
     return this.local.accessCount.desktop + this.local.accessCount.mobile;
 }
 
-userSchema.methods.addEvent = function(event) {
+userSchema.methods.addEvent = function(type, event) {
     
     if (typeof(event) !== 'undefined') {
         this.internal.eventLog.push({
-           event: event,
-           occured: Date.now()
+           type: type,
+           message: event,
+           dateCreated: Date.now()
         });
         
         this.save();

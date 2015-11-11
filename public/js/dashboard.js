@@ -6184,14 +6184,14 @@ var ZumpLightbox = function(opt) {
 	
 	function scrollLeft(delta) {
 		var scroll = Math.min(-1 * $imageViewList.position().left, 50);
-		$imageViewList.stop().animate({left:'+=' + scroll}, 500, 'linear', function() {
+		$imageViewList.stop().animate({left:'+=' + scroll}, 300, 'linear', function() {
 			scrollLeft(delta);
 		});
 	}
 	
 	function scrollRight(delta) {
 		var scroll = Math.min(delta + $imageViewList.position().left, 50);
-		$imageViewList.stop().animate({left:'-=' + scroll}, 500, 'linear', function() {
+		$imageViewList.stop().animate({left:'-=' + scroll}, 300, 'linear', function() {
 			scrollRight(delta);
 		});
 	}

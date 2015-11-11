@@ -1,5 +1,3 @@
-// app/models/event.js
-
 var mongoose = require('mongoose');
 var shortId = require('shortid');
 
@@ -9,9 +7,10 @@ var eventSchema = mongoose.Schema({
 	    unique: true,
 	    default: shortId.generate
 	},
-    userId          : {type: String},
-    message           : {type: String},
-    createDate      : {type: Date, default: Date.now}
+    userId : {type: String},
+    type : {type: String},
+    message : {type: String},
+    createDate : {type: Date, default: Date.now}
     
 });
 

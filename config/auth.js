@@ -13,6 +13,9 @@ module.exports = {
         'clientSecret': 'xxNzkZ4m3rqU3-GypyaFaPQk',
         'refreshToken': '1/JMhx2AJhcZKVgShKyOSWy0qWfrh4iGKd7scJ02rQhuAMEudVrK5jSpoR30zcRFq6',
     },
+    'geocode' : {
+        'apiKey': 'AIzaSyB7kWqjg0Yei5bPUhwmKmvLVk6Zugh_-Fw'
+    },
     'crypto' : {
         'algorithm': 'aes-256-ctr',
         'password': 'dd34x7912Id'

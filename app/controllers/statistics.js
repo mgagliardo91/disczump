@@ -3,15 +3,47 @@ var User = require('../models/user.js');
 var Disc = require('../models/disc.js');
 var DiscTemplate = require('../models/discTemplate.js');
 var Event = require('../models/event.js');
+var socketManager = require('../objects/socketCache.js');
 var async = require('async');
 
 var Error = require('../utils/error.js');
 
 module.exports = {
+    getStats: getStats,
     getUserCount: getUserCount,
     getActiveUserCount: getActiveUserCount,
     getUserStats: getUserStats,
     getDiscStats: getDiscStats
+}
+
+function getStats(callback) {
+    var ret = {};
+    
+    async.parallel([
+        function(cb) {
+            getUserStats(function(err, stats) {
+                if (err)
+                    return cb(err);
+                
+                ret.user = stats;
+                cb();
+            });
+        },
+        function(cb) {
+            getDiscStats(function(err, stats) {
+                if (err)
+                    return cb(err);
+                
+                ret.disc = stats;
+                cb();
+            });
+        }
+    ], function(err, results) {
+        if (err)
+            return callback(err);
+        
+        return callback(null, ret);
+    });
 }
 
 function getUserStats(callback) {
@@ -37,7 +69,7 @@ function getUserStats(callback) {
             });
         }
     ], function(err, results) {
-        callback(null, {total: totalCount, active: activeCount});
+        callback(null, {total: totalCount, confirmed: activeCount, active: socketManager.getSocketCount()});
     });
 }
 

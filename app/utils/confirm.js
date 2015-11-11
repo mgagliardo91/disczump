@@ -1,5 +1,6 @@
 var TemporaryLink = require('../models/temporaryLink');
 var User = require('../models/user');
+var EventController = require('../controllers/event');
 var UserController = require('../controllers/user');
 var DiscController = require('../controllers/disc');
 var MessageController = require('../controllers/message');
@@ -74,7 +75,7 @@ module.exports = {
                     if (err)
     			        return callback(Error.createError(err, Error.internalError));
                     
-                    user.addEvent('Account deletion request initialized [' + confirm._id + '].');
+                    user.addEvent(EventController.Types.AccountDeleteInit, 'Account deletion request initialized [' + confirm._id + '].');
                     callback(null, user, confirmDeleteEmail(user, confirm));
                 });
             });

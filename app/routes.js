@@ -1,14 +1,12 @@
-var Disc = require('./controllers/disc');
+var DiscController = require('./controllers/disc');
 var UserController = require('./controllers/user');
+var AdminController = require('./controllers/admin');
 var EventController = require('./controllers/event');
-var DataItemController = require('./controllers/dataItem');
 var Recover = require('./utils/recover');
 var Confirm = require('./utils/confirm');
 var Mailer = require('./utils/mailer.js');
 var DevController = require('../app/controllers/development.js')
-var configRoutes = require('../config/config.js').routes;
 var development = require('../config/config.js').development;
-var fbGraph = require('fbgraph');
 var Socket = require('../config/socket.js');
 var socketManager = require('../app/objects/socketCache.js');
 
@@ -22,45 +20,6 @@ module.exports = function(app, passport, gridFs) {
            isIndex: true,
            reqScroll: req.device.isMobile
        });
-    });
-    
-    app.post('/beta', function(req, res) {
-        if (req.body.email) {
-            DataItemController.createDataItem(req.body.email, 'BetaEmail', function(err, email) {
-                if (err) {
-                    return res.render('notification', {
-                        isMobile: req.device.isMobile,
-                        notify: {
-                            pageHeader: err.error.type,
-                            header: err.error.type,
-                            strong: err.error.message,
-                            text: 'When we enter beta, you will receive instructions on how to create' + 
-                                ' your personalized account.',
-                            buttonIcon: 'fa-home',
-                            buttonText: 'Return Home',
-                            buttonLink: '/'
-                        }
-                       
-                    });
-                } else {
-                    return res.render('notification', {
-                        isMobile: req.device.isMobile,
-                        notify : {
-                            pageHeader: 'Join Successful',
-                            header: 'Join Successful',
-                            strong: 'Your email has been successfully submitted to disc|zump!',
-                            text: 'When we enter beta, you will receive instructions on how to create' + 
-                                ' your personalized account.',
-                            buttonIcon: 'fa-home',
-                            buttonText: 'Return Home',
-                            buttonLink: '/'
-                        }
-                    });
-                }
-            });
-        } else {
-            return res.redirect('/');
-        }
     });
 
     app.get('/dashboard', isLoggedIn, function(req, res) {
@@ -84,6 +43,7 @@ module.exports = function(app, passport, gridFs) {
             
             return res.render('dashboard', {
                 user : req.user,
+                admin: req.session.admin,
                 image : req.user.accountToString().image,
                 firstUse: firstUse,
                 isDashboard : true,
@@ -135,7 +95,7 @@ module.exports = function(app, passport, gridFs) {
                 req.flash('error', err.error.message);
                 return res.redirect('/login');
             } else {
-                EventController.createEvent(user._id, EventController.types.AccountDeletion);
+                EventController.addEvent(user._id, EventController.Types.AccountDeletion, 'Account has been deleted for user [' + user._id + '].');
                 return res.render('notification', {
                     isMobile: req.device.isMobile,
                     notify : {
@@ -162,7 +122,7 @@ module.exports = function(app, passport, gridFs) {
         var userId = undefined;
         if (req.user) userId = req.user._id;
     
-        Disc.getDisc(userId, req.params.discid, function(err, disc) {
+        DiscController.getDisc(userId, req.params.discid, function(err, disc) {
             if (err) {
                return res.render('notification', {
                     isMobile: req.device.isMobile,
@@ -565,7 +525,7 @@ module.exports = function(app, passport, gridFs) {
         user.facebook.id = undefined;
         user.facebook.image = undefined;
         user.save(function(err) {
-            EventController.createEvent(user._id, EventController.types.AccountUnlink);
+            user.addEvent(EventController.Types.AccountUnlink, 'The account has been unlinked from Facebook.');
             
             var socket = socketManager.getSocket(user._id);
                 
@@ -614,29 +574,42 @@ function doLogIn(req, res, next, err, user, info) {
             var redirect = req.session.redirect;
             req.session.redirect = undefined;
             
-            req.logIn(user, function(err) {
-              if (err) {
-                  req.flash('error', err);
-                  req.flash('redirect', redirect);
-                  return res.redirect('/login');
-              }
-              
-              UserController.updateAccessCount(req.user._id, (req.device.isMobile ? 'mobile' : 'desktop'));
-              
+            if (req.user && req.user._id == user._id) {
                 var socket = socketManager.getSocket(req.user._id);
                     
-                if (typeof(socket) !== 'undefined') {
-                    req.flash('infoTitle', undefined);
-                    req.flash('infoText', undefined);
-                    Socket.sendCallback(socket, 'FacebookLink', 'Your Facebook account is now linked.');
+                if (typeof(socket) !== 'undefined' && req.flash('infoTitle') == 'FacebookLink') {
+                  req.flash('infoTitle', undefined);
+                  req.flash('infoText', undefined);
+                  Socket.sendCallback(socket, 'FacebookLink', 'Your Facebook account is now linked.');
+                }
+                
+                if (redirect) {
+                  return res.redirect(redirect);
                 }
               
-              if (redirect) {
-                  return res.redirect(redirect);
-              }
-              
-              return res.redirect('/dashboard');
-            });
+                return res.redirect('/dashboard');
+            } else {
+                req.logIn(user, function(err) {
+                    if (err) {
+                      req.flash('error', err);
+                      req.flash('redirect', redirect);
+                      return res.redirect('/login');
+                    }
+                    
+                    UserController.updateAccessCount(req.user._id, (req.device.isMobile ? 'mobile' : 'desktop'));
+                    
+                     AdminController.validateAdmin(req.user._id, function(err, admin) {
+                        
+                            req.session.admin = (!err && admin) ? admin : undefined;
+                        
+                        if (redirect) {
+                          return res.redirect(redirect);
+                        }
+                        
+                        return res.redirect('/dashboard');
+                    });
+                });
+            }
         }
     }
 }

@@ -171,6 +171,83 @@
 	padding-bottom: 0px !important;
 }
 
+.page-view {
+    margin-left: 350px;
+}
+
+.sidebar {
+    position: fixed;
+    top: 50px;
+    bottom: 0;
+    left: 0;
+    z-index: 150;
+    display: block;
+    padding: 0px;
+    background-color: rgb(238, 238, 238);
+    border-right: 1px solid #000;
+    width: 350px;
+}
+
+.nav-sidebar {
+    list-style: none;
+    padding-left: 0px;
+    font-weight: bold;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    height: 100%;
+}
+
+.nav-sidebar li {
+    padding: 10px 20px;
+    margin-bottom: 5px;
+    color: #000;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-icon {
+    width: 40px;
+    text-align: center;
+}
+
+.nav-sidebar li.sidebar-select a {
+	color: #000;
+	width: 100%;
+}
+
+.nav-sidebar li.sidebar-select:hover {
+    cursor: pointer;
+    background-color: rgba(0, 142, 221, 0.25);
+}
+
+.nav-sidebar li.sidebar-select.active {
+    background-color: rgb(0, 142, 221);
+    cursor: default;
+    color: #fff;
+}
+
+.sidebar-section-header {
+    font-size: 12px;
+    color: rgb(130, 130, 130);
+    padding-top: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-section-header span {
+    float: left;
+    padding: 0px 10px;
+}
+
+.sidebar-section-header hr {
+    border: 1px solid rgb(150, 150, 150);
+    border-width: 1px 0 0 0;
+    margin: 6px 10px;
+}
+
 .image-link > img {
 	width: 40px;
 	max-width: 40px !important;
@@ -500,4 +577,24 @@ a.btn-facebook:hover {
 
 .dz-color {
     color: #008EDD;
+}
+
+@media (min-width: 1151px) and (max-width: 1500px) {
+    .sidebar {
+        width: 250px;
+    }
+
+    .page-view {
+        margin-left: 250px;
+    }
+}
+
+@media (max-width: 1150px) {
+    .sidebar {
+        width: 161px;
+    }
+
+    .page-view {
+        margin-left: 161px;
+    }
 }

@@ -1,5 +1,6 @@
 var TemporaryLink = require('../models/temporaryLink');
 var User = require('../models/user');
+var EventController = require('../controllers/event');
 var UserController = require('../controllers/user');
 var crypto              = require('crypto');
 var Handlebars = require('handlebars');
@@ -30,7 +31,7 @@ module.exports = {
                     if (err)
     			        return callback(Error.createError(err, Error.internalError));
                     
-                    user.addEvent('Password recovery initialized [' + recover._id + '].');
+                    user.addEvent(EventController.Types.AccountPasswordInit, 'Password recovery initialized [' + recover._id + '].');
                     callback(null, generateRecoveryEmail(user, recover));
                 });
             });
@@ -65,7 +66,7 @@ module.exports = {
                    if (err)
 			            return callback(Error.createError(err, Error.internalError));
                     
-                    user.addEvent('Password recovery used to reset password [' + recover._id + '].');
+                    user.addEvent(EventController.Types.AccountPasswordReset, 'Password recovery used to reset password [' + recover._id + '].');
                     callback(null, user);
                 });
             });

@@ -59,7 +59,7 @@ require('./app/adminRoutes.js')(adminRouter, passport);
 app.use('/admin', adminRouter);
 
 var adminApiRouter = express.Router();
-require('./app/adminApi.js')(adminApiRouter);
+require('./app/adminApi.js')(adminApiRouter, passport);
 app.use('/admin/api', adminApiRouter);
 
 var mainRouter = express.Router();

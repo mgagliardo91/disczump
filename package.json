@@ -49,6 +49,8 @@
     "mocha": "~2.3.3",
     "cron": "~1.0.9",
     "moment":"~2.10.6",
-    "express-subdomain":"~1.0.4"
+    "express-subdomain":"~1.0.4",
+    "node-geocoder": "~3.4.1",
+    "geolib":"~2.0.18"
   }
 }

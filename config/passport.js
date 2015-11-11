@@ -111,8 +111,8 @@ module.exports = function(passport) {
                             if (err)
                                 throw err;
                             
-                            EventController.createEvent(user._id, EventController.types.AccountLink);
-                            req.flash('infoTitle', 'Link Successful');
+                            user.addEvent(EventController.Types.AccountLink, 'The account has been successfully linked to Facebook.');
+                            req.flash('infoTitle', 'FacebookLink');
                             req.flash('infoText', 'You can now login using Facebook!');
                             return done(null, user);
                         });
@@ -130,73 +130,26 @@ module.exports = function(passport) {
     },
     function(req, username, password, done) {
         process.nextTick(function() {
-        
-        User.findOne({ 'local.email' :  username }, function(err, user) {
-            if (err)
-                return done(err);
-
-            if (user) {
-                return done(null, false, req.flash('error', 'Email already in use.'));
-            } else {
+            UserController.createUser({
+                email: username,
+                password: password,
+                zipCode: req.body.zipCode,
+                username:  req.body.username,
+                firstName: req.body.firstName ? req.body.firstName : undefined,
+                lastName: req.body.lastName ? req.body.lastName : undefined,
+                pdgaNumber: req.body.pdgaNumber ? req.body.pdgaNumber : undefined,
+                passcode: req.body.passcode ? req.body.passcode : undefined
+            }, function(err, user) {
+                if (err)
+                    return done(null, false, req.flash('error', err.error.message));
                 
-                if (!UserController.checkPassword(password)) {
-                    return done(null, false, req.flash('error', 'Password must be 6 or more characters.'));
-                }
+                logger.info('Created new user %s.', user.local.email);
+                user.addEvent(EventController.types.AccountCreation, 'Account created.');
+                EventController.addEvent(user._id, EventController.types.AccountCreation, 'New account created for user [' + user._id + '].');
                 
-                if (!_.has(req.body, 'zipCode') || !/^\d{5}$/.test(req.body.zipCode)) {
-                    return done(null, false, req.flash('error', 'A valid zip code is required to create an account.'));
-                }
-                
-                if (!_.has(req.body, 'username') || !UserController.checkUsername(req.body.username)) {
-                    return done(null, false, req.flash('error', 'A valid username is required to create an account.'));
-                }
-
-                UserController.query('local.username', req.body.username, function(err, users) {
-                    if (err || users.length > 0) {
-                        return done(null, false, req.flash('error', 'The username [' + req.body.username + '] is already in use.'));
-                    }
-                    
-                    var newUser  = new User();
-                
-                    newUser.local.email    = username;
-                    newUser.local.password = newUser.generateHash(password);
-                    newUser.local.zipCode  = req.body.zipCode;
-                    newUser.local.username = req.body.username;
-                    
-                    
-                    if (typeof(req.body.firstName) !== 'undefined') {
-                        newUser.local.firstName = req.body.firstName;
-                    }
-                    
-                    if (typeof(req.body.lastName) !== 'undefined') {
-                        newUser.local.lastName = req.body.lastName;
-                    }
-                    
-                    if (typeof(req.body.pdgaNumber) !== 'undefined') {
-                        newUser.local.pdgaNumber = req.body.pdgaNumber;
-                    }
-                    
-                    if (req.body.passcode) {
-                        newUser.local.passcode = req.body.passcode;
-                    }
-    
-                    newUser.save(function(err) {
-                        if (err)
-                            throw err;
-                            
-                        logger.info('Created new user %s.', newUser.local.email);
-                        newUser.addEvent('Account created.');
-                        EventController.createEvent(newUser._id, EventController.types.AccountCreation);
-                        
-                        return done(null, newUser);
-                    });
-                });
-            }
-
-        });    
-
+                return done(null, user);
+            });
         });
-
     }));
     
     passport.use('local-login', new LocalStrategy({

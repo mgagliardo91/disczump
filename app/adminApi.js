@@ -1,29 +1,92 @@
 var Error = require('./utils/error');
+var _ = require('underscore');
 var AdminController = require('./controllers/admin');
-var StatController = require('./controllers/statistics');
+var DiscController = require('./controllers/disc');
+var UserController = require('./controllers/user');
+var EventController = require('./controllers/event');
+var FeedbackController = require('./controllers/feedback');
+var Passport;
 
 // app/oauthRoutes.js
-module.exports = function(app) {
-    
-    app.route('/statistics/user')
+module.exports = function(app, passport) {
+        
+    app.route('/user')
         .get(hasAccess, function(req, res) {
-             StatController.getUserStats(function(err, stats) {
+            UserController.getAllUsers(parsePagination(req.query), function(err, pager) {
                 if (err)
                     return res.json(err);
                 
-                return res.json(stats);
-             });
+                return res.json(pager);
+            });
         });
-    
-    app.route('/statistics/disc')
+        
+     app.route('/user/geo')
         .get(hasAccess, function(req, res) {
-             StatController.getDiscStats(function(err, stats) {
+            if (!req.query.loc || !req.query.radius)
+                return res.json(Error.createError('Invalid location or radius.', Error.invalidDataError));
+            
+            UserController.getUsersByArea(req.query.loc, req.query.radius, function(err, users) {
                 if (err)
                     return res.json(err);
                 
-                return res.json(stats);
-             });
+                return res.json(users);
+            });
         });
+        
+    app.route('/disc')
+        .get(hasAccess, function(req, res) {
+            DiscController.getAllDiscs(parsePagination(req.query), function(err, pager) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json(pager);
+            });
+        });
+        
+    app.route('/event')
+        .get(hasAccess, function(req, res) {
+            EventController.getAllEvents(parsePagination(req.query), function(err, pager) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json(pager);
+            });
+        });
+        
+    app.route('/feedback')
+        .get(hasAccess, function(req, res) {
+            FeedbackController.getAllFeedback(parsePagination(req.query), function(err, pager) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json(pager);
+            });
+        });
+}
+
+function parsePagination(query) {
+    var parsed;
+    var i = 0;
+    var sort = [], filter = {};
+    
+    var size = (parsed = parseInt(query.size)) && parsed > 0 ? parsed : 50;
+    var page = (parsed = parseInt(query.page)) && parsed > 0 ? parsed : 1;
+    
+    if (query.sort) {
+        for (i = 0; i < query.sort.length; i++) {
+            var sorter = query.sort[i].split(',');
+            sort.push([sorter[0], parseInt(sorter[1])]);
+        }
+    }
+    
+    if (query.filter && _.isArray(query.filter)) {
+        for (i = 0; i < query.filter.length; i++) {
+            var filterOpt = query.filter[i].split(',');
+            filter[filterOpt[0]] = filterOpt[1];
+        }
+    }
+    
+    return {size: size, page: page, sort: sort, filter: filter};
 }
 
 function hasAccess(req, res, next) {

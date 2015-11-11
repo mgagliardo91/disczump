@@ -1,0 +1,180 @@
+<!doctype html>
+<html>
+{{#section 'head'}}
+<head>
+    <title>disc|zump - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.24.3/css/theme.default.min.css">
+    <link rel="stylesheet" href="/static/css/internal/admin.css">
+</head>
+{{/section}}
+<body>
+    <div class="sidebar">
+        <ul class="nav-sidebar no-select" id="sidebar-home">
+            <h5 class="sidebar-section-header"><span>Actions</span><hr /><div class="clearfix"></div></h5>
+            <li class="sidebar-select nav" href="/admin"><span class="float-left fa-tools"><i class="fa fa-users fa-sidebar-icon"></i></span><span class="sidebar-select-text">Admin Home</span></li>
+            <h5 class="sidebar-section-header"><span>Models</span><hr /><div class="clearfix"></div></h5>
+            <li class="sidebar-select nav" href="/admin/users"><span class="float-left fa-tools"><i class="fa fa-users fa-sidebar-icon"></i></span><span class="sidebar-select-text">Users</span></li>
+            <li class="sidebar-select nav" href="/admin/discs"><span class="float-left fa-tools"><i class="fa fa-circle-o fa-sidebar-icon"></i></span><span class="sidebar-select-text">Discs</span></li>
+            <li class="sidebar-select nav" href="/admin/events"><span class="float-left fa-tools"><i class="fa fa-file-zip-o fa-sidebar-icon"></i></span><span class="sidebar-select-text">Events</span></li>
+            <li class="sidebar-select nav" href="/admin/feedback"><span class="float-left fa-tools"><i class="fa fa-comment fa-sidebar-icon"></i></span><span class="sidebar-select-text">Feedback</span></li>
+        </ul>
+    </div>
+    <div class="page-view">
+        <div class="page-title">User View</div>
+         <table>
+            <tr>
+                <td class="stat-label">
+                    ID:
+                </td>
+                <td class="stat-value">
+                    {{user._id}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Username:
+                </td>
+                <td class="stat-value">
+                    {{user.local.username}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    First Name:
+                </td>
+                <td class="stat-value">
+                    {{user.local.firstName}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Last Name:
+                </td>
+                <td class="stat-value">
+                    {{user.local.lastName}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Email:
+                </td>
+                <td class="stat-value">
+                    {{user.local.email}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Zip Code:
+                </td>
+                <td class="stat-value">
+                    {{user.local.zipCode}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Location:
+                </td>
+                <td class="stat-value">
+                    {{user.local.location.city}}, {{user.local.location.stateAcr}}, {{user.local.location.countryCode}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Geo Cordinates:
+                </td>
+                <td class="stat-value">
+                    {{user.local.location.lat}}, {{user.local.location.lng}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Zip Code:
+                </td>
+                <td class="stat-value">
+                    {{user.local.zipCode}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    PDGA Number:
+                </td>
+                <td class="stat-value">
+                    {{user.local.pdgaNumber}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Active:
+                </td>
+                <td class="stat-value">
+                    {{#if user.local.active}}True{{else}}False{{/if}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Date Joined:
+                </td>
+                <td class="stat-value">
+                    {{formatDate user.local.dateJoined "long"}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Last Access:
+                </td>
+                <td class="stat-value">
+                    {{formatDate user.local.lastAccess "long"}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Desktop Access:
+                </td>
+                <td class="stat-value">
+                    {{user.local.accessCount.desktop}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Mobile Access:
+                </td>
+                <td class="stat-value">
+                    {{user.local.accessCount.mobile}}
+                </td>
+            </tr>
+            <tr>
+                <td class="stat-label">
+                    Facebook Link:
+                </td>
+                <td class="stat-value">
+                    {{#if user.facebook.id}}True{{else}}False{{/if}}
+                </td>
+            </tr>
+        </table>
+        <div>Events</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Event Date</th>
+                    <th>Event</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each user.internal.eventLog}}
+                <tr>
+                    <td>
+                        {{formatDate this.occured "long"}}
+                    </td>
+                    <td>
+                        {{this.event}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.24.3/js/jquery.tablesorter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.24.3/js/jquery.tablesorter.widgets.min.js"></script>
+    <script src="/static/js/internal/object-table.js"></script>
+</body>
+</html>

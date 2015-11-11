@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+{{#section 'head'}}
+<head>
+    <title>disc|zump - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.24.3/css/theme.default.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.24.3/css/jquery.tablesorter.pager.min.css">
+    <link rel="stylesheet" href="/static/css/internal/admin.css">
+</head>
+{{/section}}
+<body>
+    <div class="sidebar">
+        <ul class="nav-sidebar no-select" id="sidebar-home">
+            <h5 class="sidebar-section-header"><span>Actions</span><hr /><div class="clearfix"></div></h5>
+            <li class="sidebar-select nav" href="/admin"><span class="float-left fa-tools"><i class="fa fa-users fa-sidebar-icon"></i></span><span class="sidebar-select-text">Admin Home</span></li>
+            <h5 class="sidebar-section-header"><span>Models</span><hr /><div class="clearfix"></div></h5>
+            <li class="sidebar-select active nav" href="/admin/users"><span class="float-left fa-tools"><i class="fa fa-users fa-sidebar-icon"></i></span><span class="sidebar-select-text">Users</span></li>
+            <li class="sidebar-select nav" href="/admin/discs"><span class="float-left fa-tools"><i class="fa fa-circle-o fa-sidebar-icon"></i></span><span class="sidebar-select-text">Discs</span></li>
+            <li class="sidebar-select nav" href="/admin/events"><span class="float-left fa-tools"><i class="fa fa-file-zip-o fa-sidebar-icon"></i></span><span class="sidebar-select-text">Events</span></li>
+            <li class="sidebar-select nav" href="/admin/feedback"><span class="float-left fa-tools"><i class="fa fa-comment fa-sidebar-icon"></i></span><span class="sidebar-select-text">Feedback</span></li>
+        </ul>
+    </div>
+    <div class="page-view">
+        <div class="page-title">Users</div>
+        <div class="pager"> 
+            <img src="http://mottie.github.com/tablesorter/addons/pager/icons/first.png" class="first"/> 
+            <img src="http://mottie.github.com/tablesorter/addons/pager/icons/prev.png" class="prev"/> 
+            <span class="pagedisplay"></span>
+            <img src="http://mottie.github.com/tablesorter/addons/pager/icons/next.png" class="next"/> 
+            <img src="http://mottie.github.com/tablesorter/addons/pager/icons/last.png" class="last"/> 
+            <select class="pagesize" title="Select page size"> 
+                <option value="25">25</option> 
+                <option value="50">50</option> 
+                <option value="100">100</option> 
+                <option value="200">200</option> 
+                <option value="all">All Rows</option>
+            </select>
+            <select class="gotoPage" title="Select page number"></select>
+        </div>
+        <table id="object-table">
+            <thead>
+                <tr>
+                    <th name="_id">ID</th>
+                    <th name="local.username" initSort="true">Username</th>
+                    <th name="local.firstName">First Name</th>
+                    <th name="local.lastName">Last Name</th>
+                    <th name="local.email">Email</th>
+                    <th name="local.dateJoined">Date Joined</th>
+                    <th name="local.lastAccess">Last Access</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.24.3/js/jquery.tablesorter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.24.3/js/jquery.tablesorter.widgets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.24.3/js/extras/jquery.tablesorter.pager.min.js"></script>
+    <script src="/static/js/internal/users.js"></script>
+</body>
+</html>
