@@ -9,6 +9,7 @@ var DevController = require('../app/controllers/development.js')
 var development = require('../config/config.js').development;
 var Socket = require('../config/socket.js');
 var socketManager = require('../app/objects/socketCache.js');
+var localConfig = require('../config/localConfig.js');
 
 // app/routes.js
 module.exports = function(app, passport, gridFs) {
@@ -35,7 +36,7 @@ module.exports = function(app, passport, gridFs) {
             var firstUse = false;
             
             if (typeof req.user.local.accessCount !== 'undefined') {
-                firstUse = req.user.local.accessCount.desktop < 1;
+                firstUse = req.user.local.accessCount.desktop <= 1;
                 if (firstUse) {
                     UserController.updateAccessCount(req.user._id, 'desktop');
                 }
@@ -47,6 +48,7 @@ module.exports = function(app, passport, gridFs) {
                 image : req.user.accountToString().image,
                 firstUse: firstUse,
                 isDashboard : true,
+                serverURL : localConfig.serverURL,
                 isLinked : typeof(req.user.facebook.id) !== 'undefined',
                 info: {
                     title: req.flash('infoTitle'),
@@ -158,6 +160,7 @@ module.exports = function(app, passport, gridFs) {
                 // } else {
                     return res.render('discview', {
                         disc: disc,
+                        serverURL : localConfig.serverURL,
                         primaryImage: disc.getImage(),
                         user: user.accountToString(),
                         isPublicPage: true,

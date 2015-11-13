@@ -8,19 +8,19 @@
     {{#if disc.visible}}
     <meta property="og:site_name"           content="disc|zump">
     <meta property="og:title"               content="{{disc.brand}} {{disc.name}}" />
-    <meta property="og:url"                 content="https://disczumpserver-mgagliardo.c9.io/disc/{{disc._id}}" />
+    <meta property="og:url"                 content="{{serverURL}}/disc/{{disc._id}}" />
     <meta property="og:type"                content="product" />
     <meta property="og:description"         content="Condition: {{#if disc.condition}}{{disc.condition}}/10{{else}}<No Entry>{{/if}} | Material: {{#if disc.material}}{{disc.material}}{{else}}<No Entry>{{/if}} | Weight: {{#if disc.weight}}{{disc.weight}}g{{else}}<No Entry>{{/if}}" />
     <meta property="fb:app_id"              content="1433417853616595" />
     {{#if primaryImage}}
-    <meta property="og:image"               content="https://disczumpserver-mgagliardo.c9.io/files/{{primaryImage.fileId}}/600" />
+    <meta property="og:image"               content="{{serverURL}}/files/{{primaryImage.fileId}}/600" />
     {{else}}
-    <meta property="og:image"               content="https://disczumpserver-mgagliardo.c9.io/static/logo/logo_small.svg" />
+    <meta property="og:image"               content="{{serverURL}}/static/logo/logo_small.svg" />
     {{/if}}
     {{/if}}
 </head>
 {{/section}}
-<body>
+<body url="{{serverURL}}">
     <div class="page public-disc-view" id="{{disc._id}}">
         <div class="row">
             <div class="page-btn-container">

@@ -22,6 +22,7 @@ var accountDropzone;
 var cropLock;
 var serverCallback = {};
 var connectTries = 0;
+var serverURL = '/';
 
 // Library Instances
 var myZumpColorPicker;
@@ -50,7 +51,7 @@ $(document).ready(function(){
    	/* Init Variables */
     $searchResults = $('#sidebar-search');
 	$sidebarFilter = $('#sidebar-filter');
-    $searchBar = $('#search-all');
+    $searchBar = $('#search-dashboard');
 	$sidebar = $('.sidebar');
 	$loading = $('#loading-screen');
 	$sprite = $('.loader-sprite');
@@ -61,6 +62,8 @@ $(document).ready(function(){
 			appId: dzID,
 		});
 	}); 
+   	
+   	serverURL = $('body').attr('url');
    	
    	setupFrameworkListeners();
     
@@ -1207,6 +1210,7 @@ function zumpLibraryInit() {
     });
 	
 	myMessenger = new ZumpMessenger({
+		sidebarInbox: '#sidebar-inbox',
 		threadTitle: '#thread-title',
 		inboxList: '#inbox-list',
 		addMessageContainer: '#add-message-container',
@@ -1220,7 +1224,8 @@ function zumpLibraryInit() {
 		activateThread: function() {
 			changePage('#pg-inbox');
 		},
-		deleteThread: '#delete-thread'
+		deleteThread: '#delete-thread',
+		sidebarLoading: '.sidebar-loading'
 	});
 	
 	accountValidation = new ZumpValidate({
@@ -1512,7 +1517,7 @@ function generateModal(opt) {
             '<div class="modal-content">' + 
               '<div class="modal-header">' + headerText +
               	'<div class="modal-header-logo">' +
-              		'<img class="fit-parent" src="https://disczumpserver-mgagliardo.c9.io/static/logo/logo_high_nobg.svg">' +
+              		'<img class="fit-parent" src="' + serverURL +'/static/logo/logo_high_nobg.svg">' +
               	'</div>' +
               	'<div class="clearfix"></div>' +
               '</div>' + 
@@ -2352,8 +2357,8 @@ var ZumpLink = function(opt) {
         }
         
         $linker = $('<div class="link-container remove-on-close"></div>');
-        $linker.append('<button class="link-btn" type="button" href="http://www.disczump.com/' + path + '"><span><i class="fa fa-retweet"></i></span></button>' +
-            '<input class="link-input" type="text" value="http://www.disczump.com/' + path + '"/>');
+        $linker.append('<button class="link-btn" type="button" href="' + serverURL + '/' + path + '"><span><i class="fa fa-retweet"></i></span></button>' +
+            '<input class="link-input" type="text" value="' + serverURL + '/' + path + '"/>');
         return $linker;
     }
     
@@ -3220,6 +3225,7 @@ var ZumpDashboard = function(opt) {
 	var $paginateNav;
 	var $galleryMenu;
 	var $dashboardViewArea;
+	var $sidebarLoading;
 
 	//----------------------\
     // Prototype Functions
@@ -3242,6 +3248,7 @@ var ZumpDashboard = function(opt) {
 		$paginateNav = $('#paginate-nav');
 		$imageArea = $('#view-disc-image-container');
 		$dashboardViewArea = $('#dashboard-view-area');
+		$sidebarLoading = $('.sidebar-loading');
 		onUpdateDisc = opt.onUpdateDisc;
 		onDeleteDisc = opt.onDeleteDisc;
 		onDisplayProfile = opt.onDisplayProfile;
@@ -3466,6 +3473,12 @@ var ZumpDashboard = function(opt) {
 			var field = _.findWhere(searchFields, {property: prop});
 			updateSearchResults(field.property, field.text, list);
 		});
+		
+		if (!$searchResults.children().length && search.length) {
+			$searchResults.append('<li class="sidebar-item-none"><div>No Results</div></li>');
+		}
+		
+		$searchPanel.find($sidebarLoading).css('display', 'none');
 	}
 	
 	/*
@@ -3613,6 +3626,7 @@ var ZumpDashboard = function(opt) {
 	    
 	    $searchBar.on('keyup', function() {
 			delay(function() {
+				$searchPanel.find($sidebarLoading).css('display', 'table');
 				doSearch();
 			}, 100 );
 	    }).click(function(e) {
@@ -4571,16 +4585,16 @@ var ZumpTutorial = function(opt) {
 					var id = getCache().animIndex;
 					
 					if (id == 0) {
-						$('#search-all').val('d').trigger('keyup');
+						$('#search-dashboard').val('d').trigger('keyup');
 						id++;
 					} else if (id == 1) {
-						$('#search-all').val('dr').trigger('keyup');
+						$('#search-dashboard').val('dr').trigger('keyup');
 						id++;
 					} else if (id == 2) {
-						$('#search-all').val('dri').trigger('keyup');
+						$('#search-dashboard').val('dri').trigger('keyup');
 						id++;
 					} else if (id == 3) {
-						$('#search-all').val('').trigger('keyup');
+						$('#search-dashboard').val('').trigger('keyup');
 						id = 0;
 					}
 					
@@ -4589,7 +4603,7 @@ var ZumpTutorial = function(opt) {
 			},
 			close: function() {
 				clearInterval(getCache().animId);
-				$('#search-all').val('').trigger('keyup');
+				$('#search-dashboard').val('').trigger('keyup');
 				toggleSidebar('#sidebar-search');
 			}
 		},
@@ -4818,6 +4832,7 @@ var ZumpSocial = function(opt) {
     //----------------------\
     // jQuery Objects
     //----------------------/
+    var $sidebarProfile;
     var $searchProfile;
     var $profileList;
     var $searchContainer;
@@ -4832,13 +4847,14 @@ var ZumpSocial = function(opt) {
     var $profileViewDashboard;
     var $profileViewAll;
     var $profilSendMessage;
-    var $profileLoading;
+    var $sidebarLoading;
     var $discRow;
     
     //----------------------\
     // Prototype Functions
     //----------------------/
     this.init = function(opt) {
+    	$sidebarProfile = $('#sidebar-profile');
     	$searchProfile = $('#search-profile');
     	$profileList = $('#profile-list');
 		$searchContainer = $('#profile-search-container');
@@ -4853,7 +4869,7 @@ var ZumpSocial = function(opt) {
 		$profileViewDashboard = $('#profile-view-dashboard');
 		$profileViewAll = $('#show-dashboard');
 		$profilSendMessage = $('#profile-send-message');
-		$profileLoading = $('#profile-loading');
+		$sidebarLoading = $('.sidebar-loading');
 		$discRow = $('.public-disc-row');
     	
     	setupListeners();
@@ -4899,7 +4915,7 @@ var ZumpSocial = function(opt) {
     	$searchProfile.on('keyup', function() {
     		var query = $searchProfile.val();
     		if (query.length) {
-    			$profileLoading.css('display', 'table');
+    			$sidebarProfile.find($sidebarLoading).css('display', 'table');
     			delay(function() {
 					getProfiles(query, function(success, queryResult) {
 						clearProfileList();
@@ -4910,9 +4926,9 @@ var ZumpSocial = function(opt) {
 							if (queryResult.results.length) {
 								_.each(queryResult.results, appendProfileItem);
 							} else {
-								appendNoResults();
+								$profileList.append('<li class="sidebar-item-none"><div>No Results</div></li>');
 							}
-							$profileLoading.css('display', 'none');
+							$sidebarProfile.find($sidebarLoading).css('display', 'none');
 						} else {
 							handleError(queryResult);
 						}
@@ -4920,7 +4936,7 @@ var ZumpSocial = function(opt) {
 				}, 500 );
     		} else {
     			clearProfileList();
-    			$profileLoading.css('display', 'none');
+    			$sidebarProfile.find($sidebarLoading).css('display', 'none');
     		}
 			
     	});
@@ -5029,12 +5045,6 @@ var ZumpSocial = function(opt) {
     	$profileDiscCount.text('0');
     }
     
-    var appendNoResults = function() {
-    	$profileList.append('<li id="profile-item-none">' +
-    							'<div>No Results</div>' + 
-    						'</li>');
-    }
-    
     var appendProfileItem = function(user) {
     	var pdga = getSafe(user.pdgaNumber, '');
     	var firstName = getSafe(user.firstName, '');
@@ -5131,6 +5141,7 @@ var ZumpMessenger = function(opt) {
     // JQuery Objects
     //----------------------/
     
+    var $sidebarInbox;
     var $inboxList;
     var $messageContainer;
     var $loadMessages;
@@ -5142,6 +5153,7 @@ var ZumpMessenger = function(opt) {
     var $sendOnEnter;
     var $searchInbox;
     var $deleteThread;
+    var $sidebarLoading;
     
     //----------------------\
     // Prototype Functions
@@ -5152,18 +5164,20 @@ var ZumpMessenger = function(opt) {
     */
 	this.init = function(opt) {
 		
-			$messageCount = $(opt.messageCount);
-			$threadTitle = $(opt.threadTitle);
-			activateThread = opt.activateThread;
-			$addMessageContainer = $(opt.addMessageContainer);
-			$messageContainer = $(opt.messageContainer);
-			$loadMessages = $(opt.loadMessages);
-			$sendMessageBtn = $(opt.sendMessageBtn);
-			$newMessage = $(opt.newMessage);
-			$sendOnEnter = $(opt.sendOnEnter);
-			$inboxList = $(opt.inboxList);
-			$searchInbox = $(opt.searchInbox);
-			$deleteThread = $(opt.deleteThread);
+		$sidebarInbox = $(opt.sidebarInbox);
+		$messageCount = $(opt.messageCount);
+		$threadTitle = $(opt.threadTitle);
+		activateThread = opt.activateThread;
+		$addMessageContainer = $(opt.addMessageContainer);
+		$messageContainer = $(opt.messageContainer);
+		$loadMessages = $(opt.loadMessages);
+		$sendMessageBtn = $(opt.sendMessageBtn);
+		$newMessage = $(opt.newMessage);
+		$sendOnEnter = $(opt.sendOnEnter);
+		$inboxList = $(opt.inboxList);
+		$searchInbox = $(opt.searchInbox);
+		$deleteThread = $(opt.deleteThread);
+		$sidebarLoading = $(opt.sidebarLoading);
 		
 		initializeInboxList();
 		setupListeners();
@@ -5251,6 +5265,7 @@ var ZumpMessenger = function(opt) {
     var setupListeners = function() {
     	
     	$searchInbox.keyup(function(e) {
+    		$sidebarInbox.find($sidebarLoading).css('display', 'table');
     		doSearch($searchInbox.val());
     	});
     	
@@ -5317,14 +5332,21 @@ var ZumpMessenger = function(opt) {
     
     var doSearch = function(val) {
     	$('.thread-container').hide();
+    	$inboxList.find('.sidebar-item-none').remove();
     	
     	var matchList = _.filter(_.values(threadCache), function(threadCacheObj) {
     		return threadCacheObj.thread.threadTag.toLowerCase().indexOf(val.toLowerCase()) > -1;
     	});
     	
-    	_.each(matchList, function(threadCacheObj) {
-    		$('li.thread-container[threadId="' + threadCacheObj.thread.threadId + '"]').show();
-    	});
+    	if (matchList.length) {
+    		_.each(matchList, function(threadCacheObj) {
+	    		$('li.thread-container[threadId="' + threadCacheObj.thread.threadId + '"]').show();
+	    	});
+    	} else if (val.length) {
+    		$inboxList.append('<li class="sidebar-item-none"><div>No Results</div></li>');
+    	}
+    	
+    	$sidebarInbox.find($sidebarLoading).css('display', 'none');
     }
     
     var deleteThreadItem = function(threadId) {

@@ -1251,7 +1251,7 @@
 /*                                                                   */
 /*===================================================================*/
 
-#profile-loading {
+.sidebar-loading {
     position: absolute;
     height: 100%;
     width: 100%;
@@ -1262,7 +1262,7 @@
     display: none;
 }
 
-#profile-loading > div {
+.sidebar-loading > div {
     display: table-cell;
     vertical-align: middle;
 }
@@ -1277,14 +1277,15 @@
     padding: 0px;
 }
 
-#profile-item-none {
+.sidebar-item-none {
     width: 100%;
     height: 100px;
     display: table;
     text-align: center;
+    background-color: initial !important;
 }
 
-#profile-item-none > div {
+.sidebar-item-none > div {
     display: table-cell;
     vertical-align: middle;
     color: #FFF;

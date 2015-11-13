@@ -72,7 +72,7 @@ function getDiscs(reqUserId, userId, callback) {
 }
 
 function getDisc(userId, discId, callback) {
-    getDiscInternal(userId, discId, function(err, disc) {
+    getDiscInternal(discId, function(err, disc) {
         if (err)
             return callback(err);
         
@@ -84,21 +84,21 @@ function getDisc(userId, discId, callback) {
     });
 }
 
-function getDiscInternal(userId, discId, callback) {
-    UserController.getActiveUser(userId, function(err, user) {
-		if (err)
-			return callback(err);
-		
-		Disc.findOne({_id: discId}, function(err, disc) {
-            if (err)
-                return callback(Error.createError(err, Error.internalError));
+function getDiscInternal(discId, callback) {
+    Disc.findOne({_id: discId}, function(err, disc) {
+        if (err)
+            return callback(Error.createError(err, Error.internalError));
+        
+        if (!disc)
+            return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
             
-            if (!disc)
-                return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
-            
+        UserController.getActiveUser(disc.userId, function(err, user) {
+    		if (err)
+    			return callback(err);
+    			
             return callback(null, disc);
         });
-     });
+    });
 }
 
 function createDisc(userId, data, callback) {
@@ -225,7 +225,7 @@ function createDisc(userId, data, callback) {
 }
 
 function updateDisc(userId, discId, data, gfs, callback) {
-    getDiscInternal(userId, discId, function(err, disc){
+    getDiscInternal(discId, function(err, disc){
         if (err)
             return callback(Error.createError(err, Error.internalError));
             
@@ -393,7 +393,7 @@ function updateDisc(userId, discId, data, gfs, callback) {
 }
 
 function deleteDisc(userId, discId, gfs, callback) {
-    getDiscInternal(userId, discId, function(err, disc){
+    getDiscInternal(discId, function(err, disc){
         if (err)
             return callback(err);
             

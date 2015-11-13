@@ -156,6 +156,7 @@
             <thead>
                 <tr>
                     <th>Event Date</th>
+                    <th>Event Type</th>
                     <th>Event</th>
                 </tr>
             </thead>
@@ -163,10 +164,13 @@
                 {{#each user.internal.eventLog}}
                 <tr>
                     <td>
-                        {{formatDate this.occured "long"}}
+                        {{formatDate this.dateCreated "long"}}
                     </td>
                     <td>
-                        {{this.event}}
+                        {{this.type}}
+                    </td>
+                    <td>
+                        {{this.message}}
                     </td>
                 </tr>
                 {{/each}}

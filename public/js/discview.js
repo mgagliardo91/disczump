@@ -4,9 +4,11 @@ var imageArray = [];
 var userPublicDiscs = [];
 var dzID = '1433417853616595';
 var $discRow;
+var serverURL = '/';
 
 $(document).ready(function() {
     $discRow = $('.public-disc-row');
+   	serverURL = $('body').attr('url');
     
     $(document).on('click', '#view-disc-image-container .image-preview', function(e) {
         $discImageTable.find('.image-preview.active').removeClass('active');
@@ -21,7 +23,7 @@ $(document).ready(function() {
     $('#share-disc').click(function() {
 		var winTop = ($(window).height() / 2) - (300 / 2);
 		var winLeft = ($(window).width() / 2) - (600 / 2);
-        window.open('http://www.facebook.com/sharer/sharer.php?app_id=' + dzID + '&u=https://disczumpserver-mgagliardo.c9.io/disc/' + currentDisc._id + 
+        window.open('http://www.facebook.com/sharer/sharer.php?app_id=' + dzID + '&u=' + serverURL + '/disc/' + currentDisc._id + 
         	'&display=popup&ref=plugin&src=share_button', 'sharer', 'top=' + winTop + ',left=' + winLeft + ',toolbar=0,status=0,width=' + 600 + ',height=' + 300);
 	});
 	

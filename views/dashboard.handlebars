@@ -10,16 +10,9 @@
     <link rel="stylesheet" href="/static/css/bootstrap-slider.css">
     <link href='https://fonts.googleapis.com/css?family=Orbitron:400,900' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Play:400,700' rel='stylesheet' type='text/css'>
-    <meta property="og:site_name"           content="disc|zump">
-    <meta property="og:title"               content="disc|zump" />
-    <meta property="og:url"                 content="https://disczumpserver-mgagliardo.c9.io/" />
-    <meta property="og:type"                content="product" />
-    <meta property="og:description"         content="A social disc golf inventory network enabling users to organize, maintain and share collections across any internet-enabled device." />
-    <meta property="fb:app_id"              content="1433417853616595" />
-    <meta property="og:image"               content="https://disczumpserver-mgagliardo.c9.io/static/logo/logo_banner_caption.svg" />
 </head>
 {{/section}}
-<body{{#if firstUse}} class="first-use"{{/if}}>
+<body{{#if firstUse}} class="first-use"{{/if}} url="{{serverURL}}">
     {{#if info.text}}
     <div class="alert {{#if info.error}}alert-danger{{else}}alert-info{{/if}} page-alert" role="alert">
     	<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
@@ -50,8 +43,11 @@
                     <li class="sidebar-select nav" pg-select="#pg-preferences"><span class="float-left fa-tools"><i class="fa fa-cogs fa-sidebar-icon"></i></span><span class="sidebar-select-text">Preferences</span></li>
                 </ul>
                 <ul class="nav-sidebar" id="sidebar-search" style="display: none;">
-                    <input type="text" class="search-format" id="search-all" placeholder="Search Inventory...">
+                    <input type="text" class="search-format" id="search-dashboard" placeholder="Search Inventory...">
                     <h5 class="sidebar-section-header sidebar-results-ref"><span>Results</span><hr /></h5><div class="clearfix"></div>
+                    <div class="sidebar-loading">
+                        <div><i class="fa fa-spinner fa-pulse fa-3x"></i></div>
+                    </div>
                     <div class="sidebar-results-container" id="search-results-container">
                     </div>
                 </ul>
@@ -64,7 +60,7 @@
                     <div id="profile-search-container">
                         <input type="text" class="search-format" id="search-profile" placeholder="Search Profiles...">
                         <h5 class="sidebar-section-header sidebar-results-ref"><span>Profiles</span><hr /></h5><div class="clearfix"></div>
-                        <div id="profile-loading">
+                        <div class="sidebar-loading">
                             <div><i class="fa fa-spinner fa-pulse fa-3x"></i></div>
                         </div>
                         <ul class="sidebar-results-container" id="profile-list"></ul>
@@ -73,6 +69,9 @@
                 <ul class="nav-sidebar" id="sidebar-inbox" style="display: none;">
                     <input type="text" class="search-format" id="search-inbox" placeholder="Search Inbox...">
                     <h5 class="sidebar-section-header sidebar-results-ref"><span>Inbox</span><hr /></h5><div class="clearfix"></div>
+                    <div class="sidebar-loading">
+                        <div><i class="fa fa-spinner fa-pulse fa-3x"></i></div>
+                    </div>
                     <ul class="thread-container-list sidebar-results-container" id="inbox-list">
                     </ul>
                 </ul>
