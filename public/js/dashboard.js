@@ -559,7 +559,7 @@ function setupFrameworkListeners() {
 *
 */
 function initSocket(sessionId) {
-	socket = io.connect('https://disczumpserver-mgagliardo.c9.io', {
+	socket = io.connect(serverURL, {
 		'forceNew': true,
 		reconnection: false
 	});
