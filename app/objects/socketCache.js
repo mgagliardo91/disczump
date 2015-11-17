@@ -5,7 +5,8 @@ var socketTable = [];
 module.exports = {
     requestSession: requestSession,
     pushSocket: pushSocket,
-    getSocket: getSocket,
+    hasSockets: hasSockets,
+    getSockets: getSockets,
     getSocketCount: getSocketCount,
     removeSocket: removeSocket
 }
@@ -17,7 +18,8 @@ function requestSession(userId) {
     if (typeof(socketEntry) === 'undefined') {
         socketEntry = {
             userId: userId.toString(),
-            sessionId: sessionId
+            sessionId: sessionId,
+            sockets: []
         }
         socketTable.push(socketEntry);
     } else {
@@ -31,19 +33,27 @@ function pushSocket(sessionId, socket) {
     var socketEntry = _.findWhere(socketTable, {sessionId: sessionId});
     
     if (typeof(socketEntry) !== 'undefined') {
-        socketEntry.socketId = socket.id;
-        socketEntry.socket = socket;
+        socketEntry.sockets.push({
+            socketId: socket.id,
+            socket: socket
+        })
     }
 }
 
-function getSocket(userId) {
+function hasSockets(userId) {
+    var socketEntry = _.findWhere(socketTable, {userId: userId});
+    
+    return typeof(socketEntry) !== 'undefined' && socketEntry.sockets.length;
+}
+
+function getSockets(userId) {
     var socketEntry = _.findWhere(socketTable, {userId: userId});
     
     if (typeof(socketEntry) === 'undefined') {
         return undefined;
     }
     
-    return socketEntry.socket;
+    return socketEntry.sockets;
 }
 
 function getSocketCount() {
@@ -51,5 +61,15 @@ function getSocketCount() {
 }
 
 function removeSocket(socketId) {
-    socketTable = _.reject(socketTable, function(socketEntry) { return socketEntry.socketId == socketId; });
+    var socketEntry = _.find(socketTable, function(entry) {
+        return _.findWhere(entry.sockets, {socketId: socketId});
+    });
+    
+    if (typeof(socketEntry) !== 'undefined') {
+        if (socketEntry.sockets.length == 1) {
+            socketTable = _.reject(socketTable, function(entry) { return entry == socketEntry; });
+        } else {
+            socketEntry.sockets = _.reject(socketEntry.sockets, function(socket) { return socket.socketId == socketId});
+        }
+    }
 }

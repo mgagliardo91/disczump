@@ -1,19 +1,26 @@
+var _ = require('underscore');
+var cache;
+
 module.exports = {
     
     init: function(io, socketCache, logger) {
+        
+        cache = socketCache;
+        
         io.on('connection', function (socket) {
             socket.on('initialize', function (data) {
                 logger.info('Socket connected: [' + socket.id + ']');
-                socketCache.pushSocket(data.sessionId, socket);
+                cache.pushSocket(data.sessionId, socket);
             });
             socket.on('disconnect', function() {
                 logger.info('Socket disconnected: [' + socket.id + ']');
-                socketCache.removeSocket(socket.id);
+                cache.removeSocket(socket.id);
             });
         });
     },
     
     TypeMsg: 'MessageNotification',
+    TypeThread: 'ThreadUpdateNotification',
     TypeInfo: 'InfoNotification',
     TypeCallback: 'CallbackNotification',
     
@@ -22,14 +29,20 @@ module.exports = {
     sendNotification: sendNotification,
 }
 
-function sendCallback(socket, name, data) {
-    sendNotification(socket, 'CallbackNotification', {callbackName: name, message: data});
+function sendCallback(userId, name, data) {
+    sendNotification(userId, 'CallbackNotification', {callbackName: name, message: data});
 }
 
-function sendInfo(socket, data) {
-    sendNotification(socket, 'InfoNotification', data);
+function sendInfo(userId, data) {
+    sendNotification(userId, 'InfoNotification', data);
 }
 
-function sendNotification(socket, type, data) {
-    socket.emit('notification', { type: type, data: data});
+function sendNotification(userId, type, data) {
+    var sockets = cache.getSockets(userId);
+    
+    if (sockets && sockets.length) {
+        _.each(sockets, function(socketObj) {
+            socketObj.socket.emit('notification', { type: type, data: data});
+        });
+    }
 }

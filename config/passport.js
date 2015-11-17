@@ -101,7 +101,7 @@ module.exports = function(passport) {
                     user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
                     user.facebook.email = profile.emails ? profile.emails[0].value : undefined;
                     
-                    fbGraph.get(profile.id + "/picture?width=500&access_token=" + token, function(err, pic) {
+                    fbGraph.get(profile.id + "/picture?width=500&height=500&type=square&access_token=" + token, function(err, pic) {
                         if (!err && pic.image) {
                             user.facebook.image = pic.location;
                         }

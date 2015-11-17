@@ -43,124 +43,52 @@
         <nav class="zump-navbar navbar-inverse zump-navbar-fixed-top" role="navigation">
             <div class="container-fluid full-height">
                 {{#if user}}
-                    {{#if isMobile}}
-                        <div class="navbar-left navbar-btn-container full-height float-left">
-                            <div class="navbar-btn-list">
-                                <div class="mobile-btn" id="nav-settings"><div><i class="fa fa-gears fa-lg"></i></div></div>
-                            </div>
-                        </div>
-                        <div class="navbar-right navbar-btn-container full-height float-right">
-                            <div class="navbar-btn-list">
-                                <div class="mobile-btn float-right" id="nav-user"><div><i class="fa fa-user fa-lg"></i></div></div>
-                            </div>
-                        </div>
-        				<div class="navbar-center navbar-btn-container full-height">
-                            <div class="navbar-btn-list">
-                                <a href="/" rel="external"><img src="/static/logo/logo_text.svg" class="nav-logo small"></a>
-                            </div>
-                        </div>
-				    {{else}}
-                        <div class="zump-navbar-header float-left">
-                            <a href="/"><img src="/static/logo/logo_text.svg" class="nav-logo"></a>
-                        </div>
-                        <div class="navbar-btn-container full-height float-right">
-                            <div class="navbar-btn-list">
-                                <ul class="zump-nav">
-                                    <li class="zump-navbar-dropdown">
-                                        {{#if image}}
-                                            <a href="#" class="dropdown-toggle image-link" data-toggle="dropdown" role="button" aria-expanded="false" id="nav-account"><img src="{{image}}"/><span><i class="fa fa-angle-double-down fa-lg"></i></span></span></a>
-                                        {{else}}
-                                            
-                                            <a href="#" class="dropdown-toggle image-link" data-toggle="dropdown" role="button" aria-expanded="false" id="nav-account"><img src="/static/logo/logo_high_nobg.svg"/><span><i class="fa fa-angle-double-down fa-lg"></i></span></span></a>
-                                        {{/if}}
-                                        <ul class="zump-navbar-dropdown-menu dropdown-menu" role="menu">
-                                            <li><a href="#" id="menu-tutorial"><span><i class="fa fa-info-circle fa-tools"></i></span>Tutorial</a></li>
-                                            <li><a href="#" id="menu-feedback"><span><i class="fa fa-comment fa-tools"></i></span>Feedback</a></li>
-                                            {{#if admin}}<li><a href="/admin"><span><i class="fa fa-wrench fa-tools"></i></span>Admin Console</a></li>{{/if}}
-                                            <li><a href="/logout" data-ajax="false"><span><i class="fa fa-sign-out fa-tools"></i></span>Logout</a></li>
-                                        </ul>
-                                    </li>
-                                    <div class="clearfix"></div>
-                                </ul>
-                            </div>
-                        </div>
-                    {{/if}}
-                {{else}}
-                    {{#if isMobile}}
-                        {{#or2 isDashboard isPublicPage}}
-                        <div class="navbar-left navbar-btn-container full-height float-left">
-                            <div class="navbar-btn-list">
-                            </div>
-                        </div>
-                        <div class="navbar-right navbar-btn-container full-height float-right">
-                            <div class="navbar-btn-list">
-                                <div class="mobile-btn float-right" id="nav-user"><div><i class="fa fa-user fa-lg"></i></div></div>
-                            </div>
-                        </div>
-        				<div class="navbar-center navbar-btn-container full-height">
-                            <div class="navbar-btn-list">
-                                <a href="/" rel="external"><img src="/static/logo/logo_text.svg" class="nav-logo small"></a>
-                            </div>
-                        </div>
-                        {{else}}
-                        <div class="zump-navbar-header float-left">
-                            <a href="/" rel="external" data-ajax="false"><img src="/static/logo/logo_text.svg" class="nav-logo"></a>
-                        </div>
-                        <div class="navbar-btn-container full-height float-right">
-                            <div class="navbar-btn-list">
-                                {{#if route}}
-                                    <a href="/{{route.url}}"><span class="nav-btn">{{route.text}}</span></a>
-                                {{/if}}
-                                {{#if isPublicPage}}
-                                    <a href="/login" rel="external" data-ajax="false"><span class="nav-btn">Sign In</span></a>
-                                {{/if}}
-                            </div>
-                        </div>
-                        {{/or2}}
-                    {{else}}
-                        <div class="zump-navbar-header float-left">
-                            <a href="/" rel="external" data-ajax="false"><img src="/static/logo/logo_text.svg" class="nav-logo"></a>
-                        </div>
-                        <div class="navbar-btn-container full-height float-right">
-                            <div class="navbar-btn-list">
-                                {{#if route}}
-                                    <a href="/{{route.url}}"><span class="nav-btn">{{route.text}}</span></a>
-                                {{/if}}
-                                {{#if isLoggedIn}}
-                                    <a href="/" rel="external" data-ajax="false"><span class="nav-btn">Dashboard</span></a>
+                <div class="zump-navbar-header float-left">
+                    <a href="/"><img src="/static/logo/logo_text.svg" class="nav-logo"></a>
+                </div>
+                <div class="navbar-btn-container full-height float-right">
+                    <div class="navbar-btn-list">
+                        <ul class="zump-nav">
+                            <li class="zump-navbar-dropdown">
+                                {{#if image}}
+                                    <a href="#" class="dropdown-toggle image-link" data-toggle="dropdown" role="button" aria-expanded="false" id="nav-account"><img src="{{image}}"/><span><i class="fa fa-angle-double-down fa-lg"></i></span></span></a>
                                 {{else}}
-                                {{#if isPublicPage}}
-                                    <a href="/login" rel="external" data-ajax="false"><span class="nav-btn">Sign In</span></a>
-                                    <a href="/signup" rel="external" data-ajax="false"><span class="nav-btn">Sign Up</span></a>
+                                    <a href="#" class="dropdown-toggle image-link" data-toggle="dropdown" role="button" aria-expanded="false" id="nav-account"><img src="/static/logo/logo_high_nobg.svg"/><span><i class="fa fa-angle-double-down fa-lg"></i></span></span></a>
                                 {{/if}}
-                                {{/if}}
-                            </div>
-                        </div>
-                    {{/if}}
-                    
+                                <ul class="zump-navbar-dropdown-menu dropdown-menu" role="menu">
+                                    {{#if isDashboard}}
+                                    <li><a href="#" id="menu-tutorial"><span><i class="fa fa-info-circle fa-tools"></i></span>Tutorial</a></li>
+                                    <li><a href="#" id="menu-feedback"><span><i class="fa fa-comment fa-tools"></i></span>Feedback</a></li>
+                                    {{#if admin}}<li><a href="/admin"><span><i class="fa fa-wrench fa-tools"></i></span>Admin Console</a></li>{{/if}}
+                                    {{else}}
+                                    <li><a href="/dashboard"><span><i class="fa fa-tachometer fa-tools"></i></span>Dashboard</a></li>
+                                    {{/if}}
+                                    <li><a href="/logout" data-ajax="false"><span><i class="fa fa-sign-out fa-tools"></i></span>Logout</a></li>
+                                </ul>
+                            </li>
+                            <div class="clearfix"></div>
+                        </ul>
+                    </div>
+                </div>
+                {{else}}
+                <div class="zump-navbar-header float-left">
+                    <a href="/" rel="external" data-ajax="false"><img src="/static/logo/logo_text.svg" class="nav-logo"></a>
+                </div>
+                <div class="navbar-btn-container full-height float-right">
+                    <div class="navbar-btn-list">
+                        {{#if route}}
+                            <a href="/{{route.url}}"><span class="nav-btn">{{route.text}}</span></a>
+                        {{else}}
+                            <a href="/login" rel="external" data-ajax="false"><span class="nav-btn">Sign In</span></a>
+                            <a href="/signup" rel="external" data-ajax="false"><span class="nav-btn">Sign Up</span></a>
+                        {{/if}}
+                    </div>
+                </div>
                 {{/if}}
             </div>
         </nav>
         {{/unless}}
         <script src="/static/js/main.js"></script>
-        {{#if isMobile}}
-        {{#or2 isPublicPage isDashboard}}
-        <div data-role="panel" id="options-panel" data-position="right" data-display="reveal" data-position-fixed="true" >
-            <div class="ui-panel-inner">
-                <div class="panel panel-main" id="options-container">
-                    <ul class="options-menu">
-                        {{#if isDashboard}}
-                        <li><a href="/logout" rel="external"><span><i class="fa fa-sign-out"></i></span>Log Out</a></li>
-                        {{else}}
-                        <li><a href="/login" rel="external"><span><i class="fa fa-sign-in"></i></span>Sign In</a></li>
-                        <li><a href="/signup" rel="external"><span><i class="fa fa-user-plus"></i></span>Sign Up</a></li>
-                        {{/if}}
-                    </ul>
-                </div>
-            </div>
-        </div>
-        {{/or2}}
-        {{/if}}
         {{{body}}}
     </body>
 </html>

@@ -96,6 +96,11 @@ userSchema.methods.accountToString = function() {
     account._id = this._id;
     account.dateJoined = this.local.dateJoined;
     account.username = this.local.username;
+    account.linked = typeof(this.facebook.id) !== 'undefined';
+    
+    if (account.linked) {
+        account.facebookImage = this.facebook.image;
+    }
 	
 	if (typeof(this.local.firstName) !== 'undefined') {
     account.firstName = this.local.firstName;

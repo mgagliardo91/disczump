@@ -42,7 +42,7 @@ function putThreadState(userId, threadId, threadState, callback) {
     
     if (typeof(threadState.messageCount) !== 'undefined') {
         messageCount = parseInt(threadState.messageCount);
-        if (!_.isNaN(messageCount)) {
+        if (_.isNaN(messageCount)) {
             messageCount = undefined;
         }
     }
@@ -66,6 +66,8 @@ function putThreadState(userId, threadId, threadState, callback) {
                 
                 localThreadObj.messageCount = localThread.messageCount;
                 localThreadObj.threadTag = localThread.threadTag;
+                
+                // Socket.sendNotification(userId, Socket.TypeThread, localThreadObj);
                 
                 return callback(null, localThreadObj);
             });
@@ -137,14 +139,22 @@ function sendMessage(userId, threadId, messageObj, callback) {
             notifyUsers(message, userId);
             
             Thread.findOne({_id: localThread.threadId}, function(err, thread) {
-                thread.modifiedDate = message.createDate;
-                thread.messageCount = thread.messageCount + 1;
-                localThread.messageCount = thread.messageCount;
-                thread.save();
-                localThread.save();
-            });
+                if (err)
+                    return callback(Error.createError(err, Error.internalError));
+                
+                Message.count({threadId: thread._id}, function(err, count) {
+                    if (err)
+                        return callback(Error.createError(err, Error.internalError));
+                        
+                    thread.modifiedDate = message.createDate;
+                    thread.messageCount = count;
+                    localThread.messageCount = count;
+                    thread.save();
+                    localThread.save();
             
-            return callback(null, message);
+                    return callback(null, message);
+                });
+            });
         });
     });
 }
@@ -179,10 +189,8 @@ function notifyUsers(message, userId) {
                         } else cb();
                     }
                 ], function(err, results) {
-                    var socket = socketManager.getSocket(localThread.userId);
-                
-                    if (typeof(socket) !== 'undefined') {
-                        Socket.sendNotification(socket, Socket.TypeMsg, message);
+                    if (socketManager.hasSockets(localThread.userId)) {
+                        Socket.sendNotification(localThread.userId, Socket.TypeMsg, message);
                     } else {
                         UserController.getUser(localThread.userId, function(err, user) {
                             if (!err && user && user.preferences.notifications.newMessage) {

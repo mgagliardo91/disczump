@@ -12,8 +12,8 @@ module.exports = {
             'ben@disczump.com',
             'disczump@gmail.com'
         ],
-    'tokenTTL': 3600,
-    'recoverTTL': 3600,
+    'tokenTTL': '1h',
+    'recoverTTL': '1h',
     'routes': {
         'resetPassword' : 'recover',
         'confirmAccount' : 'confirm'

@@ -166,7 +166,13 @@ var ZumpValidate = function(opt) {
                 }
             }
             
-            if (item.type == 'email') {
+            if (item.type == 'checkbox') {
+                var testVal = item.value ? item.value : true;
+                val = $input.is(':checked');
+                
+                isValid = val == testVal;
+                return callback($input, isValid);
+            } if (item.type == 'email') {
                 isValid = (val.length == 0 ? undefined : emailRegex.test(val));
                 if (!(typeof isValid === 'undefined') && !isValid) return callback($input, isValid);
                 

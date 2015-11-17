@@ -12,7 +12,6 @@ var threadLocalSchema = mongoose.Schema({
     threadId: {type: String},
     messageCount: {type: Number, default: 0},
     threadTag: {type: String},
-    message: {type: String},
     createDate: {type: Date, default: Date.now},
     active: {type: Boolean, default: true},
     lastAlert: {type: Date}

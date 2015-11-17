@@ -151,6 +151,12 @@
     .fa-sidebar-icon {
         font-size: 4em;
     }
+    
+    .legal-container .legal-text {
+        width: 100% !important;
+        border-right: 0px !important;
+        padding: 2px 0px !important;
+    }
 }
 
 .backdrop {
@@ -176,6 +182,30 @@
     -khtml-user-select: none;
     -webkit-user-select: none;
     user-select: none;
+}
+
+.legal-container {
+    position: absolute;
+    font-size: 0.8em;
+    bottom: 0;
+    width: 100%;
+    border-top: 1px solid black;
+    background-color: #BEBEBE;
+}
+
+.legal-container .legal-text {
+    width: 50%;
+    float: left;
+    text-align: center;
+    padding: 5px 0px;
+}
+
+.legal-container .legal-text > a {
+    color: #000;
+}
+
+.legal-container .legal-text:first-child {
+    border-right: 1px solid #000;
 }
 
 /*===================================================================*/
@@ -325,6 +355,7 @@
 /*                                                                   */
 /*===================================================================*/
 
+
 .account-actions-container {
     text-align: center;
 }
@@ -393,6 +424,7 @@
 }
 
 .profile-image {
+    position: relative;
     width: 170px;
     height: 170px;
     text-align: center;
@@ -410,6 +442,10 @@
     margin: auto;
     margin-bottom: 10px;
     position: relative;
+}
+
+.profile-image.upload.custom {
+    cursor: pointer;
 }
 
 .profile-image > img {
@@ -494,20 +530,16 @@
 }
 
 .page-info {
-    width: 60%;
+    width: 90%;
+    margin: 0px auto 20px auto;
     color: #828282;
     font-family: 'Lato', sans-serif;
-    margin: 0px auto 20px auto;
-    border: 1px solid #828282;
-    padding: 5px 10px;
-    border-radius: 5px;
     font-size: 0.9em;
-    background-color: rgba(0,142,221,0.15);
-    text-align: center;
+    text-align: left;
 }
 
 .modify-form-section {
-    padding: 10px 0px;
+    padding-bottom: 10px;
     max-width: 800px;
     margin: auto;
 }
@@ -1151,6 +1183,14 @@
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
 }
 
+#message-container.interact {
+    overflow: hidden !important;
+}
+
+#message-container.interact:hover {
+    overflow: auto !important;
+}
+
 .thread-message {
     display: block;
     width: 100%;
@@ -1444,7 +1484,7 @@
 }
 
 .public-disc-item.disc-gallery-item .disc-gallery-overlay {
-    cursor: default !important;
+    /*cursor: default !important;*/
 }
 
 .public-disc-item > .disc-gallery-image-container {
@@ -2080,6 +2120,14 @@ select, option {
 
 .fa-visible-disc-item.fa-eye {
     color: rgb(0, 142, 221);
+}
+
+.view-action {
+    font-size: 0.8em;
+    width: 20px;
+    margin-right: 10px;
+    margin-left: -30px;
+    float: left;
 }
 
 .disc-info-name {
@@ -3077,6 +3125,16 @@ body.tutorial-active {
     -moz-box-shadow: 5px 5px 10px 0px rgba(0, 0, 0, 0.8);
     overflow: hidden;
     z-index: 3502;
+}
+
+.tutorial-click {
+    z-index: 3503;
+    position: absolute;
+    border-radius: 50%;
+	width: 0px;
+	height: 0px; 
+	opacity: 1;
+	background-color: rgba(255, 0, 0, 1);
 }
 
 .tutorial-section i {

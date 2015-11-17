@@ -10,6 +10,17 @@ $(document).ready(function() {
     $discRow = $('.public-disc-row');
    	serverURL = $('body').attr('url');
     
+    $(window).click(function(e) {
+     	$.each($('.remove-on-close'), function(index) {
+     		var domElem = $(this).get(0);
+     		if (domElem == e.target || $.contains(domElem, e.target)) {
+     			return;
+     		}
+     		
+     		$(this).remove();
+     	});
+    });
+    
     $(document).on('click', '#view-disc-image-container .image-preview', function(e) {
         $discImageTable.find('.image-preview.active').removeClass('active');
         $(this).addClass('active');
@@ -35,6 +46,13 @@ $(document).ready(function() {
 	    var id = $(this).attr('discid');
 		var win = window.open('/disc/' + id);
   		win.focus();
+	});
+	
+	new ZumpLink({
+		selector: '#copy-link',
+		path: function($item) {
+			return 'disc/' + currentDisc._id;
+		}
 	});
     
     $(window).on('resize', resize);
@@ -73,8 +91,8 @@ function initialize() {
             
             getPublicPreview(currentDisc.userId, currentDisc._id, function(success, retData) {
                 if (success) {
-                    if (retData.discs.count > 0) {
-                        userPublicDiscs = _.reject(retData.discs.preview, function(disc) {
+                    if (retData.count > 0) {
+                        userPublicDiscs = _.reject(retData.preview, function(disc) {
                             return disc._id == currentDisc._id;
                         });
                         
@@ -142,4 +160,106 @@ function publicDisc(disc) {
     }
     
     return $disc;
+}
+
+
+/*
+* Name: ZumpLink
+* Date: 10/06/15
+*/
+var ZumpLink = function(opt) {
+	
+	//----------------------\
+    // Javascript Objects
+    //----------------------/
+    var grabPath;
+    var linkerWidth = 200;
+    var linkerHeight = 200;
+    var selector;
+    	
+	//----------------------\
+    // JQuery Objects
+    //----------------------/
+    var $linker;
+    
+    //----------------------\
+    // Prototype Functions
+    //----------------------/
+    this.init = function(opt) {
+    	selector = opt.selector;
+        $(document).on('click', selector, showLinker);
+        $(document).on('click', '.link-btn', copyLink);
+        $(window).on('resize', function() { resizeLink() });
+        grabPath = opt.path;
+    }
+    
+    this.doResize = function() {
+    	resizeLink();
+    }
+    
+    //----------------------\
+    // Private Functions
+    //----------------------/
+    var resizeLink = function($curSelector) {
+    	if (!$linker || !$.contains(document, $linker[0])) {
+    		return;
+    	}
+    	
+    	if (!$curSelector) {
+    		$curSelector = $linker.prev(selector);
+    	}
+    	
+        var left;
+        var top;
+        
+        if ($(window).width() - $curSelector.offset().left - $curSelector.outerWidth() >= linkerWidth) {
+            left = $curSelector.position().left + $curSelector.outerWidth();
+        } else {
+            left =  $curSelector.position().left - linkerWidth;
+        }
+        
+        if ($(document).height() - $curSelector.offset().top - $curSelector.outerHeight() >= linkerHeight) {
+            top = $curSelector.position().top + $curSelector.outerHeight();
+        } else {
+            top = $curSelector.position().top - linkerHeight;
+        }
+    	
+    	$linker.css({
+            left: left,
+            top: top
+        });
+        
+        return $linker;
+    }
+    
+    var copyLink = function(event) {
+    	event.stopPropagation();
+        window.open($(this).attr('href'), '_blank');
+        return false;
+    }
+    
+    var createLinker = function(path) {
+        if ($linker && $linker.length) {
+            $linker.siblings('.link-active').removeClass('link-active');
+            $linker.remove();
+        }
+        
+        $linker = $('<div class="link-container remove-on-close"></div>');
+        $linker.append('<button class="link-btn" type="button" href="' + serverURL + '/' + path + '"><span><i class="fa fa-retweet"></i></span></button>' +
+            '<input class="link-input" type="text" value="' + serverURL + '/' + path + '"/>');
+        return $linker;
+    }
+    
+    var showLinker = function(event) {
+    	event.stopPropagation();
+        var $this = $(this);
+        
+        createLinker(grabPath($this)).insertAfter($this);
+        resizeLink($this);
+        $this.addClass('link-active');
+        $linker.find('.link-input').select();
+        return false;
+    }
+    
+    this.init(opt);
 }

@@ -152,19 +152,21 @@ function autoCloseAlert($element, selector, delay) {
 * Generates an error message containing a list of invalid fields.
 */
 function generateInvalidDataError(invalidItems) {
-		var errorLength = invalidItems.length;
 		var errorText = '';
 		
-		_.each(invalidItems, function(item) {
-    		if (errorLength > 1) {
-    			errorText = errorText + $('#' + item.id).attr('param') + ', ';
-    		} else {
-    			errorText = errorText + $('#' + item.id).attr('param');
-    		}
-    		errorLength = errorLength - 1;
-    	});
+		for(var i = 0; i < invalidItems.length; i++) {
+			var item = invalidItems[i];
+			
+			if (i == invalidItems.length - 1) {
+				errorText = errorText + ' and ';
+			} else if (i > 0) {
+				errorText = errorText + ', ';
+			}
+			
+			errorText = errorText + $('#' + item.id).attr('param');
+		}
 		
-		return generateError('Invalid data in the following fields: ' + errorText + '.', 'ERROR', false);
+		return generateError('Invalid responses to the following fields: ' + errorText + '.', 'ERROR', false);
 }
 
 function getCityState(zipcode, callback) {
@@ -219,6 +221,7 @@ function doAjax(param) {
 	var success = false;
 	var retData;
 	return $.ajax({
+		cache: false,
 		type: param.type,
 		dataType: "json",
 		url: (param.url ? param.url : url) + param.path,

@@ -19,46 +19,44 @@ module.exports = function(app, passport, gridFs) {
     app.get('/', function(req, res) {
        res.render('home', {
            isIndex: true,
+           serverURL : localConfig.serverURL,
            reqScroll: req.device.isMobile
        });
+    });
+    
+    app.get('/terms', function(req, res) {
+       res.render('terms');
+    });
+    
+    app.get('/privacy', function(req, res) {
+       res.render('privacy');
     });
 
     app.get('/dashboard', isLoggedIn, function(req, res) {
         UserController.updateActivity(req.user._id);
-        // // if (req.device.isMobile) {
-        //     return res.render('mobile/dashboard', {
-        //         user : req.user,
-        //         image : req.user.accountToString().image,
-        //         isDashboard : true,
-        //         isMobile: true
-        //     });
-        // } else {
-            var firstUse = false;
-            
-            if (typeof req.user.local.accessCount !== 'undefined') {
-                firstUse = req.user.local.accessCount.desktop <= 1;
-                if (firstUse) {
-                    UserController.updateAccessCount(req.user._id, 'desktop');
-                }
+        var firstUse = false;
+        
+        if (typeof req.user.local.accessCount !== 'undefined') {
+            firstUse = req.user.local.accessCount.desktop <= 1;
+            if (firstUse) {
+                UserController.updateAccessCount(req.user._id, 'desktop');
             }
-            
-            return res.render('dashboard', {
-                user : req.user,
-                admin: req.session.admin,
-                image : req.user.accountToString().image,
-                firstUse: firstUse,
-                isDashboard : true,
-                serverURL : localConfig.serverURL,
-                isLinked : typeof(req.user.facebook.id) !== 'undefined',
-                info: {
-                    title: req.flash('infoTitle'),
-                    text: req.flash('infoText'),
-                    error: req.flash('infoError')
-                }
-            });
-        // }
+        }
         
-        
+        return res.render('dashboard', {
+            user : req.user,
+            admin: req.session.admin,
+            image : req.user.accountToString().image,
+            firstUse: firstUse,
+            isDashboard : true,
+            serverURL : localConfig.serverURL,
+            isLinked : typeof(req.user.facebook.id) !== 'undefined',
+            info: {
+                title: req.flash('infoTitle'),
+                text: req.flash('infoText'),
+                error: req.flash('infoError')
+            }
+        });
     });
     
     app.get('/account/delete', isLoggedIn, function(req, res) {
@@ -72,6 +70,8 @@ module.exports = function(app, passport, gridFs) {
                     
                 return res.render('notification', {
                     isMobile: req.device.isMobile,
+                    user : req.user,
+                    image : req.user.accountToString().image,
                     notify : {
                         pageHeader: 'Confirm Deletion',
                         header: 'Delete Account',
@@ -117,12 +117,15 @@ module.exports = function(app, passport, gridFs) {
     app.get('/disc/:discid', function(req, res) {
         var userId = undefined;
         if (req.user) userId = req.user._id;
+        var image = req.user ? req.user.accountToString().image : undefined;
     
         DiscController.getDisc(userId, req.params.discid, function(err, disc) {
             if (err) {
                return res.render('notification', {
                     isMobile: req.device.isMobile,
-                   notify : {
+                    user : req.user,
+                    image : image,
+                    notify : {
                        pageHeader: err.error.type,
                        header: err.error.type,
                        strong: err.error.message,
@@ -138,6 +141,8 @@ module.exports = function(app, passport, gridFs) {
                 if (err) {
                     return res.render('notification', {
                         isMobile: req.device.isMobile,
+                        user : req.user,
+                        image : image,
                        notify : {
                            pageHeader: err.error.type,
                            header: err.error.type,
@@ -150,24 +155,13 @@ module.exports = function(app, passport, gridFs) {
                    });
                 }
                 
-                // if (req.device.isMobile) {
-                //     return res.render('mobile/viewdisc', {
-                //         disc: disc,
-                //         user: user.accountToString(),
-                //         isPublicPage: true,
-                //         isMobile: true
-                //     });
-                // } else {
-                    return res.render('discview', {
-                        disc: disc,
-                        serverURL : localConfig.serverURL,
-                        primaryImage: disc.getImage(),
-                        user: user.accountToString(),
-                        isPublicPage: true,
-                        isLoggedIn: req.isAuthenticated()
-                    });
-                // }
-                
+                return res.render('discview', {
+                    disc: disc,
+                    user : req.user,
+                    image : image,
+                    serverURL : localConfig.serverURL,
+                    primaryImage: disc.getImage()
+                });
             });
         }) ;
     });
@@ -204,7 +198,7 @@ module.exports = function(app, passport, gridFs) {
                         
                     return res.render('notification', {
                         isMobile: req.device.isMobile,
-                       notify : {
+                        notify : {
                             pageHeader: 'Confirm Account',
                             header: 'Account Confirmation',
                             strong: 'You\'re almost there!',
@@ -235,7 +229,7 @@ module.exports = function(app, passport, gridFs) {
                     btnText: 'Recover',
                     input: [
                         {icon: 'fa-envelope-o', id : 'email', name: 'email', type: 'email', placeholder: 'Email'}
-                        ]
+                    ]
                }
             });
         })
@@ -286,6 +280,8 @@ module.exports = function(app, passport, gridFs) {
                      
                     return res.render('notification', {
                         isMobile: req.device.isMobile,
+                        user : req.user,
+                        image : req.user.accountToString().image,
                         notify : {
                            pageHeader: 'Reset Password',
                            header: 'Reset Password',
@@ -303,6 +299,8 @@ module.exports = function(app, passport, gridFs) {
         .get(isLoggedIn, function(req, res) {
             return res.render('userinput', {
                 isMobile: req.device.isMobile,
+                user : req.user,
+                image : req.user.accountToString().image,
                 message: {
                     error: req.flash('error')
                 },
@@ -496,12 +494,16 @@ module.exports = function(app, passport, gridFs) {
         if (req.user.facebook.id) {
             res.render('linkfacebook', {
                 isMobile: req.device.isMobile,
+                user : req.user,
+                image : req.user.accountToString().image,
                 unlink: true,
                 popup: req.query.popup
            });
         } else {
             res.render('linkfacebook', {
                 isMobile: req.device.isMobile,
+                user : req.user,
+                image : req.user.accountToString().image,
                 popup: req.query.popup
             });
         }
@@ -518,10 +520,8 @@ module.exports = function(app, passport, gridFs) {
         user.save(function(err) {
             user.addEvent(EventController.Types.AccountUnlink, 'The account has been unlinked from Facebook.');
             
-            var socket = socketManager.getSocket(user._id);
-                
-            if (typeof(socket) !== 'undefined') {
-                Socket.sendCallback(socket, 'FacebookLink', 'Your Facebook account is no longer linked.');
+            if (socketManager.hasSockets(user._id)) {
+                Socket.sendCallback(user._id, 'FacebookLink', 'Your Facebook account is no longer linked.');
             } else {
                 req.flash('infoTitle', 'Unlink Successful');
                 req.flash('infoText', 'Your Facebook account is no longer linked.');
@@ -566,12 +566,10 @@ function doLogIn(req, res, next, err, user, info) {
             req.session.redirect = undefined;
             
             if (req.user && req.user._id == user._id) {
-                var socket = socketManager.getSocket(req.user._id);
-                    
-                if (typeof(socket) !== 'undefined' && req.flash('infoTitle') == 'FacebookLink') {
+                if (socketManager.hasSockets(req.user._id) && req.flash('infoTitle') == 'FacebookLink') {
                   req.flash('infoTitle', undefined);
                   req.flash('infoText', undefined);
-                  Socket.sendCallback(socket, 'FacebookLink', 'Your Facebook account is now linked.');
+                  Socket.sendCallback(req.user._id, 'FacebookLink', 'Your Facebook account is now linked.');
                 }
                 
                 if (redirect) {

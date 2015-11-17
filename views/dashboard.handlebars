@@ -1,7 +1,4 @@
-<!doctype html>
-<html>
 {{#section 'head'}}
-<head>
     <title>disc|zump - Dashboard</title>
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/dropzone.css">
@@ -10,7 +7,6 @@
     <link rel="stylesheet" href="/static/css/bootstrap-slider.css">
     <link href='https://fonts.googleapis.com/css?family=Orbitron:400,900' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Play:400,700' rel='stylesheet' type='text/css'>
-</head>
 {{/section}}
 <body{{#if firstUse}} class="first-use"{{/if}} url="{{serverURL}}">
     {{#if info.text}}
@@ -28,9 +24,9 @@
         <div class="row">
             <div class="sidebar">
                 <div class="sidebar-nav-toolbar">
-                    <span class="sidebar-icon sidebar-nav-select sidebar-nav-indicator active pull-left" nav-select="#sidebar-home"><i class="fa fa-home fa-toolbar-icon"></i></span>
-                    <span class="sidebar-icon sidebar-nav-select sidebar-nav-indicator pull-left" nav-select="#sidebar-inbox"><i class="fa fa-envelope fa-toolbar-icon"></i><span id="message-count"></span></span>
-                    <span class="sidebar-icon sidebar-nav-select sidebar-nav-indicator pull-left" nav-select="#sidebar-profile"><i class="fa fa-users fa-toolbar-icon"></i></span>
+                    <span class="sidebar-icon sidebar-nav-select sidebar-nav-indicator active pull-left" nav-select="#sidebar-home" id="select-home-icon"><i class="fa fa-home fa-toolbar-icon"></i></span>
+                    <span class="sidebar-icon sidebar-nav-select sidebar-nav-indicator pull-left" nav-select="#sidebar-inbox" id="select-inbox-icon"><i class="fa fa-envelope fa-toolbar-icon"></i><span id="message-count"></span></span>
+                    <span class="sidebar-icon sidebar-nav-select sidebar-nav-indicator pull-left" nav-select="#sidebar-profile" id="select-profile-icon"><i class="fa fa-users fa-toolbar-icon"></i></span>
                     <span class="toolbar-border"></span>
                     <div class="clearfix"></div>
                 </div>
@@ -41,6 +37,10 @@
                     <h5 class="sidebar-section-header"><span>Settings</span><hr /><div class="clearfix"></div></h5>
                     <li class="sidebar-select nav" pg-select="#pg-settings"><span class="float-left fa-tools"><i class="fa fa-user fa-sidebar-icon"></i></span><span class="sidebar-select-text">Account</span></li>
                     <li class="sidebar-select nav" pg-select="#pg-preferences"><span class="float-left fa-tools"><i class="fa fa-cogs fa-sidebar-icon"></i></span><span class="sidebar-select-text">Preferences</span></li>
+                    <div class="legal-container">
+                        <div class="legal-text"><a href="/terms" target="_blank">Terms and Conditions</a></div>
+                        <div class="legal-text"><a href="/privacy" target="_blank">Privacy Policy</a></div>
+                    </div>
                 </ul>
                 <ul class="nav-sidebar" id="sidebar-search" style="display: none;">
                     <input type="text" class="search-format" id="search-dashboard" placeholder="Search Inventory...">
@@ -80,7 +80,7 @@
                 <div class="page" id="pg-profile">
                     <div class="row">
                         <div class="page-btn-container">
-                            <span class="page-title-btn dz-page-back"><i class="fa fa-times" title="Return"></i></span>
+                            <span class="page-title-btn"><i class="fa fa-times dz-page-back" title="Return"></i></span>
                             <div class="clearfix"></div>
                         </div>
                         <div class="page-title" id="profile-username"></div>
@@ -135,7 +135,7 @@
                             <span id="modify-disc-delete" class="page-title-btn"><i class="fa fa-trash" title="Delete Disc"></i></span>
                             <span id="clear-modify-disc-form" class="page-title-btn"><i class="fa fa-eraser" title="Clear Form"></i></span>
                             <span id="clone-disc" class="page-title-btn" discId=""><i class="fa fa-files-o" title="Clone Disc"></i></span>
-                            <span class="page-title-btn dz-page-back"><i class="fa fa-times" title="Return"></i></span>
+                            <span class="page-title-btn"><i class="fa fa-times dz-page-back" title="Return"></i></span>
                             <div class="clearfix"></div>
                         </div>
                         <div class="page-title">Add Disc</div>
@@ -252,6 +252,9 @@
                             </div>
                             <div id="current-images-section">
                                 <div class="row-label">Current Images</div>
+                                <div class="page-info">
+                                    Drag images to reorder, and click the star to select a primary image.
+                                </div>
                                 <div class="modify-form-section">
                                     <div class="image-list">
         				                <div class="image-list-container image-list-container-simple" id="existing-image-container">
@@ -313,10 +316,10 @@
                 <div class="page" id="pg-disc-view">
                     <div class="row">
                         <div class="page-btn-container">
-                            <span id="view-disc-share" class="page-title-btn share-disc-item"><i class="fa fa-facebook-square" title="Share Disc"></i></span>
-                            <span id="view-disc-link" class="page-title-btn disc-copy-link"><i class="fa fa-link fa-copy-link" title="Share Disc"></i></span>
-                            <span id="view-disc-edit" class="page-title-btn" discId=""><i class="fa fa-pencil" title="Edit Disc"></i></span>
-                            <span class="page-title-btn dz-page-back"><i class="fa fa-times" title="Return"></i></span>
+                            <span class="page-title-btn"><i  id="view-disc-share" class="fa fa-facebook-square share-disc-item" title="Share Disc"></i></span>
+                            <span class="page-title-btn"><i id="view-disc-link" class="fa fa-link fa-copy-link" title="Share Disc"></i></span>
+                            <span class="page-title-btn"><i id="view-disc-edit" class="fa fa-pencil" title="Edit Disc"></i></span>
+                            <span class="page-title-btn"><i class="fa fa-times dz-page-back" title="Return"></i></span>
                             <div class="clearfix"></div>
                         </div>
                         <div class="page-title" id="view-disc-title">Disc</div>
@@ -625,15 +628,15 @@
                     </div>
                     <div class="row">
                         <div class="row-label">Account Image</div>
-                        <div class="row-text">
+                        <div class="page-info">
                             Upload your profile photo here. If you are linked with Facebook, 
                             you can set your profile to remain up-to-date with your Facebook 
                             profile picture.
                         </div>
-                        <table class="account-image{{#unless user.facebook.id}} no-fb{{/unless}}">
+                        <table class="account-image{{#unless user.facebook.id}} no-fb{{/unless}} no-select">
                             <tr>
                                 <td>
-                                    <div class="profile-image upload" id="upload-profile-image">
+                                    <div class="profile-image upload custom" id="upload-profile-image">
                                         <div id="image-upload-placeholder">
                                             <div>
                                                 <span><i class="fa fa-camera-retro fa-5x"></i></span>
@@ -643,11 +646,11 @@
                                         <div class="image-upload-overlay" id="upload-profile-overlay"></div>
                                     </div>
                                     <button id="profile-image-local-clear" class="btn btn-default">Clear</button>
-                                    <button id="profile-image-local-submit" class="btn btn-primary">Upload</button>
+                                    <button id="profile-image-local-submit" class="btn btn-primary" disabled>Upload</button>
                                 </td>
-                                <td>
+                                <td id="profile-image-fb-container">
                                     {{#if user.facebook.id}}
-                                     <div class="profile-image upload">
+                                    <div class="profile-image upload">
                                         <img src="{{user.facebook.image}}" />
                                     </div>
                                     <button id="profile-image-fb-submit" class="btn btn-primary">Use Facebook Photo</button>
@@ -660,14 +663,10 @@
                         <div class="row-label">Actions</div>
                         <div class="account-actions-container">
                             <span class="account-btn">
-                                {{!--<a href="/account/link">--}}
                                     <button id="facebook-link" class="btn btn-primary"><span><i class="fa fa-facebook-square fa-tools"></i></span>Manage Facebook</button>
-                                {{!--</a>--}}
                             </span>
                             <span class="account-btn">
-                                {{!--<a href="/reset" target="_blank">--}}
                                 <button id="account-change-pwd" class="btn btn-default"><span><i class="fa fa-key fa-tools"></i></span>Change Password</button>
-                                {{!--</a>--}}
                             </span>
                             <span class="account-btn">
                                 <button id="account-delete" class="btn btn-danger"><span><i class="fa fa-minus-circle fa-tools"></i></span>Delete Account</button>
@@ -796,14 +795,6 @@
                                     </select>
                                 </div>
                             </div>
-                            {{!--<div class="form-group">--}}
-                            {{!--    <div class="col-sm-12">--}}
-                            {{!--        <div class="checkbox pull-left">--}}
-                            {{!--            <input type="checkbox" id="enable-secondary-sort"> Enable Secondary Sort--}}
-                            {{!--            <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="enable-secondary-sort"></i>--}}
-                            {{!--        </div>--}}
-                            {{!--    </div>--}}
-                            {{!--</div>--}}
                             <div class="form-group">
                                 <label for="items-per-row" class="col-sm-3 control-label">Use Templates
                                     <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="show-template-picker"></i>
@@ -918,4 +909,3 @@
     <script src="/static/js/validation.js"></script>
     <script src="/static/js/dashboard.js"></script>
 </body>
-</html>

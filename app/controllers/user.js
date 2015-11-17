@@ -414,12 +414,8 @@ function resetPassword(userId, password, callback) {
         user.save(function(err){
             if (err)
                 return callback(err);
-                
-            var socket = socketManager.getSocket(user._id);
-                
-            if (typeof(socket) !== 'undefined') {
-                Socket.sendCallback(socket, 'ResetPassword', 'Your password has been successfully changed.');
-            }
+            
+            Socket.sendCallback(user._id, 'ResetPassword', 'Your password has been successfully changed.');
             
             callback(null, user);
         });

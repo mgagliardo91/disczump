@@ -357,7 +357,11 @@ img.fit-parent {
     cursor: pointer;
 }
 
-#view-profile:hover, #copy-link:hover {
+#copy-link:hover {
+    color: #00A926;
+}
+
+#view-profile:hover {
     color: rgb(0, 142, 221);
 }
 
@@ -500,3 +504,48 @@ img.fit-parent {
 }
 
 /* ----------------- */
+
+
+/*===================================================================*/
+/*                                                                   */
+/*                        Link Container                             */
+/*                                                                   */
+/*===================================================================*/
+.link-container {
+    position: absolute;
+    z-index: 995;
+    width: 200px;
+    background-color: rgb(190, 190, 190);
+    border: 1px solid rgb(142, 141, 141);
+    padding: 5px;
+    -webkit-box-shadow: 2px 2px 8px 0px rgba(156,156,156,0.75);
+    -moz-box-shadow: 2px 2px 8px 0px rgba(156,156,156,0.75);
+    box-shadow: 2px 2px 8px 0px rgba(156,156,156,0.75);
+}
+
+.link-btn {
+    float: right;
+    width: 30px;
+    height: 20px;
+    text-align: center;
+}
+
+.link-btn span {
+    font-size: 12px;
+    display: block;
+}
+
+.link-input {
+    width: 150px;
+    height: 20px;
+    display: block;
+    background-image: none;
+    border: 1px solid #ccc;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+    -webkit-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+    border-radius: 4px;
+    padding: 6px 5px 5px 5px;
+    font-size: 10px;
+}

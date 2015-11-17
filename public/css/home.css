@@ -421,7 +421,7 @@ li.clearfix:before {
 }
 
 .footer-bar {
-    max-width: 500px;
+    max-width: 700px;
     margin: auto;
     color: #828282;
     padding-top: 10px;
@@ -452,6 +452,14 @@ li.clearfix:before {
 .footer-copyright {
     display: table-cell;
     vertical-align: middle;
+}
+
+.footer-copyright > a {
+    margin-left: 20px;
+}
+
+.footer-copyright > a:hover {
+    color: #428bca;
 }
 
 #get-started {
