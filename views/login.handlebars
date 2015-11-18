@@ -1,59 +1,51 @@
-<!doctype html>
-<html>
-<head>
+{{#section 'head'}}
     <title>disc|zump - Sign In</title>
     <link rel="stylesheet" href="/static/css/login.css">
-</head>
-<body>
-    <form method="post" id="facebook-login" action="/auth/facebook" style="display: none">{{#if redirect}}<input type="hidden" name="redirect" value="{{redirect}}" />{{/if}}</form>
-    <div data-role="page" class="login-form-container">
-        <div class="login-form-cell">
-            <div class="login-form-center">
-                <form action="/login" method="post" id="login-form">
-                    <img src="/static/logo/logo_small.svg" class="main-logo" />
-                    {{#if message.error}}
-                    <div class="alert alert-danger" role="alert">
-                        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                        <strong>Error: </strong>{{message.error}}
-                        {{#if message.link.url}}
-                            <br />
-                            <a href="{{message.link.url}}">{{message.link.text}}</a>
-                        {{/if}}
-                    </div>
+{{/section}}
+<form method="post" id="facebook-login" action="/auth/facebook" style="display: none">{{#if redirect}}<input type="hidden" name="redirect" value="{{redirect}}" />{{/if}}</form>
+<div data-role="page" class="login-form-container">
+    <div class="login-form-cell">
+        <div class="login-form-center">
+            <form action="/login" method="post" id="login-form">
+                <img src="/static/logo/logo_small.svg" class="main-logo" />
+                {{#if message.error}}
+                <div class="alert alert-danger" role="alert">
+                    <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <strong>Error: </strong>{{message.error}}
+                    {{#if message.link.url}}
+                        <br />
+                        <a href="{{message.link.url}}">{{message.link.text}}</a>
                     {{/if}}
-                    {{#if message.info}}
-                    <div class="alert alert-info" role="alert">
-                        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                        <strong>Note: </strong>{{message.info}}
-                        {{#if message.link.url}}
-                            <br />
-                            <a href="{{message.link.url}}">{{message.link.text}}</a>
-                        {{/if}}
-                    </div>
+                </div>
+                {{/if}}
+                {{#if message.info}}
+                <div class="alert alert-info" role="alert">
+                    <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <strong>Note: </strong>{{message.info}}
+                    {{#if message.link.url}}
+                        <br />
+                        <a href="{{message.link.url}}">{{message.link.text}}</a>
                     {{/if}}
-                    <div class="login-form-stacked">
-                        {{#if redirect}}<input type="hidden" name="redirect" value="{{redirect}}" />{{/if}}
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
-                            <input class="form-control" id="login-username" type="email" name="email" placeholder="Email">
-                        </div>
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                            <input class="form-control" id="login-password" type="password" name="password" placeholder="Password">
-                        </div>
-                        <button id="submit" class="btn btn-submit btn-block" type="submit">Sign in</button>
-                        
-                        <a id="auth-facebook" class="btn btn-primary btn-block" role="button">Sign in with Facebook</a>
+                </div>
+                {{/if}}
+                <div class="login-form-stacked">
+                    {{#if redirect}}<input type="hidden" name="redirect" value="{{redirect}}" />{{/if}}
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
+                        <input class="form-control" id="login-username" type="email" name="email" placeholder="Email">
                     </div>
-                    <div class="form-header"><a href="/recover">Forgot Password?</a></div>
-                </form>
-            </div>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                        <input class="form-control" id="login-password" type="password" name="password" placeholder="Password">
+                    </div>
+                    <button id="submit" class="btn btn-submit btn-block" type="submit">Sign in</button>
+                    
+                    <a id="auth-facebook" class="btn btn-primary btn-block" role="button">Sign in with Facebook</a>
+                </div>
+                <div class="form-header"><a href="/recover">Forgot Password?</a></div>
+            </form>
         </div>
     </div>
-    {{#if isMobile}}
-    {{!--<script src="/static/js/mobile/mobile.js"></script>--}}
-    {{/if}}
-    <script src="/static/js/access.js"></script>
-    <script src="/static/js/validation.js"></script>
-</body>
-</html>
+</div>
+<script src="/static/js/access.js"></script>
+<script src="/static/js/validation.js"></script>

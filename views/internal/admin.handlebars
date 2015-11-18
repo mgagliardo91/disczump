@@ -1,64 +1,59 @@
-<!doctype html>
-<html>
 {{#section 'head'}}
 <head>
     <title>disc|zump - Admin</title>
 </head>
 {{/section}}
-<body>
-    <div class="sidebar">
-        <ul class="nav-sidebar no-select" id="sidebar-home">
-            <h5 class="sidebar-section-header"><span>Actions</span><hr /><div class="clearfix"></div></h5>
-            <li class="sidebar-select nav active" href="/admin"><span class="float-left fa-tools"><i class="fa fa-users fa-sidebar-icon"></i></span><span class="sidebar-select-text">Admin Home</span></li>
-            <h5 class="sidebar-section-header"><span>Models</span><hr /><div class="clearfix"></div></h5>
-            <li class="sidebar-select nav" href="/admin/users"><span class="float-left fa-tools"><i class="fa fa-users fa-sidebar-icon"></i></span><span class="sidebar-select-text">Users</span></li>
-            <li class="sidebar-select nav" href="/admin/discs"><span class="float-left fa-tools"><i class="fa fa-circle-o fa-sidebar-icon"></i></span><span class="sidebar-select-text">Discs</span></li>
-            <li class="sidebar-select nav" href="/admin/events"><span class="float-left fa-tools"><i class="fa fa-file-zip-o fa-sidebar-icon"></i></span><span class="sidebar-select-text">Events</span></li>
-            <li class="sidebar-select nav" href="/admin/feedback"><span class="float-left fa-tools"><i class="fa fa-comment fa-sidebar-icon"></i></span><span class="sidebar-select-text">Feedback</span></li>
-        </ul>
-    </div>
-    <div class="page-view">
-        <div class="page-title">Statistics</div>
-         <table id="stat-table">
-            <tr>
-                <td class="stat-label">
-                    Total Users:
-                </td>
-                <td class="stat-value" id="count-total-users">
-                    {{stats.user.total}}
-                </td>
-            </tr>
-            <tr>
-                <td class="stat-label">
-                    Confirmed Users:
-                </td>
-                <td class="stat-value" id="count-confirmed-users">
-                    {{stats.user.confirmed}}
-                </td>
-            </tr>
-            <tr>
-                <td class="stat-label">
-                    Users Active Now:
-                </td>
-                <td class="stat-value" id="count-active-users">
-                    {{stats.user.active}}
-                </td>
-            </tr>
-            <tr>
-                <td class="stat-label">
-                    Total Discs:
-                </td>
-                <td class="stat-value" id="count-total-discs">
-                    {{stats.disc.total}}
-                </td>
-            </tr>
-        </table>
-        <input type="text" id="testVal" />
-        <input type="text" id="testVal2" />
-        <button type="button" id="test">Click Me!</button>
-        <ul id="result">
-            
-        </ul>
-    </div>
-</body>
-</html>
+<div class="sidebar">
+    <ul class="nav-sidebar no-select" id="sidebar-home">
+        <h5 class="sidebar-section-header"><span>Actions</span><hr /><div class="clearfix"></div></h5>
+        <li class="sidebar-select nav active" href="/admin"><span class="float-left fa-tools"><i class="fa fa-users fa-sidebar-icon"></i></span><span class="sidebar-select-text">Admin Home</span></li>
+        <h5 class="sidebar-section-header"><span>Models</span><hr /><div class="clearfix"></div></h5>
+        <li class="sidebar-select nav" href="/admin/users"><span class="float-left fa-tools"><i class="fa fa-users fa-sidebar-icon"></i></span><span class="sidebar-select-text">Users</span></li>
+        <li class="sidebar-select nav" href="/admin/discs"><span class="float-left fa-tools"><i class="fa fa-circle-o fa-sidebar-icon"></i></span><span class="sidebar-select-text">Discs</span></li>
+        <li class="sidebar-select nav" href="/admin/events"><span class="float-left fa-tools"><i class="fa fa-file-zip-o fa-sidebar-icon"></i></span><span class="sidebar-select-text">Events</span></li>
+        <li class="sidebar-select nav" href="/admin/feedback"><span class="float-left fa-tools"><i class="fa fa-comment fa-sidebar-icon"></i></span><span class="sidebar-select-text">Feedback</span></li>
+    </ul>
+</div>
+<div class="page-view">
+    <div class="page-title">Statistics</div>
+     <table id="stat-table">
+        <tr>
+            <td class="stat-label">
+                Total Users:
+            </td>
+            <td class="stat-value" id="count-total-users">
+                {{stats.user.total}}
+            </td>
+        </tr>
+        <tr>
+            <td class="stat-label">
+                Confirmed Users:
+            </td>
+            <td class="stat-value" id="count-confirmed-users">
+                {{stats.user.confirmed}}
+            </td>
+        </tr>
+        <tr>
+            <td class="stat-label">
+                Users Active Now:
+            </td>
+            <td class="stat-value" id="count-active-users">
+                {{stats.user.active}}
+            </td>
+        </tr>
+        <tr>
+            <td class="stat-label">
+                Total Discs:
+            </td>
+            <td class="stat-value" id="count-total-discs">
+                {{stats.disc.total}}
+            </td>
+        </tr>
+    </table>
+    <input type="text" id="testVal" />
+    <input type="text" id="testVal2" />
+    <button type="button" id="test">Click Me!</button>
+    <ul id="result">
+        
+    </ul>
+</div>

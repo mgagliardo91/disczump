@@ -1,59 +1,53 @@
-<!-- views/signup.ejs -->
-<!doctype html>
-<html>
-<head>
+{{#section 'head'}}
     <title>disc|zump - Link Account</title>
-</head>
-<body>
-    <div class="page-container container">
-        <div class="page-header">
-            <i class="fa fa-facebook-square fb-color"></i>
-            {{#if unlink}}
-            <h1>Unlink Facebook</h1>
-            {{else}}
-            <h1>Connect with Facebook</h1>
-            {{/if}}
-        </div>
-        <div class="page-body">
-            {{#if message.error}}
-            <div class="alert alert-danger" role="alert">
-                <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <strong>Error: </strong>{{message.error}}
-            </div>
-            {{/if}}
-            {{#if unlink}}
-            <strong>We are sorry to see you go!</strong>
-            {{else}}
-            <strong>Join the disc|zump Community!</strong>
-            {{/if}}
-            <br />
-            <br />
-            Linking your disc|zump account to Facebook allows you to access many 
-            features including sharing with friends, posting to groups and more! Once your 
-            account has been linked, you can then login with a single click in addition to 
-            the standard method of using your email and password.
-            <br />
-            <br />
-            You can always link/unlink your facebook account in the future by accessing 
-            the appropriate option from the account settings menu.
-        </div>
-        <div style="text-align: center">
-            {{#if unlink}}
-            <a class="btn btn-wide btn-primary btn-facebook" href="/account/unlink/facebook">
-                <i class="fa fa-frown-o pull-left"></i> Unlink!</a>
-            {{#unless popup}}
-            <a class="btn btn-wide btn-default" href="/dashboard">
-                <i class="fa fa-smile-o pull-left"></i> Nevermind!</a>
-            {{/unless}}
-            {{else}}
-            <a class="btn btn-wide btn-primary btn-facebook" href="/account/link/facebook">
-                <i class="fa fa-facebook-square pull-left"></i> Link!</a>
-            {{#unless popup}}
-            <a class="btn btn-wide btn-default" href="/dashboard">
-                <i class="fa fa-home pull-left"></i> Take Me Home!</a>
-            {{/unless}}
-            {{/if}}
-        </div>
+{{/section}}
+<div class="page-container container">
+    <div class="page-header">
+        <i class="fa fa-facebook-square fb-color"></i>
+        {{#if unlink}}
+        <h1>Unlink Facebook</h1>
+        {{else}}
+        <h1>Connect with Facebook</h1>
+        {{/if}}
     </div>
-</body>
-</html>
+    <div class="page-body">
+        {{#if message.error}}
+        <div class="alert alert-danger" role="alert">
+            <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <strong>Error: </strong>{{message.error}}
+        </div>
+        {{/if}}
+        {{#if unlink}}
+        <strong>We are sorry to see you go!</strong>
+        {{else}}
+        <strong>Join the disc|zump Community!</strong>
+        {{/if}}
+        <br />
+        <br />
+        Linking your disc|zump account to Facebook allows you to access many 
+        features including sharing with friends, posting to groups and more! Once your 
+        account has been linked, you can then login with a single click in addition to 
+        the standard method of using your email and password.
+        <br />
+        <br />
+        You can always link/unlink your facebook account in the future by accessing 
+        the appropriate option from the account settings menu.
+    </div>
+    <div style="text-align: center">
+        {{#if unlink}}
+        <a class="btn btn-wide btn-primary btn-facebook" href="/account/unlink/facebook">
+            <i class="fa fa-frown-o pull-left"></i> Unlink!</a>
+        {{#unless popup}}
+        <a class="btn btn-wide btn-default" href="/dashboard">
+            <i class="fa fa-smile-o pull-left"></i> Nevermind!</a>
+        {{/unless}}
+        {{else}}
+        <a class="btn btn-wide btn-primary btn-facebook" href="/account/link/facebook">
+            <i class="fa fa-facebook-square pull-left"></i> Link!</a>
+        {{#unless popup}}
+        <a class="btn btn-wide btn-default" href="/dashboard">
+            <i class="fa fa-home pull-left"></i> Take Me Home!</a>
+        {{/unless}}
+        {{/if}}
+    </div>
+</div>

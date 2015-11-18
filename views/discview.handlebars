@@ -1,5 +1,3 @@
-<!doctype html>
-<html>
 {{#section 'head'}}
 <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# testdisczumpfb: http://ogp.me/ns/fb/testdisczumpfb#">
     <title>disc|zump - Public View</title>
@@ -20,124 +18,122 @@
     {{/if}}
 </head>
 {{/section}}
-<body url="{{serverURL}}">
-    <div class="page public-disc-view" id="{{disc._id}}">
-        <div class="row">
-            <div class="page-btn-container">
-                <span id="share-disc" class="page-title-btn"><i class="fa fa-facebook-square" title="Share Disc"></i></span>
-                <span id="copy-link" class="page-title-btn"><i class="fa fa-link" title="Copy Public URL"></i></span>
-                <div class="clearfix"></div>
-            </div>
-            <div class="page-title" id="view-disc-title">{{disc.brand}} {{disc.name}}</div>
-            <hr>
+<div style="display: none;" firstUse="{{firstUse}}" serverURL="{{serverURL}}" id="server-params"></div>
+<div class="page public-disc-view" id="{{disc._id}}">
+    <div class="row">
+        <div class="page-btn-container">
+            <span id="share-disc" class="page-title-btn"><i class="fa fa-facebook-square" title="Share Disc"></i></span>
+            <span id="copy-link" class="page-title-btn"><i class="fa fa-link" title="Copy Public URL"></i></span>
             <div class="clearfix"></div>
         </div>
-        <div id="disc-view">
-            <div class="image-block-display">
-                <div class="image-block">
-                    <div class="image-block-frame">
-                        {{#if primaryImage}}
-                        <img src="/files/{{primaryImage.fileId}}" class="fit-parent" id="view-disc-image">
-                        {{else}}
-                        <img src="/static/logo/logo_small.svg" class="fit-parent" id="view-disc-image">
-                        {{/if}}
-                    </div>
+        <div class="page-title" id="view-disc-title">{{disc.brand}} {{disc.name}}</div>
+        <hr>
+        <div class="clearfix"></div>
+    </div>
+    <div id="disc-view">
+        <div class="image-block-display">
+            <div class="image-block">
+                <div class="image-block-frame">
+                    {{#if primaryImage}}
+                    <img src="/files/{{primaryImage.fileId}}" class="fit-parent" id="view-disc-image">
+                    {{else}}
+                    <img src="/static/logo/logo_small.svg" class="fit-parent" id="view-disc-image">
+                    {{/if}}
                 </div>
-                <div class="image-list">
-                    <div class="image-list-container image-list-container-simple">
-                        <div class="image-list-table" id="view-disc-image-container">
-                            <div class="image-item-container logo-placeholder">
-                                <div class="image-item">
-                                    <div class="image-preview active">
-                                        <img src="/static/logo/logo_small.svg" class="fit-parent">
-                                    </div>
+            </div>
+            <div class="image-list">
+                <div class="image-list-container image-list-container-simple">
+                    <div class="image-list-table" id="view-disc-image-container">
+                        <div class="image-item-container logo-placeholder">
+                            <div class="image-item">
+                                <div class="image-preview active">
+                                    <img src="/static/logo/logo_small.svg" class="fit-parent">
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="view-info-container">
-                <div class="view-disc-row disc-info">
-                    <div class="flight-container">
-                        <table class="flight-number-table">
-                            <tbody>
-                                <tr>
-                                    <td class="flight-number-table-cell">
-                                        <p class="flight-number-table-cell-title">Speed</p>
-                                        <p class="flight-number-table-cell-value">{{#exists disc.speed}}{{disc.speed}}{{else}}--{{/exists}}</p>
-                                    </td>
-                                    <td class="flight-number-table-cell">
-                                        <p class="flight-number-table-cell-title">Glide</p>
-                                        <p class="flight-number-table-cell-value">{{#exists disc.glide}}{{disc.glide}}{{else}}--{{/exists}}</p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="flight-number-table-cell">
-                                        <p class="flight-number-table-cell-title">Turn</p>
-                                        <p class="flight-number-table-cell-value">{{#exists disc.turn}}{{disc.turn}}{{else}}--{{/exists}}</p>
-                                    </td>
-                                    <td class="flight-number-table-cell">
-                                        <p class="flight-number-table-cell-title">Fade</p>
-                                        <p class="flight-number-table-cell-value">{{#exists disc.fade}}{{disc.fade}}{{else}}--{{/exists}}</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="view-disc-info">
-                        <div>
-                            <div class="view-disc-info-row">
-                                <div class="info-label">Type:</div>
-                                <div class="info-data">{{#exists disc.type}}{{disc.type}}{{else}}-{{/exists}}</div>
-                            </div>
-                            <div class="view-disc-info-row">
-                                <div class="info-label">Material:</div>
-                                <div class="info-data">{{#exists disc.material}}{{disc.material}}{{else}}-{{/exists}}</div>
-                            </div>
-                            <div class="view-disc-info-row">
-                                <div class="info-label">Color:</div>
-                                <div class="info-data">{{#exists disc.color}}{{disc.color}}{{else}}-{{/exists}}</div>
-                            </div>
-                            <div class="view-disc-info-row">
-                                <div class="info-label">Weight:</div>
-                                <div class="info-data">{{#exists disc.weight}}{{disc.weight}}g{{else}}-{{/exists}}</div>
-                            </div>
-                            <div class="view-disc-info-row">
-                                <div class="info-label">Condition:</div>
-                                <div class="info-data">{{#exists disc.condition}}{{disc.condition}}/10{{else}}-{{/exists}}</div>
-                            </div>
-                            <div class="view-disc-info-row">
-                                <div class="info-label">Owner:</div>
-                                <div class="info-data dz-link dz-color" id="disc-owner"><a href="/dashboard#view=profile&user_id={{user._id}}">{{user.username}}</a></div>
-                            </div>
+        </div>
+        <div class="view-info-container">
+            <div class="view-disc-row disc-info">
+                <div class="flight-container">
+                    <table class="flight-number-table">
+                        <tbody>
+                            <tr>
+                                <td class="flight-number-table-cell">
+                                    <p class="flight-number-table-cell-title">Speed</p>
+                                    <p class="flight-number-table-cell-value">{{#exists disc.speed}}{{disc.speed}}{{else}}--{{/exists}}</p>
+                                </td>
+                                <td class="flight-number-table-cell">
+                                    <p class="flight-number-table-cell-title">Glide</p>
+                                    <p class="flight-number-table-cell-value">{{#exists disc.glide}}{{disc.glide}}{{else}}--{{/exists}}</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="flight-number-table-cell">
+                                    <p class="flight-number-table-cell-title">Turn</p>
+                                    <p class="flight-number-table-cell-value">{{#exists disc.turn}}{{disc.turn}}{{else}}--{{/exists}}</p>
+                                </td>
+                                <td class="flight-number-table-cell">
+                                    <p class="flight-number-table-cell-title">Fade</p>
+                                    <p class="flight-number-table-cell-value">{{#exists disc.fade}}{{disc.fade}}{{else}}--{{/exists}}</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="view-disc-info">
+                    <div>
+                        <div class="view-disc-info-row">
+                            <div class="info-label">Type:</div>
+                            <div class="info-data">{{#exists disc.type}}{{disc.type}}{{else}}-{{/exists}}</div>
+                        </div>
+                        <div class="view-disc-info-row">
+                            <div class="info-label">Material:</div>
+                            <div class="info-data">{{#exists disc.material}}{{disc.material}}{{else}}-{{/exists}}</div>
+                        </div>
+                        <div class="view-disc-info-row">
+                            <div class="info-label">Color:</div>
+                            <div class="info-data">{{#exists disc.color}}{{disc.color}}{{else}}-{{/exists}}</div>
+                        </div>
+                        <div class="view-disc-info-row">
+                            <div class="info-label">Weight:</div>
+                            <div class="info-data">{{#exists disc.weight}}{{disc.weight}}g{{else}}-{{/exists}}</div>
+                        </div>
+                        <div class="view-disc-info-row">
+                            <div class="info-label">Condition:</div>
+                            <div class="info-data">{{#exists disc.condition}}{{disc.condition}}/10{{else}}-{{/exists}}</div>
+                        </div>
+                        <div class="view-disc-info-row">
+                            <div class="info-label">Owner:</div>
+                            <div class="info-data dz-link dz-color" id="disc-owner"><a href="/dashboard#view=profile&user_id={{user._id}}">{{user.username}}</a></div>
                         </div>
                     </div>
-                    <div class="clearfix"></div>
                 </div>
-                <div class="view-disc-row short">
-                    <div class="info-label">Tags:</div>
-                    <div class="info-data" id="view-disc-tagList">
-                        {{#each disc.tagList}}
-                            <div class="tag-item"><p class="tag-item-text">{{this}}</p></div>
-                        {{/each}}
-                     </div>
-                </div>
-                <div class="view-disc-row short">
-                    <div class="info-label">Notes:</div>
-                    <div class="info-data" id="view-disc-notes">{{#exists disc.notes}}{{disc.notes}}{{else}}-{{/exists}}</div>
-                </div>
+                <div class="clearfix"></div>
             </div>
-            <div class="clearfix"></div>
+            <div class="view-disc-row short">
+                <div class="info-label">Tags:</div>
+                <div class="info-data" id="view-disc-tagList">
+                    {{#each disc.tagList}}
+                        <div class="tag-item"><p class="tag-item-text">{{this}}</p></div>
+                    {{/each}}
+                 </div>
+            </div>
+            <div class="view-disc-row short">
+                <div class="info-label">Notes:</div>
+                <div class="info-data" id="view-disc-notes">{{#exists disc.notes}}{{disc.notes}}{{else}}-{{/exists}}</div>
+            </div>
         </div>
-        <div class="row" id="public-disc-table">
-            <div class="row-label">Public Discs<span class="pull-right dz-link dz-color" id="show-dashboard"><a href="/dashboard#view=dashboard&user_id={{user._id}}">View All</a></span></div>
-            <div class="public-disc-row-container">
-                <div class="public-disc-row">
-                </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="row" id="public-disc-table">
+        <div class="row-label">Public Discs<span class="pull-right dz-link dz-color" id="show-dashboard"><a href="/dashboard#view=dashboard&user_id={{user._id}}">View All</a></span></div>
+        <div class="public-disc-row-container">
+            <div class="public-disc-row">
             </div>
         </div>
     </div>
-    <script src="/static/js/discview.js"></script>
-</body>
-</html>
+</div>
+<script src="/static/js/discview.js"></script>

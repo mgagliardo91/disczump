@@ -241,6 +241,10 @@
     position: relative;
 }
 
+.colorize-container.disabled {
+    opacity: 0.25;
+}
+
 .colorize-item {
     height: 19px;
     width: 19px;

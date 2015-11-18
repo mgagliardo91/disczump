@@ -22,7 +22,8 @@ var accountDropzone;
 var cropLock;
 var serverCallback = {};
 var connectTries = 0;
-var serverURL = '/';
+var firstUse = false;
+var serverURL = 'http://www.disczump.com';
 
 // Library Instances
 var myZumpColorPicker;
@@ -63,7 +64,11 @@ $(document).ready(function(){
 		});
 	}); 
    	
-   	serverURL = $('body').attr('url');
+   	var $serverParams;
+   	if (($serverParams = $('#server-params')).length) {
+   		serverURL = $serverParams.attr('serverURL');
+   		firstUse = $serverParams.attr('firstUse') == 'true';
+   	}
    	
    	setupFrameworkListeners();
     
@@ -244,6 +249,8 @@ $(document).ready(function(){
 	
 	$('.colorize-item').click(function() {
 		var $this = $(this);
+		if ($this.parents('.colorize-container').hasClass('disabled')) return;
+		
 		myZumpColorPicker.getColor($this, function(success, color) {
 			if (success) {
 				$this.css('backgroundColor', color);
@@ -832,7 +839,7 @@ function triggerPageChange(sender, page, callback) {
 function initializePage(callback) {
     var params = getSearchParameters();
     
-    if ((isDef(params.firstUse) && params.firstUse == 'true') || $('body').hasClass('first-use')) {
+    if ((isDef(params.firstUse) && params.firstUse == 'true') || firstUse) {
     	 new ZumpTutorial().showTutorial();
 		 return callback();
     }
@@ -1052,6 +1059,15 @@ function initSettings() {
 	}
 }
 
+function updateColorize(event, state) {
+	if (!state) {
+		$('.colorize-container').addClass('disabled');
+	} else {
+		$('.colorize-container').removeClass('disabled');
+		
+	}
+}
+
 function setUserPrefs() {
 	if (userPrefs.defaultView.length > 0) {
 		$('#default-view').val(userPrefs.defaultView);
@@ -1076,7 +1092,9 @@ function setUserPrefs() {
 			userPrefs.defaultSort[1].sortAsc ? $('#sort-order-secondary-direction').val("Ascending") : $('#sort-order-secondary-direction').val("Descending");
 		}
 	}
-	$('#colorize-visibility').bootstrapSwitch('state', userPrefs.colorizeVisibility);
+	$('#colorize-visibility').bootstrapSwitch('state', userPrefs.colorizeVisibility).off('switchChange.bootstrapSwitch').on('switchChange.bootstrapSwitch', updateColorize);
+	updateColorize(null, userPrefs.colorizeVisibility);
+	
 	$('#show-template-picker').bootstrapSwitch('state', userPrefs.showTemplatePicker);
 	
 	if (isDef(userPrefs.colorize)) {
@@ -5360,21 +5378,22 @@ var ZumpMessenger = function(opt) {
     //----------------------/
     
     var pushMessageUpdate = function(thread, message) {
-    	if (isShowing && activeThread.threadId == message.threadId) {
-    		thread.messageCount += 1;
-			$inboxList.prepend($('li.thread-container[threadId="' + message.threadId + '"]'));
-			appendMessage(message);
-	    	$messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
-	    	putThreadState(thread.threadId, {messageCount: thread.messageCount});
-	    	updateThread(thread);
-		} else {
-			$('li.thread-container[threadId="' + thread.threadId + '"]').remove();
-			prependThread(thread);
-	    	updateThread(thread);
-			showNotification('Thread: ' + thread.threadTag, 'You have receieved a new message!', function() {
-				myMessenger.openThreadById(thread.threadId);
-			});
-		}
+    	if (activeThread && activeThread.threadId == message.threadId) {
+    		appendMessage(message);
+    		
+	    	if (isShowing) {
+	    		thread.messageCount += 1;
+	    		$inboxList.prepend($('li.thread-container[threadId="' + message.threadId + '"]'));
+	    		$messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
+	    		putThreadState(thread.threadId, {messageCount: thread.messageCount});
+	    		return;
+	    	}
+    	}
+    	
+    	updateThread(thread);
+    	showNotification('Thread: ' + thread.threadTag, 'You have receieved a new message!', function() {
+			myMessenger.openThreadById(thread.threadId);
+		});
     }
     
     var resizeMessageArea = function() {

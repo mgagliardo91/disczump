@@ -1,42 +1,62 @@
-<!-- views/signup.ejs -->
-<!doctype html>
-<html>
-<head>
+{{#section 'head'}}
     <title>disc|zump - Sign Up</title>
     <link rel="stylesheet" href="/static/css/signup.css">
-</head>
-<body>
-    <div class="signup-form-container">
-        <div class="signup-form-cell">
-            <div class="signup-form-center">
-                <form action="/signup" method="post" id="signup-form" autocomplete="off">
-                    <img src="/static/logo/logo_small.svg" class="main-logo" />
-                    {{#if message.error}}
-                    <div class="alert alert-danger" role="alert">
-                        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                        <strong>Error: </strong>{{message.error}}
-                    </div>
-                    {{/if}}
-                    {{#if message.info}}
-                    <div class="alert alert-info" role="alert">
-                        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                        <strong>Note: </strong>{{message.info}}
-                    </div>
-                    {{/if}}
-                    <div class="signup-form-stacked">
-                        <div class="input-field">
-                            <div class="input-prefix-container">
-                                <div class="input-prefix">
-                                    <span><i class="fa fa-asterisk"></i></span>
-                                </div>
-                            </div>
-                            <div class="input-group" id="emailGroup">
-                                <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
-                                <input class="form-control" id="email" type="text" name="email" placeholder="Email" value="{{email}}" autocomplete="off" param="Email">
+{{/section}}
+<div class="signup-form-container">
+    <div class="signup-form-cell">
+        <div class="signup-form-center">
+            <form action="/signup" method="post" id="signup-form" autocomplete="off">
+                <img src="/static/logo/logo_small.svg" class="main-logo" />
+                {{#if message.error}}
+                <div class="alert alert-danger" role="alert">
+                    <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <strong>Error: </strong>{{message.error}}
+                </div>
+                {{/if}}
+                {{#if message.info}}
+                <div class="alert alert-info" role="alert">
+                    <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <strong>Note: </strong>{{message.info}}
+                </div>
+                {{/if}}
+                <div class="signup-form-stacked">
+                    <div class="input-field">
+                        <div class="input-prefix-container">
+                            <div class="input-prefix">
+                                <span><i class="fa fa-asterisk"></i></span>
                             </div>
                         </div>
-                        {{#if isMobile}}
-                        <div class="input-field">
+                        <div class="input-group" id="emailGroup">
+                            <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
+                            <input class="form-control" id="email" type="text" name="email" placeholder="Email" value="{{email}}" autocomplete="off" param="Email">
+                        </div>
+                    </div>
+                    {{#if isMobile}}
+                    <div class="input-field">
+                        <div class="input-prefix-container">
+                            <div class="input-prefix">
+                                <span><i class="fa fa-asterisk"></i></span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                            <input class="form-control" id="password" type="password" name="password" placeholder="Password" autocomplete="off" param="Password">
+                        </div>
+                    </div>
+                    <div class="input-field">
+                        <div class="input-prefix-container">
+                            <div class="input-prefix">
+                                <span><i class="fa fa-asterisk"></i></span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                            <input class="form-control" id="verify-password" type="password" placeholder="Verify Password" autocomplete="off" param="Verify Password">
+                        </div>
+                    </div>
+                    {{else}}
+                    <div class="input-group-inline">
+                        <div class="input-field inline">
                             <div class="input-prefix-container">
                                 <div class="input-prefix">
                                     <span><i class="fa fa-asterisk"></i></span>
@@ -47,7 +67,7 @@
                                 <input class="form-control" id="password" type="password" name="password" placeholder="Password" autocomplete="off" param="Password">
                             </div>
                         </div>
-                        <div class="input-field">
+                        <div class="input-field inline">
                             <div class="input-prefix-container">
                                 <div class="input-prefix">
                                     <span><i class="fa fa-asterisk"></i></span>
@@ -58,110 +78,84 @@
                                 <input class="form-control" id="verify-password" type="password" placeholder="Verify Password" autocomplete="off" param="Verify Password">
                             </div>
                         </div>
-                        {{else}}
-                        <div class="input-group-inline">
-                            <div class="input-field inline">
-                                <div class="input-prefix-container">
-                                    <div class="input-prefix">
-                                        <span><i class="fa fa-asterisk"></i></span>
-                                    </div>
-                                </div>
-                                <div class="input-group">
-                                    <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                                    <input class="form-control" id="password" type="password" name="password" placeholder="Password" autocomplete="off" param="Password">
+                        <div class="clearfix"></div>
+                    </div>
+                    {{/if}}
+                    <div class="input-group-inline">
+                        <div class="input-field inline">
+                            <div class="input-prefix-container">
+                                <div class="input-prefix">
+                                    <span><i class="fa fa-asterisk"></i></span>
                                 </div>
                             </div>
-                            <div class="input-field inline">
-                                <div class="input-prefix-container">
-                                    <div class="input-prefix">
-                                        <span><i class="fa fa-asterisk"></i></span>
-                                    </div>
-                                </div>
-                                <div class="input-group">
-                                    <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-                                    <input class="form-control" id="verify-password" type="password" placeholder="Verify Password" autocomplete="off" param="Verify Password">
-                                </div>
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-user-secret fa-fw"></i></span>
+                                <input class="form-control" id="username" type="text" name="username" placeholder="Username" value="{{username}}" autocomplete="off" param="Username">
                             </div>
-                            <div class="clearfix"></div>
                         </div>
-                        {{/if}}
-                        <div class="input-group-inline">
-                            <div class="input-field inline">
-                                <div class="input-prefix-container">
-                                    <div class="input-prefix">
-                                        <span><i class="fa fa-asterisk"></i></span>
-                                    </div>
-                                </div>
-                                <div class="input-group">
-                                    <span class="input-group-addon"><i class="fa fa-user-secret fa-fw"></i></span>
-                                    <input class="form-control" id="username" type="text" name="username" placeholder="Username" value="{{username}}" autocomplete="off" param="Username">
-                                </div>
-                            </div>
-                            <div id="username-feedback" class="text-left inline">
-                            </div>
-                            <div class="clearfix"></div>
+                        <div id="username-feedback" class="text-left inline">
                         </div>
-                        <div class="input-group-inline">
-                            <div class="input-field inline">
-                                <div class="input-prefix-container">
-                                    <div class="input-prefix">
-                                        <span><i class="fa fa-asterisk"></i></span>
-                                    </div>
-                                </div>
-                                <div class="input-group">
-                                    <span class="input-group-addon"><i class="fa fa-location-arrow fa-fw"></i></span>
-                                    <input class="form-control" id="zipCode" type="text" name="zipCode" placeholder="Zip Code" value="{{zipCode}}" autocomplete="off" param="Zip Code">
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="input-group-inline">
+                        <div class="input-field inline">
+                            <div class="input-prefix-container">
+                                <div class="input-prefix">
+                                    <span><i class="fa fa-asterisk"></i></span>
                                 </div>
                             </div>
-                            <div id="citystate" class="text-left inline">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-location-arrow fa-fw"></i></span>
+                                <input class="form-control" id="zipCode" type="text" name="zipCode" placeholder="Zip Code" value="{{zipCode}}" autocomplete="off" param="Zip Code">
                             </div>
-                            <div class="clearfix"></div>
                         </div>
-                        {{#if isMobile}}
+                        <div id="citystate" class="text-left inline">
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                    {{#if isMobile}}
+                    <div class="input-group inline">
+                        <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
+                        <input class="form-control" id="firstName" type="text" name="firstName" placeholder="First Name" value="{{firstName}}" autocomplete="off" param="First Name">
+                    </div>
+                    <div class="input-group inline">
+                        <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
+                        <input class="form-control" id="lastName" type="text" name="lastName" placeholder="Last Name" value="{{lastName}}" autocomplete="off" param="Last Name">
+                    </div>
+                    <div class="input-group inline">
+                        <span class="input-group-addon"><i class="fa fa-trophy fa-fw"></i></span>
+                        <input class="form-control" id="pdgaNumber" type="text" name="pdgaNumber" placeholder="PDGA Number" value="{{pdgaNumber}}" autocomplete="off" param="PDGA Number">
+                    </div>
+                    {{else}}
+                    <div class="input-group-inline">
                         <div class="input-group inline">
                             <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
-                            <input class="form-control" id="firstName" type="text" name="firstName" placeholder="First Name" value="{{firstName}}" autocomplete="off" param="First Name">
+                            <input class="form-control" id="firstName" type="text" name="firstName" placeholder="First Name" autocomplete="off" param="First Name">
                         </div>
                         <div class="input-group inline">
                             <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
-                            <input class="form-control" id="lastName" type="text" name="lastName" placeholder="Last Name" value="{{lastName}}" autocomplete="off" param="Last Name">
+                            <input class="form-control" id="lastName" type="text" name="lastName" placeholder="Last Name" autocomplete="off" param="Last Name">
                         </div>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="input-group-inline">
                         <div class="input-group inline">
                             <span class="input-group-addon"><i class="fa fa-trophy fa-fw"></i></span>
                             <input class="form-control" id="pdgaNumber" type="text" name="pdgaNumber" placeholder="PDGA Number" value="{{pdgaNumber}}" autocomplete="off" param="PDGA Number">
                         </div>
-                        {{else}}
-                        <div class="input-group-inline">
-                            <div class="input-group inline">
-                                <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
-                                <input class="form-control" id="firstName" type="text" name="firstName" placeholder="First Name" autocomplete="off" param="First Name">
-                            </div>
-                            <div class="input-group inline">
-                                <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
-                                <input class="form-control" id="lastName" type="text" name="lastName" placeholder="Last Name" autocomplete="off" param="Last Name">
-                            </div>
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="input-group-inline">
-                            <div class="input-group inline">
-                                <span class="input-group-addon"><i class="fa fa-trophy fa-fw"></i></span>
-                                <input class="form-control" id="pdgaNumber" type="text" name="pdgaNumber" placeholder="PDGA Number" value="{{pdgaNumber}}" autocomplete="off" param="PDGA Number">
-                            </div>
-                            <div class="clearfix"></div>
-                        </div>
-                        {{/if}}
-                        <div class="input-group">
-                            <div class="checkbox"><input type="checkbox" id="legal-accept" param="Legal Agreements"></input>I agree to both the <a href="/terms" target="_blank">Terms and Condtions</a> and <a href="/privacy" target="_blank">Privacy Policy</a>.</div>
-                        </div>
-                        <div class="signup-btn-container">
-                            <button id="submit" class="btn btn-submit btn-block" type="submit">Sign up</button>
-                        </div>
+                        <div class="clearfix"></div>
                     </div>
-                </form>
-            </div>
+                    {{/if}}
+                    <div class="input-group">
+                        <div class="checkbox"><input type="checkbox" id="legal-accept" param="Legal Agreements"></input>I agree to both the <a href="/terms" target="_blank">Terms and Condtions</a> and <a href="/privacy" target="_blank">Privacy Policy</a>.</div>
+                    </div>
+                    <div class="signup-btn-container">
+                        <button id="submit" class="btn btn-submit btn-block" type="submit">Sign up</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
-    <script src="/static/js/access.js"></script>
-    <script src="/static/js/validation.js"></script>
-</body>
-</html>
+</div>
+<script src="/static/js/access.js"></script>
+<script src="/static/js/validation.js"></script>

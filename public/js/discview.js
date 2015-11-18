@@ -4,11 +4,15 @@ var imageArray = [];
 var userPublicDiscs = [];
 var dzID = '1433417853616595';
 var $discRow;
-var serverURL = '/';
+var serverURL = 'http://www.disczump.com';
 
 $(document).ready(function() {
     $discRow = $('.public-disc-row');
-   	serverURL = $('body').attr('url');
+   	
+   	var $serverParams;
+   	if (($serverParams = $('#server-params')).length) {
+   		serverURL = $serverParams.attr('serverURL');
+   	}
     
     $(window).click(function(e) {
      	$.each($('.remove-on-close'), function(index) {
