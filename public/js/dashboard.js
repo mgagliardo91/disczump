@@ -32,6 +32,7 @@ var myDashboard;
 var myEditor;
 var mySocial;
 var accountValidation;
+var myNotifier;
 
 // Global vars
 var socket;
@@ -108,7 +109,10 @@ $(document).ready(function(){
     			$('#account-pdga').val(retData.pdgaNumber);
     			generateSuccess('Account successfully updated.', 'Success', true);
     			
+    			userAccount = retData;
+    			userCache[userAccount._id] = userAccount;
     			accountValidation.updateItem('account-username', 'data', retData.username);
+    			myNotifier.executeEvent('accountChange');
     		} else {
     			handleError(retData);
     		}
@@ -324,8 +328,10 @@ $(document).ready(function(){
 		},
 		onShow: function() {
    			hashProfileView(mySocial.CurrentUser());
+   			mySocial.onShow();
 		},
 		onHide: function() {
+			mySocial.onHide();
 		},
 		isShowing: function() {
    			hashProfileView(mySocial.CurrentUser());
@@ -968,8 +974,10 @@ function initSettings() {
 				deleteAccountImage(function(success, retData) {
 					if (success) {
 						userAccount = retData;
+						userCache[userAccount._id] = userAccount;
 						resetUserImage();
 						generateSuccess('Account image successfully updated.', 'Update Successful', true);
+						myNotifier.executeEvent('accountChange');
 					} else {
 						handleError(retData);
 					}
@@ -1047,9 +1055,11 @@ function initSettings() {
 				}).on("success", function(file, response) {
 					if (!isDef(response.error)) {
 						userAccount = response;
+						userCache[userAccount._id] = userAccount;
 						resetUserImage();
 						$('#profile-image-local-clear').trigger('click');
 						generateSuccess('Account image successfully updated', 'Update Successful', true);
+    					myNotifier.executeEvent('accountChange');
 					} else {
 						handleError(response);
 					}
@@ -1166,6 +1176,8 @@ function generateTooltipOptions(placement, trigger, title, width) {
 /*===================================================================*/
 
 function zumpLibraryInit() {
+	
+	myNotifier = new ZumpNotifier();
 	
 	mySocial = new ZumpSocial();
 	
@@ -2099,6 +2111,46 @@ function getMonth(month) {
 /*                     Library Objects                               */
 /*                                                                   */
 /*===================================================================*/
+
+/*
+* Name: ZumpNotifier
+* Date: 11/18/15
+*/
+var ZumpNotifier = function() {
+	
+	//----------------------\
+    // Javascript Objects
+    //----------------------/
+    var zumpNotifier = this;
+    var notifyTable = {
+    	accountChange : []
+    };
+    
+    //----------------------\
+    // Prototype Functions
+    //----------------------/
+    this.addListener = function(event, owner, callback) {
+    	if (notifyTable[event]) {
+    		notifyTable[event] = _.reject(notifyTable[event], function(listener) {
+    			return listener.id == owner;
+    		});
+    		notifyTable[event].push({
+    			id: owner,
+    			callback: callback
+    		});
+    	}
+    }
+    
+    this.executeEvent = function(event) {
+    	var eventListeners = notifyTable[event];
+    	
+    	if (eventListeners) {
+    		_.each(eventListeners, function(listener) {
+    			listener.callback(event);
+    		});
+    	}
+    }
+}
 
 /*
 * Name: ZumpTemplatePicker
@@ -4949,6 +5001,8 @@ var ZumpSocial = function(opt) {
     var zumpSocial = this;
     var zipCodeCache = {};
     var curUser;
+    var isShowing = false;
+    var forceUpdate = false;
     
     //----------------------\
     // jQuery Objects
@@ -5001,37 +5055,15 @@ var ZumpSocial = function(opt) {
     }
     
     this.showProfile = function(userId, fail) {
-    	setLoading(true);
-    	curUser = userId;
-    	var user = userCache[userId];
-    	
-    	if (userId == userAccount._id) {
-			$('.profile-action-container > button').attr('disabled', 'disabled');
-		} else {
-			$('.profile-action-container > button').removeAttr('disabled');
-		}
-		
-    	if (typeof(user) !== 'undefined') {
-    		userCache[user._id] = user;
-			populateProfile(user);
-			changePage('#pg-profile', function() {
-				setLoading(false);
-			});
-    	} else {
-    		getUser(userId, function(success, retUser) {
-    			if (success) {
-    				userCache[retUser._id] = retUser;
-					populateProfile(retUser);
-					changePage('#pg-profile', function() {
-						setLoading(false);
-					});
-    			} else {
-					if (fail) fail('Unknown profile identifier.');
-					setLoading(false);
-    			}
-    		});
-    	}
-    	
+    	setProfile(userId, fail);
+    }
+    
+    this.onShow = function() {
+    	isShowing = true;
+    }
+    
+    this.onHide = function() {
+    	isShowing = false;
     }
     
     //----------------------\
@@ -5070,13 +5102,8 @@ var ZumpSocial = function(opt) {
     	
     	$(document).on('click', '.profile-item', function() {
     		var selectedUser = $(this).attr('userid');
-    		if (curUser == selectedUser) {
-    			changePage('#pg-profile');
-    			return false;
-    		} else {
-	    		emptyProfileTemplate();
-	    		zumpSocial.showProfile(selectedUser);
-    		}
+    		
+    		setProfile(selectedUser);
     	});
     	
     	$(document).on('click', '.public-disc-item', function() {
@@ -5093,6 +5120,57 @@ var ZumpSocial = function(opt) {
     	$profileViewDashboard.click(showDashboard);
     	
     	$(window).on('resize', resize);
+    	
+    	myNotifier.addListener('accountChange', zumpSocial, function() {
+    		if (curUser == userAccount._id) {
+    			updateProfileItem(curUser);
+    			forceUpdate = true;
+    			
+    			if (isShowing) {
+    				setProfile(curUser);
+    			}
+    		}
+    	});
+    }
+    
+    var setProfile = function(userId, fail) {
+    	
+    	if (curUser == userId && !forceUpdate) {
+			changePage('#pg-profile');
+			return;
+		}
+		
+		forceUpdate = false;
+		setLoading(true);
+		var user = userCache[userId];
+		
+		if (userId == userAccount._id) {
+			$('.profile-action-container > button').attr('disabled', 'disabled');
+		} else {
+			$('.profile-action-container > button').removeAttr('disabled');
+		}
+		
+    	if (typeof(user) !== 'undefined') {
+    		curUser = userId;
+			populateProfile(user);
+			changePage('#pg-profile', function() {
+				setLoading(false);
+			});
+    	} else {
+    		getUser(userId, function(success, retUser) {
+    			if (success) {
+    				curUser = userId;
+    				userCache[retUser._id] = retUser;
+					populateProfile(retUser);
+					changePage('#pg-profile', function() {
+						setLoading(false);
+					});
+    			} else {
+					if (fail) fail('Unknown profile identifier.');
+					setLoading(false);
+    			}
+    		});
+    	}
     }
     
     var showDashboard = function() {
@@ -5115,6 +5193,7 @@ var ZumpSocial = function(opt) {
     	var image = getSafe(user.image, '');
     	var dateJoined = parseDate(user.dateJoined);
     	
+    	emptyProfileTemplate();
     	getPreview(user);
     	
     	if (fullName.length) {
@@ -5177,7 +5256,20 @@ var ZumpSocial = function(opt) {
     	$profileDiscCount.text('0');
     }
     
+    var updateProfileItem = function(userId) {
+    	var user = userCache[userId];
+    	var $profileItem = $('.profile-item[userId="' + userId + '"]');
+    	
+    	if ($profileItem.length) {
+    		$profileItem.empty().append(generateProfileItem(user).html());
+    	}
+    }
+    
     var appendProfileItem = function(user) {
+        $profileList.append(generateProfileItem(user));
+    }
+    
+    var generateProfileItem = function(user) {
     	var pdga = getSafe(user.pdgaNumber, '');
     	var firstName = getSafe(user.firstName, '');
     	var lastName = getSafe(user.lastName, '');
@@ -5216,7 +5308,7 @@ var ZumpSocial = function(opt) {
 	        });
         }
         
-        $profileList.append($profileItem);
+        return $profileItem;
     }
     
     var clearProfileList = function() {

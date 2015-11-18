@@ -16,7 +16,6 @@ $(document).ready(function(){
             {id:'zipCode', type:'zipcode', output: 'citystate', hint: 'Enter 5 digit zip code.'},
             {id:'firstName', optional: true, type:'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }, hint: 'Enter your first name to help people find you. (Cannot contain spaces)'},
             {id:'lastName', optional: true,  type:'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }, hint: 'Enter your last name to help people find you. (Cannot contain spaces)'},
-            {id:'legal-accept', type:'checkbox', value:true},
             {id:'pdgaNumber', optional: true, type:'function', fn: function(val) { return val.length == 0 ? undefined : /^[0-9]*$/.test(val) }, max: 6}
         ],
         feedbackOnInit: true,

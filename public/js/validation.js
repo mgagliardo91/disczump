@@ -172,7 +172,7 @@ var ZumpValidate = function(opt) {
                 
                 isValid = val == testVal;
                 return callback($input, isValid);
-            } if (item.type == 'email') {
+            } else if (item.type == 'email') {
                 isValid = (val.length == 0 ? undefined : emailRegex.test(val));
                 if (!(typeof isValid === 'undefined') && !isValid) return callback($input, isValid);
                 
