@@ -15,9 +15,9 @@ var localConfig = require('../config/localConfig.js');
 module.exports = function(app, passport, gridFs) {
 
     // Site
-    
     app.get('/', function(req, res) {
        res.render('home', {
+           isRelease: localConfig.release,
            isIndex: true,
            serverURL : localConfig.serverURL,
            reqScroll: req.device.isMobile
@@ -25,15 +25,21 @@ module.exports = function(app, passport, gridFs) {
     });
     
     app.get('/terms', function(req, res) {
-       res.render('terms');
+       res.render('terms', {
+           isRelease: localConfig.release
+       });
     });
     
     app.get('/faq', function(req, res) {
-       res.render('faq');
+       res.render('faq', {
+           isRelease: localConfig.release
+       });
     });
     
     app.get('/privacy', function(req, res) {
-       res.render('privacy');
+       res.render('privacy', {
+           isRelease: localConfig.release
+       });
     });
 
     app.get('/dashboard', isLoggedIn, function(req, res) {
@@ -48,6 +54,7 @@ module.exports = function(app, passport, gridFs) {
         }
         
         return res.render('dashboard', {
+            isRelease: localConfig.release,
             user : req.user,
             admin: req.session.admin,
             image : req.user.accountToString().image,
@@ -67,6 +74,7 @@ module.exports = function(app, passport, gridFs) {
         Confirm.initializeConfirmDelete(req.user._id, function(err, user, message) {
             if (err) {
                 return res.render('notification', {
+                    isRelease: localConfig.release,
                     isMobile: req.device.isMobile,
                     user : req.user,
                     image : req.user.accountToString().image,
@@ -85,6 +93,7 @@ module.exports = function(app, passport, gridFs) {
             Mailer.sendMail(user.local.email, 'disc|zump Account Deletion', message, function(err, result) {
                 if (err) {
                     return res.render('notification', {
+                        isRelease: localConfig.release,
                         isMobile: req.device.isMobile,
                         user : req.user,
                         image : req.user.accountToString().image,
@@ -101,6 +110,7 @@ module.exports = function(app, passport, gridFs) {
                 }
                     
                 return res.render('notification', {
+                    isRelease: localConfig.release,
                     isMobile: req.device.isMobile,
                     user : req.user,
                     image : req.user.accountToString().image,
@@ -131,6 +141,7 @@ module.exports = function(app, passport, gridFs) {
             } else {
                 EventController.addEvent(user._id, EventController.Types.AccountDeletion, 'Account has been deleted for user [' + user._id + '].');
                 return res.render('notification', {
+                    isRelease: localConfig.release,
                     isMobile: req.device.isMobile,
                     notify : {
                         pageHeader: 'Confirm Deletion',
@@ -154,6 +165,7 @@ module.exports = function(app, passport, gridFs) {
         DiscController.getDisc(userId, req.params.discid, function(err, disc) {
             if (err) {
                return res.render('notification', {
+                    isRelease: localConfig.release,
                     isMobile: req.device.isMobile,
                     user : req.user,
                     image : image,
@@ -172,6 +184,7 @@ module.exports = function(app, passport, gridFs) {
             UserController.getUser(disc.userId, function(err, user){
                 if (err) {
                     return res.render('notification', {
+                        isRelease: localConfig.release,
                         isMobile: req.device.isMobile,
                         user : req.user,
                         image : image,
@@ -188,6 +201,7 @@ module.exports = function(app, passport, gridFs) {
                 }
                 
                 return res.render('discview', {
+                    isRelease: localConfig.release,
                     disc: disc,
                     user : req.user,
                     image : image,
@@ -233,6 +247,7 @@ module.exports = function(app, passport, gridFs) {
                     }
                         
                     return res.render('notification', {
+                        isRelease: localConfig.release,
                         isMobile: req.device.isMobile,
                         notify : {
                             pageHeader: 'Confirm Account',
@@ -255,6 +270,7 @@ module.exports = function(app, passport, gridFs) {
     app.route('/recover')
         .get(function(req,res) {
             return res.render('userinput', {
+                isRelease: localConfig.release,
                 isMobile: req.device.isMobile,
                 message: {
                     error: req.flash('error'),
@@ -288,6 +304,7 @@ module.exports = function(app, passport, gridFs) {
                     }
                         
                     return res.render('notification', {
+                        isRelease: localConfig.release,
                         isMobile: req.device.isMobile,
                         notify : {
                            pageHeader: 'Recover Account',
@@ -316,6 +333,7 @@ module.exports = function(app, passport, gridFs) {
                 }
                 
                 return res.render('userinput', {
+                    isRelease: localConfig.release,
                     isMobile: req.device.isMobile,
                     message: {
                         error: req.flash('error')
@@ -359,6 +377,7 @@ module.exports = function(app, passport, gridFs) {
                      }
                      
                     return res.render('notification', {
+                        isRelease: localConfig.release,
                         isMobile: req.device.isMobile,
                         user : req.user,
                         image : req.user.accountToString().image,
@@ -378,6 +397,7 @@ module.exports = function(app, passport, gridFs) {
         })
         .get(isLoggedIn, function(req, res) {
             return res.render('userinput', {
+                isRelease: localConfig.release,
                 isMobile: req.device.isMobile,
                 user : req.user,
                 image : req.user.accountToString().image,
@@ -403,6 +423,7 @@ module.exports = function(app, passport, gridFs) {
         UserController.getUserFromHash(req.query.hashId, function(err, user) {
             if (err) {
                  return res.render('notification', {
+                    isRelease: localConfig.release,
                     isMobile: req.device.isMobile,
                     notify : {
                         pageHeader: err.error.type,
@@ -420,6 +441,7 @@ module.exports = function(app, passport, gridFs) {
             user.save();
             
             return res.render('notification', {
+                isRelease: localConfig.release,
                 isMobile: req.device.isMobile,
                 notify : {
                    pageHeader: 'Preferences Updated',
@@ -443,6 +465,7 @@ module.exports = function(app, passport, gridFs) {
         
         // render the page and pass in any flash data if it exists
         res.render('login', {
+            isRelease: localConfig.release,
             redirect: req.flash('redirect'),
             route: {
                 url: 'signup',
@@ -474,6 +497,7 @@ module.exports = function(app, passport, gridFs) {
 
         // render the page and pass in any flash data if it exists
         res.render('signup', {
+            isRelease: localConfig.release,
             isMobile: req.device.isMobile,
             email: req.flash('email'),
             username: req.flash('username'),
@@ -494,19 +518,6 @@ module.exports = function(app, passport, gridFs) {
     
     // process the signup form
     app.post('/signup', function(req, res, next) {
-        
-        // if (development.beta) { 
-        //     // validate passcode 
-        //     if (!req.body.passcode || (req.body.passcode != development.passcode)) {
-        //         req.flash('error', 'Invalid passcode. Please try again.');
-        //         req.flash('email', req.body.email);
-        //         req.flash('username', req.body.username);
-        //         req.flash('zipCode', req.body.zipCode);
-        //         req.flash('alias', req.body.alias);
-        //         req.flash('pdgaNumber', req.body.pdgaNumber);
-        //         return res.redirect('/signup');
-        //     }
-        // }
         
         passport.authenticate('local-signup', function(err, user, info) {
             req.flash('email', req.body.email);
@@ -533,6 +544,7 @@ module.exports = function(app, passport, gridFs) {
     app.get('/account/link', isLoggedIn, function(req, res) {
         if (req.user.facebook.id) {
             res.render('linkfacebook', {
+                isRelease: localConfig.release,
                 isMobile: req.device.isMobile,
                 user : req.user,
                 image : req.user.accountToString().image,
@@ -541,6 +553,7 @@ module.exports = function(app, passport, gridFs) {
            });
         } else {
             res.render('linkfacebook', {
+                isRelease: localConfig.release,
                 isMobile: req.device.isMobile,
                 user : req.user,
                 image : req.user.accountToString().image,

@@ -157,5 +157,10 @@
         </div>
     </div>
 </div>
+{{#if isRelease}}
+<script src="/static/js-dist/access.min.js"></script>
+<script src="/static/js-dist/validation.min.js"></script>
+{{else}}
 <script src="/static/js/access.js"></script>
 <script src="/static/js/validation.js"></script>
+{{/if}}

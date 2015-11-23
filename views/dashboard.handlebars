@@ -1,10 +1,18 @@
 {{#section 'head'}}
     <title>disc|zump - Dashboard</title>
-    <link rel="stylesheet" href="/static/css/dashboard.css">
-    <link rel="stylesheet" href="/static/css/dropzone.css">
+    {{#if isRelease}}
     <link rel="stylesheet" href="https://cdn.rawgit.com/fengyuanchen/cropper/v0.11.1/dist/cropper.min.css">
-    <link rel="stylesheet" href="/static/css/bootstrap-switch.min.css">
+    <link rel="stylesheet" href="/static/css-dist/dashboard.min.css">
+    <link rel="stylesheet" href="https://cdn.rawgit.com/fengyuanchen/cropper/v0.11.1/dist/cropper.min.css">
+    <link rel="stylesheet" href="/static/css-dist/bootstrap-switch.min.css">
+    <link rel="stylesheet" href="/static/css-dist/bootstrap-slider.min.css">
+    {{else}}
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdn.rawgit.com/fengyuanchen/cropper/v0.11.1/dist/cropper.min.css">
+    <link rel="stylesheet" href="/static/css-dist/bootstrap-switch.min.css">
     <link rel="stylesheet" href="/static/css/bootstrap-slider.css">
+    {{/if}}
+    
     <link href='https://fonts.googleapis.com/css?family=Orbitron:400,900' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Play:400,700' rel='stylesheet' type='text/css'>
 {{/section}}
@@ -933,11 +941,20 @@
 </div>
 <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
 <script src="https://cdn.rawgit.com/fengyuanchen/cropper/v0.11.1/dist/cropper.min.js"></script>
-<script src="/static/js/jquery.canvasjs.min.js"></script>
 <script src="https://cdn.rawgit.com/exif-js/exif-js/master/exif.js"></script>
+<script src="/static/js-dist/jquery.canvasjs.min.js"></script>
+{{#if isRelease}}
+<script src="/static/js-dist/dropzone.min.js"></script>
+<script src="/static/js-dist/bootstrap-switch.min.js"></script>
+<script src="/static/js-dist/bootstrap-slider.min.js"></script>
+<script src="/static/js-dist/jquery-ui.min.js"></script>
+<script src="/static/js-dist/validation.min.js"></script>
+<script src="/static/js-dist/dashboard.min.js"></script>
+{{else}}
 <script src="/static/js/dropzone.js"></script>
-<script src="/static/js/bootstrap-switch.min.js"></script>
+<script src="/static/js-dist/bootstrap-switch.min.js"></script>
 <script src="/static/js/bootstrap-slider.js"></script>
-<script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/js-dist/jquery-ui.min.js"></script>
 <script src="/static/js/validation.js"></script>
 <script src="/static/js/dashboard.js"></script>
+{{/if}}

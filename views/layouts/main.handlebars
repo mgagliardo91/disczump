@@ -22,7 +22,11 @@
     	{{/if}}
         <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" media="screen">
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        {{#if isRelease}}
+        <link rel="stylesheet" href="/static/css-dist/main.min.css">
+        {{else}}
         <link rel="stylesheet" href="/static/css/main.css">
+        {{/if}}
         <style type="text/css">
             body { padding-top: 70px; }
         </style>
@@ -36,7 +40,7 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
         <script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
         <script src="https://cdn.rawgit.com/jashkenas/underscore/master/underscore.js"></script>
-        <script src="/static/js/jquery.html5-placeholder-shim.js"></script>
+        <script src="/static/js-dist/jquery.html5-placeholder-shim.min.js"></script>
         {{{_sections.head}}}
     </head>
     <body>
@@ -90,7 +94,11 @@
             </div>
         </nav>
         {{/unless}}
+        {{#if isRelease}}
+        <script src="/static/js-dist/main.min.js"></script>
+        {{else}}
         <script src="/static/js/main.js"></script>
+        {{/if}}
         {{{body}}}
     </body>
 </html>

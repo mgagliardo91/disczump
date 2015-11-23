@@ -1,7 +1,11 @@
 {{#section 'head'}}
 <head>
     <title>disc|zump - FAQ</title>
+    {{#if isRelease}}
+    <link rel="stylesheet" href="/static/css-dist/faq.min.css">
+    {{else}}
     <link rel="stylesheet" href="/static/css/faq.css">
+    {{/if}}
 </head>
 {{/section}}
 <div class="page-scroll">
@@ -9,21 +13,7 @@
         <div class="page-header">
             <img src="/static/logo/logo_small_round.svg">
             <h1>Frequently Asked Questions</h1>
-            <script>
-                // $(document).ready(function() {
-                //     if ("onhashchange" in window) {
-                //         window.onhashchange = function(newURL, oldURL) {
-                //             var $elem = $(location.hash);
-                //             var top = $elem.offset().top;
-                //             var navHeight = $('.zump-navbar').outerHeight(true);
-                //             if (top > $(window).height()) {
-                //                 top += navHeight;
-                //             }
-                //             $(document).scrollTop(top);
-                //         };
-                //     }
-                // });
-            </script>
+            <script></script>
         </div>
         <div class="page-body">
             <ul class="toc-container">

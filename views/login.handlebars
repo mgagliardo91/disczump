@@ -1,6 +1,10 @@
 {{#section 'head'}}
     <title>disc|zump - Sign In</title>
+    {{#if isRelease}}
+    <link rel="stylesheet" href="/static/css-dist/login.min.css">
+    {{else}}
     <link rel="stylesheet" href="/static/css/login.css">
+    {{/if}}
 {{/section}}
 <form method="post" id="facebook-login" action="/auth/facebook" style="display: none">{{#if redirect}}<input type="hidden" name="redirect" value="{{redirect}}" />{{/if}}</form>
 <div data-role="page" class="login-form-container">
@@ -47,5 +51,10 @@
         </div>
     </div>
 </div>
+{{#if isRelease}}
+<script src="/static/js-dist/access.min.js"></script>
+<script src="/static/js-dist/validation.min.js"></script>
+{{else}}
 <script src="/static/js/access.js"></script>
 <script src="/static/js/validation.js"></script>
+{{/if}}
