@@ -640,6 +640,7 @@ a.btn-facebook:hover {
 
 .dropdown-search-list {
     margin-bottom: 0px;
+    position: relative;
 }
 
 .dropdown-list-item {

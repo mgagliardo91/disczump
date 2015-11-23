@@ -547,16 +547,16 @@ var ZumpDropdown = function(opt) {
     /*
     * Update Results Container Scroll Position
     */
-    var updateScroll = function($activeResult) {
-    	var curTop = $dropdown.scrollTop();
-    	var curBottom = $dropdown.height();
+    var updateScroll = function($activeResult) {    	
+        var curTop = $dropdown.scrollTop();
+    	var curBottom = curTop + $dropdown.height();
     	var resultTop = $activeResult.position().top;
-    	var resultBottom = resultTop  + $activeResult.outerHeight();
+    	var resultBottom = resultTop  + $activeResult.outerHeight(true);
     	
     	if (resultTop < curTop) { 
     		$dropdown.scrollTop(resultTop);	
     	} else if (resultBottom > curBottom) {
-    		$dropdown.scrollTop(curTop + (resultBottom - curBottom));
+    		$dropdown.scrollTop(resultBottom - $dropdown.height());
     	}
     }
     

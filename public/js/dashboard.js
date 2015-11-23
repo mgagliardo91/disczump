@@ -7776,14 +7776,14 @@ var ZumpTextAssist = function(opt) {
     */
     var updateScroll = function($activeResult) {
     	var curTop = $dropdown.scrollTop();
-    	var curBottom = $dropdown.height();
+    	var curBottom = curTop + $dropdown.height();
     	var resultTop = $activeResult.position().top;
-    	var resultBottom = resultTop  + $activeResult.outerHeight();
+    	var resultBottom = resultTop  + $activeResult.outerHeight(true);
     	
     	if (resultTop < curTop) { 
     		$dropdown.scrollTop(resultTop);	
     	} else if (resultBottom > curBottom) {
-    		$dropdown.scrollTop(curTop + (resultBottom - curBottom));
+    		$dropdown.scrollTop(resultBottom - $dropdown.height());
     	}
     }
     
