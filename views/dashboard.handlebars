@@ -253,7 +253,7 @@
                         <div id="current-images-section">
                             <div class="row-label">Current Images</div>
                             <div class="page-info">
-                                Drag images to reorder, and click the star to select a primary image.
+                                Drag images to reorder. Click the star to select a primary image.
                             </div>
                             <div class="modify-form-section">
                                 <div class="image-list">
@@ -544,12 +544,14 @@
                     <hr>
                 </div>
                 <div class="row">
-                    <div class="profile-image float" id="account-image">
-                        {{#if image}}
-                        <img src="{{image}}" />
-                        {{else}}
-                        <img src="/static/logo/logo_high_nobg.svg" />
-                        {{/if}}
+                    <div class="profile-image-wrapper float-left">
+                        <div class="profile-image" id="account-image">
+                            {{#if image}}
+                            <img src="{{image}}" />
+                            {{else}}
+                            <img src="/static/logo/logo_high_nobg.svg" />
+                            {{/if}}
+                        </div>
                     </div>
                     <div class="profile-status">
                         <div class="data-table">
@@ -571,6 +573,7 @@
                             </div>
                         </div>
                     </div>
+                    <div class="clearfix"></div>
                 </div>
                 <div class="row">
                     <div class="row-label">Personal Information</div>
@@ -633,9 +636,9 @@
                         you can set your profile to remain up-to-date with your Facebook 
                         profile picture.
                     </div>
-                    <table class="account-image{{#unless user.facebook.id}} no-fb{{/unless}} no-select">
-                        <tr>
-                            <td>
+                    <div class="account-image{{#unless user.facebook.id}} no-fb{{/unless}} no-select">
+                        <div class="half-width float-left">
+                            <div class="profile-image-wrapper center">
                                 <div class="profile-image upload custom" id="upload-profile-image">
                                     <div id="image-upload-placeholder">
                                         <div>
@@ -645,19 +648,49 @@
                                     </div>
                                     <div class="image-upload-overlay" id="upload-profile-overlay"></div>
                                 </div>
-                                <button id="profile-image-local-clear" class="btn btn-default">Clear</button>
-                                <button id="profile-image-local-submit" class="btn btn-primary" disabled>Upload</button>
-                            </td>
-                            <td id="profile-image-fb-container">
-                                {{#if user.facebook.id}}
+                            </div>
+                            <button id="profile-image-local-clear" class="btn btn-default">Clear</button>
+                            <button id="profile-image-local-submit" class="btn btn-primary" disabled>Upload</button>
+                        </div>
+                        <div class="half-width float-right" id="profile-image-fb-container">
+                            {{#if user.facebook.id}}
+                            <div class="profile-image-wrapper center">
                                 <div class="profile-image upload">
                                     <img src="{{user.facebook.image}}" />
                                 </div>
-                                <button id="profile-image-fb-submit" class="btn btn-primary">Use Facebook Photo</button>
-                                {{/if}}
-                            </td>
-                        </tr>
-                    </table>
+                            </div>
+                            <button id="profile-image-fb-submit" class="btn btn-primary">Use Facebook Photo</button>
+                            {{/if}}
+                        </div>
+                        <div class-"clearfix"></div>
+                    </div>
+                    {{!--<table class="account-image{{#unless user.facebook.id}} no-fb{{/unless}} no-select">--}}
+                    {{!--    <tr>--}}
+                    {{!--        <td>--}}
+                    {{!--            <div class="profile-image-wrapper">--}}
+                    {{!--                <div class="profile-image upload custom" id="upload-profile-image">--}}
+                    {{!--                    <div id="image-upload-placeholder">--}}
+                    {{!--                        <div>--}}
+                    {{!--                            <span><i class="fa fa-camera-retro fa-5x"></i></span>--}}
+                    {{!--                            <div class="upload-placeholder-text">Click or drag image here</div>--}}
+                    {{!--                        </div>--}}
+                    {{!--                    </div>--}}
+                    {{!--                    <div class="image-upload-overlay" id="upload-profile-overlay"></div>--}}
+                    {{!--                </div>--}}
+                    {{!--            </div>--}}
+                    {{!--            <button id="profile-image-local-clear" class="btn btn-default">Clear</button>--}}
+                    {{!--            <button id="profile-image-local-submit" class="btn btn-primary" disabled>Upload</button>--}}
+                    {{!--        </td>--}}
+                    {{!--        <td id="profile-image-fb-container">--}}
+                    {{!--            {{#if user.facebook.id}}--}}
+                    {{!--            <div class="profile-image upload">--}}
+                    {{!--                <img src="{{user.facebook.image}}" />--}}
+                    {{!--            </div>--}}
+                    {{!--            <button id="profile-image-fb-submit" class="btn btn-primary">Use Facebook Photo</button>--}}
+                    {{!--            {{/if}}--}}
+                    {{!--        </td>--}}
+                    {{!--    </tr>--}}
+                    {{!--</table>--}}
                 </div>
                 <div class="row">
                     <div class="row-label">Actions</div>

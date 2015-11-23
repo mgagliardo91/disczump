@@ -11,16 +11,22 @@
         <div class="alert alert-danger" role="alert">
             <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
             <strong>Error: </strong>{{message.error}}
+            {{#if message.link.url}}
+                <br />
+                <a href="{{message.link.url}}">{{message.link.text}}</a>
+            {{/if}}
         </div>
         {{/if}}
-        
         {{#if message.info}}
         <div class="alert alert-info" role="alert">
             <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
             <strong>Note: </strong>{{message.info}}
+            {{#if message.link.url}}
+                <br />
+                <a href="{{message.link.url}}">{{message.link.text}}</a>
+            {{/if}}
         </div>
         {{/if}}
-        
         {{#if userinput.text}}
         <p>{{userinput.text}}</p>
         {{/if}}

@@ -10,7 +10,7 @@ module.exports = {
     'admins': [
             'mike@disczump.com',
             'ben@disczump.com',
-            'disczump@gmail.com'
+            'support@disczump.com'
         ],
     'tokenTTL': '1h',
     'recoverTTL': '1h',

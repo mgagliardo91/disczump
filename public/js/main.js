@@ -1,4 +1,25 @@
 var url = "/api";
+var dzID = '1433417853616595';
+
+$(document).ready(function() {
+	var $scroller = $('.page-scroll');
+	
+	
+	if ($scroller.length) {
+		$scroller.find('.page-container').css({
+			
+		});
+		
+		$(window).on('resize', resizeScroller);
+		resizeScroller();
+	}
+});
+
+function resizeScroller() {
+	$('.page-scroll').css({
+		'max-height': $(window).height() - $('.zump-navbar').outerHeight(true)
+	});
+}
 
 function preloadImage() {
     var image = new Image();
@@ -6,6 +27,10 @@ function preloadImage() {
     
     var image2 = new Image();
     image2.src = 'static/logo/logo_block.svg';
+}
+
+function isInternetExplorer() {
+    return (window.navigator.userAgent.indexOf("MSIE ") > 0);
 }
 
 /*
@@ -24,11 +49,22 @@ function isDef(obj) {
 	return typeof obj !== 'undefined';
 }
 
-var shareFacebook = function(discId) {
-	var winTop = ($(window).height() / 2) - (300 / 2);
-	var winLeft = ($(window).width() / 2) - (600 / 2);
-    window.open('http://www.facebook.com/sharer/sharer.php?app_id=' + dzID + '&u=disczump.com/disc/' + discId + 
-    	'&display=popup&ref=plugin&src=share_button', 'sharer', 'top=' + winTop + ',left=' + winLeft + ',toolbar=0,status=0,width=' + 600 + ',height=' + 300);
+var shareFacebook = function(discId, callback) {
+	FB.api('/?id=' + serverURL + '/disc/' + discId + '&scrape=true', function(response) {
+    	var winTop = ($(window).height() / 2) - (300 / 2);
+		var winLeft = ($(window).width() / 2) - (600 / 2);
+		
+		
+		FB.ui({
+		  method: 'share',
+		  href: serverURL + '/disc/' + discId,
+		}, function(response){
+			console.log(response);
+			if (callback) {
+				callback();
+			}
+		});
+    });
 }
 
 function getUserImage(user) {
@@ -67,7 +103,7 @@ function handleError(error) {
 function generateInfo(message, title, autoClose, links) {
 	
 	$('.page-alert').remove();
-	$('body').prepend(generateMessage('info', message, title));
+	$('body').prepend(generateMessage('info', message, title, links));
 	$('.page-alert').slideDown(300);
 	if (autoClose) {
 		autoCloseAlert($('.page-alert'), '.close', 3000);
@@ -157,7 +193,7 @@ function generateInvalidDataError(invalidItems) {
 		for(var i = 0; i < invalidItems.length; i++) {
 			var item = invalidItems[i];
 			
-			if (i == invalidItems.length - 1) {
+			if (i == invalidItems.length - 1 && invalidItems.length > 1) {
 				errorText = errorText + ' and ';
 			} else if (i > 0) {
 				errorText = errorText + ', ';
@@ -169,20 +205,17 @@ function generateInvalidDataError(invalidItems) {
 		return generateError('Invalid responses to the following fields: ' + errorText + '.', 'ERROR', false);
 }
 
+
 function getCityState(zipcode, callback) {
+	
 	var success = false;
 	var retData;
-	$.ajax({
+	return $.ajax({
 		type: "GET",
 		dataType: "json",
 		url: 'https://maps.googleapis.com/maps/api/geocode/json?address=' + zipcode,
 		success: function (data) {
-			if (data.status == 'OK') {
-				var location = formatGeolocation(data.results[0]);
-			    retData = location.local + ", " + location.admin;
-			} else {
-				retData = 'Unknown';
-			}
+			retData = parseGeo(data);
 			success = true;
 		},
 		error: function (request, textStatus, errorThrown) {
@@ -196,6 +229,34 @@ function getCityState(zipcode, callback) {
 		   }
 		}
 	});
+}
+
+function parseGeo(results) {
+	var geoResults = [];
+	
+	if (results.status == 'OK') {
+		_.each(results.results, function(loc) {
+			var stringRes = loc.formatted_address;
+			var zip;
+			
+			_.each(loc.address_components, function(comps) {
+				if (_.contains(comps.types, 'postal_code')) {
+					zip = comps.long_name;
+				}
+			});
+			
+			if (stringRes && zip) {
+				geoResults.push({
+					formatted: stringRes,
+					zipCode: zip
+				});
+			}
+		});
+		
+		_.sortBy(geoResults, 'formatted');
+	}
+	
+	return geoResults;
 }
 
 function formatGeolocation(results) {

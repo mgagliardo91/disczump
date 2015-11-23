@@ -36,6 +36,7 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
         <script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
         <script src="https://cdn.rawgit.com/jashkenas/underscore/master/underscore.js"></script>
+        <script src="/static/js/jquery.html5-placeholder-shim.js"></script>
         {{{_sections.head}}}
     </head>
     <body>
@@ -58,6 +59,7 @@
                                 <ul class="zump-navbar-dropdown-menu dropdown-menu" role="menu">
                                     {{#if isDashboard}}
                                     <li><a href="#" id="menu-tutorial"><span><i class="fa fa-info-circle fa-tools"></i></span>Tutorial</a></li>
+                                    <li><a href="/faq"><span><i class="fa fa-question-circle fa-tools"></i></span>FAQ</a></li>
                                     <li><a href="#" id="menu-feedback"><span><i class="fa fa-comment fa-tools"></i></span>Feedback</a></li>
                                     {{#if admin}}<li><a href="/admin"><span><i class="fa fa-wrench fa-tools"></i></span>Admin Console</a></li>{{/if}}
                                     {{else}}

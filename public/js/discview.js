@@ -14,6 +14,12 @@ $(document).ready(function() {
    		serverURL = $serverParams.attr('serverURL');
    	}
     
+    $.getScript('//connect.facebook.net/en_UK/all.js', function(){
+		FB.init({
+			appId: dzID,
+		});
+	});
+    
     $(window).click(function(e) {
      	$.each($('.remove-on-close'), function(index) {
      		var domElem = $(this).get(0);
@@ -36,10 +42,11 @@ $(document).ready(function() {
     });
     
     $('#share-disc').click(function() {
-		var winTop = ($(window).height() / 2) - (300 / 2);
-		var winLeft = ($(window).width() / 2) - (600 / 2);
-        window.open('http://www.facebook.com/sharer/sharer.php?app_id=' + dzID + '&u=' + serverURL + '/disc/' + currentDisc._id + 
-        	'&display=popup&ref=plugin&src=share_button', 'sharer', 'top=' + winTop + ',left=' + winLeft + ',toolbar=0,status=0,width=' + 600 + ',height=' + 300);
+		var $this = $(this);
+		$this.removeClass('fa-facebook-square').addClass('fa-spinner').addClass('fa-pulse').addClass('disabled');
+        shareFacebook(currentDisc._id, function() {
+			$this.removeClass('fa-spinner').removeClass('fa-pulse').addClass('fa-facebook-square');
+		});
 	});
 	
 	$(document).on('mouseenter','.disc-gallery-item', function() {

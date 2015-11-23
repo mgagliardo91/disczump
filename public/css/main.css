@@ -160,7 +160,6 @@
     float: right;
 }
 
-
 .navbar-logo {
 	font-size: 1.4em;
 	color: rgb(134, 134, 134);
@@ -249,8 +248,8 @@
 }
 
 .image-link > img {
-	width: 40px;
-	max-width: 40px !important;
+	/*width: 40px;*/
+	max-width: 40px;
 	max-height: 40px;
 	margin-right: 5px;
 }
@@ -435,6 +434,10 @@
 	-moz-box-shadow: 2px 2px 10px 0px rgb(102, 115, 132);
 }
 
+.page-scroll {
+	overflow: auto;
+}
+
 .page-container {
 	padding-top: 20px;
 	max-width: 600px;
@@ -517,6 +520,10 @@ a.btn-facebook:hover {
     }
 }
 
+.page-header {
+	margin: 20px 0px;
+}
+
 .page-header > img {
 	float: left;
 }
@@ -587,6 +594,10 @@ a.btn-facebook:hover {
     .page-view {
         margin-left: 250px;
     }
+    
+    .legal-container {
+	    font-size: 0.7em !important;
+	}
 }
 
 @media (max-width: 1150px) {
@@ -597,4 +608,54 @@ a.btn-facebook:hover {
     .page-view {
         margin-left: 161px;
     }
+    
+    .legal-container {
+	    font-size: 0.6em !important;
+	}
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*                   Autocomplete List                               */
+/*                                                                   */
+/*===================================================================*/
+
+*:focus {
+    outline: none;
+}
+
+.dropdown-list-display {
+    max-height: 100px;
+    z-index: 1000;
+    background-color: #ffffff;
+    border-radius: 0px 0px 5px 5px;
+    position: absolute;
+    border: 1px solid #949494;
+    -webkit-box-shadow: 4px 3px 5px 0px rgba(31, 31, 31, 0.29);
+    -moz-box-shadow: 4px 3px 5px 0px rgba(31, 31, 31, 0.29);
+    box-shadow: 4px 3px 5px 0px rgba(31, 31, 31, 0.29);
+    overflow: auto;
+    display: none;
+}
+
+.dropdown-search-list {
+    margin-bottom: 0px;
+}
+
+.dropdown-list-item {
+    padding: 3px 5px;
+    cursor: pointer;
+    font-size: .8em;
+}
+
+.dropdown-list-item span {
+    margin-right: 5px;
+}
+
+.dropdown-list-item:hover {
+    background-color: #ccc;
+}
+
+.dropdown-list-item.active {
+    background-color: #ccc;
 }

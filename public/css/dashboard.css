@@ -125,6 +125,9 @@
 
 .lh-input {
     line-height: 34px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .dashboard-view {
@@ -369,23 +372,43 @@
 }
 
 .account-image {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.account-image td {
-    width: 50%;
     text-align: center;
 }
 
-.account-image td:first-child {
-    border-right: 2px solid black;
+.half-width {
+    width: 50%;
 }
 
-.account-image.no-fb td {
+.account-image {
     width: 100%;
-    border-right: 0px;
 }
+
+.account-image > .float-right {
+    border-left: 2px solid black;
+}
+
+.account-image.no-fb > .float-left {
+    width: 100%;
+}
+
+/*.account-image {*/
+/*    width: 100%;*/
+/*    border-collapse: collapse;*/
+/*}*/
+
+/*.account-image td {*/
+/*    width: 50%;*/
+/*    text-align: center;*/
+/*}*/
+
+/*.account-image td:first-child {*/
+/*    border-right: 2px solid black;*/
+/*}*/
+
+/*.account-image.no-fb td {*/
+/*    width: 100%;*/
+/*    border-right: 0px;*/
+/*}*/
 
 #upload-profile-image.dragging {
     background-color: rgb(175, 220, 245);
@@ -427,6 +450,16 @@
     font-weight: bold;
 }
 
+.profile-image-wrapper {
+    width: 170px;
+    height: 170px;
+    display: table;
+}
+
+.profile-image-wrapper.center {
+    margin: 0px auto 10px auto;
+}
+
 .profile-image {
     position: relative;
     width: 170px;
@@ -436,36 +469,24 @@
     background-color: rgb(238, 238, 238);
     padding: 9px 8px 8px 9px;
     border-radius: 3px;
+    display: table-cell;
+    vertical-align: middle;
 }
 
-.profile-image.float {
-    float: left;
-}
-
-.profile-image.upload {
-    margin: auto;
-    margin-bottom: 10px;
-    position: relative;
-}
-
-.profile-image.upload.custom {
-    cursor: pointer;
-}
-
-.profile-image > img {
+.profile-image > img, .dz-image-preview > img {
     max-width: 150px;
     max-height: 150px;
     border: 1px solid rgb(163, 163, 163);
 }
 
-.profile-image > .user-default-image > i {
-    width: 150px;
-    height: 150px;
-    background-color: #fff;
-    border: 1px solid rgb(163, 163, 163);
-    font-size: 100px;
-    display: table-cell;
-    vertical-align: middle;
+/*.profile-image.upload {*/
+/*    margin: auto;*/
+/*    margin-bottom: 10px;*/
+/*    position: relative;*/
+/*}*/
+
+.profile-image.upload.custom {
+    cursor: pointer;
 }
 
 .profile-status {
@@ -1459,7 +1480,7 @@
 }
 
 #public-disc-table {
-    margin-top: 30px;
+    margin: 30px 0px;
 }
 
 .public-disc-row-container {
@@ -1468,31 +1489,18 @@
 }
 
 .public-disc-row {
-    display: table;
-    table-layout: fixed;
-    margin: auto;
-    border-spacing: 30px;
-    -webkit-border-horizontal-spacing: 30px;
-    -webkit-border-vertical-spacing: 0px;
+    text-align: center;
 }
 
 .public-disc-item.disc-gallery-item {
     width: 150px;
     height: 150px;
-    display: table-cell;
-    vertical-align: middle;
+    display: inline-block;
     text-align: center;
     position: relative;
     border: 1px solid #000;
     cursor: default;
-}
-
-.public-disc-item.disc-gallery-item .disc-gallery-overlay {
-    /*cursor: default !important;*/
-}
-
-.public-disc-item > .disc-gallery-image-container {
-    border-spacing: 0px;
+    margin: 0px 10px;
 }
 
 .public-disc-item .disc-gallery-image > img {
@@ -1553,12 +1561,6 @@
         max-width: 100px;
         max-height: 100px;
     }
-    
-    .public-disc-row {
-        border-spacing: 10px;
-        -webkit-border-horizontal-spacing: 10px;
-        -webkit-border-vertical-spacing: 0px;
-    }
 }
 
 @media (max-width: 1150px) {
@@ -1593,7 +1595,7 @@
     }
     
     #profile-view {
-        width: 700px;
+        width: 600px;
     }
     
     .profile-view-left {
@@ -1602,6 +1604,7 @@
     
     .profile-view-right {
         margin-left: 270px;
+        font-size: 12px;
     }
         
     #profile-view-image-container > img, #profile-image-view-container > span {
@@ -1610,19 +1613,13 @@
     }
     
     .public-disc-item.disc-gallery-item {
-        width: 100px;
-        height: 100px;
+        width: 75px;
+        height: 75px;
     }
     
     .public-disc-item .disc-gallery-image > img {
-        max-width: 100px;
-        max-height: 100px;
-    }
-    
-    .public-disc-row {
-        border-spacing: 10px;
-        -webkit-border-horizontal-spacing: 10px;
-        -webkit-border-vertical-spacing: 0px;
+        max-width: 75px;
+        max-height: 75px;
     }
 }
 
@@ -2606,52 +2603,6 @@ img.fit-parent {
 
 /*===================================================================*/
 /*                                                                   */
-/*                   Autocomplete List                               */
-/*                                                                   */
-/*===================================================================*/
-
-*:focus {
-    outline: none;
-}
-
-.dropdown-list-display {
-    max-height: 100px;
-    z-index: 1000;
-    background-color: #ffffff;
-    border-radius: 0px 0px 5px 5px;
-    position: absolute;
-    border: 1px solid #949494;
-    -webkit-box-shadow: 4px 3px 5px 0px rgba(31, 31, 31, 0.29);
-    -moz-box-shadow: 4px 3px 5px 0px rgba(31, 31, 31, 0.29);
-    box-shadow: 4px 3px 5px 0px rgba(31, 31, 31, 0.29);
-    overflow: auto;
-    display: none;
-}
-
-.dropdown-search-list {
-    margin-bottom: 0px;
-}
-
-.dropdown-list-item {
-    padding: 3px 5px;
-    cursor: pointer;
-    font-size: .8em;
-}
-
-.dropdown-list-item span {
-    margin-right: 5px;
-}
-
-.dropdown-list-item:hover {
-    background-color: #ccc;
-}
-
-.dropdown-list-item.active {
-    background-color: #ccc;
-}
-
-/*===================================================================*/
-/*                                                                   */
 /*                      Template Picker                              */
 /*                                                                   */
 /*===================================================================*/
@@ -2959,6 +2910,7 @@ img.fit-parent {
     border: 2px solid #000;
     position: relative;
     overflow: hidden;
+    display: none;
 }
 
 .disc-gallery-item.no-results {

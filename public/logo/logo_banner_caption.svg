@@ -29,7 +29,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.70000001"
-     inkscape:cx="670.24232"
+     inkscape:cx="334.52804"
      inkscape:cy="538.42467"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -38,9 +38,9 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="1920"
-     inkscape:window-height="1047"
-     inkscape:window-x="3189"
+     inkscape:window-width="3200"
+     inkscape:window-height="1711"
+     inkscape:window-x="-11"
      inkscape:window-y="-11"
      inkscape:window-maximized="1"
      units="px" />
@@ -52,7 +52,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -68,6 +68,14 @@
        height="329.8671"
        x="-331.69937"
        y="-332.6918" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:2.609869;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4341"
+       width="1920"
+       height="1080"
+       x="-713.28235"
+       y="-2862.6702"
+       ry="0" />
     <g
        id="g4151"
        transform="matrix(1.478073,0,0,1.478073,-948.69131,-2629.2841)">
@@ -290,13 +298,5 @@
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:58.58660889px;line-height:125%;font-family:Aharoni;-inkscape-font-specification:'Aharoni Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1"
          id="path4205" />
     </g>
-    <rect
-       style="fill:none;fill-opacity:1;stroke:none;stroke-width:2.609869;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect4341"
-       width="1920"
-       height="1080"
-       x="-713.28235"
-       y="-2862.6702"
-       ry="0" />
   </g>
 </svg>

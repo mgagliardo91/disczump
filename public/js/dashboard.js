@@ -26,6 +26,7 @@ var firstUse = false;
 var serverURL = 'http://www.disczump.com';
 
 // Library Instances
+var main = this;
 var myZumpColorPicker;
 var myMessenger;
 var myDashboard;
@@ -43,7 +44,6 @@ var activePage = '#pg-dashboard';
 var isFixed = false, isHidden = false;
 var userPrefs;
 var userAccount;
-var dzID = '1433417853616595';
 
 /*
 * On Load
@@ -305,19 +305,11 @@ $(document).ready(function(){
 	
 	pageEvents['pg-disc-view'] = {
 		beforeShow: function() {
-			if (!myDashboard.isPublicMode()) {
-				$('#view-disc-edit').show();
-				myDashboard.bindPrivateListeners();
-			}
 		},
 		onShow: function() {
-			hashDiscView(myDashboard.CurrentDisc());
+			hashDiscView(myDashboard.CurrentDisc()._id);
 		},
 		onHide: function() {
-			if (!myDashboard.isPublicMode()) {
-				$('#view-disc-edit').hide();
-				myDashboard.unbindPrivateListeners();	
-			}
 		},
 		isShowing: function() {
 		}
@@ -359,6 +351,7 @@ $(document).ready(function(){
 		},
 		onShow: function() {
 			updateHash({view: 'settings'});
+			accountValidation.triggerResize();
 		},
 		onHide: function() {
 		},
@@ -445,8 +438,13 @@ $(document).ready(function(){
     	}	
     });
     
-    $('.page-alert').slideDown(300);
-    autoCloseAlert($('.page-alert'), '.close', 3000);
+    
+   	if (isInternetExplorer()) {
+   		generateInfo('This browser is not yet supported by disc|zump and therefore, certain features may not work as designed. Please see our <FAQ> for more information.', 'Unsupported Browser', false, ['/faq#faq-browsers']);
+   	} else {
+    	$('.page-alert').slideDown(300);
+   	}
+    
 });
 
 function openPopup(url, name) {
@@ -644,14 +642,16 @@ function fbLinked(isLinked) {
 	var fbImageContainer = $('#profile-image-fb-container');
 	if (isLinked) {
 		$('#facebook-link-status').text('Linked');
-		fbImageContainer.closest('table').removeClass('no-fb');
-		fbImageContainer.append('<div class="profile-image upload">' +
-			                                        '<img src="' + userAccount.facebookImage + '" />' +
-			                                    '</div>' +
-			                                    '<button id="profile-image-fb-submit" class="btn btn-primary">Use Facebook Photo</button>');
+		fbImageContainer.closest('.account-image').removeClass('no-fb');
+		fbImageContainer.append('<div class="profile-image-wrapper center">' +
+									'<div class="profile-image upload">' +
+						                '<img src="' + userAccount.facebookImage + '" />' +
+                                    '</div>' +
+                                '</div>' +
+                            	'<button id="profile-image-fb-submit" class="btn btn-primary">Use Facebook Photo</button>');
 	} else {
 		$('#facebook-link-status').text('Not Linked');
-		fbImageContainer.closest('table').addClass('no-fb');
+		fbImageContainer.closest('.account-image').addClass('no-fb');
 		fbImageContainer.empty();
 	}
 }
@@ -1178,6 +1178,20 @@ function generateTooltipOptions(placement, trigger, title, width) {
 function zumpLibraryInit() {
 	
 	myNotifier = new ZumpNotifier();
+	myNotifier.addListener('discCreated', main, function(event, disc) {
+		discs.push(disc);
+		myDashboard.setDiscList(discs);
+	}).addListener('discUpdated', main, function(event, disc) {
+		var index = discs.indexOf(getDisc(disc._id));
+		discs[index] = disc;
+		myDashboard.updateSingleDisc(disc);
+	}).addListener('discDeleted', main, function(event, disc) {
+		discs = _.filter(discs, function(discItem){
+			return discItem._id != disc._id;
+		});
+		myDashboard.setDiscList(discs);
+	});
+	
 	
 	mySocial = new ZumpSocial();
 	
@@ -1220,42 +1234,10 @@ function zumpLibraryInit() {
 		statistics: {
 			statPlot: '#statistics-plot',
 			renderGraph: '#render-graph'
-		},
-		onDeleteDisc: function(delDisc) {
-			discs = _.filter(discs, function(disc){
-				return disc._id != delDisc._id;
-			});
-			myDashboard.setDiscList(discs);
-		},
-		onUpdateDisc: function(upDisc) {
-			discs = _.filter(discs, function(disc){
-				return disc._id != upDisc._id;
-			});
-			discs.push(upDisc);
-			myDashboard.updateSingleDisc(upDisc);
-		},
-		onDisplayProfile: function(userId) {
-			mySocial.showProfile(userId);
 		}
 	});
 	
-	myEditor = new ZumpEditor({
-		onNewDisc: function(disc) {
-			discs.push(disc);
-			myDashboard.setDiscList(discs);
-		},
-		onUpdatedDisc: function(disc) {
-			var index = discs.indexOf(getDisc(disc._id));
-			discs[index] = disc;
-			myDashboard.setDiscList(discs);
-		},
-		onDeleteDisc: function(delDisc) {
-			discs = _.filter(discs, function(disc){
-				return disc._id != delDisc._id;
-			});
-			myDashboard.setDiscList(discs);
-		}
-	});
+	myEditor = new ZumpEditor();
     
     myZumpColorPicker = new ZumpColorPicker({
        baseColors: [
@@ -2050,8 +2032,12 @@ function updateHash(urlHash) {
 		if (hashString.length) hashString += '&';
 		hashString += key + '=' + urlHash[key];
 	});
-	window.location.hash = '#' + hashString;
-	//window.history.replaceState(undefined, undefined, '#' + hashString);
+	
+	if (typeof (window.history.replaceState) == 'function') {
+		window.history.replaceState(undefined, undefined, '#' + hashString);
+	} else {
+		window.location.hash = '#' + hashString;
+	}
 }
 
 /*
@@ -2077,6 +2063,13 @@ function copyDisc(id) {
 	}
 	
 	return newDisc;
+}
+
+/*
+* Check if user owns disc
+*/
+function isUserOwned(id) {
+	return typeof _.findWhere(discs, {_id: id}) !== 'undefined';
 }
 
 function resizeSidebarResults() {
@@ -2123,7 +2116,10 @@ var ZumpNotifier = function() {
     //----------------------/
     var zumpNotifier = this;
     var notifyTable = {
-    	accountChange : []
+    	accountChange: [],
+    	discCreated: [],
+    	discUpdated: [],
+    	discDeleted: []
     };
     
     //----------------------\
@@ -2139,17 +2135,23 @@ var ZumpNotifier = function() {
     			callback: callback
     		});
     	}
+    	
+    	return zumpNotifier;
     }
     
-    this.executeEvent = function(event) {
+    this.executeEvent = function(event, data) {
     	var eventListeners = notifyTable[event];
     	
     	if (eventListeners) {
     		_.each(eventListeners, function(listener) {
-    			listener.callback(event);
+    			listener.callback(event, data);
     		});
     	}
+    	
+    	return zumpNotifier;
     }
+    
+    return zumpNotifier;
 }
 
 /*
@@ -2488,6 +2490,7 @@ var ZumpEditor = function(opt) {
 	//----------------------\
     // Javascript Objects
     //----------------------/
+    var myEditor = this;
 	var textAssistArr = [];
 	var dropzoneImageHandle = [];
 	var templateCache = [];
@@ -2495,9 +2498,6 @@ var ZumpEditor = function(opt) {
 	var modifyHandler = {lastType: undefined, type: 'Add', discId: undefined};
 	var templatePicker;
 	var dropzone;
-	var onNewDisc;
-	var onUpdatedDisc;
-	var onDeleteDisc;
 	var isProcessing = false;
 	var isInitialized = false;
 	var discPhotoCrop = false;
@@ -2524,18 +2524,6 @@ var ZumpEditor = function(opt) {
     // Prototype Functions
     //----------------------/
     this.init = function(opt) {
-    	
-    	if (isDef(opt.onNewDisc)) {
-    		onNewDisc = opt.onNewDisc;
-    	}
-    	
-    	if (isDef(opt.onUpdatedDisc)) {
-    		onUpdatedDisc = opt.onUpdatedDisc;
-    	}
-    	
-    	if (isDef(opt.onDeleteDisc)) {
-    		onDeleteDisc = opt.onDeleteDisc;
-    	}
     	
     	$clearForm = $('#clear-modify-disc-form');
     	$saveDisc = $('#save-disc');
@@ -2663,20 +2651,7 @@ var ZumpEditor = function(opt) {
 			
 			var invalidItems = discEditorValidation.getInvalidItems();
 			if (invalidItems.length) {
-				var errorLength = invalidItems.length;
-				var errorText = '';
-				
-				_.each(invalidItems, function(item) {
-		    		if (errorLength > 1) {
-		    			errorText = errorText + $('#' + item.id).attr('param') + ', ';
-		    		} else {
-		    			errorText = errorText + $('#' + item.id).attr('param');
-		    		}
-		    		errorLength = errorLength - 1;
-		    	});
-				
-				return generateError('Invalid data in the following fields: ' + errorText + '.', 'ERROR', false);
-				
+				generateInvalidDataError(invalidItems);
 			} else if (modifyHandler.type == 'Add' || modifyHandler.type == 'Clone') {
 	    		saveNewDisc();
 	    	} else if (modifyHandler.type == 'Edit') {
@@ -2696,7 +2671,7 @@ var ZumpEditor = function(opt) {
 			generateConfirmationModal('WARNING!', body, 'Delete', function() {
 				deleteDisc(modifyHandler.discId, function(success, data) {
 					if (success) {
-						onDeleteDisc(data);
+						myNotifier.executeEvent('discDeleted', data);
 						changePage('#pg-dashboard');
 					} else {
 						handleError(data);
@@ -2882,14 +2857,16 @@ var ZumpEditor = function(opt) {
 		var lastType = modifyHandler.lastType;
 		modifyHandler.lastType = modifyHandler.type;
 		
-		if (modifyHandler.type == 'Add' && lastType != 'Add') {
-			$pgTitle.text('Add Disc');
+		if (modifyHandler.type == 'Add') {
+			if (lastType != 'Add') {
+				$pgTitle.text('Add Disc');
+				$clearForm.show();
+				$cloneDisc.hide();
+				$deleteDisc.hide();
+				populateDiscForm();
+			}
 			$curImagesSection.hide();
-			$clearForm.show();
-			$cloneDisc.hide();
-			$deleteDisc.hide();
 			clearDiscForm(true);
-			populateDiscForm();
 		} else if (modifyHandler.type == 'Edit') {
 			$pgTitle.text('Edit Disc');
 			clearDiscForm();
@@ -2900,14 +2877,13 @@ var ZumpEditor = function(opt) {
 			populateDiscForm(modifyHandler.discId);
 		} else if (modifyHandler.type == 'Clone') {
 			$pgTitle.text('Add Disc');
-			$curImagesSection.hide();
 			$clearForm.show();
 			$cloneDisc.hide();
 			$deleteDisc.hide();
-			$imageContainer.empty();
 			clearDiscForm();
-			clearDropzone();
 			populateDiscForm(modifyHandler.discId, true);
+			$curImagesSection.hide();
+			clearDiscForm(true);
 			modifyHandler.type = 'Add';
 			modifyHandler.discId = undefined;
 		}
@@ -3003,7 +2979,7 @@ var ZumpEditor = function(opt) {
 				isProcessing = false;
 				setLoading(false);
 				stageModifyDiscPage();
-				onNewDisc(retData);
+				myNotifier.executeEvent('discCreated', retData);
 			} else {
 				handleError(retData);
 				setLoading(false);
@@ -3029,7 +3005,7 @@ var ZumpEditor = function(opt) {
 				isProcessing = false;
 				setLoading(false);
 				clearDropzone();
-				onUpdatedDisc(retData);
+				myNotifier.executeEvent('discUpdated', retData);
 			} else {
 				handleError(retData);
 				setLoading(false);
@@ -3286,10 +3262,7 @@ var ZumpDashboard = function(opt) {
 	var refPageTop;
 	var refContBottom;
 	var activeView;
-	var discViewId;
-	var onUpdateDisc;
-	var onDeleteDisc;
-	var onDisplayProfile;
+	var discViewDisc;
 	var publicList = false;
 	var currentUser;
 	var forceRefresh = false;
@@ -3352,9 +3325,6 @@ var ZumpDashboard = function(opt) {
 		$imageArea = $('#view-disc-image-container');
 		$dashboardViewArea = $('#dashboard-view-area');
 		$sidebarLoading = $('.sidebar-loading');
-		onUpdateDisc = opt.onUpdateDisc;
-		onDeleteDisc = opt.onDeleteDisc;
-		onDisplayProfile = opt.onDisplayProfile;
 		
 		if (opt.paginate.displayCount) {
 			paginateOptions.displayCount = opt.paginate.displayCount;
@@ -3465,7 +3435,7 @@ var ZumpDashboard = function(opt) {
 	}
 	
 	this.CurrentDisc = function() {
-		return discViewId;
+		return discViewDisc;
 	}
 	
 	this.setView = function(view) {
@@ -3520,7 +3490,7 @@ var ZumpDashboard = function(opt) {
 		});
 		unfilteredList.push(upDisc);
 		updateDiscItem(upDisc);
-		if (discViewId == upDisc._id) forceRefresh = true;
+		if (discViewDisc._id == upDisc._id) forceRefresh = true;
 	}
 	
 	/*
@@ -3790,7 +3760,7 @@ var ZumpDashboard = function(opt) {
 		* Handlers for dashboard
 		***************************/
 		$('#public-dashboard').click(function(e) {
-			onDisplayProfile($(this).attr('userId'));
+			mySocial.showProfile($(this).attr('userId'));
 		});
 		
 		$(document).on('click', '.filterable[filterable="true"]', function(e) {
@@ -3809,16 +3779,6 @@ var ZumpDashboard = function(opt) {
 			path: function($item) {
 				return 'disc/' + $item.attr('discid');
 			}
-		});
-		
-		$(document).on('click', '#existing-image-list .image-preview:not(.active)', function() {
-			var src = $(this).children('img').attr('src');
-			var $blockDisplay = $(this).parents('.image-block-display');
-			var $primAryimage = $blockDisplay.find('#disc-primary-image');
-			
-			$blockDisplay.find('.image-preview.active').removeClass('active');
-			$primAryimage.attr('src', src);
-			$(this).addClass('active');
 		});
 	   	
 	   	$(window).scroll(function(){
@@ -3849,7 +3809,7 @@ var ZumpDashboard = function(opt) {
 			generateConfirmationModal('WARNING!', body, 'Delete', function() {
 				deleteDisc(discId, function(success, data) {
 					if (success) {
-						onDeleteDisc(data);
+						myNotifier.executeEvent('discDeleted', data);
 					} else {
 						handleError(data);
 					}
@@ -3866,8 +3826,12 @@ var ZumpDashboard = function(opt) {
 		});
 		 
 		$(document).on('click', '.share-disc-item', function() {
-			var disc = getDisc($(this).attr('discid'));
-			shareFacebook(disc._id);
+			var $this = $(this);
+			var disc = getDisc($this.attr('discid'));
+			$this.removeClass('fa-facebook-square').addClass('fa-spinner').addClass('fa-pulse').addClass('disabled');
+			shareFacebook(disc._id, function() {
+				$this.removeClass('fa-spinner').removeClass('fa-pulse').addClass('fa-facebook-square');
+			});
 		});
 		 
 		$(document).on('click', '.fa-visible-disc-item', function() {
@@ -3875,7 +3839,7 @@ var ZumpDashboard = function(opt) {
 			disc.visible = !disc.visible;
 			putDisc(disc, function(success, retData) {
 				if (success) {
-					onUpdateDisc(retData);
+					myNotifier.executeEvent('discUpdated', retData);
 				} else {
 					handleError(retData);
 				}
@@ -3923,15 +3887,14 @@ var ZumpDashboard = function(opt) {
 	        $imageArea.find('.image-preview.active').removeClass('active');
 	        $(this).addClass('active');
 	        var id = $(this).children('img').attr('imageId');
-	        var disc = getDisc(discViewId);
-	        var img = _.findWhere(disc.imageList, {_id: id});
+	        var img = _.findWhere(discViewDisc.imageList, {_id: id});
 	        if (img) {
 	            $('#view-disc-image').attr('src', '/files/' + img.fileId);
 	        }
 	    });
 	    
 	    $('#view-disc-owner').click(function() {
-	    	onDisplayProfile($(this).attr('userId'));
+	    	mySocial.showProfile($(this).attr('userId'));
 	    });
 	    
 	}
@@ -4066,20 +4029,30 @@ var ZumpDashboard = function(opt) {
 	}
 	
 	var showDisc = function(disc) {
-		if (discViewId == disc._id && !forceRefresh) {
+		
+		if (discViewDisc && discViewDisc._id == disc._id && !forceRefresh) {
 			changePage('#pg-disc-view');
 			return;
 		}
 		
 		forceRefresh = false;
-		discViewId = disc._id;
+		discViewDisc = disc;
+		
+		if (isUserOwned(disc._id)) {
+			$('#view-disc-edit').closest('.page-title-btn').show();
+			$('#view-disc-edit').attr('discId', discViewDisc._id);
+			myDashboard.bindPrivateListeners();
+		} else {
+			$('#view-disc-edit').closest('.page-title-btn').hide();
+			$('#view-disc-edit').attr('discId', '');
+			myDashboard.unbindPrivateListeners();
+		}
 		
 		var discString = stringifyDisc(disc);
 		
-		$('#view-disc-share').attr('discId', discViewId);
-		$('#view-disc-link').attr('discId', discViewId);
+		$('#view-disc-share').attr('discId', discViewDisc._id);
+		$('#view-disc-link').attr('discId', discViewDisc._id);
 		$('#view-disc-title').text(disc.brand + ' ' + disc.name);
-		$('#view-disc-edit').attr('discId', discViewId);
 		$('#view-disc-notes').text(discString.notes.length ? discString.notes : '-');
 		
 		setDiscViewItem($('#view-disc-type'), discString.type, '', '-');
@@ -5300,8 +5273,8 @@ var ZumpSocial = function(opt) {
         	zipCodeCache[user.zipCode] = '';
         	getCityState(user.zipCode, function(success, retData) {
 	        	if (success) {
-	        		$('.city-state[value="' + user.zipCode + '"]').text(retData);
-	        		zipCodeCache[user.zipCode] = retData;
+	        		$('.city-state[value="' + user.zipCode + '"]').text(retData[0].formatted);
+	        		zipCodeCache[user.zipCode] = retData.zipCode;
 	        	} else {
 	        		//Ignore error in the case that zip code is not found.
 	        	}
@@ -5360,6 +5333,9 @@ var ZumpMessenger = function(opt) {
 	var initialized = false;
 	var postFunction;
 	var isShowing = false;
+	
+	var urlRegex = /(https?:\/\/)?([\da-zA-Z\.-]+)\.([a-zA-Z]{2,6}\.?)([\/\w\.#=?-]*)*\/?/g;
+	var protocolRegex = /(https?:\/\/)/;
 	
     //----------------------\
     // JQuery Objects
@@ -5538,12 +5514,19 @@ var ZumpMessenger = function(opt) {
 		$deleteThread.click(function() {
 			deleteThreadItem(activeThread.threadId);
 		});
+		
+		myNotifier.addListener('accountChange', zumpMessenger, function() {
+			userCache[userAccount._id] = {photo: getUserImage(userAccount), username: userAccount.username};
+			forceUpdate = true;
+		});
     }
     
     /*
     * Sets up the inbox list
     */
     var initializeInboxList = function() {
+    	userCache[userAccount._id] = {photo: getUserImage(userAccount), username: userAccount.username};
+    	
     	getThreads(function(success, threadList) {
     		if (success) {
     			newMessageCount = 0;
@@ -5767,13 +5750,6 @@ var ZumpMessenger = function(opt) {
 		
 		var thread = threadCacheObj.thread;
     	
-    	if (userCache[userAccount._id] && userCache[userAccount._id].photo != getUserImage(userAccount)) {
-    		userCache[userAccount._id].photo = getUserImage(userAccount);
-			forceUpdate = true;
-    	} else {
-    		userCache[userAccount._id] = {photo: getUserImage(userAccount), username: userAccount.username};
-    	}
-    	
     	threadCacheObj.thread.messageCount = threadCacheObj.thread.currentMessageCount;
 		
 		var $threadContainer = $('.thread-container[threadId="' + threadId + '"]');
@@ -5913,13 +5889,14 @@ var ZumpMessenger = function(opt) {
     }
     
     var processMessage = function(body) {
-    	var urlRegex = /(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w\.#=?-]*)*\/?/g;
     	var res = _.uniq(body.match(urlRegex));
     	
     	if (res.length) {
     		_.each(res, function(url) {
-    			var regex = new RegExp(url, 'g');
-	    		body = body.replace(regex, '<a href="' + url + '">' + url + '</a>');
+    			
+    			var protocol = url.match(protocolRegex) ? '' : 'http://';
+    			
+	    		body = body.replace(url, '<a href="' + protocol + url + '" target="_blank">' + url + '</a>');
 	    	});
     	}
     	
@@ -6238,7 +6215,7 @@ var ZumpGallery = function(opt) {
 			maxWidth: itemWidth + 'px',
 			maxHeight: itemWidth + 'px',
 			'font-size': fontsize
-		});
+		}).show();
 		
 		$('.disc-gallery-row > .disc-gallery-item').find('img').css({
 			maxWidth: itemWidth + 'px',
@@ -6460,25 +6437,29 @@ var ZumpLightbox = function(opt) {
 			var $selectedImage = $('.image-view-thumbnail-selected').first().parent();
 			var $nextImage = $selectedImage.next();
 			var $prevImage = $selectedImage.prev();
-			var rightMin = $imageViewListContainer.width() - 100;
+			var curPos = $imageViewList.position().left;
 			
-			if (e.which == 37) { // left arrow key
-				if ($prevImage.length) {
-					var id = $prevImage.attr('lbid');
-					var img = getNewImage(id);
-					changeMainImage(img, $prevImage);
-					if (($prevImage.position().left + $imageViewList.position().left) < 0) {
-						scrollLeft($imageViewList);
-					}
-				}
-			}
 			if (e.which == 39) { // right arrow key
 				if ($nextImage.length) {
 					var id = $nextImage.attr('lbid');
 					var img = getNewImage(id);
 					changeMainImage(img, $nextImage);
-					if ($nextImage.position().left > rightMin) {
-						scrollRight($imageViewList);
+					var pos = $nextImage.position().left + curPos;
+					var rightMin = $imageViewListContainer.width() - 100;
+					if (pos > rightMin) {
+						var delta = pos - rightMin;
+						$imageViewList.css('left', curPos-delta + 'px');
+					}
+				}
+			} else if (e.which == 37) { // left arrow key
+				if ($prevImage.length) {
+					var id = $prevImage.attr('lbid');
+					var img = getNewImage(id);
+					changeMainImage(img, $prevImage);
+					var pos = $prevImage.position().left;
+					if (pos + curPos < 0) {
+						var delta = pos + curPos;
+						$imageViewList.css('left', curPos-delta + 'px');
 					}
 				}
 			}
@@ -7562,7 +7543,6 @@ var ZumpFilter = function(opt) {
     this.init(opt);
 }
 
-
 /*
 * Name: ZumpTextAssist
 * Date: 01/07/2015
@@ -7602,7 +7582,7 @@ var ZumpTextAssist = function(opt) {
         if (isDef(opt.inputElement)) {
         	if (opt.inputElement instanceof jQuery) {
         		$input = opt.inputElement
-        	} else if (_.isString(opt.intputElement)) {
+        	} else if (_.isString(opt.inputElement)) {
             	$input = $(opt.inputElement);
         	}
             createDropdown();

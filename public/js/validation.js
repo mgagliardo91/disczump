@@ -24,6 +24,14 @@ var ZumpValidate = function(opt) {
         setupListeners();
     }
     
+    this.triggerResize = function() {
+         _.each(items, function(item) {
+            if (item.type == 'zipcode') {
+                item.dropdown.triggerResize();
+            }
+        });
+    }
+    
     this.doValidate = function() {
         _.each(items, function(item) {
             validate(item.id, undefined, 'keyup'); 
@@ -69,6 +77,22 @@ var ZumpValidate = function(opt) {
                
                 if (typeof item.type !== 'undefined' && item.type != 'none') {
                     $input.on('keyup paste change leave', handleEvent);
+                    
+                    if (item.type == 'zipcode') {
+                            item.dropdown = new ZumpDropdown({
+                        	minLength: 5,
+                    		inputElement: $input,
+                    		searchProp: 'zipCode',
+                    		getResults: getCityState,
+                    		getString: function(item) {
+                    			return item.formatted;
+                    		},
+                            onSelection: function(result, reset) {
+                           		validate($input.attr('id'), undefined, 'ZumpDropdown');
+                           		$('#' + item.output).text(result.formatted);
+                            }
+                    	});
+                    }
                 } else {
                     item.isValid = true;
                 }
@@ -214,19 +238,20 @@ var ZumpValidate = function(opt) {
                 }
                 
             } else if (item.type == 'zipcode') {
-                isValid = val.length == 0 ? undefined : zipCodeRegex.test(val);
                 
-                if (isValid) {
-                    shouldCb = false;
-                    getCityState(val, function(success, cityState) {
-                        if (success) {
-                            $('#' + item.output).text(cityState);
-                        } else {
-                            //Ignore error in the case that zip code is not found.
-                        }
-                    });
-                    callback($input, isValid);
-                } else {
+                if (item.isValid == undefined && val.length >= 5) {
+                    item.isValid = false;
+                    item.dropdown.triggerInput();
+                    return;
+                }
+                
+                if (!item.dropdown.SelectionComplete() && val.length >= 5) {
+                    $('#' + item.output).text('');
+                    return;
+                }
+                
+                isValid = val.length == 0 ? undefined : item.dropdown.SelectionComplete();
+                if (!isValid) {
                     $('#' + item.output).text('');
                 }
                 
@@ -253,6 +278,412 @@ var ZumpValidate = function(opt) {
         } else {
             $input.parent().removeClass('has-success').removeClass('has-error');
         }
+    }
+    
+    this.init(opt);
+}
+
+var ZumpDropdown = function(opt) {
+
+    //----------------------\
+    // Javascript Objects
+    //----------------------/
+	var zumpDropdown = this;
+	var resultList = [];
+	var property = undefined;
+	var getResults = undefined;
+	var getString = undefined;
+	var curSelection = undefined;
+    var currentSearch = '';
+    var onSelection;
+    var minLength = -1;
+    var tabTrigger = false;
+    var cityReq = undefined;
+	
+	//----------------------\
+    //JQuery Objects
+    //----------------------/
+    var $input;
+    var $dropdown;
+    var $dropdownList;
+    
+    //----------------------\
+    // Prototype Functions
+    //----------------------/
+    
+    this.SelectionComplete = function() {
+        return typeof curSelection !== 'undefined';
+    }
+    
+    this.triggerInput = function() {
+        setInput($input.val(), true, function() {
+            if (resultList.length) {
+                curSelection = resultList[0];
+            
+                if (onSelection) {
+    	        	onSelection(curSelection, zumpDropdown.resetInput);
+    	        }
+            }
+        });
+    }
+    
+    this.init = function(opt) {
+    	
+		/*
+        * Grab input element from options
+        */
+        if (isDef(opt.inputElement)) {
+        	if (opt.inputElement instanceof jQuery) {
+        		$input = opt.inputElement
+        	} else if (_.isString(opt.inputElement)) {
+            	$input = $(opt.inputElement);
+        	}
+            createDropdown();
+        }
+        
+        if (isDef(opt.minLength)) {
+        	minLength = opt.minLength;
+        }
+        
+		/*
+        * Grab search property from options
+        */
+        if (isDef(opt.searchProp)) {
+            property = opt.searchProp;
+        }
+        
+        /*
+        * Grab current set of items
+        */
+        if (isDef(opt.getResults)) {
+            if (_.isFunction(opt.getResults)) {
+                getResults = opt.getResults;
+            }
+        }
+        
+        /*
+        * Grab current set of items
+        */
+        if (isDef(opt.getString)) {
+            if (_.isFunction(opt.getString)) {
+                getString = opt.getString;
+            }
+        }
+        
+        /*
+        * Grab on enter event callback
+        */
+        if (isDef(opt.onSelection)) {
+        	if (_.isFunction(opt.onSelection)) {
+        		onSelection = opt.onSelection;
+        	}
+        }
+        
+        /*
+        * Resize result container dropdown on resize of page
+        */
+        $(window).on('resize', function(){
+           resizeResultContainer();
+        });
+        
+        /*
+        * Stop normal propagation on Up, Down, and Enter
+        */
+        $input.on('keydown', function(e) {
+	    	var code = e.keyCode || e.which;
+	    	var $curActive = $dropdownList.find('.dropdown-list-item.active');
+	    	
+	    	if (code == 13 || code == 38 || code == 40) {
+		    	e.stopImmediatePropagation();
+		    	return false;
+	    	}
+	    	
+	    	else if (code == 9 && $curActive.length) {
+	    		tabTrigger = true;
+		    	e.stopImmediatePropagation();
+		    	return false;
+	    	}
+	    	
+	    	else if (code == 9) {
+	    		setResultsVisibility(false);
+	    	}
+	    })
+	    
+	    /*
+	    * Key Events within input box
+	    */
+	    .on('keyup', function(e){
+	    	var code = e.keyCode || e.which;
+	    	
+	    	/*
+	    	* Enter key - select active result item
+	    	*/
+	    	if (code == 13 || (code == 9 && tabTrigger)) {
+	    		var $curActive = $dropdownList.find('.dropdown-list-item.active');
+		        if ($curActive.length) {
+		        	updateInput($curActive.attr('result'), true);
+		        }
+		        
+		        if (onSelection) {
+	        		onSelection(curSelection, zumpDropdown.resetInput);
+		        }
+		        
+		        tabTrigger = false;
+			 	e.preventDefault();
+      			return false;
+	    	}
+	    	
+	    	/*
+	    	* Up/Down keys - select prev/next result item
+	    	*/
+	    	else if (code == 38 || code == 40) {
+			 	var $curActive = $dropdownList.find('.dropdown-list-item.active');
+			 	var $nextActive;
+			 	
+			 	if ($('.dropdown-list-item').length) {
+			 	    setResultsVisibility(true);
+			 	}
+			 	
+			 	if ($curActive.length == 0) {
+			 	    $nextActive = code == 38 ? 
+			 	    	$dropdownList.find('.dropdown-list-item').last() : 
+			 	    	$dropdownList.find('.dropdown-list-item').first();
+			 	} else {
+			 	    $curActive.removeClass('active');
+			 	    $nextActive = code == 38 ? $curActive.prev() : $curActive.next();
+			 	}
+			 	
+			 	if ($nextActive.length > 0) {
+			    	$nextActive.addClass('active');
+			    	updateScroll($nextActive);
+			    	
+			    	var result = getResult($nextActive.attr('result'));
+			    	if (result) {
+			    		$input.val(getString(result));
+			    	}
+			 	} else {
+			 		$input.val(currentSearch);
+			 	}
+			 	
+			 	e.preventDefault();
+			 	return false;
+			 }
+			 
+			 /*
+			 * All other keys
+			 */
+			 else {
+			     setInput($input.val());
+			 }
+			 
+	    })
+	    
+	    /*
+	    * Show results on click
+	    */
+	    .on('click', function(e){
+	    	e.preventDefault();
+	    	setInput($input.val());
+	    	return false;
+	    })
+	    
+	    /*
+	    * Hide results on leave
+	    */
+        .on('focusout', function(e){
+        	if ($(e.relatedTarget)[0] != $dropdown[0] && !$dropdownList.has(e.relatedTarget).length > 0) {
+        		setResultsVisibility(false);
+        	}
+        	
+        	e.preventDefault();
+        	e.stopPropagation();
+	    	return false;
+        });
+        
+        /*
+        * Click event on a result item
+        */
+        $dropdownList.on('click', '.dropdown-list-item', function(){
+            updateInput($(this).attr('result'), true);
+            
+            if (onSelection) {
+	        	onSelection(curSelection, zumpDropdown.resetInput);
+	        }
+	        
+        	$input.focus();
+        });
+        
+        /*
+	    * Hide results on leave
+	    */
+        $dropdown.on('focusout', function(e){
+        	if ($(e.relatedTarget)[0] != $input[0] && !$dropdownList.has(e.relatedTarget).length > 0) {
+        		setResultsVisibility(false);
+        	}
+        	
+        	e.preventDefault();
+        	e.stopPropagation();
+	    	return false;
+        });
+        
+	    /*
+	    * Start up events
+	    */
+        resizeResultContainer();
+    }
+    
+    this.resetInput = function() {
+    	updateInput('', true);
+    }
+    
+    this.triggerResize = function() {
+    	resizeResultContainer();
+    }
+    
+    //----------------------\
+    // Private Functions
+    //----------------------/
+    
+    /*
+    * Update Results Container Scroll Position
+    */
+    var updateScroll = function($activeResult) {
+    	var curTop = $dropdown.scrollTop();
+    	var curBottom = $dropdown.height();
+    	var resultTop = $activeResult.position().top;
+    	var resultBottom = resultTop  + $activeResult.outerHeight();
+    	
+    	if (resultTop < curTop) { 
+    		$dropdown.scrollTop(resultTop);	
+    	} else if (resultBottom > curBottom) {
+    		$dropdown.scrollTop(curTop + (resultBottom - curBottom));
+    	}
+    }
+    
+    /*
+    * Update Input
+    */
+    var updateInput = function(resultId, hideAlways) {
+    	var result = getResult(resultId);
+    	
+    	if (result) {
+    		curSelection = result;
+    		$input.val(result[property]);
+    	} else {
+    		curSelection = undefined;
+    		$input.val('');
+    	}
+    	
+    	setInput(result[property], hideAlways);
+    }
+    
+    var getResult = function(resultId) {
+    	return _.findWhere(resultList, {resultId: resultId});
+    }
+    
+    /*
+    * Set Input
+    */
+    var setInput = function(newVal, hideAlways, callback) {
+    	if (isDef(newVal)) {
+    		if (currentSearch == newVal) {
+    			setResultsVisibility(!hideAlways);
+    			return;
+    		}
+    		
+			currentSearch = newVal;
+			curSelection = undefined;
+    	}
+    	
+    	if (currentSearch.length < minLength) {
+    		setResultsVisibility(false);
+    		return;
+    	}
+    	
+    	updateResults(function(vis) {
+    	    setResultsVisibility(vis && !hideAlways);
+    	    if (callback) {
+    	        callback(); 
+    	    }
+    	});
+    }
+    
+    /*
+    * Update Results
+    */
+    var updateResults = function(callback) {
+    	$dropdownList.empty();
+    	
+    	if (cityReq) {
+    	    cityReq.abort();
+    	}
+    	
+		cityReq = getResults(currentSearch, function(success, results) {
+		    if (success) {
+		        resultList = [];
+		        _.each(results, function(result) {
+    				result.resultId = '' + ( _.random(10000, 99999));
+    				resultList.push(result);
+    				var resultHtml = generateResult(result);
+    				$dropdownList.append(resultHtml);
+    			});
+		    }
+			
+			return callback(resultList.length > 0);
+		});
+    }
+    
+    /*
+    * Shows the results list
+    */
+    var setResultsVisibility = function(shouldShow) {
+    	if (shouldShow && !$dropdown.is(':visible')) {
+    		$dropdown.show();
+    	}
+    	
+    	if (!shouldShow) {
+    		$dropdown.hide();
+    	}
+    }
+    
+    /*
+    * Resizes the result view to the width of the input
+    */
+    var resizeResultContainer = function() {
+        
+        if ($input) {
+	        var leftOff = $input.position().left;
+	    	var topOff = $input.position().top;
+	    	
+	    	$dropdown.css({
+	    		width: $input.outerWidth() + 'px',
+	    		left: leftOff, 
+	    		top: topOff + $input.outerHeight()
+	    	});
+        }
+    }
+    
+    /*
+    * Creates the dropdown div/list to hold result items
+    */
+    var createDropdown = function() {
+        $input.after('<div class="dropdown-list-display" tabindex="-1">' +
+                        '<ul class="list-unstyled dropdown-search-list">' +
+                        '</ul>' +
+                    '</div>');
+        
+        $dropdown = $input.siblings('div.dropdown-list-display');
+        $dropdownList = $dropdown.find('.dropdown-search-list');
+    }
+    
+    /*
+    * Creates the result items for dropdowns
+    */
+    var generateResult = function(result) {
+    	
+        return '<li class="dropdown-list-item" tabindex="0" result="' + result.resultId + '">' +
+                    getString(result) +
+                '</li>';
     }
     
     this.init(opt);

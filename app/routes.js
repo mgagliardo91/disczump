@@ -28,6 +28,10 @@ module.exports = function(app, passport, gridFs) {
        res.render('terms');
     });
     
+    app.get('/faq', function(req, res) {
+       res.render('faq');
+    });
+    
     app.get('/privacy', function(req, res) {
        res.render('privacy');
     });
@@ -61,12 +65,40 @@ module.exports = function(app, passport, gridFs) {
     
     app.get('/account/delete', isLoggedIn, function(req, res) {
         Confirm.initializeConfirmDelete(req.user._id, function(err, user, message) {
-            if (err)
-                return res.send(err);
+            if (err) {
+                return res.render('notification', {
+                    isMobile: req.device.isMobile,
+                    user : req.user,
+                    image : req.user.accountToString().image,
+                    notify : {
+                       pageHeader: err.error.type,
+                       header: err.error.type,
+                       strong: err.error.message,
+                       text: 'Unable to delete account. Please try again or contact support.',
+                       buttonIcon: 'fa-home',
+                       buttonText: 'Return Home',
+                       buttonLink: '/'
+                   }
+               });
+            }
             
             Mailer.sendMail(user.local.email, 'disc|zump Account Deletion', message, function(err, result) {
-              if (err)
-                    return res.send(err);
+                if (err) {
+                    return res.render('notification', {
+                        isMobile: req.device.isMobile,
+                        user : req.user,
+                        image : req.user.accountToString().image,
+                        notify : {
+                           pageHeader: err.error.type,
+                           header: err.error.type,
+                           strong: err.error.message,
+                           text: 'Error attempting to send confirmation email. Please try again or contact support.',
+                           buttonIcon: 'fa-home',
+                           buttonText: 'Return Home',
+                           buttonLink: '/'
+                       }
+                    });
+                }
                     
                 return res.render('notification', {
                     isMobile: req.device.isMobile,
@@ -95,7 +127,7 @@ module.exports = function(app, passport, gridFs) {
         Confirm.confirmDelete(req.params.authorizationId, gridFs, function(err, user){
             if (err) {
                 req.flash('error', err.error.message);
-                return res.redirect('/login');
+                return res.redirect('/dashboard');
             } else {
                 EventController.addEvent(user._id, EventController.Types.AccountDeletion, 'Account has been deleted for user [' + user._id + '].');
                 return res.render('notification', {
@@ -129,7 +161,7 @@ module.exports = function(app, passport, gridFs) {
                        pageHeader: err.error.type,
                        header: err.error.type,
                        strong: err.error.message,
-                       text: 'The owner of this disc has not made it visible to the public.',
+                       text: 'Unable to show public view of disc [' + req.params.discid + '].',
                        buttonIcon: 'fa-home',
                        buttonText: 'Return Home',
                        buttonLink: '/'
@@ -171,30 +203,34 @@ module.exports = function(app, passport, gridFs) {
                 if (err) {
                     req.flash('error', err.error.message);
                     return res.redirect('/login');
-                } else {
-                    if (!user.facebook.id) {
-                        req.session.redirect = '/account/link';
-                    }
-                    
-                    if (user.totalAccessCount() == 0) {
-                        DevController.createDiscData(gridFs, user._id, function(err) {
-                            doLogIn(req, res, next, err, user);
-                        });
-                    } else {
+                }
+                
+                if (!user.facebook.id) {
+                    req.session.redirect = '/account/link';
+                }
+                
+                if (user.totalAccessCount() == 0) {
+                    DevController.createDiscData(gridFs, user._id, function(err) {
                         doLogIn(req, res, next, err, user);
-                    }
+                    });
+                } else {
+                    doLogIn(req, res, next, err, user);
                 }
             });
         });
     
     app.get('/confirm/user/:userId', function(req, res){
              Confirm.initializeConfirmAccount(req.params.userId, function(err, user, message) {
-                if (err)
-                    return res.send(err);
+                if (err) {
+                    req.flash('error', err.error.message);
+                    return res.redirect('/login');
+                }
                 
                 Mailer.sendMail(user.local.email, 'disc|zump Account Confirmation', message, function(err, result) {
-                  if (err)
-                        return res.send(err);
+                   if (err) {
+                        req.flash('error', err.error.message);
+                        return res.redirect('/login');
+                    }
                         
                     return res.render('notification', {
                         isMobile: req.device.isMobile,
@@ -220,6 +256,10 @@ module.exports = function(app, passport, gridFs) {
         .get(function(req,res) {
             return res.render('userinput', {
                 isMobile: req.device.isMobile,
+                message: {
+                    error: req.flash('error'),
+                    info: req.flash('info')
+                },
                 userinput : {
                     pageHeader: 'Password Recovery',
                     header: 'Recover Password',
@@ -265,6 +305,46 @@ module.exports = function(app, passport, gridFs) {
                     });
                 });
             });
+        });
+
+    app.route('/recover/:authorizationId')
+        .get(function(req, res) {
+            Recover.validateRecovery(req.params.authorizationId, function(err, recover) {
+                if (err) {
+                    req.flash('info', 'Unable to retrieve request. Please fill out a new request below.');
+                    return res.redirect('/recover');
+                }
+                
+                return res.render('userinput', {
+                    isMobile: req.device.isMobile,
+                    message: {
+                        error: req.flash('error')
+                    },
+                    userinput : {
+                        pageHeader: 'Password Reset',
+                        header: 'Reset Password',
+                        text: 'Enter a new password below to reset your account password.',
+                        route: '/recover/' + recover._id,
+                        btnText: 'Reset',
+                        input: [
+                            {icon: 'fa-key', id : 'new-password', name: 'password', type: 'password', placeholder: 'Password'},
+                            {icon: 'fa-key', id : 'verify-password', type: 'password', placeholder: 'Verify Password'}
+                        ]
+                   }
+                });
+            })
+        })
+        
+        .post(function(req, res) {
+            Recover.resetPassword(req.params.authorizationId, req.body.password, function(err, user) {
+                if (err) {
+                    req.flash('error', err.error.message);
+                    return res.redirect('/recover');
+                }
+                
+                req.flash('info', 'Password successfully reset.');
+                res.redirect('/login');
+            })
         });
         
     app.route('/reset')
@@ -317,46 +397,6 @@ module.exports = function(app, passport, gridFs) {
                     ]
                }
             });
-        });
-    
-    app.route('/recover/:authorizationId')
-        .get(function(req, res) {
-            Recover.validateRecovery(req.params.authorizationId, function(err, recover) {
-                if (err) {
-                    req.flash('info', 'Unable to retrieve request. Please fill out a new request below.');
-                    return res.redirect('/recover');
-                }
-                
-                return res.render('userinput', {
-                    isMobile: req.device.isMobile,
-                    message: {
-                        error: req.flash('error')
-                    },
-                    userinput : {
-                        pageHeader: 'Password Reset',
-                        header: 'Reset Password',
-                        text: 'Enter a new password below to reset your account password.',
-                        route: '/recover/' + recover._id,
-                        btnText: 'Reset',
-                        input: [
-                            {icon: 'fa-key', id : 'new-password', name: 'password', type: 'password', placeholder: 'Password'},
-                            {icon: 'fa-key', id : 'verify-password', type: 'password', placeholder: 'Verify Password'}
-                        ]
-                   }
-                });
-            })
-        })
-        
-        .post(function(req, res) {
-            Recover.resetPassword(req.params.authorizationId, req.body.password, function(err, user) {
-                if (err) {
-                    req.flash('error', err.error.message);
-                    return res.redirect('/recover');
-                }
-                
-                req.flash('info', 'Password successfully reset.');
-                res.redirect('/login');
-            })
         });
     
     app.get('/unsubscribe', function(req, res) {
@@ -455,18 +495,18 @@ module.exports = function(app, passport, gridFs) {
     // process the signup form
     app.post('/signup', function(req, res, next) {
         
-        if (development.beta) { 
-            // validate passcode 
-            if (!req.body.passcode || (req.body.passcode != development.passcode)) {
-                req.flash('error', 'Invalid passcode. Please try again.');
-                req.flash('email', req.body.email);
-                req.flash('username', req.body.username);
-                req.flash('zipCode', req.body.zipCode);
-                req.flash('alias', req.body.alias);
-                req.flash('pdgaNumber', req.body.pdgaNumber);
-                return res.redirect('/signup');
-            }
-        }
+        // if (development.beta) { 
+        //     // validate passcode 
+        //     if (!req.body.passcode || (req.body.passcode != development.passcode)) {
+        //         req.flash('error', 'Invalid passcode. Please try again.');
+        //         req.flash('email', req.body.email);
+        //         req.flash('username', req.body.username);
+        //         req.flash('zipCode', req.body.zipCode);
+        //         req.flash('alias', req.body.alias);
+        //         req.flash('pdgaNumber', req.body.pdgaNumber);
+        //         return res.redirect('/signup');
+        //     }
+        // }
         
         passport.authenticate('local-signup', function(err, user, info) {
             req.flash('email', req.body.email);
@@ -604,7 +644,7 @@ function doLogIn(req, res, next, err, user, info) {
 }
 
 function isLoggedIn(req, res, next) {
-
+    
     if (req.isAuthenticated())
         return next();
     

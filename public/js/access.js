@@ -18,12 +18,7 @@ $(document).ready(function(){
             {id:'lastName', optional: true,  type:'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }, hint: 'Enter your last name to help people find you. (Cannot contain spaces)'},
             {id:'pdgaNumber', optional: true, type:'function', fn: function(val) { return val.length == 0 ? undefined : /^[0-9]*$/.test(val) }, max: 6}
         ],
-        feedbackOnInit: true,
-        callback: function($item, isValid, isRequired) {
-            if ($item == $('#legal-accept')) {
-                console.log(isValid);
-            }
-        }
+        feedbackOnInit: true
     });
     
     $('#signup-form').submit(function() {
@@ -54,7 +49,6 @@ $(document).ready(function(){
     });
     
 });
-
 
 function convertHash(hash) {
     return "~" + hash.substring(1);
