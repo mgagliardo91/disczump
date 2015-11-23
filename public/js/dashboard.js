@@ -7928,8 +7928,8 @@ var ZumpTextAssist = function(opt) {
         	}
         });
     	
-    	return results.sort(function(a,b) {
-    		return a.item.toLowerCase() > b.item.toLowerCase();
+    	return _.sortBy(results, function(result) {
+    		return result.item.toLowerCase();
     	});
     }
     
