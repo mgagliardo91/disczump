@@ -59,11 +59,11 @@ $(document).ready(function(){
 	$sprite = $('.loader-sprite');
 	
 	$.ajaxSetup({ cache: true });
-	$.getScript('//connect.facebook.net/en_UK/all.js', function(){
-		FB.init({
-			appId: dzID,
-		});
-	}); 
+	// $.getScript('//connect.facebook.net/en_UK/all.js', function(){
+	// 	FB.init({
+	// 		appId: dzID,
+	// 	});
+	// }); 
    	
    	var $serverParams;
    	if (($serverParams = $('#server-params')).length) {

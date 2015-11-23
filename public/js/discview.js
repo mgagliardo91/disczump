@@ -14,12 +14,6 @@ $(document).ready(function() {
    		serverURL = $serverParams.attr('serverURL');
    	}
     
-    $.getScript('//connect.facebook.net/en_UK/all.js', function(){
-		FB.init({
-			appId: dzID,
-		});
-	});
-    
     $(window).click(function(e) {
      	$.each($('.remove-on-close'), function(index) {
      		var domElem = $(this).get(0);
