@@ -45,4 +45,23 @@ discSchema.methods.getImage = function() {
     }
 }
 
+discSchema.methods.toDescString = function() {
+    var retString = '';
+    
+    if (this.condition) {
+        retString = 'Condition: ' + this.condition + '/10';
+    }
+    
+    if (this.material) {
+        retString = (retString.length ? retString + ' | ' : '') + 'Material: ' + this.material;
+    }
+    
+    if (this.weight) {
+        retString = (retString.length ? retString + ' | ' : '') + 'Weight: ' + this.weight + 'g';
+    }
+    
+    return retString;
+}
+
+
 module.exports = mongoose.model('Disc', discSchema);

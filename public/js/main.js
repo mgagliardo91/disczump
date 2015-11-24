@@ -50,11 +50,8 @@ function isDef(obj) {
 }
 
 var shareFacebook = function(discId, callback) {
-	FB.api('/?id=' + serverURL + '/disc/' + discId + '&scrape=true', function(response) {
-    	var winTop = ($(window).height() / 2) - (300 / 2);
-		var winLeft = ($(window).width() / 2) - (600 / 2);
-		
-		
+	FB.api('/?id=' + serverURL + '/disc/' + discId + '&scrape=true', 'post', {}, function(response) {
+
 		FB.ui({
 		  method: 'share',
 		  href: serverURL + '/disc/' + discId,

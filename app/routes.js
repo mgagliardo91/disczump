@@ -203,6 +203,7 @@ module.exports = function(app, passport, gridFs) {
                 return res.render('discview', {
                     isRelease: localConfig.release,
                     disc: disc,
+                    discStr: disc.toDescString(),
                     user : req.user,
                     owner : owner,
                     image : image,
