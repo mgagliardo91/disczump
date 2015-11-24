@@ -139,6 +139,7 @@ function preloadImage(imageUrl) {
 }
 
 function publicDisc(disc) {
+    var discImage = getPrimaryDiscImage(disc);
     var $disc = $('<div class="public-disc-item disc-gallery-item" discid="' + disc._id + '"></div>');
     $disc.append('<div class="disc-gallery-overlay" style="display: none;">' +
                             '<div class="disc-gallery-text-container">' +
@@ -150,20 +151,9 @@ function publicDisc(disc) {
                         '</div>' +
                         '<div class="disc-gallery-image-container">' +
                             '<div class="disc-gallery-image">' +
-                                '<img src="/static/logo/logo_small.svg">' +
+                                '<img src="' + (discImage ? '/files/' + discImage.fileId : '/static/logo/logo_small.svg') + '">' +
                             '</div>' +
                         '</div>');
-    
-    if (disc.primaryImage) {
-        getPrimaryDiscImage(disc.primaryImage, function(success, primaryImage) {
-            if (success) {
-                $('.public-disc-item[discid="' + primaryImage.discId + '"]').find('.disc-gallery-image > img').attr('src', '/files/' + primaryImage.thumbnailId);
-            } else {
-                handleError(primaryImage);
-            }
-        });
-    }
-    
     return $disc;
 }
 

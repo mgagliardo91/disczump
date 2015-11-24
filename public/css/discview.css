@@ -370,7 +370,7 @@ img.fit-parent {
 }
 
 #public-disc-table {
-    margin-top: 30px;
+    margin: 30px 0px;
 }
 
 .public-disc-row-container {
@@ -379,24 +379,18 @@ img.fit-parent {
 }
 
 .public-disc-row {
-    display: table;
-    table-layout: fixed;
-    margin: auto;
-    border-spacing: 10px;
+    text-align: center;
 }
 
 .public-disc-item.disc-gallery-item {
     width: 100px;
     height: 100px;
-    display: table-cell;
-    vertical-align: middle;
+    display: inline-block;
     text-align: center;
     position: relative;
     border: 1px solid #000;
-}
-
-.public-disc-item > .disc-gallery-image-container {
-    border-spacing: 0px;
+    cursor: default;
+    margin: 0px 10px;
 }
 
 .public-disc-item .disc-gallery-image > img {
@@ -436,15 +430,9 @@ img.fit-parent {
         max-width: 150px;
         max-height: 150px;
     }
-    
-    .public-disc-row {
-        border-spacing: 30px;
-        -webkit-border-horizontal-spacing: 30px;
-        -webkit-border-vertical-spacing: 0px;
-    }
 }
 
-
+/* ----------------- */
 /* From Dashboard.js */
 /* ----------------- */
 

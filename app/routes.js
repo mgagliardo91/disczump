@@ -181,7 +181,7 @@ module.exports = function(app, passport, gridFs) {
                });
             }
             
-            UserController.getUser(disc.userId, function(err, user){
+            UserController.getUser(disc.userId, function(err, owner){
                 if (err) {
                     return res.render('notification', {
                         isRelease: localConfig.release,
@@ -204,6 +204,7 @@ module.exports = function(app, passport, gridFs) {
                     isRelease: localConfig.release,
                     disc: disc,
                     user : req.user,
+                    owner : owner,
                     image : image,
                     serverURL : localConfig.serverURL,
                     primaryImage: disc.getImage()
