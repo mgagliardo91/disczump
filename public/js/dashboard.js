@@ -59,11 +59,14 @@ $(document).ready(function(){
 	$sprite = $('.loader-sprite');
 	
 	$.ajaxSetup({ cache: true });
-	// $.getScript('//connect.facebook.net/en_UK/all.js', function(){
-	// 	FB.init({
-	// 		appId: dzID,
-	// 	});
-	// }); 
+	
+	if (window.location.hash.indexOf('#_=_') > 0) {
+		if (typeof (window.history.replaceState) == 'function') {
+			window.history.replaceState(undefined, undefined, window.location.hash.replace('#_=_', ''));
+		} else {
+			window.location.hash = window.location.hash.replace('#_=_', '');
+		}
+	}
    	
    	var $serverParams;
    	if (($serverParams = $('#server-params')).length) {
