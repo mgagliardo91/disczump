@@ -1235,7 +1235,7 @@ function zumpLibraryInit() {
 		},
 		gallery: {
 			galleryContainer: '#gallery-container',
-			galleryCount: userPrefs.galleryCount,
+			galleryCount: parseInt(userPrefs.galleryCount),
 			gallerySlider: '#gallery-slider',
 			galleryMenu: '#gallery-menu',
 			galleryRowCount: '#gallery-row-count',
@@ -3524,6 +3524,7 @@ var ZumpDashboard = function(opt) {
 	this.showDiscGallery = function() {
 		var sorted = mySort.doSort(discList);
 		myGallery.showGallery();
+		resizeResultHeader();
 	}
 	
 	/*
@@ -5995,13 +5996,6 @@ var ZumpGallery = function(opt) {
 			$galleryRowCount = $(opt.galleryRowCount);
 		}
 		
-		if (isDef(opt.galleryContainer)) {
-			$galleryContainer = $(opt.galleryContainer);
-			createGallery();
-			setupListeners();
-		}
-		
-		
 		if (isDef(opt.galleryCount)) {
 			itemsPerRow = opt.galleryCount;
 		}
@@ -6009,6 +6003,13 @@ var ZumpGallery = function(opt) {
 		if (isDef(opt.onItemClick)) {
 			itemClick = opt.onItemClick;
 		}
+		
+		if (isDef(opt.galleryContainer)) {
+			$galleryContainer = $(opt.galleryContainer);
+		}
+		
+		createGallery();
+		setupListeners();
 	}
 	
 	/*
@@ -6083,6 +6084,7 @@ var ZumpGallery = function(opt) {
 			tooltip: 'hide',
 			selection: 'none'
 		}).on('change', function(slider) {
+			if (itemsPerRow == slider.value.newValue) return;
 			itemsPerRow = slider.value.newValue;
 			gallerySetup();
 		});
@@ -6201,7 +6203,7 @@ var ZumpGallery = function(opt) {
 		
 		var width = $galleryContainer.width();
 		var colCount = itemsPerRow;
-		var itemWidth = Math.min(500, Math.floor(width / colCount * 0.99));
+		var itemWidth = Math.min(500, Math.floor(width / colCount * 0.98));
 		var fontsize = getGalleryFontSize(itemWidth);
 		
 		$('.disc-gallery-row > .disc-gallery-item').css({
