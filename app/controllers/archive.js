@@ -33,9 +33,9 @@ function archiveUser(user) {
             email: user.local.email,
             dateJoined: user.local.dateJoined,
             lastAccess: user.local.lastAccess,
-            zipCode: user.local.zipCode,
             pdgaNumber: user.local.pdgaNumber,
             location: {
+                zipcode: user.local.location.zipcode,
                 lat: user.local.location.lat,
                 lng: user.local.location.lng,
                 city: user.local.location.city,

@@ -11,7 +11,8 @@ module.exports = {
             'firstName': 'disczump',
             'lastName': 'test',
             'password': 'password!',
-            'zipCode': '28078',
+            'locLat': '35.8019142',
+            'locLng': '-78.6875364',
             'active': true
         },
         'Update' : {
@@ -42,7 +43,8 @@ module.exports = {
             'firstName': 'disczump',
             'lastName': 'test',
             'password': 'password!',
-            'zipCode': '28078',
+            'locLat': '35.4172882',
+            'locLng': '-80.8765205',
             'active': true
         },
         'Fail' : {

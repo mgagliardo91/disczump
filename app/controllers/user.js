@@ -17,6 +17,7 @@ var geocoder = require("node-geocoder")('google', 'https', {apiKey : GeoConfig.a
 module.exports = {
 	query: query,
 	queryUsers: queryUsers,
+	createUserInternal: createUserInternal,
 	createUser: createUser,
 	getUser: getUser,
 	getActiveUser: getActiveUser,
@@ -58,24 +59,84 @@ function queryUsers(query, callback) {
 	
 	if (query.indexOf(' ') >= 0) { // name query
 		var nameQuery = query.split(' ');
-		User.find({ $and : [{'local.firstName': new RegExp(nameQuery[0], 'i')}, 
-						{'local.lastName': new RegExp(nameQuery[1], 'i')},
+		
+		if (nameQuery.length == 2) {
+			User.find({ $and : [ 
+							{$or: [
+								{$and : [
+									{'local.firstName': new RegExp(nameQuery[0], 'i')}, 
+									{'local.lastName': new RegExp(nameQuery[1], 'i')},
+								]},
+								{'local.firstName': regExp},
+								{'local.lastName': regExp}
+							]},
 						{'local.active': true}]}).limit(50).exec(
-			function(err, users) {
-				if (err) 
-					return callback(Error.createError(err, Error.internalError));
-				
-				var userInfoArr = [];
-				_.each(users, function(user) {
-					userInfoArr.push(user.accountToString());
+				function(err, users) {
+					if (err) 
+						return callback(Error.createError(err, Error.internalError));
+					
+					var userInfoArr = [];
+					_.each(users, function(user) {
+						userInfoArr.push(user.accountToString());
+					});
+					
+					userInfoArr.sort(function(x,y) {
+						return x.firstName.toLowerCase() > y.firstName.toLowerCase();
+					});
+					
+					return callback(null, {query: query, results: userInfoArr});
 				});
-				
-				userInfoArr.sort(function(x,y) {
-					return x.firstName.toLowerCase() > y.firstName.toLowerCase();
+		} else if (nameQuery.length == 3) {
+			User.find({ $and : [ {$or : [
+									{$and : [
+											{'local.firstName': new RegExp(nameQuery[0], 'i')},
+											{'local.lastName': new RegExp(nameQuery[1] + ' ' + nameQuery[2], 'i')}
+										]},
+									{$and : [
+											{'local.firstName': new RegExp(nameQuery[0] + ' ' + nameQuery[1], 'i')},
+											{'local.lastName': new RegExp( nameQuery[2], 'i')}
+										]}
+								]},
+						{'local.active': true}]}).limit(50).exec(
+				function(err, users) {
+					if (err) 
+						return callback(Error.createError(err, Error.internalError));
+					
+					var userInfoArr = [];
+					_.each(users, function(user) {
+						userInfoArr.push(user.accountToString());
+					});
+					
+					userInfoArr.sort(function(x,y) {
+						return x.firstName.toLowerCase() > y.firstName.toLowerCase();
+					});
+					
+					return callback(null, {query: query, results: userInfoArr});
 				});
-				
-				return callback(null, {query: query, results: userInfoArr});
-			});
+		} else if (nameQuery.length == 4) {
+			User.find({ $and : [ {$and : [
+									{'local.firstName': new RegExp(nameQuery[0] + ' ' + nameQuery[1], 'i')},
+									{'local.lastName': new RegExp(nameQuery[2] + ' ' + nameQuery[3], 'i')}
+								]},
+						{'local.active': true}]}).limit(50).exec(
+				function(err, users) {
+					if (err) 
+						return callback(Error.createError(err, Error.internalError));
+					
+					var userInfoArr = [];
+					_.each(users, function(user) {
+						userInfoArr.push(user.accountToString());
+					});
+					
+					userInfoArr.sort(function(x,y) {
+						return x.firstName.toLowerCase() > y.firstName.toLowerCase();
+					});
+					
+					return callback(null, {query: query, results: userInfoArr});
+				});
+		} else {
+			return callback(null, {query: query, results: []});
+		}
 	} else {
 		User.find({$and: [{'local.active': true},
 					{$or:[ {'local.username': regExp}, 
@@ -119,6 +180,21 @@ function queryUsers(query, callback) {
 	}
 }
 
+function createUserInternal(info, callback) {
+	createUser(info, function(err, user) {
+		if (err)
+			return callback(err);
+		
+		user.local.active = true;
+		user.save(function(err) {
+			if (err)
+				return callback(Error.createError(err, Error.internalError));
+			
+			return callback(null, user);
+		});
+	});
+}
+
 function createUser(info, callback) {
 	if (!info.email)
 		return callback(Error.createError('A valid email is required to create an account.', Error.invalidDataError));
@@ -128,6 +204,12 @@ function createUser(info, callback) {
 		
 	if (!checkPassword(info.password)) 
 		return callback(Error.createError('A valid password is required to create an account.', Error.invalidDataError));
+		
+	if (info.firstName && !checkName(info.firstName))
+		return callback(Error.createError('First name cannot contain more than one space.', Error.invalidDataError));
+		
+	if (info.lastName && !checkName(info.lastName))
+		return callback(Error.createError('Last name cannot contain more than one space.', Error.invalidDataError));
 	
 	async.series([
 		function(cb) {
@@ -155,7 +237,7 @@ function createUser(info, callback) {
 			});
 		},
 		function(cb) {
-			geocoder.geocode(info.zipCode, function(err, res) {
+			geocoder.reverse({lat:info.locLat, lon:info.locLng}, function(err, res) {
 				if (err)
 					return cb(Error.createError(err, Error.internalError));
 				
@@ -170,7 +252,8 @@ function createUser(info, callback) {
 				    state : loc.administrativeLevels.level1long,
 				    stateAcr : loc.administrativeLevels.level1short,
 				    country : loc.country,
-				    countryCode : loc.countryCode
+				    countryCode : loc.countryCode,
+				    zipcode: loc.zipcode
 				};
 			    
 				return cb();
@@ -181,7 +264,16 @@ function createUser(info, callback) {
 			return callback(err);
 			
 		var user = new User({
-			local: info
+			local: {
+				email: info.email,
+				password: info.password,
+				username: info.username,
+				firstName: info.firstName,
+				lastName: info.lastName,
+				pdgaNumber: info.pdgaNumber,
+				passcode: info.passcode,
+				location: info.location
+			}
 		});
 		
 		user.local.password = user.generateHash(info.password);
@@ -326,11 +418,11 @@ function updateAccount(userId, account, callback) {
        if (err) 
 			return callback(err);
 		
-		if (typeof account.firstName !== 'undefined') {
+		if (typeof account.firstName !== 'undefined' && checkName(account.firstName)) {
 			user.local.firstName = account.firstName;
 		}
 		
-		if (typeof account.lastName !== 'undefined') {
+		if (typeof account.lastName !== 'undefined' && checkName(account.lastName)) {
 			user.local.lastName = account.lastName;
 		}
 		
@@ -340,10 +432,12 @@ function updateAccount(userId, account, callback) {
 		
 		async.series([
 			function(cb) {
-				if (typeof account.username !== 'undefined' && checkUsername(account.username)) {
+				if (typeof account.username !== 'undefined') {
 					if (account.username == user.local.username) {
 						return cb();
 					}
+					if (!checkUsername(account.username))
+						return cb(Error.createError('The username does not meet the required criteria.', Error.invalidDataError));
 					
 					query('local.username', account.username, function(err, users) {
 			            if (err || users.length > 0) {
@@ -354,12 +448,12 @@ function updateAccount(userId, account, callback) {
 			            }
 					});
 				} else {
-					cb(Error.createError('The username does not meet the required criteria.', Error.invalidDataError));
+					cb();
 				}
 			},
 			function(cb) {
-				if (typeof account.zipCode !== 'undefined' && /^\d{5}$/.test(account.zipCode)) {
-					geocoder.geocode(account.zipCode, function(err, res) {
+				if (typeof account.locLat !== 'undefined' && typeof account.locLng !== 'undefined') {
+					geocoder.reverse({lat:account.locLat, lon:account.locLng}, function(err, res) {
 						if (err)
 							return cb(Error.createError(err, Error.internalError));
 						
@@ -367,8 +461,8 @@ function updateAccount(userId, account, callback) {
 							return cb(Error.createError('Unable to locate zip code.', Error.invalidDataError));
 						
 						var loc = res[0];
-						user.local.zipCode = account.zipCode;
 						user.local.location = {
+							zipcode: loc.zipcode,
 							lat : loc.latitude,
 						    lng : loc.longitude,
 						    city : loc.city,
@@ -618,14 +712,14 @@ function getAllUsers(params, callback) {
 
 }
 
-function getUsersByArea(zipCode, radius, callback) {
+function getUsersByArea(zipcode, radius, callback) {
 	var center = {};
 	var userList = [];
 	var radiusMeters = radius * 1609.34;
 	
 	async.series([
 		function(cb) {
-			geocoder.geocode(zipCode, function(err, res) {
+			geocoder.geocode(zipcode, function(err, res) {
 				if (err)
 					return cb(Error.createError(err, Error.internalError));
 				
@@ -683,4 +777,8 @@ function checkPassword(password) {
 
 function checkUsername(username) {
 	return /^[a-zA-Z0-9\_]{6,15}$/.test(username);
+}
+
+function checkName(val) {
+	return val.split(' ').length <= 2;
 }

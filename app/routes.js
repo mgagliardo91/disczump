@@ -56,8 +56,8 @@ module.exports = function(app, passport, gridFs) {
         return res.render('dashboard', {
             isRelease: localConfig.release,
             user : req.user,
+            userString: req.user.accountToString(),
             admin: req.session.admin,
-            image : req.user.accountToString().image,
             firstUse: firstUse,
             isDashboard : true,
             serverURL : localConfig.serverURL,
@@ -77,7 +77,7 @@ module.exports = function(app, passport, gridFs) {
                     isRelease: localConfig.release,
                     isMobile: req.device.isMobile,
                     user : req.user,
-                    image : req.user.accountToString().image,
+                    userString: req.user.accountToString(),
                     notify : {
                        pageHeader: err.error.type,
                        header: err.error.type,
@@ -96,7 +96,7 @@ module.exports = function(app, passport, gridFs) {
                         isRelease: localConfig.release,
                         isMobile: req.device.isMobile,
                         user : req.user,
-                        image : req.user.accountToString().image,
+                        userString: req.user.accountToString(),
                         notify : {
                            pageHeader: err.error.type,
                            header: err.error.type,
@@ -113,7 +113,7 @@ module.exports = function(app, passport, gridFs) {
                     isRelease: localConfig.release,
                     isMobile: req.device.isMobile,
                     user : req.user,
-                    image : req.user.accountToString().image,
+                    userString: req.user.accountToString(),
                     notify : {
                         pageHeader: 'Confirm Deletion',
                         header: 'Delete Account',
@@ -160,7 +160,7 @@ module.exports = function(app, passport, gridFs) {
     app.get('/disc/:discid', function(req, res) {
         var userId = undefined;
         if (req.user) userId = req.user._id;
-        var image = req.user ? req.user.accountToString().image : undefined;
+        var userString = req.user ? req.user : undefined;
     
         DiscController.getDisc(userId, req.params.discid, function(err, disc) {
             if (err) {
@@ -168,7 +168,7 @@ module.exports = function(app, passport, gridFs) {
                     isRelease: localConfig.release,
                     isMobile: req.device.isMobile,
                     user : req.user,
-                    image : image,
+                    userString : userString,
                     notify : {
                        pageHeader: err.error.type,
                        header: err.error.type,
@@ -187,7 +187,7 @@ module.exports = function(app, passport, gridFs) {
                         isRelease: localConfig.release,
                         isMobile: req.device.isMobile,
                         user : req.user,
-                        image : image,
+                        userString : userString,
                        notify : {
                            pageHeader: err.error.type,
                            header: err.error.type,
@@ -206,7 +206,7 @@ module.exports = function(app, passport, gridFs) {
                     discStr: disc.toDescString(),
                     user : req.user,
                     owner : owner,
-                    image : image,
+                    userString : userString,
                     serverURL : localConfig.serverURL,
                     primaryImage: disc.getImage()
                 });
@@ -382,7 +382,7 @@ module.exports = function(app, passport, gridFs) {
                         isRelease: localConfig.release,
                         isMobile: req.device.isMobile,
                         user : req.user,
-                        image : req.user.accountToString().image,
+                        userString: req.user.accountToString(),
                         notify : {
                            pageHeader: 'Reset Password',
                            header: 'Reset Password',
@@ -402,7 +402,7 @@ module.exports = function(app, passport, gridFs) {
                 isRelease: localConfig.release,
                 isMobile: req.device.isMobile,
                 user : req.user,
-                image : req.user.accountToString().image,
+                userString: req.user.accountToString(),
                 message: {
                     error: req.flash('error')
                 },
@@ -503,7 +503,6 @@ module.exports = function(app, passport, gridFs) {
             isMobile: req.device.isMobile,
             email: req.flash('email'),
             username: req.flash('username'),
-            zipCode: req.flash('zipCode'),
             alias: req.flash('alias'),
             pdgaNumber: req.flash('pdgaNumber'),
             route: {
@@ -524,7 +523,6 @@ module.exports = function(app, passport, gridFs) {
         passport.authenticate('local-signup', function(err, user, info) {
             req.flash('email', req.body.email);
             req.flash('username', req.body.username);
-            req.flash('zipCode', req.body.zipCode);
             req.flash('alias', req.body.alias);
             req.flash('pdgaNumber', req.body.pdgaNumber);
             
@@ -549,7 +547,7 @@ module.exports = function(app, passport, gridFs) {
                 isRelease: localConfig.release,
                 isMobile: req.device.isMobile,
                 user : req.user,
-                image : req.user.accountToString().image,
+                userString: req.user.accountToString(),
                 unlink: true,
                 popup: req.query.popup
            });
@@ -558,7 +556,7 @@ module.exports = function(app, passport, gridFs) {
                 isRelease: localConfig.release,
                 isMobile: req.device.isMobile,
                 user : req.user,
-                image : req.user.accountToString().image,
+                userString: req.user.accountToString(),
                 popup: req.query.popup
             });
         }

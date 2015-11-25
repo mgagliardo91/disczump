@@ -5,7 +5,6 @@ var ZumpValidate = function(opt) {
     var feedbackOnInit = false;
     var emailRegex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
     var usernameRegex = /^[a-zA-Z0-9_]*$/;
-    var zipCodeRegex = /^\d{5}$/;
     var numberRegex = /^-*[0-9]+$/;
     
     this.init = function(opt) {
@@ -22,6 +21,35 @@ var ZumpValidate = function(opt) {
         }
         
         setupListeners();
+    }
+    
+    this.setInitValues = function(initVals) {
+        _.each(_.keys(initVals), function(key) {
+            var item = _.findWhere(items, {id: key});
+            
+            if (item) {
+                item.initVal = initVals[key];
+            }
+        });
+        
+        zumpValidate.doValidate();
+    }
+    
+    this.getValue = function(id) {
+        var retVal;
+        var item = _.findWhere(items, {id: id});
+        
+        if (item) {
+            if (item.type == 'zipcode') {
+                return item.dropdown.GetSelection();
+            } else if (item.type == 'checkbox') {
+                return $('#' + item.id).attr('checked');
+            } else {
+                return $('#' + item.id).val().trim();
+            }
+        }
+        
+        return retVal
     }
     
     this.triggerResize = function() {
@@ -47,6 +75,18 @@ var ZumpValidate = function(opt) {
         });
         
         return invalid.length == 0;
+    }
+    
+    this.getValidChanges = function() {
+        var validChanges = {};
+        
+        _.each(items, function(item) {
+            if (item.isValid) {
+                validChanges[item.id] = zumpValidate.getValue(item.id);
+            }
+        });
+        
+        return validChanges;
     }
     
     this.getInvalidItems = function() {
@@ -82,8 +122,10 @@ var ZumpValidate = function(opt) {
                             item.dropdown = new ZumpDropdown({
                         	minLength: 5,
                     		inputElement: $input,
-                    		searchProp: 'zipCode',
-                    		getResults: getCityState,
+                    		searchProp: 'zipcode',
+                    		getResults: function(val, callback) {
+                    		    return getCityState(encodeURI(val), callback);
+                    		},
                     		getString: function(item) {
                     			return item.formatted;
                     		},
@@ -107,7 +149,7 @@ var ZumpValidate = function(opt) {
         
         setTimeout(function() {
             _.each(items, function(item) {
-                validate(item.id, undefined, 'keyup'); 
+                validate(item.id, undefined, 'ZumpInit'); 
             });  
         },500);
     }
@@ -174,6 +216,15 @@ var ZumpValidate = function(opt) {
                 validate(hasRef.id);
             }
             
+            if (typeof item.initVal !== 'undefined' && val == item.initVal) {
+                
+                if (item.type == 'username') {
+                    $('#' + item.output).text('Current Username');
+                }
+                
+                return callback($input, undefined);
+            }
+            
             if (item.min) {
                 isValid = val.length == 0 ? undefined : val.length >= item.min;
                 if (!(typeof isValid === 'undefined') && !isValid)  {
@@ -224,11 +275,9 @@ var ZumpValidate = function(opt) {
                     shouldCb = false;
                     queryUser('username', val, function(success, retData) {
                         if (success) {
-                            var isCurrent = isDef(item.data) ? item.data && item.data == val : false;
-                            var available = !retData.count || isCurrent;
-                            var availableText = isCurrent ? 'Current Username' : (available ? 'Available' : 'Unavailable');
+                            var availableText = (!retData.count ? 'Available' : 'Unavailable');
                             $('#' + item.output).text(availableText);
-                            callback($input, available);
+                            callback($input, !retData.count);
                         } else {
                             handleError(retData);
                         }
@@ -239,15 +288,13 @@ var ZumpValidate = function(opt) {
                 
             } else if (item.type == 'zipcode') {
                 
-                if (item.isValid == undefined && val.length >= 5) {
-                    item.isValid = false;
-                    item.dropdown.triggerInput();
-                    return;
+                if (eventType == 'ZumpInit') {
+                    return callback($input, undefined);
                 }
                 
                 if (!item.dropdown.SelectionComplete() && val.length >= 5) {
                     $('#' + item.output).text('');
-                    return;
+                    return callback($input, false);
                 }
                 
                 isValid = val.length == 0 ? undefined : item.dropdown.SelectionComplete();
@@ -310,6 +357,10 @@ var ZumpDropdown = function(opt) {
     //----------------------\
     // Prototype Functions
     //----------------------/
+    
+    this.GetSelection = function() {
+        return curSelection;
+    }
     
     this.SelectionComplete = function() {
         return typeof curSelection !== 'undefined';
@@ -398,7 +449,7 @@ var ZumpDropdown = function(opt) {
 		    	return false;
 	    	}
 	    	
-	    	else if (code == 9 && $curActive.length) {
+	    	else if (code == 9 && $dropdownList.is(':visible') && !curSelection) {
 	    		tabTrigger = true;
 		    	e.stopImmediatePropagation();
 		    	return false;
@@ -422,12 +473,15 @@ var ZumpDropdown = function(opt) {
 	    		var $curActive = $dropdownList.find('.dropdown-list-item.active');
 		        if ($curActive.length) {
 		        	updateInput($curActive.attr('result'), true);
+		        } else { 
+		            updateInput($dropdownList.find('.dropdown-list-item').first().attr('result'), true);
 		        }
 		        
 		        if (onSelection) {
 	        		onSelection(curSelection, zumpDropdown.resetInput);
 		        }
 		        
+		        $curActive.removeClass('active');
 		        tabTrigger = false;
 			 	e.preventDefault();
       			return false;
@@ -574,6 +628,7 @@ var ZumpDropdown = function(opt) {
     		$input.val('');
     	}
     	
+    	currentSearch = result[property];
     	setInput(result[property], hideAlways);
     }
     
@@ -585,19 +640,20 @@ var ZumpDropdown = function(opt) {
     * Set Input
     */
     var setInput = function(newVal, hideAlways, callback) {
+    	if (newVal.length < minLength) {
+			curSelection = undefined;
+    		setResultsVisibility(false);
+    		return;
+    	}
+    	
     	if (isDef(newVal)) {
     		if (currentSearch == newVal) {
-    			setResultsVisibility(!hideAlways);
+    			setResultsVisibility(!hideAlways && resultList.length);
     			return;
     		}
     		
 			currentSearch = newVal;
 			curSelection = undefined;
-    	}
-    	
-    	if (currentSearch.length < minLength) {
-    		setResultsVisibility(false);
-    		return;
     	}
     	
     	updateResults(function(vis) {
@@ -667,13 +723,12 @@ var ZumpDropdown = function(opt) {
     * Creates the dropdown div/list to hold result items
     */
     var createDropdown = function() {
-        $input.after('<div class="dropdown-list-display" tabindex="-1">' +
+        $dropdown = $('<div class="dropdown-list-display" tabindex="-1">' +
                         '<ul class="list-unstyled dropdown-search-list">' +
                         '</ul>' +
                     '</div>');
-        
-        $dropdown = $input.siblings('div.dropdown-list-display');
         $dropdownList = $dropdown.find('.dropdown-search-list');
+        $input.after($dropdown);
     }
     
     /*

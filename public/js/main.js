@@ -245,7 +245,9 @@ function parseGeo(results) {
 			if (stringRes && zip) {
 				geoResults.push({
 					formatted: stringRes,
-					zipCode: zip
+					locLat: loc.geometry.location.lat,
+					locLng: loc.geometry.location.lng,
+					zipcode: zip
 				});
 			}
 		});

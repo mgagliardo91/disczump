@@ -15,9 +15,9 @@ var userArchiveSchema = mongoose.Schema({
         email: {type: String, unique: true},
         dateJoined: {type: Date, default: Date.now},
         lastAccess: {type: Date, default: Date.now},
-        zipCode: String,
         pdgaNumber: String,
         location: {
+            zipcode: String,
             lat: String,
             lng: String,
             city: String,

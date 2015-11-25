@@ -22,9 +22,9 @@ var userSchema = mongoose.Schema({
         active: {type: Boolean, default: false},
         passcode: String,
         image: String,
-        zipCode: String,
         pdgaNumber: String,
         location: {
+            zipcode: String,
             lat: String,
             lng: String,
             city: String,
@@ -116,8 +116,12 @@ userSchema.methods.accountToString = function() {
 	    account.image = this.facebook.image;
 	}
 	
-	if (typeof(this.local.zipCode) !== 'undefined') {
-		account.zipCode = this.local.zipCode;
+	if (typeof(this.local.location.zipcode) !== 'undefined') {
+		account.zipcode = this.local.location.zipcode;
+		account.location = this.local.location.city + ', ' + 
+    		this.local.location.stateAcr + ' ' + this.local.location.zipcode + ', ' + 
+    		this.local.location.countryCode;
+    	account.shortLocation = this.local.location.city + ', ' + this.local.location.stateAcr;
 	}
 	
 	if (typeof(this.local.pdgaNumber) !== 'undefined') {

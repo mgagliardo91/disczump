@@ -85,13 +85,13 @@
 }
 
 .dashboard-header {
-    width: 150px;
+    width: 200px;
     padding: 0px 5px;
 }
 
 .dashboard-header-main {
     width: 100%;
-    padding: 0px 150px;
+    padding: 0px 200px;
 }
 
 .page {

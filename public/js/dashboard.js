@@ -84,37 +84,43 @@ $(document).ready(function(){
     
     $('#account-save').click(function() {
     	var $accountForm = $('#account-form')
-    	
     	$('.page-alert').remove();
     	
     	if (!accountValidation.doValidate()) {
     		return false;
     	}
     	
-    	var username = $('#account-username').val();
-    	var firstName = $('#account-first-name').val();
-    	var lastName = $('#account-last-name').val();
-    	var zipCode = $('#account-zip-code').val();
-    	var pdga = $('#account-pdga').val();
+    	var changes = accountValidation.getValidChanges();
+    	
+    	if (_.isEmpty(changes)) return false;
+    	
+    	var loc = changes['account-zip-code'];
     	
     	putAccount({
-    		username : username,
-    		firstName : firstName,
-    		lastName : lastName,
-    		zipCode: zipCode,
-    		pdgaNumber: pdga
+    		username : changes['account-username'],
+    		firstName : changes['account-first-name'],
+    		lastName : changes['account-last-name'],
+    		locLat: loc ? loc.locLat : undefined,
+    		locLng: loc ? loc.locLng : undefined,
+    		pdgaNumber: changes['account-pdga']
     	}, function(success, retData) {
     		if (success) {
     			$('#account-username').val(retData.username);
     			$('#account-first-name').val(retData.firstName);
     			$('#account-last-name').val(retData.lastName);
-    			$('#account-zip-code').val(retData.zipCode);
+    			$('#account-zip-code').val(retData.zipcode);
     			$('#account-pdga').val(retData.pdgaNumber);
     			generateSuccess('Account successfully updated.', 'Success', true);
     			
     			userAccount = retData;
     			userCache[userAccount._id] = userAccount;
-    			accountValidation.updateItem('account-username', 'data', retData.username);
+    			accountValidation.setInitValues({
+    				'account-username': retData.username,
+	    			'account-first-name': retData.firstName,
+	    			'account-last-name': retData.lastName,
+	    			'account-zip-code': retData.zipcode,
+	    			'account-pdga': retData.pdgaNumber
+    			});
     			myNotifier.executeEvent('accountChange');
     		} else {
     			handleError(retData);
@@ -1277,13 +1283,13 @@ function zumpLibraryInit() {
 	
 	accountValidation = new ZumpValidate({
     	items: [
-    		{id: 'account-username', data: userAccount.username, type: 'username', output: 'account-username-feedback', min: 6, max: 15},
-            {id: 'account-first-name', optional: true, type: 'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }},
-            {id: 'account-last-name',  optional: true, type: 'function', fn: function(val) { return val.length == 0 ? undefined : !/\s/.test(val) }},
-            {id: 'account-zip-code', type: 'zipcode', output: 'account-city-state'},
-            {id: 'account-pdga', optional: true, type:'function', fn: function(val) { return val.length == 0 ? undefined : /^[0-9]*$/.test(val) }, max: 6}
+    		{id: 'account-username', optional: true, initVal: userAccount.username, type: 'username', output: 'account-username-feedback', min: 6, max: 15},
+            {id: 'account-first-name', optional: true, initVal: userAccount.firstName, type: 'function', fn: function(val) { return val.length == 0 ? undefined : val.split(' ').length < 3 }},
+            {id: 'account-last-name',  optional: true, initVal: userAccount.lastName, type: 'function', fn: function(val) { return val.length == 0 ? undefined : val.split(' ').length < 3 }},
+            {id: 'account-zip-code', optional: true, initVal: userAccount.zipcode, type: 'zipcode', output: 'account-city-state'},
+            {id: 'account-pdga', optional: true, initVal: userAccount.pdgaNumber, type:'function', fn: function(val) { return val.length == 0 ? undefined : /^[0-9]*$/.test(val) }, max: 6}
     	],
-        feedbackOnInit: true
+        feedbackOnInit: false
     });
 }
 
@@ -3330,7 +3336,7 @@ var ZumpDashboard = function(opt) {
 		$sidebarLoading = $('.sidebar-loading');
 		
 		if (opt.paginate.displayCount) {
-			paginateOptions.displayCount = opt.paginate.displayCount;
+			setPaginateCount(opt.paginate.displayCount);
 			$paginateCount.val(paginateOptions.displayCount);
 		}
 		
@@ -3700,8 +3706,8 @@ var ZumpDashboard = function(opt) {
 	    	});
 	    });
 	    
-	    $searchBar.on('keyup', function() {
-			delay(function() {
+	    $searchBar.on('keyup', function(e) {
+	    	delay(function() {
 				$searchPanel.find($sidebarLoading).css('display', 'table');
 				doSearch();
 			}, 100 );
@@ -3743,13 +3749,7 @@ var ZumpDashboard = function(opt) {
 		
 		$paginateCount.on('change', function(){
 			var val = $(this).val();
-			val = parseInt(val);
-			if (_.isNaN(val)) {
-				paginateOptions.displayCount = -1;
-				paginateOptions.currentPage = 1;
-			} else {
-				paginateOptions.displayCount = parseInt(val);
-			}
+			setPaginateCount(val);
 			
 			showDiscs();
 		});
@@ -3850,6 +3850,7 @@ var ZumpDashboard = function(opt) {
 		});
 		
 		$(document).on('mouseenter', '.disc-info-name', function(e) {
+			$('.view-action').remove();
 			$(this).prepend('<div class="view-action"><i class="fa fa-binoculars fa-sm"></i></div>');
 			$(this).find('.view-action').stop().animate({
 				'margin-left': '0px'
@@ -4388,6 +4389,19 @@ var ZumpDashboard = function(opt) {
 	/**************************
 	* Pagination
 	***************************/
+	
+	/*
+	* Sets the paginate count
+	*/
+	var setPaginateCount = function(val) {
+		val = parseInt(val);
+		if (_.isNaN(val)) {
+			paginateOptions.displayCount = -1;
+			paginateOptions.currentPage = 1;
+		} else {
+			paginateOptions.displayCount = parseInt(val);
+		}
+	}
 	
 	/*
 	* Paginates the provided array
@@ -4975,7 +4989,6 @@ var ZumpSocial = function(opt) {
     // Javascript Objects
     //----------------------/
     var zumpSocial = this;
-    var zipCodeCache = {};
     var curUser;
     var isShowing = false;
     var forceUpdate = false;
@@ -5048,14 +5061,14 @@ var ZumpSocial = function(opt) {
     
     var setupListeners = function() {
     	$searchProfile.on('keyup', function() {
-    		var query = $searchProfile.val();
+    		var query = $searchProfile.val().trim();
     		if (query.length) {
     			$sidebarProfile.find($sidebarLoading).css('display', 'table');
     			delay(function() {
 					getProfiles(query, function(success, queryResult) {
 						clearProfileList();
 						if (success) {
-							if (queryResult.query != $searchProfile.val()) {
+							if (queryResult.query != query) {
 								return false;
 							}
 							if (queryResult.results.length) {
@@ -5183,10 +5196,7 @@ var ZumpSocial = function(opt) {
     	$profilePictureContainer.find('img').attr('src', getUserImage(user));
     	
     	$profileUsername.text(user.username);
-    	$profileLocation.attr('value', user.zipCode);
-    	if (zipCodeCache[user.zipCode]) {
-			$profileLocation.text(zipCodeCache[user.zipCode]);
-    	}
+    	$profileLocation.text(user.shortLocation);
     	
     	$profileJoinDate.text(dateJoined);
     }
@@ -5260,29 +5270,11 @@ var ZumpSocial = function(opt) {
 	                                    '<div class="profile-item-label">' + fullName + '</div>' +
 	                                    '<div class="profile-item-text">' + user.username + '</div>' +
 	                                    '<div class="profile-item-text">' + (pdga.length ? '#' + pdga : '') + '</div>' +
-	                                    '<div class="profile-item-text city-state" value="' + user.zipCode + '"></div>' +
+	                                    '<div class="profile-item-text city-state">' + user.shortLocation + '</div>' +
 	                                '</div>' +
 	                            '</div>' +
 	                        '</div>' +
                             '<div class="clearfix"></div>');
-        
-        var cityState = zipCodeCache[user.zipCode];
-        
-        if (cityState) {
-        	if (cityState.length) {
-        		$profileItem.find('.city-state').text(cityState);
-        	}
-        } else {
-        	zipCodeCache[user.zipCode] = '';
-        	getCityState(user.zipCode, function(success, retData) {
-	        	if (success) {
-	        		$('.city-state[value="' + user.zipCode + '"]').text(retData[0].formatted);
-	        		zipCodeCache[user.zipCode] = retData.zipCode;
-	        	} else {
-	        		//Ignore error in the case that zip code is not found.
-	        	}
-	        });
-        }
         
         return $profileItem;
     }

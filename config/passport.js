@@ -133,7 +133,8 @@ module.exports = function(passport) {
             UserController.createUser({
                 email: username,
                 password: password,
-                zipCode: req.body.zipCode,
+                locLat: req.body.locLat,
+                locLng: req.body.locLng,
                 username:  req.body.username,
                 firstName: req.body.firstName ? req.body.firstName : undefined,
                 lastName: req.body.lastName ? req.body.lastName : undefined,

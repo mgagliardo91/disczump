@@ -571,8 +571,8 @@
                 <div class="row">
                     <div class="profile-image-wrapper float-left">
                         <div class="profile-image" id="account-image">
-                            {{#if image}}
-                            <img src="{{image}}" />
+                            {{#if userString}}
+                            <img src="{{userString.image}}" />
                             {{else}}
                             <img src="/static/logo/logo_high_nobg.svg" />
                             {{/if}}
@@ -636,9 +636,10 @@
                                 <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim" data-toggle="tooltip" tt="account-zip-code"></i>
                             </label>
                             <div class="col-sm-5">
-                                <input type="text" class="form-control" id="account-zip-code" placeholder="Zip Code" value="{{user.local.zipCode}}">
+                                <input type="text" class="form-control" id="account-zip-code" placeholder="Zip Code" value="{{user.local.location.zipcode}}">
                             </div>
                             <div class="col-sm-4 lh-input" id="account-city-state">
+                                {{userString.location}}
                             </div>
                         </div>
                         <div class="form-group">

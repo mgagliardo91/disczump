@@ -188,6 +188,9 @@ function createDisc(userId, data, callback) {
                     ImageController.getImageCache(imageId, function(err, imageObj) {
                         if (!err && imageObj) {
                             disc.imageList.push(imageObj);
+                            if (typeof (disc.primaryImage) === 'undefined') {
+                                disc.primaryImage = imageObj._id;
+                            }
                         }
                         
                         imgCb();
@@ -215,6 +218,7 @@ function createDisc(userId, data, callback) {
             }
         }
     ], function(err, results){
+        console.log(disc.toObject());
         disc.save(function(err){
             if (err)
                 return callback(Error.createError(err, Error.internalError));
