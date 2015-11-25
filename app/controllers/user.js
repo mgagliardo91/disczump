@@ -21,8 +21,6 @@ module.exports = {
 	createUser: createUser,
 	getUser: getUser,
 	getActiveUser: getActiveUser,
-	updateActivity: updateActivity,
-	updateAccessCount: updateAccessCount,
     checkPassword: checkPassword,
     checkUsername: checkUsername,
     getAccount: getAccount,
@@ -308,25 +306,6 @@ function getActiveUser(userId, callback) {
 		
 		return callback(null, user);
 	});
-}
-
-function updateAccessCount(userId, platform) {
-	User.findOne({_id: userId}, function(err, user) {
-        if (!err && user) {
-			user.local.accessCount[platform] += 1;
-			user.local.lastAccess = Date.now();
-			user.save();
-        }
-    });
-}
-
-function updateActivity(userId) {
-	User.findOne({_id: userId}, function(err, user) {
-        if (!err && user) {
-			user.local['last_access'] = Date.now();
-			user.save();
-        }
-    });
 }
 
 function getAccount(userId, callback) {

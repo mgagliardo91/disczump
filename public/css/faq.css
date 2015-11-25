@@ -29,7 +29,8 @@
 }
 
 .faq-body span {
-    margin-right: 5px;
+    padding-right: 5px;
+    display: inline-block;
 }
 
 .faq-body span.inline {

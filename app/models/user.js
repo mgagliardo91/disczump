@@ -90,6 +90,11 @@ userSchema.methods.addEvent = function(type, event) {
     }
 }
 
+userSchema.methods.updateAccessCount = function(platform) {
+    this.local.accessCount[platform] += 1;
+    this.save();
+}
+
 userSchema.methods.accountToString = function() {
     var account = {};
     
@@ -118,10 +123,11 @@ userSchema.methods.accountToString = function() {
 	
 	if (typeof(this.local.location.zipcode) !== 'undefined') {
 		account.zipcode = this.local.location.zipcode;
-		account.location = this.local.location.city + ', ' + 
+		account.location = (this.local.location.city ? this.local.location.city + ', ' : '') + 
     		this.local.location.stateAcr + ' ' + this.local.location.zipcode + ', ' + 
     		this.local.location.countryCode;
-    	account.shortLocation = this.local.location.city + ', ' + this.local.location.stateAcr;
+    	account.shortLocation = (this.local.location.city ? this.local.location.city + ', ' : '') +
+    	    this.local.location.stateAcr;
 	}
 	
 	if (typeof(this.local.pdgaNumber) !== 'undefined') {

@@ -367,7 +367,7 @@ function createThreadLocal(userId, refUserId, thread, callback) {
         t.isPrivate = thread.isPrivate;
         t.threadId = thread._id;
         t.userId = userId;
-        t.threadTag = thread._id;
+        t.threadTag = user.local.username;
         t.save(function(err) {
             if (err) return callback(Error.createError(err, Error.internalError));
         

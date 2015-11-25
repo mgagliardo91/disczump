@@ -56,6 +56,8 @@ function confirmAccount(authorizationId, callback) {
             user.save(function(err){
                 if (err)
                     return callback(Error.createError(err, Error.internalError));
+                    
+                confirm.remove();
                 
                 return callback(null, user);
             });
@@ -108,6 +110,8 @@ function confirmDelete(authorizationId, gfs, callback) {
                         UserController.deleteUser(user._id, gfs, cb);
                     }
                 ], function(err, results) {
+                    
+                    confirm.remove();
                     return callback(null, user);
                 });
             });

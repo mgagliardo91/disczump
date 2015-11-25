@@ -43,15 +43,32 @@ module.exports = function(app, passport, gridFs) {
     });
 
     app.get('/dashboard', isLoggedIn, function(req, res) {
-        UserController.updateActivity(req.user._id);
-        var firstUse = false;
         
-        if (typeof req.user.local.accessCount !== 'undefined') {
-            firstUse = req.user.local.accessCount.desktop <= 1;
-            if (firstUse) {
-                UserController.updateAccessCount(req.user._id, 'desktop');
-            }
+        if (req.device.isMobile) {
+            req.user.updateAccessCount('mobile');
+            return res.render('notification', {
+                isRelease: localConfig.release,
+                isMobile: req.device.isMobile,
+                user : req.user,
+                userString: req.user.accountToString(),
+                notify : {
+                   pageHeader: 'Unsupported Platform',
+                   header: 'Unsupported Platform',
+                   strong: 'Your dashboard is not currently accessible by a mobile device.',
+                   text: 'We are working to bring mobile capability to the disc|zump ' + 
+                            'dashboard, but at this time you will need to access the ' + 
+                            'dashboard from a desktop/laptop. Check out our ' +
+                            '<a href="/faq#faq-mobile">FAQ</a> for more information on ' +
+                            'mobile support.',
+                   buttonIcon: 'fa-home',
+                   buttonText: 'Return Home',
+                   buttonLink: '/'
+               }
+           });
         }
+        
+        var firstUse = req.user.local.accessCount.desktop < 1;
+        req.user.updateAccessCount('desktop');
         
         return res.render('dashboard', {
             isRelease: localConfig.release,
@@ -638,11 +655,8 @@ function doLogIn(req, res, next, err, user, info) {
                       return res.redirect('/login');
                     }
                     
-                    UserController.updateAccessCount(req.user._id, (req.device.isMobile ? 'mobile' : 'desktop'));
-                    
-                     AdminController.validateAdmin(req.user._id, function(err, admin) {
-                        
-                            req.session.admin = (!err && admin) ? admin : undefined;
+                    AdminController.validateAdmin(req.user._id, function(err, admin) {
+                        req.session.admin = (!err && admin) ? admin : undefined;
                         
                         if (redirect) {
                           return res.redirect(redirect);

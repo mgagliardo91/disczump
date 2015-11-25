@@ -51,17 +51,37 @@ function isDef(obj) {
 
 var shareFacebook = function(discId, callback) {
 	FB.api('/?id=' + serverURL + '/disc/' + discId + '&scrape=true', 'post', {}, function(response) {
-
-		FB.ui({
-		  method: 'share',
-		  href: serverURL + '/disc/' + discId,
-		}, function(response){
-			console.log(response);
-			if (callback) {
-				callback();
-			}
-		});
+		
+		if (callback) callback();
+		
+		var popupWindow = generatePopup('http://www.facebook.com/sharer/sharer.php?app_id=' + dzID + '&u=' + serverURL + '/disc/' + discId + 
+	    	'&display=popup&ref=plugin&src=share_button', 'sharer', 600, 300);
     });
+}
+
+/*
+* Code credited to: http://www.xtf.dk/2011/08/center-new-popup-window-even-on.html
+* Modified to fit our code
+*/
+function generatePopup(url, title, w, h) {
+    // Fixes dual-screen position                         Most browsers      Firefox
+    var dualScreenLeft = window.screenLeft != undefined ? window.screenLeft : screen.left;
+    var dualScreenTop = window.screenTop != undefined ? window.screenTop : screen.top;
+
+    var width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
+    var height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
+
+    var left = ((width / 2) - (w / 2)) + dualScreenLeft;
+    var top = ((height / 2) - (h / 2)) + dualScreenTop;
+    var popupWindow = window.open(url, title, 'scrollbars=yes,toolbar=0,status=0,width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+    try {
+		popupWindow.focus();
+		return popupWindow;
+	}
+	catch (e) {
+		generateError('A popup blocker is enabled in this browser. Please allow popups and try again.', 'Unable To Open', true);
+		return undefined;
+	}
 }
 
 function getUserImage(user) {

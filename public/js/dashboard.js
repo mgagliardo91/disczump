@@ -467,12 +467,13 @@ function openPopup(url, name) {
 		serverCallback[name]();
 	}
 	
-	var popupWindow = window.open(url + '?popup=true', name, 'top=' + winTop + ',left=' + winLeft + ',toolbar=0,status=0,width=' + 800 + ',height=' + 500);
+	var popupWindow = generatePopup(url + '?popup=true', name, 800, 500);
 	
-	serverCallback[name] = function() {
-		if (popupWindow) popupWindow.close();
+	if (popupWindow) {
+		serverCallback[name] = function() {
+			if (popupWindow) popupWindow.close();
+		}
 	}
-	
 }
 
 function setupFrameworkListeners() {
@@ -3274,10 +3275,11 @@ var ZumpDashboard = function(opt) {
 	var refPageTop;
 	var refContBottom;
 	var activeView;
-	var discViewDisc;
+	var currentDisc;
 	var publicList = false;
 	var currentUser;
 	var forceRefresh = false;
+	var forceUpdate = false;
 	
 	var paginateOptions = {displayCount: 20, currentPage: 1, lastPage: 1};
 	var chartData = {};
@@ -3447,7 +3449,7 @@ var ZumpDashboard = function(opt) {
 	}
 	
 	this.CurrentDisc = function() {
-		return discViewDisc;
+		return currentDisc;
 	}
 	
 	this.setView = function(view) {
@@ -3502,7 +3504,7 @@ var ZumpDashboard = function(opt) {
 		});
 		unfilteredList.push(upDisc);
 		updateDiscItem(upDisc);
-		if (discViewDisc._id == upDisc._id) forceRefresh = true;
+		if (currentDisc._id == upDisc._id) forceRefresh = true;
 	}
 	
 	/*
@@ -3895,7 +3897,7 @@ var ZumpDashboard = function(opt) {
 	        $imageArea.find('.image-preview.active').removeClass('active');
 	        $(this).addClass('active');
 	        var id = $(this).children('img').attr('imageId');
-	        var img = _.findWhere(discViewDisc.imageList, {_id: id});
+	        var img = _.findWhere(currentDisc.imageList, {_id: id});
 	        if (img) {
 	            $('#view-disc-image').attr('src', '/files/' + img.fileId);
 	        }
@@ -3904,6 +3906,10 @@ var ZumpDashboard = function(opt) {
 	    $('#view-disc-owner').click(function() {
 	    	mySocial.showProfile($(this).attr('userId'));
 	    });
+	    
+    	myNotifier.addListener('accountChange', zumpDashboard, function() {
+    		if (currentDisc && currentDisc.userId == userAccount._id) forceRefresh = true;
+    	});
 	    
 	}
 	
@@ -4038,17 +4044,17 @@ var ZumpDashboard = function(opt) {
 	
 	var showDisc = function(disc) {
 		
-		if (discViewDisc && discViewDisc._id == disc._id && !forceRefresh) {
+		if (currentDisc && currentDisc._id == disc._id && !forceRefresh) {
 			changePage('#pg-disc-view');
 			return;
 		}
 		
 		forceRefresh = false;
-		discViewDisc = disc;
+		currentDisc = disc;
 		
 		if (isUserOwned(disc._id)) {
 			$('#view-disc-edit').closest('.page-title-btn').show();
-			$('#view-disc-edit').attr('discId', discViewDisc._id);
+			$('#view-disc-edit').attr('discId', currentDisc._id);
 			myDashboard.bindPrivateListeners();
 		} else {
 			$('#view-disc-edit').closest('.page-title-btn').hide();
@@ -4058,8 +4064,8 @@ var ZumpDashboard = function(opt) {
 		
 		var discString = stringifyDisc(disc);
 		
-		$('#view-disc-share').attr('discId', discViewDisc._id);
-		$('#view-disc-link').attr('discId', discViewDisc._id);
+		$('#view-disc-share').attr('discId', currentDisc._id);
+		$('#view-disc-link').attr('discId', currentDisc._id);
 		$('#view-disc-title').text(disc.brand + ' ' + disc.name);
 		$('#view-disc-notes').text(discString.notes.length ? discString.notes : '-');
 		
@@ -5072,7 +5078,7 @@ var ZumpSocial = function(opt) {
 					getProfiles(query, function(success, queryResult) {
 						clearProfileList();
 						if (success) {
-							if (queryResult.query != query) {
+							if (queryResult.query != $searchProfile.val().trim()) {
 								return false;
 							}
 							if (queryResult.results.length) {
@@ -5623,7 +5629,7 @@ var ZumpMessenger = function(opt) {
     
     var updateThread = function(thread) {
     	var $thread = $('li.thread-container[threadId="' + thread.threadId + '"]');
-    	if ($thread) {
+    	if ($thread.length) {
 	    	var isActive = $thread.hasClass('active');
 	    	if ($thread.length) {
 	    		$thread.empty();
@@ -5632,6 +5638,8 @@ var ZumpMessenger = function(opt) {
 	    	}
 	    	updateMessageCount();
 	    	reorderThreads();
+    	} else {
+    		prependThread(thread);
     	}
     }
     
