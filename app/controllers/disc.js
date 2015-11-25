@@ -218,7 +218,6 @@ function createDisc(userId, data, callback) {
             }
         }
     ], function(err, results){
-        console.log(disc.toObject());
         disc.save(function(err){
             if (err)
                 return callback(Error.createError(err, Error.internalError));
