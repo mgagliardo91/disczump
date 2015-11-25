@@ -115,7 +115,8 @@ var ZumpValidate = function(opt) {
            
             if ($input.length) {
                
-                if (typeof item.type !== 'undefined' && item.type != 'none') {
+                item.initVal = getSafe(item.initVal, '');
+                if (typeof item.type !== 'undefined') {
                     $input.on('keyup paste change leave', handleEvent);
                     
                     if (item.type == 'zipcode') {
@@ -206,7 +207,7 @@ var ZumpValidate = function(opt) {
         
         var val = $input.val();
         
-        var isValid = undefined;
+        var isValid = true;
         var shouldCb = true;
         var item = _.findWhere(items, {id: id});
         
@@ -216,9 +217,9 @@ var ZumpValidate = function(opt) {
                 validate(hasRef.id);
             }
             
-            if (typeof item.initVal !== 'undefined' && val == item.initVal) {
+            if (val == item.initVal) {
                 
-                if (item.type == 'username') {
+                if (item.type == 'username' && val.length) {
                     $('#' + item.output).text('Current Username');
                 }
                 
@@ -226,18 +227,18 @@ var ZumpValidate = function(opt) {
             }
             
             if (item.min) {
-                isValid = val.length == 0 ? undefined : val.length >= item.min;
-                if (!(typeof isValid === 'undefined') && !isValid)  {
+                isValid = val.length >= item.min;
+                if (!isValid)  {
                     if (item.output) $('#' + item.output).text('');
-                    return callback($input, isValid);
+                    return callback($input, false);
                 }
             }
             
             if (item.max) {
-                isValid = val.length == 0 ? undefined : val.length <= item.max;
-                if (!(typeof isValid === 'undefined') && !isValid)  {
+                isValid = val.length <= item.max;
+                if (!isValid)  {
                     if (item.output) $('#' + item.output).text('');
-                    return callback($input, isValid);
+                    return callback($input, false);
                 }
             }
             
@@ -248,28 +249,28 @@ var ZumpValidate = function(opt) {
                 isValid = val == testVal;
                 return callback($input, isValid);
             } else if (item.type == 'email') {
-                isValid = (val.length == 0 ? undefined : emailRegex.test(val));
-                if (!(typeof isValid === 'undefined') && !isValid) return callback($input, isValid);
+                isValid = emailRegex.test(val);
+                if (!isValid) return callback($input, false);
                 
             } else if (item.type == 'compare') {
                 var ref = $('#' + item.refId);
                 
                 if (ref.length) {
-                    isValid = ref.val().length == 0 ? undefined : val === ref.val();
-                    if (!(typeof isValid === 'undefined') && !isValid) return callback($input, isValid);
+                    isValid = val === ref.val();
+                    if (!isValid) return callback($input, false);
                 }
                 
             } else if (item.type == 'function') {
                 if (item.fn) {
                     isValid = item.fn(val);
-                    if (!(typeof isValid === 'undefined') && !isValid) return callback($input, isValid);
+                    if (!isValid) return callback($input, false);
                 }
                 
             } else if (item.type == 'number') {
-                isValid = val.length == 0 ? undefined : numberRegex.test(val);
+                isValid = numberRegex.test(val);
                 
             } else if (item.type == 'username') {
-                isValid = val.length == 0 ? undefined : usernameRegex.test(val);
+                isValid = usernameRegex.test(val);
                 
                 if (isValid) {
                     shouldCb = false;
@@ -297,13 +298,13 @@ var ZumpValidate = function(opt) {
                     return callback($input, false);
                 }
                 
-                isValid = val.length == 0 ? undefined : item.dropdown.SelectionComplete();
+                isValid = item.dropdown.SelectionComplete();
                 if (!isValid) {
                     $('#' + item.output).text('');
                 }
                 
             } else if (item.type == 'none') {
-                return;
+                isValid = true;
             }
             
             if (shouldCb) callback($input, isValid);

@@ -4,9 +4,6 @@ var $footer;
 var $beta;
 var popValue;
 var stepValue;
-var cycle = true;
-
-var emailValidate;
 
 $(document).ready(function(){
     
@@ -49,18 +46,6 @@ $(document).ready(function(){
             'line-height': '100px',
             'font-size': '100%'
         }, 100);
-    });
-    
-    $('#submit-email').submit(function(e) {
-       if (!emailValidate.doValidate()) {
-           return false;
-       } 
-    });
-    
-    var emailValidate = new ZumpValidate({
-        items: [
-            {id:'email', type:'email'},
-        ]
     });
     
     doResize();

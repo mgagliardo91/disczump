@@ -1272,11 +1272,11 @@
 }
 
 .thread-message.message-incoming .message-content {
-    padding-left: 60px;
+    margin-left: 60px;
 }
 
 .thread-message.message-outgoing .message-content {
-    padding-right: 60px;
+    margin-right: 60px;
 }
 
 .message-content {
@@ -1300,6 +1300,10 @@
     font-size: 10px;
     position: absolute;
     bottom: 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .thread-message.message-incoming .message-date {

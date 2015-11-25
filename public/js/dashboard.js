@@ -96,6 +96,7 @@ $(document).ready(function(){
     	
     	var loc = changes['account-zip-code'];
     	
+    	setLoading(true);
     	putAccount({
     		username : changes['account-username'],
     		firstName : changes['account-first-name'],
@@ -110,6 +111,7 @@ $(document).ready(function(){
     			$('#account-last-name').val(retData.lastName);
     			$('#account-zip-code').val(retData.zipcode);
     			$('#account-pdga').val(retData.pdgaNumber);
+    			setLoading(false);
     			generateSuccess('Account successfully updated.', 'Success', true);
     			
     			userAccount = retData;
@@ -123,6 +125,7 @@ $(document).ready(function(){
     			});
     			myNotifier.executeEvent('accountChange');
     		} else {
+    			setLoading(false);
     			handleError(retData);
     		}
     	});
@@ -1142,7 +1145,7 @@ function initializeTooltips() {
 	var ttAccountFirstName = generateTooltipOptions('top', 'hover', 'Enter your first name to help people find you. (Cannot contain spaces)', '200px');
 	var ttAccountLastName = generateTooltipOptions('top', 'hover', 'Enter your last name to help people find you. (Cannot contain spaces)', '200px');
 	var ttAccountUsername = generateTooltipOptions('top', 'hover', 'This is how your name is displayed publicly. Username must be 6-15 characters and can only consist of letters, numbers, and underscore.', '200px');
-	var ttAccountZipCode = generateTooltipOptions('top', 'hover', 'Enter 5 digit zip code.', '200px');
+	var ttAccountZipCode = generateTooltipOptions('top', 'hover', 'Enter zip code and select location.', '200px');
 	var ttGraphBy = generateTooltipOptions('right', 'hover', 'This property will be used to generate the data in the graph.', '200px');
 	var ttGraphType = generateTooltipOptions('right', 'hover', 'Select the type of graph to generate.', '200px');
 	var ttNotifyNewMessages = generateTooltipOptions('right', 'hover', 'Use this option to be alerted when you receive a new message.', '200px');
@@ -1284,10 +1287,10 @@ function zumpLibraryInit() {
 	accountValidation = new ZumpValidate({
     	items: [
     		{id: 'account-username', optional: true, initVal: userAccount.username, type: 'username', output: 'account-username-feedback', min: 6, max: 15},
-            {id: 'account-first-name', optional: true, initVal: userAccount.firstName, type: 'function', fn: function(val) { return val.length == 0 ? undefined : val.split(' ').length < 3 }},
-            {id: 'account-last-name',  optional: true, initVal: userAccount.lastName, type: 'function', fn: function(val) { return val.length == 0 ? undefined : val.split(' ').length < 3 }},
+            {id: 'account-first-name', optional: true, initVal: userAccount.firstName, type: 'function', fn: function(val) { return val.split(' ').length < 3 }},
+            {id: 'account-last-name',  optional: true, initVal: userAccount.lastName, type: 'function', fn: function(val) { return val.split(' ').length < 3 }},
             {id: 'account-zip-code', optional: true, initVal: userAccount.zipcode, type: 'zipcode', output: 'account-city-state'},
-            {id: 'account-pdga', optional: true, initVal: userAccount.pdgaNumber, type:'function', fn: function(val) { return val.length == 0 ? undefined : /^[0-9]*$/.test(val) }, max: 6}
+            {id: 'account-pdga', optional: true, initVal: userAccount.pdgaNumber, type:'function', fn: function(val) { return /^[0-9]*$/.test(val) }, max: 6}
     	],
         feedbackOnInit: false
     });
@@ -2609,15 +2612,15 @@ var ZumpEditor = function(opt) {
     	items: [
     		{id: 'disc-brand', type: 'text', min: 1},
     		{id: 'disc-name', type: 'text', min: 1},
-    		{id: 'disc-type', optional: true, type: 'function', fn: function(val) {return val.length == 0 ? undefined : true}},
-    		{id: 'disc-material', optional: true, type: 'function', fn: function(val) {return val.length == 0 ? undefined : true}},
+    		{id: 'disc-type', optional: true, type: 'none'},
+    		{id: 'disc-material', optional: true, type: 'none'},
     		{id: 'disc-weight', optional: true, type: 'number', max: 3},
-    		{id: 'disc-color', optional: true, type: 'function', fn: function(val) {return val.length == 0 ? undefined : true}},
+    		{id: 'disc-color', optional: true, type: 'none'},
     		{id: 'disc-speed', optional: true, type: 'number', max: 2},
     		{id: 'disc-glide', optional: true, type: 'number', max: 2},
     		{id: 'disc-turn', optional: true, type: 'number', max: 2},
     		{id: 'disc-fade', optional: true, type: 'number', max: 2},
-    		{id: 'disc-condition', optional: true, type:'function', fn: function(val) { return val.length == 0 ? undefined : /^(10|[0-9])$/.test(val) }, max: 2}
+    		{id: 'disc-condition', optional: true, type:'function', fn: function(val) { return /^(10|[0-9])$/.test(val) }, max: 2}
     	]
     });
     
@@ -5136,8 +5139,10 @@ var ZumpSocial = function(opt) {
 		
 		if (userId == userAccount._id) {
 			$('.profile-action-container > button').attr('disabled', 'disabled');
+			$('#show-dashboard').hide();
 		} else {
 			$('.profile-action-container > button').removeAttr('disabled');
+			$('#show-dashboard').show();
 		}
 		
     	if (typeof(user) !== 'undefined') {
@@ -5508,7 +5513,12 @@ var ZumpMessenger = function(opt) {
 		$newMessage.on('keydown', onKeyDown);
 		
 		$deleteThread.click(function() {
-			deleteThreadItem(activeThread.threadId);
+			var body = {
+				text: 'Are you sure you want to delete this message thread?'
+			};
+			generateConfirmationModal('WARNING!', body, 'Delete', function() {
+				deleteThreadItem(activeThread.threadId);
+			});
 		});
 		
 		myNotifier.addListener('accountChange', zumpMessenger, function() {
@@ -5853,7 +5863,7 @@ var ZumpMessenger = function(opt) {
     							'<div class="message-user-overlay"></div>' +
                                 '<div class="message-user" style="background-image:url(/static/logo/logo_small_nobg.svg)"></div>' +
                                 '<div class="message-content">' +
-                                    '<div class="message-date">' + date.toLocaleString() + '</div>' +
+                                    '<div class="message-date" title="' + date.toLocaleString() + '">' + date.toLocaleString() + '</div>' +
                                     '<div class="message-bubble message-body">' + body.replace(/\n/g, '<br>') +
                                     '</div>' +
                                 '</div>' +
