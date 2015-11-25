@@ -55,7 +55,7 @@ var shareFacebook = function(discId, callback) {
 		if (callback) callback();
 		
 		var popupWindow = generatePopup('http://www.facebook.com/sharer/sharer.php?app_id=' + dzID + '&u=' + serverURL + '/disc/' + discId + 
-	    	'&display=popup&ref=plugin&src=share_button', 'sharer', 600, 300);
+	    	'&display=popup&ref=plugin&src=share_button', 'sharer', 600, 400);
     });
 }
 
@@ -73,7 +73,7 @@ function generatePopup(url, title, w, h) {
 
     var left = ((width / 2) - (w / 2)) + dualScreenLeft;
     var top = ((height / 2) - (h / 2)) + dualScreenTop;
-    var popupWindow = window.open(url, title, 'scrollbars=yes,toolbar=0,status=0,width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+    var popupWindow = window.open(url, title, 'toolbar=0 ,status=0, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
     try {
 		popupWindow.focus();
 		return popupWindow;
