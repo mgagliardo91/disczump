@@ -2660,12 +2660,13 @@ var ZumpEditor = function(opt) {
 	    $saveDisc.click(function() {
 			$('.page-alert').remove();
 			
-			discEditorValidation.doValidate();
-			
-			var invalidItems = discEditorValidation.getInvalidItems();
-			if (invalidItems.length) {
+			if (!discEditorValidation.doValidate()) {
+				var invalidItems = discEditorValidation.getInvalidItems();
 				generateInvalidDataError(invalidItems);
-			} else if (modifyHandler.type == 'Add' || modifyHandler.type == 'Clone') {
+				return;
+			}
+			
+			if (modifyHandler.type == 'Add' || modifyHandler.type == 'Clone') {
 	    		saveNewDisc();
 	    	} else if (modifyHandler.type == 'Edit') {
 	    		saveExistingDisc();
@@ -2946,6 +2947,20 @@ var ZumpEditor = function(opt) {
 		$('#disc-fade').val(getSafe(curDisc.fade, ''));
 		$('#disc-notes').val(getSafe(curDisc.notes, ''));
 		$('#disc-condition').val(getSafe(curDisc.condition, ''));
+		
+		// discEditorValidation.setInitValues({
+		// 	'disc-brand': getSafe(curDisc.brand, ''),
+		// 	'disc-name': getSafe(curDisc.name, ''),
+		// 	'disc-type': getSafe(curDisc.type, ''),
+		// 	'disc-material': getSafe(curDisc.material, ''),
+		// 	'disc-weight': getSafe(curDisc.weight, ''),
+		// 	'disc-color': getSafe(curDisc.color, ''),
+		// 	'disc-speed': getSafe(curDisc.speed, ''),
+		// 	'disc-glide': getSafe(curDisc.glide, ''),
+		// 	'disc-turn': getSafe(curDisc.turn, ''),
+		// 	'disc-fade': getSafe(curDisc.fade, ''),
+		// 	'disc-condition': getSafe(curDisc.condition, '')
+		// });
 		
 		$('#disc-visibility').bootstrapSwitch('state', getSafe(curDisc.visible, true));
 		
