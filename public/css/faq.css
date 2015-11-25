@@ -9,7 +9,6 @@
     margin: 20px 0px;
 }
 
-
 .faq-container {
     margin-bottom: 30px;
 }
@@ -31,4 +30,8 @@
 
 .faq-body span {
     margin-right: 5px;
+}
+
+.faq-body span.inline {
+    margin: 0px;
 }
