@@ -29,7 +29,9 @@ mongoose.connect('mongodb://' + config.database.host + ':' +
 require('./config/passport')(passport);
 
 // set up our express application
-app.use(morgan('dev'));
+if (!localServer.release) {
+  app.use(morgan('dev'));
+}
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
