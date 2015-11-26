@@ -5137,14 +5137,32 @@ var ZumpSocial = function(opt) {
     	
     	myNotifier.addListener('accountChange', zumpSocial, function() {
     		if (curUser == userAccount._id) {
-    			updateProfileItem(curUser);
-    			forceUpdate = true;
-    			
-    			if (isShowing) {
-    				setProfile(curUser);
-    			}
+    			updateCurUser();
     		}
     	});
+    	
+	    myNotifier.addListener('discCreated', zumpSocial, function(event, disc) {
+	    	if (curUser == userAccount._id) {
+    			updateCurUser();
+    		}
+		}).addListener('discUpdated', zumpSocial, function(event, disc) {
+			if (curUser == userAccount._id) {
+    			updateCurUser();
+    		}
+		}).addListener('discDeleted', zumpSocial, function(event, disc) {
+			if (curUser == userAccount._id) {
+    			updateCurUser();
+    		}
+		});
+    }
+    
+    var updateCurUser = function() {
+    	updateProfileItem(curUser);
+		forceUpdate = true;
+		
+		if (isShowing) {
+			setProfile(curUser);
+		}
     }
     
     var setProfile = function(userId, fail) {
@@ -5435,6 +5453,7 @@ var ZumpMessenger = function(opt) {
 			var $threadContainer = $('.thread-container[threadId="' + activeThread.threadId + '"]');
 			$threadContainer.addClass('thread-open').siblings().removeClass('thread-open');
 		}
+		$newMessage.focus();
 	}
 	
 	this.handleMessage = function(message) {
@@ -5601,6 +5620,7 @@ var ZumpMessenger = function(opt) {
 				if (success) {
 					delete threadCache[threadId];
 					$inboxList.find('li[threadid="' + threadId + '"]').remove();
+					activeThread = undefined;
 					if (_.keys(threadCache).length) {
 						$inboxList.find('li:first-child').trigger('click');
 					} else {
@@ -5759,7 +5779,6 @@ var ZumpMessenger = function(opt) {
 					threadCache[thread.threadId] = {thread: thread, messages: [], lastId: undefined};
 					prependThread(thread);
 	    			showThread(thread.threadId);
-					changeSidebar('#sidebar-inbox');
     			} else {
     				handleError(thread);
     			}
@@ -5795,6 +5814,7 @@ var ZumpMessenger = function(opt) {
     	
     	activeThread = thread;
 		activateThread();
+		changeSidebar('#sidebar-inbox');
 		forceUpdate = false;
     }
     
@@ -5938,18 +5958,21 @@ var ZumpMessenger = function(opt) {
 		
     	var content = {content: body};
 		$sendMessageBtn.find('i').show();
+		$newMessage.attr('disabled','disabled');
 		postMessage(activeThread.threadId, content, function(success, message) {
 			$sendMessageBtn.find('i').hide();
+			$newMessage.removeAttr('disabled').focus();
 			if (success) {
 				$newMessage.val('');
 				appendMessage(message);
 	        	$messageContainer.animate({ scrollTop: $messageContainer[0].scrollHeight}, 100);
 	        	
-	        	var thread = getThread(message.threadId).thread;
-	        	thread.messageCount += 1;
-				thread.currentMessageCount += 1;
-				thread.modifiedDate = message.createDate;
-				updateThread(thread);
+	        	var threadObj = getThread(message.threadId);
+	        	threadObj.thread.messageCount += 1;
+				threadObj.thread.currentMessageCount += 1;
+				threadObj.thread.modifiedDate = message.createDate;
+				threadObj.messages.unshift(message);
+				updateThread(threadObj.thread);
 			} else {
 				handleError(message);
 			}

@@ -57,7 +57,7 @@ function putThreadState(userId, threadId, threadState, callback) {
                 localThread.threadTag = threadState.threadTag;
             }
         
-            if (typeof(messageCount) !== 'undefined' && messageCount < localThreadObj.messageCount && messageCount > localThreadObj.currentMessageCount) {
+            if (typeof(messageCount) !== 'undefined' && messageCount > localThreadObj.messageCount && messageCount <= localThreadObj.currentMessageCount) {
                 localThread.messageCount = messageCount;
             }
             
