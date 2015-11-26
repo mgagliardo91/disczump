@@ -2371,21 +2371,23 @@ var ZumpTemplatePicker = function(opt) {
 	}
 	
 	var checkUnique = function(match) {
-		_.each(templates, function(template) {
-			if (compareTemplate(template, match)) {
+		
+		for (var i = 0; i < templates.length; i++) {
+			if (compareTemplate(templates[i], match)) {
 				return false;
-			}
-		});
+			} 
+		}
 		
 		return true;
 	}
 	
 	var compareTemplate = function(template, match) {
-		_.each(compareParams, function(param) {
+		for (var i = 0; i < compareParams.length; i++) {
+			var param = compareParams[i];
 			if (template[param] != match[param]) {
 				return false;
 			}
-		});
+		}
 		
 		return true;
 	}
@@ -3519,7 +3521,7 @@ var ZumpDashboard = function(opt) {
 		});
 		unfilteredList.push(upDisc);
 		updateDiscItem(upDisc);
-		if (currentDisc._id == upDisc._id) forceRefresh = true;
+		if (currentDisc && currentDisc._id == upDisc._id) forceRefresh = true;
 	}
 	
 	/*
