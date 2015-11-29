@@ -1,6 +1,7 @@
 var fs = require('fs');
 var _ = require('underscore');
 var Feedback = require('../models/feedback');
+var UserController = require('./user');
 var Error = require('../utils/error');
 var LocalConfig = require('../../config/localConfig.js');
 var Config = require('../../config/config.js');
@@ -9,7 +10,9 @@ var handleConfig = require('../utils/handleConfig.js');
 
 module.exports = {
     createFeedback: createFeedback,
-    getAllFeedback: getAllFeedback
+    getAllFeedback: getAllFeedback,
+    getFeedback: getFeedback,
+    sendResponse: sendResponse
 }
 
 function createFeedback(user, data, callback) {
@@ -33,6 +36,34 @@ function generateEmailNotification(user, feedback) {
     var html = fs.readFileSync('./private/html/feedbackAlert.handlebars', 'utf8');
     var template = handleConfig.getMainHandle().compile(html);
     return template({user: user, feedback : feedback, serverURL: LocalConfig.serverURL});
+}
+
+function getFeedback(feedbackId, callback) {
+    Feedback.findOne({_id: feedbackId}, function(err, feedback) {
+        if (err)
+            return callback(Error.createError(err, Error.internalError));
+            
+        return callback(null, feedback);
+    });
+}
+
+function sendResponse(feedbackId, response, callback) {
+    getFeedback(feedbackId, function(err, feedback) {
+        if (err)
+            return callback(err);
+        
+        UserController.getUser(feedback.userId, function(err, user) {
+            if (err)
+                return callback(err);
+                
+            var html = fs.readFileSync('./private/html/feedbackResponse.handlebars', 'utf8');
+            var template = handleConfig.getMainHandle().compile(html);
+            var email =  template({user: user, feedback : feedback, serverURL: LocalConfig.serverURL, response: response});
+            
+            Mailer.sendMail(Config.admins.concat([user.local.email]).toString(), 'disc|zump Feedback Response', email, callback);
+        });
+        
+    });
 }
 
 function getAllFeedback(params, callback) {

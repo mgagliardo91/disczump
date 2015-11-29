@@ -1,5 +1,6 @@
 $(document).ready(function(){
     var firstSort = $('th[initSort="true"]').first().index();
+    var idIndex = $('th[name="_id').index();
     var userIdIndex = $('th[name="userId').index();
     
     $(document).on('click', '#object-table tbody td.pg-link', function() {
@@ -103,7 +104,9 @@ $(document).ready(function(){
     }).bind('pagerComplete', function(e, c){
         $('#object-table tbody tr').each(function() {
             var $userIdField = $($(this).children('td').get(userIdIndex));
+            var $idField = $($(this).children('td').get(idIndex));
             $userIdField.addClass('dz-color pg-link').attr('href', '/admin/users/' + $userIdField.text());
+            $idField.addClass('dz-color pg-link').attr('href', '/admin/feedback/' + $idField.text());
         });
     });
 });

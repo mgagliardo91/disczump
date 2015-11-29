@@ -1,0 +1,43 @@
+{{#section 'head'}}
+<head>
+    <title>disc|zump - Admin</title>
+    <link rel="stylesheet" href="/static/css/internal/admin.css">
+</head>
+{{/section}}
+<div class="sidebar">
+    <ul class="nav-sidebar no-select" id="sidebar-home">
+        <h5 class="sidebar-section-header"><span>Actions</span><hr /><div class="clearfix"></div></h5>
+        <li class="sidebar-select nav" href="/admin"><span class="float-left fa-tools"><i class="fa fa-users fa-sidebar-icon"></i></span><span class="sidebar-select-text">Admin Home</span></li>
+        <li class="sidebar-select active nav" href="/admin/reply"><span class="float-left fa-tools"><i class="fa fa-users fa-sidebar-icon"></i></span><span class="sidebar-select-text">Reply to Feedback</span></li>
+        <h5 class="sidebar-section-header"><span>Models</span><hr /><div class="clearfix"></div></h5>
+        <li class="sidebar-select nav" href="/admin/users"><span class="float-left fa-tools"><i class="fa fa-users fa-sidebar-icon"></i></span><span class="sidebar-select-text">Users</span></li>
+        <li class="sidebar-select nav" href="/admin/discs"><span class="float-left fa-tools"><i class="fa fa-circle-o fa-sidebar-icon"></i></span><span class="sidebar-select-text">Discs</span></li>
+        <li class="sidebar-select nav" href="/admin/events"><span class="float-left fa-tools"><i class="fa fa-file-zip-o fa-sidebar-icon"></i></span><span class="sidebar-select-text">Events</span></li>
+        <li class="sidebar-select nav" href="/admin/feedback"><span class="float-left fa-tools"><i class="fa fa-comment fa-sidebar-icon"></i></span><span class="sidebar-select-text">Feedback</span></li>
+    </ul>
+</div>
+<div class="page-view">
+    <div class="page-title">Reply to Feedback</div>
+    {{#if info}}
+    <div>
+        {{info}}
+    </div>
+    {{/if}}
+    {{#if error}}
+    <div>
+        {{error}}
+    </div>
+    {{/if}}
+    </div>
+    <div style="background-color: #C1C1C1;padding: 10px;margin-bottom: 20px;display: block;max-width: 400px;margin: auto;border-radius: 5px;margin-bottom: 20px">
+        {{#if feedback}}{{{compileToHtml feedback.feedback}}}{{/if}}
+    </div>
+    <form method="post" action="/admin/reply" style="display: table;margin: auto">
+        Feedback Id:<br>
+        <input type="text" name="feedbackId" value="{{feedback._id}}" /><br>
+        Response:<br>
+        <textarea  rows="4" cols="50" name="response"></textarea>
+        <br><br>
+        <input type="submit" value="Submit">
+    </form>
+</div>

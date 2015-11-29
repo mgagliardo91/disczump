@@ -69,6 +69,9 @@ function getExpressHandle() {
                   else {
                     return datetime;
                   }
+              },
+              compileToHtml: function(data) {
+                return processLinks(data).replace(/\n/g, '<br>');
               }
             }
         });

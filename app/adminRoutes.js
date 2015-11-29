@@ -4,6 +4,7 @@ var AdminController = require('./controllers/admin');
 var StatController = require('./controllers/statistics');
 var UserController = require('./controllers/user');
 var DiscController = require('./controllers/disc');
+var FeedbackController = require('./controllers/feedback');
 
 // app/oauthRoutes.js
 module.exports = function(app, passport) {
@@ -95,6 +96,45 @@ module.exports = function(app, passport) {
                 layout: 'internal',
                 user : req.user,
                 image : req.user.accountToString().image
+            });
+        });
+        
+    app.route('/feedback/:feedbackId')
+        .get(hasAccess, function(req, res) {
+            FeedbackController.getFeedback(req.params.feedbackId, function(err, feedback) {
+                if (err) {
+                    return res.redirect('/admin/feedback');
+                }
+                
+                return res.render('internal/sendResponse', {
+                    info: req.flash('info'),
+                    error: req.flash('error'),
+                    feedback: feedback,
+                    layout: 'internal',
+                    user : req.user,
+                    image : req.user.accountToString().image
+                });
+            });
+        });
+        
+    app.route('/reply')
+        .get(hasAccess, function(req, res) {
+            return res.render('internal/sendResponse', {
+                layout: 'internal',
+                user : req.user,
+                image : req.user.accountToString().image
+            });
+        })
+        .post(hasAccess, function(req, res) {
+            FeedbackController.sendResponse(req.body.feedbackId, req.body.response, function(err) {
+                if (err) {
+                    console.log(err);
+                    req.flash('error', 'Unable to send email response.');
+                } else {
+                    req.flash('info', 'Response successfully sent.');
+                }
+                
+                return res.redirect('/admin/feedback/' + req.body.feedbackId);
             });
         });
 }
