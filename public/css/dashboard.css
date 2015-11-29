@@ -1686,6 +1686,11 @@
     font-size: 0.8em;
 }
 
+#dashboard-multiselect {
+    float: left;
+    margin-right: 10px;
+}
+
 #dashboard-filter-toggle.filtering i {
     color: red;
 }
@@ -1701,6 +1706,7 @@
 }
 
 .results-header-button {
+    text-align: center;
     width: 30px;
     height: 30px;
     margin: 5px 2px;
@@ -2002,6 +2008,37 @@ select, option {
     display: block;
     height: 85px;
     padding: 5px;
+}
+
+.disc-item.active {
+    background-color: rgba(0,142,221,0.10);
+}
+
+.disc-select {
+    float: left;
+    height: 75px;
+    width: 0px;
+    overflow: hidden;
+    text-align: center;
+    display: table;
+}
+
+.disc-select > div {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.disc-select .disc-toggle-select {
+    display: none;
+    cursor: pointer;
+}
+
+.disc-select .disc-toggle-select:hover {
+    color: #008EDD;
+}
+
+.disc-select .disc-toggle-select.active {
+    color: #008EDD;
 }
 
 .disc-colorize {

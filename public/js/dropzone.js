@@ -1394,6 +1394,10 @@
         return this.processQueue();
       }
     };
+    
+    Dropzone.prototype.drawImageOrientFix = function(o, ctx, img, sx, sy, sw, sh, dx, dy, dw, dh) {
+      return drawImageIOSFix(o, ctx, img, sx, sy, sw, sh, dx, dy, dw, dh);
+    }
 
     return Dropzone;
 

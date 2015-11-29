@@ -1036,7 +1036,7 @@ function initSettings() {
 				 		accountDropzone.removeFile(file);
 				 		return;
 				 	}
-			        if (file.cropped) {
+			        if (file.cropped || file.width < 200) {
 			        	$placeholder.hide();
 						if (this.files[1] != null){
 							this.removeFile(this.files[0]);
@@ -1045,26 +1045,24 @@ function initSettings() {
 			            return;
 			        }
 			        
-					$('body').css('overflow', 'hidden');
-			        
-			        if (file.width < 200) {
-			            return;
-			        }
-			        
+			        $('body').css('overflow', 'hidden');
+			        setLoading(true);
 			        cropLock = true;
+				    accountDropzone.removeFile(file);
 			        
-			        var cachedFilename = file.name;
-			        accountDropzone.removeFile(file);
-			        
-			        var reader = new FileReader();
-			        reader.onloadend = function() {
-			        	showPhotoCrop(file.name, reader.result, function(newFile) {
-							cropLock = false;
+			        fixImageOrientation(accountDropzone, file, function(dataURI) {
+			        	cropLock = false;
+						setLoading(false);
+						
+			        	if (!dataURI) {
+			        		return generateError('Unable to load image. Please try again.', 'Error Uploading Image', true);
+			        	}
+			        	
+				        showPhotoCrop(file.name, dataURI, function(newFile) {
 			        		if (newFile) accountDropzone.addFile(newFile);
 			        	});
-	        		};
-			        
-			        reader.readAsDataURL(file);
+			        });
+
 				}).on("success", function(file, response) {
 					if (!isDef(response.error)) {
 						userAccount = response;
@@ -1842,6 +1840,49 @@ var repositionPhotoCrop = function() {
 		top: top,
 		left: left
 	});
+}
+
+var fixImageOrientation = function(dropzone, file, callback) {
+	
+ var fileReader;
+  fileReader = new FileReader;
+  fileReader.onload = function() {
+  		var img;
+  		img = document.createElement('img');
+  		img.onload = function() {
+  			var orientation = 0;
+  			EXIF.getData(img, function() { 
+			    switch(parseInt(EXIF.getTag(this, "Orientation"))){ 
+			      case 3: orientation = 180; break; 
+			      case 6: orientation = -90; break; 
+			      case 8: orientation = 90; break; 
+			    }
+			    
+			    if (orientation == 0) {
+			    	return callback(fileReader.result);
+			    }
+			    
+			    var canvas, ctx, dataURL;
+			    var targetWidth, targetHeight;
+			    file.width = img.width;
+			    file.height = img.height;
+			    
+			    targetWidth = Math.abs(orientation) == 90 ? img.height : img.width;
+			    targetHeight = Math.abs(orientation) == 90 ? img.width : img.height;
+			    
+			    canvas = document.createElement("canvas");
+			    ctx = canvas.getContext("2d");
+			    canvas.width = targetWidth;
+			    canvas.height = targetHeight;
+			    dropzone.drawImageOrientFix(orientation, ctx, img, 0, 0, img.width, img.height, 0, 0, targetWidth, targetHeight)
+    			dataURL = canvas.toDataURL(file.type);
+    			callback(dataURL);
+  			});
+  		}
+  		img.onerror = callback;
+  		img.src = fileReader.result;
+  };
+  fileReader.readAsDataURL(file);
 }
 
 /*
@@ -3233,11 +3274,8 @@ var ZumpEditor = function(opt) {
         discPhotoCrop = true;
         setLoading(true);
         
-        var cachedFilename = file.name;
-        
-        var reader = new FileReader();
-        reader.onloadend = function() {
-        	showPhotoCrop(file.name, reader.result, function(newFile) {
+        fixImageOrientation(dropzone, file, function(dataURI) {
+        	showPhotoCrop(file.name, dataURI, function(newFile) {
 				discPhotoCrop = false;
 				
         		if (newFile) {
@@ -3250,9 +3288,7 @@ var ZumpEditor = function(opt) {
 					handleDropzoneImage();
 				}
         	});
-        };
-        
-        reader.readAsDataURL(file);
+        });
 	}
 	
 	var pushNewImage = function(imageObj) {
@@ -3296,7 +3332,7 @@ var ZumpDashboard = function(opt) {
 	var publicList = false;
 	var currentUser;
 	var forceRefresh = false;
-	var forceUpdate = false;
+	var multiselect = false;
 	
 	var paginateOptions = {displayCount: 20, currentPage: 1, lastPage: 1};
 	var chartData = {};
@@ -3898,6 +3934,22 @@ var ZumpDashboard = function(opt) {
 			showDiscLightbox(disc);
 		});
 		
+		$('#dashboard-multiselect').click(function() {
+			if (multiselect) {
+				$(this).removeClass('active');
+			} else {
+				$(this).addClass('active');
+			}
+			
+			toggleMultiselect();
+		});
+		
+		$(document).on('click', '.disc-toggle-select', function() {
+			var discId = $(this).parents('.disc-item').attr('discId');
+			var disc = getDisc(discId);
+			toggleDiscSelect($(this), disc);
+		});
+		
 		/**************************
 		* Handlers for statistics
 		***************************/
@@ -4010,6 +4062,60 @@ var ZumpDashboard = function(opt) {
 	}
 	
 	/*
+	* Toggles Multiselect Mode
+	*/
+	var toggleMultiselect = function() {
+		multiselect = !multiselect;
+		
+		if (multiselect) {
+			$('.disc-select').animate({
+				width: '30px'
+			}, 300, function() {
+				$('.disc-toggle-select').show();
+			});
+			$('.disc-content-info-container').animate({
+				'margin-left': '135px'
+			}, 300);
+		} else {
+			$('.disc-toggle-select').hide();
+			$('.disc-select').animate({
+				width: '0px'
+			}, 100);
+			$('.disc-content-info-container').animate({
+				'margin-left': '105px'
+			}, 100);
+			
+			$('.disc-toggle-select').each(function() {
+				updateDiscSelect($(this), false);
+			});
+			
+			_.each(unfilteredList, function(item) {
+				item.markSelect = undefined;
+			});
+		}
+	}
+	
+	var toggleDiscSelect = function($selector, disc) {
+		if (disc.markSelect) {
+			disc.markSelect = undefined;
+		} else {
+			disc.markSelect = true;
+		}
+		
+		updateDiscSelect($selector, disc.markSelect);
+	}
+	
+	var updateDiscSelect = function($selector, value) {
+		if (!value) {
+			$selector.removeClass('active').removeClass('fa-check-square-o').addClass('fa-square-o');
+			$selector.parents('.disc-item').removeClass('active');
+		} else {
+			$selector.addClass('active').removeClass('fa-square-o').addClass('fa-check-square-o');
+			$selector.parents('.disc-item').addClass('active');
+		}
+	}
+	
+	/*
 	* Reloads a single disc item
 	*/
 	var updateDiscItem = function(disc) {
@@ -4023,6 +4129,10 @@ var ZumpDashboard = function(opt) {
 			
 			// resizes tag lists
 			resizeTagLists();
+			
+			if (multiselect && disc.markSelect) {
+				$discItem.addClass('active');
+			}
 		}
 	}
 	
@@ -4252,6 +4362,11 @@ var ZumpDashboard = function(opt) {
 			var discItem = $('<div class="disc-item" discId="' + disc._id + '"></div>');
 			
 			discItem.append(generateDiscData(disc));
+			
+			if (multiselect && disc.markSelect) {
+				discItem.addClass('active');
+			}
+			
 			discContainer.append(discItem);
 		}
 		return discContainer;
@@ -4312,7 +4427,9 @@ var ZumpDashboard = function(opt) {
 		                        ((typeof disc.turn != 'undefined') ? '<span title="Filter: Turn = ' + disc.turn + '" class="filterable filterable-text" prop="turn" filterable="true" filteron="' + disc.turn + '">' + disc.turn + '</span>' : '??') + ' | ' +
 		                        ((typeof disc.fade != 'undefined') ? '<span title="Filter: Fade = ' + disc.fade + '" class="filterable filterable-text" prop="fade" filterable="true" filteron="' + disc.fade + '">' + disc.fade + '</span>' : '??');
 		}
-		return '<div class="disc-colorize"' + (isDef(color) && userPrefs.colorizeVisibility ? ' style="background-color: ' + color + '"' : ' style="background-color:#FFF"') + '>' + 
+		
+		var $inner = $('<div></div>');
+		$inner.append('<div class="disc-select"><div><i class="fa fa-lg fa-square-o disc-toggle-select"></i></div></div><div class="disc-colorize"' + (isDef(color) && userPrefs.colorizeVisibility ? ' style="background-color: ' + color + '"' : ' style="background-color:#FFF"') + '>' + 
 	                	'</div>' +
 	                    '<div class="disc-content-image-container">' +
 	                        '<div class="disc-content-image">' +
@@ -4410,7 +4527,18 @@ var ZumpDashboard = function(opt) {
 	                            '<div class="clearfix"></div>' +
 	                        '</div>' +
 	                    '</div>' +
-	                    '<div class="clearfix"></div>';
+	                    '<div class="clearfix"></div>');
+	                    
+		if (multiselect) {
+			$inner.find('.disc-select').css('width', '30px');
+			$inner.find('.disc-content-info-container').css('margin-left', '135px');
+			$inner.find('.disc-toggle-select').show();
+			if (disc.markSelect) {
+				$inner.find('.disc-toggle-select').addClass('active').removeClass('fa-square-o').addClass('fa-check-square-o');
+			}
+		}
+		
+		return $inner.html();
 	}
 	
 	/**************************
