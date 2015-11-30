@@ -2961,6 +2961,10 @@ var ZumpEditor = function(opt) {
 			$discVisibility.bootstrapSwitch('state', true);
 		}
 		
+		if (curDisc) {
+			curDisc.imageList = [];
+		}
+		
 		$imageContainer.empty();
 		clearDropzone();
 	}

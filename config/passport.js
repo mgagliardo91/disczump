@@ -93,6 +93,8 @@ module.exports = function(passport) {
                         return done(null, null);
                     }
                     
+                    var isLinking = typeof req.user.facebook.id === 'undefined';
+                    
                     var user = req.user;
                     user.facebook.id = profile.id;
                     user.facebook.token = profile.token;
@@ -109,9 +111,12 @@ module.exports = function(passport) {
                             if (err)
                                 throw err;
                             
-                            user.addEvent(EventController.Types.AccountLink, 'The account has been successfully linked to Facebook.');
-                            req.flash('infoTitle', 'FacebookLink');
-                            req.flash('infoText', 'You can now log in using Facebook!');
+                            if (isLinking) {
+                                user.addEvent(EventController.Types.AccountLink, 'The account has been successfully linked to Facebook.');
+                                req.flash('infoTitle', 'FacebookLink');
+                                req.flash('infoText', 'You can now log in using Facebook!');
+                            }
+                            
                             return done(null, user);
                         });
                     });

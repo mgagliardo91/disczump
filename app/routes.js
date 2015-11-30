@@ -24,6 +24,12 @@ module.exports = function(app, passport, gridFs) {
        });
     });
     
+    // app.get('/test', function(req, res) {
+    //   res.render('test', {
+    //       isRelease: localConfig.release
+    //   });
+    // });
+    
     app.get('/terms', function(req, res) {
        res.render('terms', {
            isRelease: localConfig.release
@@ -636,7 +642,7 @@ function doLogIn(req, res, next, err, user, info) {
             req.session.redirect = undefined;
             
             if (req.user && req.user._id == user._id) {
-                if (socketManager.hasSockets(req.user._id) && req.flash('infoTitle') == 'FacebookLink') {
+                if (req.flash('infoTitle') == 'FacebookLink' && socketManager.hasSockets(req.user._id)) {
                   req.flash('infoTitle', undefined);
                   req.flash('infoText', undefined);
                   Socket.sendCallback(req.user._id, 'FacebookLink', 'Your Facebook account is now linked.');
