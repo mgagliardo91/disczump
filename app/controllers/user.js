@@ -40,7 +40,8 @@ module.exports = {
 }
 
 function query(field, q, callback) {
-	User.find().where(field, new RegExp('^' + q + '$', 'i')).exec(function(err, users) {
+	var query = q.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+	User.find().where(field, new RegExp('^' + query + '$', 'i')).exec(function(err, users) {
 		if (err) 
 			return callback(Error.createError(err, Error.internalError));
 			
@@ -49,7 +50,8 @@ function query(field, q, callback) {
 }
 
 function queryUsers(query, callback) {
-	query = query.trim();
+	var origQuery = query;
+	query = query.trim().replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	if (!query.length) return callback(null, {query: query, results: []});
 	
 	var regExp = new RegExp(query, 'i');
@@ -81,7 +83,7 @@ function queryUsers(query, callback) {
 						return x.firstName.toLowerCase() > y.firstName.toLowerCase();
 					});
 					
-					return callback(null, {query: query, results: userInfoArr});
+					return callback(null, {query: origQuery, results: userInfoArr});
 				});
 		} else if (nameQuery.length == 3) {
 			User.find({ $and : [ {$or : [
@@ -108,7 +110,7 @@ function queryUsers(query, callback) {
 						return x.firstName.toLowerCase() > y.firstName.toLowerCase();
 					});
 					
-					return callback(null, {query: query, results: userInfoArr});
+					return callback(null, {query: origQuery, results: userInfoArr});
 				});
 		} else if (nameQuery.length == 4) {
 			User.find({ $and : [ {$and : [
@@ -129,10 +131,10 @@ function queryUsers(query, callback) {
 						return x.firstName.toLowerCase() > y.firstName.toLowerCase();
 					});
 					
-					return callback(null, {query: query, results: userInfoArr});
+					return callback(null, {query: origQuery, results: userInfoArr});
 				});
 		} else {
-			return callback(null, {query: query, results: []});
+			return callback(null, {query: origQuery, results: []});
 		}
 	} else {
 		User.find({$and: [{'local.active': true},
@@ -172,7 +174,7 @@ function queryUsers(query, callback) {
 					return xVal > yVal;
 				});
 				
-				return callback(null, {query: query, results: userInfoArr});
+				return callback(null, {query: origQuery, results: userInfoArr});
 		});
 	}
 }

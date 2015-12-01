@@ -1141,8 +1141,8 @@ function initializeTooltips() {
 	var ttEnableSecondarySort = generateTooltipOptions('top', 'hover', 'This switch toggles the secondary sort property.', '200px');
 	var ttTemplatePicker = generateTooltipOptions('top', 'hover', 'Select whether the template auto-fill dialog is shown when a disc name is selected.', '200px');
 	var ttColorizeVisibility = generateTooltipOptions('top', 'hover', 'Show or hide the color strips seen in the dashboard view.', '200px');
-	var ttAccountFirstName = generateTooltipOptions('top', 'hover', 'Enter your first name to help people find you. (Cannot contain spaces)', '200px');
-	var ttAccountLastName = generateTooltipOptions('top', 'hover', 'Enter your last name to help people find you. (Cannot contain spaces)', '200px');
+	var ttAccountFirstName = generateTooltipOptions('top', 'hover', 'Enter your first name to help people find you. (Can only contain one space)', '200px');
+	var ttAccountLastName = generateTooltipOptions('top', 'hover', 'Enter your last name to help people find you. (Can only contain one space)', '200px');
 	var ttAccountUsername = generateTooltipOptions('top', 'hover', 'This is how your name is displayed publicly. Username must be 6-15 characters and can only consist of letters, numbers, and underscore.', '200px');
 	var ttAccountZipCode = generateTooltipOptions('top', 'hover', 'Enter zip code and select location.', '200px');
 	var ttGraphBy = generateTooltipOptions('right', 'hover', 'This property will be used to generate the data in the graph.', '200px');
