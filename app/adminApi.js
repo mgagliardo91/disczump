@@ -1,10 +1,12 @@
 var Error = require('./utils/error');
 var _ = require('underscore');
+var async = require('async');
 var AdminController = require('./controllers/admin');
 var DiscController = require('./controllers/disc');
 var UserController = require('./controllers/user');
 var EventController = require('./controllers/event');
 var FeedbackController = require('./controllers/feedback');
+var socketManager = require('./objects/socketCache.js');
 var Passport;
 
 // app/oauthRoutes.js
@@ -17,6 +19,22 @@ module.exports = function(app, passport) {
                     return res.json(err);
                 
                 return res.json(pager);
+            });
+        });
+    
+    app.route('/active')
+        .get(hasAccess, function(req, res) {
+            var users = [];
+            async.each(socketManager.getSocketSessions(), function(socketSession, cb) {
+                UserController.getUser(socketSession.userId, function(err, user) {
+                    if (err)
+                        return cb(err);
+                    
+                    users.push(user);
+                    cb();
+                });
+            }, function(err, results) {
+                return res.json(users);
             });
         });
         

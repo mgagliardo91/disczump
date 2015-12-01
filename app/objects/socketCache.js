@@ -8,7 +8,8 @@ module.exports = {
     hasSockets: hasSockets,
     getSockets: getSockets,
     getSocketCount: getSocketCount,
-    removeSocket: removeSocket
+    removeSocket: removeSocket,
+    getSocketSessions: getSocketSessions
 }
 
 function requestSession(userId) {
@@ -54,6 +55,10 @@ function getSockets(userId) {
     }
     
     return socketEntry.sockets;
+}
+
+function getSocketSessions() {
+    return socketTable;
 }
 
 function getSocketCount() {

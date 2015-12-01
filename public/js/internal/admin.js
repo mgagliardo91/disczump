@@ -2,42 +2,6 @@ var adminUrl = "/admin";
 var url = adminUrl + "/api";
 
 $(document).ready(function() {
-
-	$('li.sidebar-select.nav').click(function() {
-		window.location = $(this).attr('href');
-	});
-    
- //   getStats('user', function(success, stat) {
- //   	if (success) {
-	//         $('#count-total-users').text(stat.total);
-	//         $('#count-confirmed-users').text(stat.confirmed);
-	//         $('#count-active-users').text(stat.active);
- //   	}
-	// });
-	
-	// getStats('disc', function(success, stat) {
-	// 	if (success) {
- //       	$('#count-total-discs').text(stat.total);
-	// 	}
-	// });
-	
-	// $('#search-users').click(function() {
-	// 	var query = $('#user-query').val();
-		
-	// 	if (!query.length) return;
-		
-	// 	var queryTypeSelection = $('input[name="optQuery"]').is(':checked');
-	// 	var queryType = queryTypeSelection.length ? queryTypeSelection.attr('value') : 'email';
-		
-	// 	queryUser(queryType, query, function(success, user) {
-	// 		if (success) {
-	// 			$('#query-result').empty().append('<a class="dz-color" href="' + adminUrl + '/users/' + user._id +'">[' + user._id + '] ' + user.local.email + '</a>');
-	// 		} else {
-	// 			$('#query-result').empty().append('No Results');
-	// 		}
-	// 	});
-	// });
-	
 	$('#test').click(function() {
 		var val = $('#testVal').val();
 		var val2 = $('#testVal2').val();
@@ -58,22 +22,29 @@ $(document).ready(function() {
 				}
 			});
 	});
+	
+	doAjax({
+		path: '/active', 
+		type: 'GET',
+		url: url,
+		callback: handleActive
+	});
 });
 
-function getStats(table, callback) {
-    doAjax({
-	    url: url,
-		path: '/statistics/' + table, 
-		type: 'GET',
-		callback: callback
-	});
-}
-
-function queryUser(type, query, callback) {
-    doAjax({
-	    url: url,
-		path: '/user?' + type + '=' + query, 
-		type: 'GET',
-		callback: callback
-	});
+var handleActive = function(success, users) {
+    if (success) {
+        var $table = $('#object-table');
+        
+        _.each(users, function(user) {
+            var $row = $('<tr></tr>');
+            $row.append('<td>' + user._id + '</td>');
+            $row.append('<td>' + user.local.username + '</td>');
+            $row.append('<td>' + user.local.firstName + '</td>');
+            $row.append('<td>' + user.local.lastName + '</td>');
+            $row.append('<td>' + user.local.email + '</td>');
+            $row.append('<td>' + user.local.dateJoined + '</td>');
+            $row.append('<td>' + user.local.lastAccess + '</td>');
+            $table.append($row);
+        });
+    }
 }

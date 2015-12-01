@@ -125,6 +125,7 @@ Discraft,Crank,Distance Driver,ESP,12,5,-1,2
 Discraft,Crank,Distance Driver,Pro D,12,5,-1,2
 Discraft,Crank,Distance Driver,Ti,12,5,-1,2
 Discraft,Crank,Distance Driver,X,12,5,-1,2
+Discraft,Crank,Distance Driver,Z Glo,12,5,-1,2
 Discraft,Crank,Distance Driver,Z,12,5,-1,2
 Discraft,Crank,Distance Driver,Z FLX,12,5,-1,2
 Discraft,Crank,Distance Driver,Z Lite,12,5,-1,2
@@ -217,7 +218,7 @@ Discraft,Buzzz,Mid-range,Big Z,5,5,0,1
 Discraft,Buzzz,Mid-range,Big Z FLX,5,5,0,1
 Discraft,Buzzz,Mid-range,Cryztal,5,5,0,1
 Discraft,Buzzz,Mid-range,ESP,5,5,0,1
-Discraft,Buzzz,Mid-range,ESP FLX,5,5,0,1
+Discraft,Buzzz,Mid-range,FLX,5,5,0,1
 Discraft,Buzzz,Mid-range,Glo FLX,5,5,0,1
 Discraft,Buzzz,Mid-range,Pro D,5,5,0,1
 Discraft,Buzzz,Mid-range,Ti,5,5,0,1
@@ -253,6 +254,7 @@ Discraft,Drone,Mid-range,FLX,5,4,0,4
 Discraft,Drone,Mid-range,Pro D,5,4,0,4
 Discraft,Drone,Mid-range,Ti,5,4,0,4
 Discraft,Drone,Mid-range,Ti FLX,5,4,0,4
+Discraft,Drone,Mid-range,Glo FLX,5,4,0,4
 Discraft,Drone,Mid-range,Z,5,4,0,4
 Discraft,Hawk,Mid-range,Pro D,4,5,-2,2
 Discraft,Hornet,Mid-range,Z,5,5,0,4
@@ -266,7 +268,7 @@ Discraft,Banger GT,Putt/Approach,Glo FLX,2,3,0,1
 Discraft,Banger GT,Putt/Approach,Pro D,2,3,0,1
 Discraft,Banger GT,Putt/Approach,Ti,2,3,0,1
 Discraft,Challenger,Putt/Approach,CT,2,3,0,2
-Discraft,Challenger,Putt/Approach,ESP FLX,2,3,0,2
+Discraft,Challenger,Putt/Approach,FLX,2,3,0,2
 Discraft,Challenger,Putt/Approach,Pro D,2,3,0,2
 Discraft,Challenger,Putt/Approach,Ti,2,3,0,2
 Discraft,Challenger,Putt/Approach,Ti FLX,2,3,0,2

@@ -92,6 +92,7 @@ userSchema.methods.addEvent = function(type, event) {
 
 userSchema.methods.updateAccessCount = function(platform) {
     this.local.accessCount[platform] += 1;
+    this.local.lastAccess = Date.now();
     this.save();
 }
 

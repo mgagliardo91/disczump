@@ -10,7 +10,6 @@ var UserConfig = require('../../config/config.js').user.preferences;
 var CryptoConfig = require('../../config/auth.js').crypto;
 var FileUtil = require('../utils/file.js');
 var Socket = require('../../config/socket.js');
-var socketManager = require('../objects/socketCache.js');
 
 var geocoder = require("node-geocoder")('google', 'https', {apiKey : GeoConfig.apiKey, formatter: null});
 
