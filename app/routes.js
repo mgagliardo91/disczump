@@ -188,7 +188,7 @@ module.exports = function(app, passport, gridFs) {
     app.get('/disc/:discid', function(req, res) {
         var userId = undefined;
         if (req.user) userId = req.user._id;
-        var userString = req.user ? req.user : undefined;
+        var userString = req.user ? req.user.accountToString() : undefined;
     
         DiscController.getDisc(userId, req.params.discid, function(err, disc) {
             if (err) {
