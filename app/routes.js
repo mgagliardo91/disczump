@@ -1,3 +1,4 @@
+var path = require('path');
 var DiscController = require('./controllers/disc');
 var UserController = require('./controllers/user');
 var AdminController = require('./controllers/admin');
@@ -22,6 +23,10 @@ module.exports = function(app, passport, gridFs) {
            serverURL : localConfig.serverURL,
            reqScroll: req.device.isMobile
        });
+    });
+    
+    app.get('/sitemap.xml', function(req, res) {
+        res.sendfile(path.resolve(__dirname + '/../private/sitemap.xml'));
     });
     
     // app.get('/test', function(req, res) {
