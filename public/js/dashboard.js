@@ -1200,9 +1200,8 @@ function zumpLibraryInit() {
 		discs = _.filter(discs, function(discItem){
 			return discItem._id != disc._id;
 		});
-		myDashboard.setDiscList(discs);
+		//myDashboard.setDiscList(discs);
 	});
-	
 	
 	mySocial = new ZumpSocial();
 	
@@ -2173,7 +2172,8 @@ var ZumpNotifier = function() {
     	accountChange: [],
     	discCreated: [],
     	discUpdated: [],
-    	discDeleted: []
+    	discDeleted: [],
+    	initDiscDeleted: []
     };
     
     //----------------------\
@@ -2728,7 +2728,7 @@ var ZumpEditor = function(opt) {
 			generateConfirmationModal('WARNING!', body, 'Delete', function() {
 				deleteDisc(modifyHandler.discId, function(success, data) {
 					if (success) {
-						myNotifier.executeEvent('discDeleted', data);
+						myNotifier.executeEvent('initDiscDeleted', data);
 						changePage('#pg-dashboard');
 					} else {
 						handleError(data);
@@ -3567,10 +3567,10 @@ var ZumpDashboard = function(opt) {
 	/*
 	* Filters the discs and redraws the results table
 	*/
-	this.updateFilter = function(generateFilters) {
+	this.updateFilter = function(generateFilters, maintainPage) {
 		$filterCount.text(myFilter.getCount() > 0 ? myFilter.getCount() : '');
 		discList = myFilter.filter(unfilteredList, generateFilters);
-		showDiscs();
+		showDiscs(maintainPage);
 	}
 	
 	/*
@@ -3578,6 +3578,7 @@ var ZumpDashboard = function(opt) {
 	*/
 	this.doResize = function() {
 		resizeDashboard();
+		myGallery.doResizeGallery();
 	}
 	
 	/*
@@ -3699,6 +3700,7 @@ var ZumpDashboard = function(opt) {
 	   	if ($view.length) {
 	   		
 		   	if (!$curView.length) {
+	   			preViewChange(view);
 		        $view.fadeIn(100, function() {
 		        	onViewChange(view);
 		        	activeView = view;
@@ -3875,7 +3877,7 @@ var ZumpDashboard = function(opt) {
 			generateConfirmationModal('WARNING!', body, 'Delete', function() {
 				deleteDisc(discId, function(success, data) {
 					if (success) {
-						myNotifier.executeEvent('discDeleted', data);
+						myNotifier.executeEvent('initDiscDeleted', data);
 					} else {
 						handleError(data);
 					}
@@ -3982,6 +3984,14 @@ var ZumpDashboard = function(opt) {
 	    
     	myNotifier.addListener('accountChange', zumpDashboard, function() {
     		if (currentDisc && currentDisc.userId == userAccount._id) forceRefresh = true;
+    	});
+    	
+    	myNotifier.addListener('initDiscDeleted', zumpDashboard, function(event, data) {
+    		unfilteredList = _.filter(unfilteredList, function(discItem){
+				return discItem._id != data._id;
+			});
+			zumpDashboard.updateFilter(true, true);
+			myNotifier.executeEvent('discDeleted', data);
     	});
 	    
 	}
@@ -6210,7 +6220,6 @@ var ZumpGallery = function(opt) {
 		objCount = objects.length;
 		
 		gallerySetup();
-		this.showGallery();
 	}
 	
 	/*
@@ -6219,6 +6228,16 @@ var ZumpGallery = function(opt) {
 	this.updateGalleryCount = function(galleryCount) {
 		itemsPerRow = parseInt(galleryCount);
 		$gallerySlider.slider('setValue', itemsPerRow);
+	}
+	
+	/*
+	* Shows the gallery
+	*/
+	this.doResizeGallery = function() {
+		
+		if (!$galleryContainer.is(':visible')) return;
+		
+		resizeGallery();
 	}
 	
 	/*
