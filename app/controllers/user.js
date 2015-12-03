@@ -241,7 +241,7 @@ function createUser(info, callback) {
 					return cb(Error.createError(err, Error.internalError));
 				
 				if (!res || !res.length)
-					return cb(Error.createError('Unable to locate zip code.', Error.invalidDataError));
+					return cb(Error.createError('Unable to locate postal code.', Error.invalidDataError));
 				
 				var loc = res[0];
 				info.location = {
@@ -438,7 +438,7 @@ function updateAccount(userId, account, callback) {
 							return cb(Error.createError(err, Error.internalError));
 						
 						if (!res || !res.length)
-							return cb(Error.createError('Unable to locate zip code.', Error.invalidDataError));
+							return cb(Error.createError('Unable to locate postal code.', Error.invalidDataError));
 						
 						var loc = res[0];
 						user.local.location = {
@@ -704,7 +704,7 @@ function getUsersByArea(zipcode, radius, callback) {
 					return cb(Error.createError(err, Error.internalError));
 				
 				if (!res || !res.length)
-					return cb(Error.createError('Unable to locate zip code.', Error.invalidDataError));
+					return cb(Error.createError('Unable to locate postal code.', Error.invalidDataError));
 				
 				var loc = res[0];
 				

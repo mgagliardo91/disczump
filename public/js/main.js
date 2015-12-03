@@ -237,7 +237,7 @@ function getCityState(zipcode, callback) {
 		},
 		error: function (request, textStatus, errorThrown) {
 		   if (request.status == 404) {
-		   		retData = 'Invalid zip code';
+		   		retData = 'Invalid postal code';
 		   }
 		},
 		complete: function() {

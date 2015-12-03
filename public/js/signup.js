@@ -13,7 +13,7 @@ $(document).ready(function(){
             {id:'password', type: 'text', min: 6, hint: 'Password must be at least 6 characters in length.'},
             {id:'verify-password', type:'compare', refId:'password'},
             {id:'username', type:'username', output: 'username-feedback', min: 6, max: 15, hint: 'Username must be 6-15 characters and can only consist of letters, numbers, and underscore.'},
-            {id:'zipcode', type:'zipcode', output: 'citystate', hint: 'Enter zip code and select location.'},
+            {id:'zipcode', type:'zipcode', output: 'citystate', hint: 'Enter postal code and select location.'},
             {id:'firstName', optional: true, type:'function', fn: function(val) { return val.split(' ').length < 3 }, hint: 'Enter your first name to help people find you. (Can only contain one space)'},
             {id:'lastName', optional: true,  type:'function', fn: function(val) { return val.split(' ').length < 3 }, hint: 'Enter your last name to help people find you. (Can only contain one space)'},
             {id:'pdgaNumber', optional: true, type:'function', fn: function(val) { return /^[0-9]*$/.test(val) }, max: 6}
@@ -33,7 +33,7 @@ $(document).ready(function(){
         var locObj = signUpValidate.getValue('zipcode');
         if (!locObj) return false;
         
-        var $form = $('<form action="/signup" method="post" id="signup-form">' +
+        var $form = $('<form action="/signup" method="post" id="signup-form" style="display: none;">' +
                             '<input type="text" name="email" value="' + $('#email').val() + '">' +
                             '<input type="password" name="password" value="' + $('#password').val() + '">' +
                             '<input type="text" name="username" value="' + $('#username').val() + '">' +
@@ -43,8 +43,8 @@ $(document).ready(function(){
                             '<input type="text" name="lastName" value="' + $('#lastName').val() + '">' +
                             '<input type="text" name="pdgaNumber" value="' + $('#pdgaNumber').val() + '">' +
                         '</form>');
-        
-        $form.submit();
+        $('body').append($form);
+        $('body').find('#signup-form').submit();
     });
     
 });

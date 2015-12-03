@@ -121,7 +121,7 @@ var ZumpValidate = function(opt) {
                     
                     if (item.type == 'zipcode') {
                             item.dropdown = new ZumpDropdown({
-                        	minLength: 5,
+                        	minLength: 3,
                     		inputElement: $input,
                     		searchProp: 'zipcode',
                     		getResults: function(val, callback) {

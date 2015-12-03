@@ -11,6 +11,8 @@ var Passport;
 
 // app/oauthRoutes.js
 module.exports = function(app, passport) {
+    
+    Passport = passport;
         
     app.route('/user')
         .get(hasAccess, function(req, res) {
