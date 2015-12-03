@@ -447,6 +447,12 @@
 	padding-bottom: 30px;
 }
 
+.page-info {
+    padding: 3px 15px;
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+}
+
 #user-input-form {
 	margin: 20px auto;
 	max-width: 400px;

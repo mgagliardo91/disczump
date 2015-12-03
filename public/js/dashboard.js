@@ -2169,6 +2169,7 @@ var ZumpNotifier = function() {
     //----------------------/
     var zumpNotifier = this;
     var notifyTable = {
+    	dashboardInit: [],
     	accountChange: [],
     	discCreated: [],
     	discUpdated: [],
@@ -3373,6 +3374,7 @@ var ZumpDashboard = function(opt) {
 	var $galleryMenu;
 	var $dashboardViewArea;
 	var $sidebarLoading;
+	var $discView;
 
 	//----------------------\
     // Prototype Functions
@@ -3396,6 +3398,7 @@ var ZumpDashboard = function(opt) {
 		$imageArea = $('#view-disc-image-container');
 		$dashboardViewArea = $('#dashboard-view-area');
 		$sidebarLoading = $('.sidebar-loading');
+		$discView = $('#disc-view');
 		
 		if (opt.paginate.displayCount) {
 			setPaginateCount(opt.paginate.displayCount);
@@ -3490,10 +3493,14 @@ var ZumpDashboard = function(opt) {
 	}
 	
 	this.bindPrivateListeners = function() {
+		$('#view-disc-edit').closest('.page-title-btn').show();
+		$('#view-disc-edit').attr('discId', currentDisc._id);
 		bindListeners();
 	}
 	
 	this.unbindPrivateListeners = function() {
+		$('#view-disc-edit').closest('.page-title-btn').hide();
+		$('#view-disc-edit').attr('discId', '');
 		unbindListeners();
 	}
 	
@@ -3533,6 +3540,8 @@ var ZumpDashboard = function(opt) {
 		if (!publicList) {
 			zumpDashboard.setDiscList(discs);
 		}
+		
+		myNotifier.executeEvent('dashboardInit');
 	}
 	
 	this.setDiscList = function(discs, user) {
@@ -3982,6 +3991,12 @@ var ZumpDashboard = function(opt) {
 	    	mySocial.showProfile($(this).attr('userId'));
 	    });
 	    
+	    myNotifier.addListener('dashboardInit', zumpDashboard, function() {
+    		if (currentDisc && isUserOwned(currentDisc._id)) {
+    			zumpDashboard.bindPrivateListeners();
+    		}
+    	})
+	    
     	myNotifier.addListener('accountChange', zumpDashboard, function() {
     		if (currentDisc && currentDisc.userId == userAccount._id) forceRefresh = true;
     	});
@@ -4194,19 +4209,29 @@ var ZumpDashboard = function(opt) {
 		currentDisc = disc;
 		
 		if (isUserOwned(disc._id)) {
-			$('#view-disc-edit').closest('.page-title-btn').show();
-			$('#view-disc-edit').attr('discId', currentDisc._id);
 			myDashboard.bindPrivateListeners();
 		} else {
-			$('#view-disc-edit').closest('.page-title-btn').hide();
-			$('#view-disc-edit').attr('discId', '');
 			myDashboard.unbindPrivateListeners();
 		}
 		
 		var discString = stringifyDisc(disc);
+		$discView.find('.page-info').remove();
 		
 		$('#view-disc-share').attr('discId', currentDisc._id);
 		$('#view-disc-link').attr('discId', currentDisc._id);
+		
+		if (disc.visible) {
+			$('#view-disc-share').show();
+			$('#view-disc-link').show();
+		} else {
+			$('#view-disc-share').hide();
+			$('#view-disc-link').hide();
+			$discView.prepend('<div class="page-info">' + 
+				'<span style="margin-right: 10px; display: inline-block">' + 
+				'<i class="fa fa-lg fa-eye-slash"></i></span>' + 
+				'This disc can only be viewed by you.</div>');
+		}
+		
 		$('#view-disc-title').text(disc.brand + ' ' + disc.name);
 		$('#view-disc-notes').text(discString.notes.length ? discString.notes : '-');
 		
