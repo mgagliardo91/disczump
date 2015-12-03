@@ -347,6 +347,7 @@ var ZumpDropdown = function(opt) {
     var minLength = -1;
     var tabTrigger = false;
     var cityReq = undefined;
+    var hideDelay;
 	
 	//----------------------\
     //JQuery Objects
@@ -546,8 +547,12 @@ var ZumpDropdown = function(opt) {
 	    * Hide results on leave
 	    */
         .on('focusout', function(e){
-        	if ($(e.relatedTarget)[0] != $dropdown[0] && !$dropdownList.has(e.relatedTarget).length > 0) {
-        		setResultsVisibility(false);
+        	if ($(e.relatedTarget)[0] != $dropdown[0] && !$dropdownList.has(e.relatedTarget).length > 0) {// Bug fix for FF: e.relatedTarget is null so we delay hiding 
+        		// dropdown so that the dropdown list item click event can occur
+        		//setResultsVisibility(false);
+        		hideDelay = setTimeout(function() {
+        			setResultsVisibility(false);
+        		}, 300);
         	}
         	
         	e.preventDefault();
@@ -559,6 +564,7 @@ var ZumpDropdown = function(opt) {
         * Click event on a result item
         */
         $dropdownList.on('click', '.dropdown-list-item', function(){
+            clearTimeout(hideDelay);
             updateInput($(this).attr('result'), true);
             
             if (onSelection) {
