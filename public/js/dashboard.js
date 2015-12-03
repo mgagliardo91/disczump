@@ -7745,6 +7745,7 @@ var ZumpTextAssist = function(opt) {
     var currentSearch = '';
     var onSelection;
     var tabTrigger = false;
+    var hideDelay;
     
     
     //----------------------\
@@ -7905,18 +7906,23 @@ var ZumpTextAssist = function(opt) {
 	    */
         .on('focusout', function(e){
         	if ($(e.relatedTarget)[0] != $dropdown[0] && !$dropdownList.has(e.relatedTarget).length > 0) {
-        		setResultsVisibility(false);
+        		// Bug fix for FF: e.relatedTarget is null so we delay hiding 
+        		// dropdown so that the dropdown list item click event can occur
+        		//setResultsVisibility(false);
+        		hideDelay = setTimeout(function() {
+        			setResultsVisibility(false);
+        		}, 300);
         	}
         	
         	e.preventDefault();
-        	e.stopPropagation();
-	    	return false;
+		    return true;
         });
         
         /*
         * Click event on a result item
         */
         $dropdownList.on('click', '.dropdown-list-item', function(){
+        	clearTimeout(hideDelay);
             updateInput($(this).attr('result'), true);
             
             if (onSelection) {
