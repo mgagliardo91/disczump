@@ -2824,7 +2824,7 @@ var ZumpEditor = function(opt) {
 		var tagTextAssist = new ZumpTextAssist({
 			inputElement: $tagInput,
 			searchProp: 'tagList',
-			items: function() { return discs; }, 
+			items: function() { return {userDiscs: discs, templateDiscs: []} }, 
 	        onSelection: function(item, reset) {
 	       		if (item.length > 0) {
 	        		$tagContainer.append(generateTagItem(item));
