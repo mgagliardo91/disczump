@@ -5404,7 +5404,7 @@ var ZumpSocial = function(opt) {
     	}
     	
     	if (pdga.length) {
-    		$profilePDGA.text('#' + pdga);
+    		$profilePDGA.text('#' + pdga).attr('href', 'http://www.pdga.com/player/' + pdga);
     	}
     	
     	$profilePictureContainer.find('img').attr('src', getUserImage(user));
