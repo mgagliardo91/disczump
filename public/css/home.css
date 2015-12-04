@@ -421,7 +421,7 @@ li.clearfix:before {
 }
 
 .footer-bar {
-    max-width: 700px;
+    max-width: 1000px;
     margin: auto;
     color: #828282;
     padding-top: 10px;
@@ -454,11 +454,11 @@ li.clearfix:before {
     vertical-align: middle;
 }
 
-.footer-copyright > a {
+.footer-copyright a {
     margin-left: 20px;
 }
 
-.footer-copyright > a:hover {
+.footer-copyright a:hover {
     color: #428bca;
 }
 
@@ -496,6 +496,20 @@ li.clearfix:before {
 }
 
 @media (max-width: 1400px) {
+    
+    .footer-bar {
+        max-width: 700px;
+    }
+    
+    .footer-copyright span {
+        display: block;
+        text-align: center;
+    }
+    
+    .footer-copyright span.cr-links a:first-child {
+        margin-left: 0px;
+    }
+    
     .preview-icon {
         width: 150px;
     }
