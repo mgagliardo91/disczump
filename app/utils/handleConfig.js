@@ -11,24 +11,13 @@ var DateFormats = {
 
 module.exports = {
     getExpressHandle: getExpressHandle,
-    getMainHandle: getMainHandle
+    getMainHandle: getMainHandle,
+    registerHelpers: registerHelpers
 }
 
 function getMainHandle() {
     if (!mainInit) {
-        Handlebars.registerHelper("formatDate", function(datetime, format) {
-          if (moment) {
-            format = DateFormats[format] || format;
-            return moment(datetime).format(format);
-          }
-          else {
-            return datetime;
-          }
-        });
-        
-        Handlebars.registerHelper("compileToHtml", function(data) {
-            return processLinks(data).replace(/\n/g, '<br>');
-        });
+        registerHelpers(Handlebars);
         
         mainInit = true;
     }
@@ -92,4 +81,20 @@ var processLinks = function(body) {
 	}
 	
 	return body;
+}
+
+function registerHelpers(hb) {
+  hb.registerHelper("formatDate", function(datetime, format) {
+    if (moment) {
+      format = DateFormats[format] || format;
+      return moment(datetime).format(format);
+    }
+    else {
+      return datetime;
+    }
+  });
+  
+  hb.registerHelper("compileToHtml", function(data) {
+      return processLinks(data).replace(/\n/g, '<br>');
+  });
 }

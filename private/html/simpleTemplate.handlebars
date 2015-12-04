@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>disc|zump Feedback Response</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet" type="text/css">
+</head>
+<table align="center" cellpadding="0" cellspacing="0" width="600" style="border: 1px solid #CCC;">
+ <tr>
+  <td bgcolor="#EEEEEE" style="padding: 40px 0 30px 0; border-bottom: 1px solid #ccc;">
+   <img src="{{serverURL}}/static/logo/logo_email.png" alt="disc|zump" style="max-width: 100%; display: block;">
+  </td>
+ </tr>
+ <tr>
+  <td bgcolor="#ffffff" style="padding: 10px 40px 10px 40px; font-family: 'PT Sans', sans-serif;">
+   <p style="padding-bottom: 10px;">Hello, <strong>{{user.local.username}}</strong>!</p>
+    <p style="padding-bottom: 10px; font-size: 0.9em">
+        {{{compileToHtml content}}}
+    </p>
+    <p style="text-align: right;">Happy Zumping!</p>
+    <p style="text-align: right;"><strong>disc|zump Staff</strong></p>
+  </td>
+ </tr>
+ <tr>
+  <td bgcolor="#ff9070" style="padding: 10px 40px 10px 40px; border-top: 1px solid #ccc;">
+   <table cellpadding="0" cellspacing="0" width="100%">
+     <tr>
+      <td>
+       Copyright &copy; disc|zump, LLC<br/>
+       <a href="{{serverURL}}" style="color: #0060A7">www.disczump.com</a>
+      </td>
+      <td align="right">
+      <ul style="font-size: 1.5em; padding: 0px; margin: 0px; color: black;">
+        <li style="display: inline; list-style-type: none; padding-right: 10px;"><a href="https://www.facebook.com/disczump/" target="_blank" style="color: #000;"><img src="{{serverURL}}/static/icon/fb_icon.png" alt="disc|zump Facebook"/></a></li>
+        <li style="display: inline; list-style-type: none; padding-right: 10px;"><a href="https://twitter.com/disczump" target="_blank" style="color: #000;"><img src="{{serverURL}}/static/icon/twitter_icon.png" alt="disc|zump Twitter"/></a></li>
+        <li style="display: inline; list-style-type: none;"><a href="https://instagram.com/disczump/" target="_blank" style="color: #000;"><img src="{{serverURL}}/static/icon/insta_icon.png" alt="disc|zump Instagram"/></a></li>
+      </ul>
+      </td>
+     </tr>
+    </table>
+  </td>
+ </tr>
+</table>
+</html>
