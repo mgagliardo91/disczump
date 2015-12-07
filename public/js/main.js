@@ -54,7 +54,7 @@ var shareFacebook = function(discId, callback) {
 		
 		if (callback) callback();
 		
-		var popupWindow = generatePopup('http://www.facebook.com/sharer/sharer.php?app_id=' + dzID + '&u=' + serverURL + '/disc/' + discId + 
+		var popupWindow = generatePopup('https://www.facebook.com/sharer/sharer.php?app_id=' + dzID + '&u=' + serverURL + '/disc/' + discId + 
 	    	'&display=popup&ref=plugin&src=share_button', 'sharer', 600, 400);
     });
 }

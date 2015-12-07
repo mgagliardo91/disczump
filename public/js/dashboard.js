@@ -23,7 +23,7 @@ var cropLock;
 var serverCallback = {};
 var connectTries = 0;
 var firstUse = false;
-var serverURL = 'http://www.disczump.com';
+var serverURL = 'https://www.disczump.com';
 
 // Library Instances
 var main = this;

@@ -6,3 +6,5 @@ mongod
 config/localConfig.js
 testlogs/
 logs/
+private/site-certificate.crt
+private/disczump-key.pem

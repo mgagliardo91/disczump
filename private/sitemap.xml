@@ -5,43 +5,43 @@
       xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 <url>
-  <loc>http://www.disczump.com/</loc>
+  <loc>https://www.disczump.com/</loc>
   <lastmod>2015-11-30</lastmod>
   <changefreq>daily</changefreq>
   <priority>1.0</priority>
 </url>
 <url>
-  <loc>http://www.disczump.com/login</loc>
+  <loc>https://www.disczump.com/login</loc>
   <lastmod>2015-11-30</lastmod>
   <changefreq>monthly</changefreq>
 </url>
 <url>
-  <loc>http://www.disczump.com/signup</loc>
+  <loc>https://www.disczump.com/signup</loc>
   <lastmod>2015-11-30</lastmod>
   <changefreq>monthly</changefreq>
 </url>
 <url>
-  <loc>http://www.disczump.com/faq</loc>
+  <loc>https://www.disczump.com/faq</loc>
   <lastmod>2015-11-30</lastmod>
   <changefreq>weekly</changefreq>
 </url>
 <url>
-  <loc>http://www.disczump.com/privacy</loc>
+  <loc>https://www.disczump.com/privacy</loc>
   <lastmod>2015-11-30</lastmod>
   <changefreq>monthly</changefreq>
 </url>
 <url>
-  <loc>http://www.disczump.com/terms</loc>
+  <loc>https://www.disczump.com/terms</loc>
   <lastmod>2015-11-30</lastmod>
   <changefreq>monthly</changefreq>
 </url>
 <url>
-  <loc>http://www.disczump.com/recover</loc>
+  <loc>https://www.disczump.com/recover</loc>
   <lastmod>2015-11-30</lastmod>
   <changefreq>weekly</changefreq>
 </url>
 <url>
-  <loc>http://www.disczump.com/dashboard</loc>
+  <loc>https://www.disczump.com/dashboard</loc>
   <lastmod>2015-11-30</lastmod>
   <changefreq>always</changefreq>
 </url>

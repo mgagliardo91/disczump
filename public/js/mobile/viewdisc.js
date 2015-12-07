@@ -57,7 +57,7 @@ $(document).on("pagecreate", "#disc-view", function () {
     
     $(document).on('vclick', '#share-disc', function() {
         var id = $(this).attr('discid');
-        window.open('http://www.facebook.com/sharer/sharer.php?app_id=1433417853616595&u=disczump.com/disc/' + id + 
+        window.open('https://www.facebook.com/sharer/sharer.php?app_id=1433417853616595&u=disczump.com/disc/' + id + 
         	'&display=popup&ref=plugin&src=share_button', 'sharer');
     });
     
