@@ -102,7 +102,7 @@ if (localServer.release) {
   server = require('https').createServer({key: privateKey, cert: certificate}, app);
   require('http').createServer(function (req, res) {
       console.log("https://" + req.headers['host'] + req.url);
-      res.redirect("https://" + req.headers['host'] + req.url);
+      req.redirect("https://" + req.headers['host'] + req.url);
       // res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
       // res.end();
       
