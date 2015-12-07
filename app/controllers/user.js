@@ -264,7 +264,7 @@ function createUser(info, callback) {
 			
 		var user = new User({
 			local: {
-				email: info.email,
+				email: info.email.toLowerCase(),
 				password: info.password,
 				username: info.username,
 				firstName: info.firstName,

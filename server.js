@@ -2,7 +2,7 @@
 var express  = require('express');
 var subdomain = require('express-subdomain');
 var app      = express();
-var port     = process.env.PORT || 80;
+var fs       = require('fs');
 var mongoose = require('mongoose');
 var passport = require('passport');
 var flash    = require('connect-flash');
@@ -21,6 +21,10 @@ var handleConfig = require('./app/utils/handleConfig.js');
 var Grid = require('gridfs-stream');
 
 // configuration ===============================================================
+var port     = (localServer.release ? 443 : process.env.PORT || 80);
+var privateKey = fs.readFileSync('./private/disczump-key.pem', 'utf8');
+var certificate = fs.readFileSync('./private/site-certificate.crt', 'utf8');
+
 require('./app/utils/mailer.js');
 
 mongoose.connect('mongodb://' + config.database.host + ':' + 
@@ -90,7 +94,14 @@ app.get('*', function(req, res){
 });
 
 // launch ======================================================================
-var server = require('http').createServer(app);
+var server;
+
+if (localServer.release) {
+  server = require('https').createServer({key: privateKey, cert: certificate}, app);
+} else {
+  server = require('http').createServer(app);
+}
+
 var io = require('socket.io')(server);
 
 require('./config/socket.js').init(io, socketCache, logger);

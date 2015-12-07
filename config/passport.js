@@ -163,7 +163,7 @@ module.exports = function(passport) {
     },
     function(req, username, password, done) {
 
-        User.findOne({ 'local.email' :  username }, function(err, user) {
+        User.findOne({'local.email': username.toLowerCase()}, function(err, user) {
             if (err)
                 return done(err);
 
