@@ -21,7 +21,9 @@ var handleConfig = require('./app/utils/handleConfig.js');
 var Grid = require('gridfs-stream');
 
 // configuration ===============================================================
-var port     = (localServer.release ? 443 : process.env.PORT || 80);
+var httpsPort = (localServer.release ? 443 : process.env.PORT || 80);
+var httpPort = process.env.PORT || 80;
+
 var privateKey = fs.readFileSync('./private/disczump-key.pem', 'utf8');
 var certificate = fs.readFileSync('./private/site-certificate.crt', 'utf8');
 
@@ -98,6 +100,12 @@ var server;
 
 if (localServer.release) {
   server = require('https').createServer({key: privateKey, cert: certificate}, app);
+  require('http').createServer(function (req, res) {
+      res.redirect("https://" + req.headers['host'] + req.url);
+      // res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
+      // res.end();
+      
+  }).listen(httpPort);
 } else {
   server = require('http').createServer(app);
 }
@@ -106,7 +114,7 @@ var io = require('socket.io')(server);
 
 require('./config/socket.js').init(io, socketCache, logger);
 
-server.listen(port);
+server.listen(httpsPort);
 
-logger.info('[' + localServer.serverIdentity + '] Server running at %s:%s', process.env.IP, port);
+logger.info('[' + localServer.serverIdentity + '] Server running at %s:%s', process.env.IP, httpsPort);
 logger.info('[' + localServer.serverIdentity + '] Websocket server started.');
