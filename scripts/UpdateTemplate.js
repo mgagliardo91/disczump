@@ -46,14 +46,14 @@ mongoose.connection.on('connected', function() {
                 var properties = template.split(",");
                 if (properties.length == 8) {
                     templateArray.push({
-                        brand: properties[0],
-                        name: properties[1],
-                        type: properties[2],
-                        material: properties[3],
-                        speed: properties[4],
-                        glide: properties[5],
-                        turn: properties[6],
-                        fade: properties[7]
+                        brand: properties[0].length ? properties[0] : undefined,
+                        name: properties[1].length ? properties[1] : undefined,
+                        type: properties[2].length ? properties[2] : undefined,
+                        material: properties[3].length ? properties[3] : undefined,
+                        speed: properties[4].length ? properties[4] : undefined,
+                        glide: properties[5].length ? properties[5] : undefined,
+                        turn: properties[6].length ? properties[6] : undefined,
+                        fade: properties[7].length ? properties[7] : undefined
                     });
                     count++;
                 }
