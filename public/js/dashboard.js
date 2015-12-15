@@ -671,7 +671,7 @@ function fbLinked(isLinked) {
 
 function resizeLoader() {
 	$loading.css({
-		width: $(document).width() - $('.sidebar').outerWidth(),
+		width: $(window).width() - $('.sidebar').outerWidth(),
 		left: $('.sidebar').outerWidth(),
 		height: $(document).height()
 	});
@@ -1866,14 +1866,14 @@ var fixImageOrientation = function(dropzone, file, callback) {
 			    file.width = img.width;
 			    file.height = img.height;
 			    
-			    targetWidth = Math.abs(orientation) == 90 ? img.height : img.width;
-			    targetHeight = Math.abs(orientation) == 90 ? img.width : img.height;
+			    targetWidth = img.width;
+			    targetHeight = img.height;
 			    
 			    canvas = document.createElement("canvas");
 			    ctx = canvas.getContext("2d");
-			    canvas.width = targetWidth;
-			    canvas.height = targetHeight;
-			    dropzone.drawImageOrientFix(orientation, ctx, img, 0, 0, img.width, img.height, 0, 0, targetWidth, targetHeight)
+			    canvas.width = targetHeight;
+			    canvas.height = targetWidth;
+			    dropzone.drawImageOrientFix(orientation, ctx, img, 0, 0, img.width, img.height, 0, 0, targetWidth, targetHeight);
     			dataURL = canvas.toDataURL(file.type);
     			callback(dataURL);
   			});
@@ -2265,7 +2265,7 @@ var ZumpTemplatePicker = function(opt) {
 		getTemplates(value);
 		generateTemplateItems();
 		$templateLoading.hide();
-		$templateList.find('.template-item').first().trigger('click');
+		$templateList.find('.template-item').first().trigger('click').focus();
 	}
 	
 	//----------------------\
@@ -2369,7 +2369,7 @@ var ZumpTemplatePicker = function(opt) {
 	}
 	
 	var generateTemplateItem = function(template) {
-		return '<li class="template-item" tempId="' + template._id + '">' +
+		return '<li class="template-item" tempId="' + template._id + '" tabindex="-1">' +
             '<table class="template-data-table table-main">' +
               '<tr>' +
                 '<td>Brand: <span class="template-data-value">' + getSafe(template.brand, 'N/A') + '</span></td>' +

@@ -1084,12 +1084,8 @@
             file.width = img.width;
             file.height = img.height;
             resizeInfo = _this.options.resize.call(_this, file);
-            if (resizeInfo.trgWidth == null) {
-              resizeInfo.trgWidth = Math.abs(orientation) == 90 ? resizeInfo.optHeight : resizeInfo.optWidth;
-            }
-            if (resizeInfo.trgHeight == null) {
-              resizeInfo.trgHeight = Math.abs(orientation) == 90 ? resizeInfo.optWidth : resizeInfo.optHeight;
-            }
+            resizeInfo.trgWidth = resizeInfo.optWidth;
+            resizeInfo.trgHeight = resizeInfo.optHeight;
             
             canvas = document.createElement("canvas");
             ctx = canvas.getContext("2d");
@@ -1672,10 +1668,19 @@
 
   drawImageIOSFix = function(o, ctx, img, sx, sy, sw, sh, dx, dy, dw, dh) {
     // console.log('Just used orientation: ' + o);
-    var vertSquashRatio;
+    var vertSquashRatio, transX, transY;
     vertSquashRatio = detectVerticalSquash(img);
-    dh = dh / vertSquashRatio; ctx.translate( dx+dw/2, dy+dh/2 ); ctx.rotate(-1*o*Math.PI/180); dx = -dw/2; dy = -dh/2;
-    return ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh / vertSquashRatio);
+    dh = dh / vertSquashRatio;
+    
+    transX = Math.abs(o) == 90 ? dx+dh/2 : dx+dw/2;
+    transY = Math.abs(o) == 90 ? dy+dw/2 : dy+dh/2;
+    
+    ctx.translate( transX, transY);
+    ctx.rotate(-1*o*Math.PI/180);
+    dx = -dw/2;
+    dy = -dh/2;
+    return ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+    
   };
 
 
