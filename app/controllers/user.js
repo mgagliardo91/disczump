@@ -19,6 +19,8 @@ module.exports = {
 	createUserInternal: createUserInternal,
 	createUser: createUser,
 	getUser: getUser,
+	getUserByEmail: getUserByEmail,
+	getUserByFacebook: getUserByFacebook,
 	getActiveUser: getActiveUser,
     checkPassword: checkPassword,
     checkUsername: checkUsername,
@@ -209,6 +211,9 @@ function createUser(info, callback) {
 		
 	if (info.lastName && !checkName(info.lastName))
 		return callback(Error.createError('Last name cannot contain more than one space.', Error.invalidDataError));
+		
+	if (!info.locLat && !info.locLng)
+		return callback(Error.createError('Valid latitude and longitude is required to create and account.', Error.invalidDataError));
 	
 	async.series([
 		function(cb) {
@@ -292,6 +297,24 @@ function getUser(userId, callback) {
 			return callback(Error.createError(err, Error.internalError));
 			
 		if (!user) return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
+		
+		return callback(null, user);	
+	});
+}
+
+function getUserByEmail(email, callback) {
+	User.findOne({'local.email': email}, function(err, user) {
+       if (err) 
+			return callback(Error.createError(err, Error.internalError));
+		
+		return callback(null, user);	
+	});
+}
+
+function getUserByFacebook(facebookId, callback) {
+	User.findOne({'facebook.id': facebookId}, function(err, user) {
+       if (err) 
+			return callback(Error.createError(err, Error.internalError));
 		
 		return callback(null, user);	
 	});

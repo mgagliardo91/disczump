@@ -54,14 +54,14 @@ function getDiscs(reqUserId, userId, callback) {
 			return callback(err);
 			
 		if (typeof(reqUserId) !== 'undefined' && reqUserId == userId) {
-            Disc.find({userId: userId}, function (err, discs){
+            Disc.find({userId: userId}).sort({createDate: -1}).exec(function (err, discs){
                 if (err)
                     return callback(Error.createError(err, Error.internalError));
                 
                 return callback(null, discs);
             });
         } else {
-            Disc.find({userId: userId, visible: true}, function (err, discs){
+            Disc.find({userId: userId, visible: true}).sort({createDate: -1}).exec(function (err, discs){
                 if (err)
                     return callback(Error.createError(err, Error.internalError));
                 

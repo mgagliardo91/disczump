@@ -15,7 +15,7 @@ var logger = new (winston.Logger)({
     ]
 });
 
-logger.info('Cron job started.')
+logger.info('Daily cron job started.')
 Grid.mongo = mongoose.mongo;
 
 mongoose.connect('mongodb://' + configDB.database.host + ':' + 
@@ -31,7 +31,7 @@ mongoose.connection.on('connected', function() {
             logger.info('Image cache cleared.');
        }
         
-        logger.info('Cron job completed.')
+        logger.info('Daily cron job completed.')
         mongoose.disconnect();
    });
 });

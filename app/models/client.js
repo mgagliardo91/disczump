@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var shortId = require('shortid');
+var bcrypt   = require('bcrypt-nodejs')
 
 var clientSchema = mongoose.Schema({
     _id: {
@@ -20,8 +21,16 @@ var clientSchema = mongoose.Schema({
     clientSecret: {
         type: String,
         required: true
+    },
+    permissions: {
+        createUsers: {type: Boolean, default: false},
+        deleteUsers: {type: Boolean, default: false}
     }
     
 });
+
+clientSchema.methods.generateHash = function(secret) {
+    return bcrypt.hashSync(secret, bcrypt.genSaltSync(8), null);
+};
 
 module.exports = mongoose.model('Client', clientSchema);

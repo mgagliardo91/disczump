@@ -4,6 +4,8 @@ var gfs;
 var gm = require('gm').subClass({ imageMagick: true });
 var async = require('async');
 var Error = require('./utils/error');
+var AccessTokenController = require('./controllers/accessToken');
+var ClientController = require('./controllers/client');
 var EventController = require('./controllers/event');
 var UserController = require('./controllers/user');
 var MessageController = require('./controllers/message');
@@ -14,6 +16,8 @@ var DiscTemplateController = require('./controllers/discTemplate');
 var logger = require('../config/logger.js').logger;
 var config = require('../config/config.js');
 var FileUtil = require('./utils/file.js');
+var Confirm = require('./utils/confirm');
+var Mailer = require('./utils/mailer.js');
 
 // app/api.js
 module.exports = function(app, passport, gridFs) {
@@ -260,6 +264,31 @@ module.exports = function(app, passport, gridFs) {
                 
                 return res.json(users);
             });
+        })
+        .post(clientAccess, function(req, res) {
+            if (!req.permissions.createUsers) {
+                return res.json(401, Error.createError('Access to this API call requires a client permission [createUsers].', Error.unauthorizedError))
+            }
+            
+            UserController.createUser(req.body, function(err, user) {
+                if (err)
+                    return res.json(err);
+                    
+                Confirm.initializeConfirmAccount(user._id, function(err, user, message) {
+                    if (err) {
+                        return res.json(err);
+                    }
+                    
+                    Mailer.sendMail(user.local.email, 'disc|zump Account Confirmation', message, function(err, result) {
+                       if (err) {
+                            return res.json(err);
+                        }
+                        
+                        EventController.addEvent(user._id, EventController.Types.AccountCreation, 'New account created for user [' + user._id + '] by client [' + req.client._id + '].' );
+                        return res.json(user.accountToString());
+                    });
+                });
+            });
         });
         
     app.route('/users/:userId')
@@ -446,9 +475,23 @@ function hasAccess(req, res, next) {
     passport.authenticate('bearer', { session : false }, function(err, user, info) {
         if (err) { return next(err); }
         if (!user) { 
-            return res.json(401, Error.createError('Access to this page requires an account.', Error.unauthorizedError));
+            return res.json(401, Error.createError('Access to this API call requires an account.', Error.unauthorizedError));
         }
+        
         req.user = user;
+        next();
+    })(req, res, next);
+}
+
+function clientAccess(req, res, next) {
+     passport.authenticate('oauth2-client-password', { session : false }, function(err, client) {
+        if (err) {
+            return res.json(401, err);
+        }
+        
+        if (!client) { 
+            return res.json(401, Error.createError('Access to this API call requires a valid client.', Error.unauthorizedError))
+        }
         next();
     })(req, res, next);
 }

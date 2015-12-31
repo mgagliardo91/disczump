@@ -22,15 +22,6 @@ var discSchema = mongoose.Schema({
     notes: String,
     primaryImage: String,
     imageList: { type : Array , default : [], unique: false },
-    // imageList: [{
-    //     _id: {
-    // 	    type: String,
-    // 	    default: shortId.generate,
-    // 	    sparse: true
-    // 	},
-    //     fileId: String,
-    //     thumbnailId: String
-    // }],
     tagList: [String],
     visible: {type:Boolean, default: false},
     condition: String,
