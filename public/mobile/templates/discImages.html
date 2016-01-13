@@ -1,0 +1,26 @@
+<div class="scrollable" id="disc-images">
+    <div class="navbar navbar-app navbar-absolute-top">
+        <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
+            {{title}}
+        </div>
+        <div class="btn-group pull-left">
+            <div ng-click="goBack()" class="btn">
+                <i class="fa fa-arrow-left fa-lg"></i>
+            </div>
+        </div>
+    </div>
+    <div class="app-body" ng-class="{loading: loading}">
+        <div ng-show="loading" class="app-content-loading">
+            <i class="fa fa-spinner fa-spin loading-spinner"></i>
+        </div>
+        <div class="app-content">
+            <div class="scrollable-content" id="view-disc-images">
+                <ul class="disc-image-list" ng-show="$def(disc)">
+                    <li class="disc-image" ng-repeat="image in disc.imageList" style="width:{{windowWidth}}px;height:{{windowWidth}}px">
+                        <a ng-href="/files/{{image.fileId}}"><img ng-src="/files/{{image.fileId}}" /></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

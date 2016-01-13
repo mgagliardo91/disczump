@@ -1,0 +1,92 @@
+<div class="scrollable" id="disc">
+    <div class="navbar navbar-app navbar-absolute-top">
+        <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
+            {{title}}
+        </div>
+        <div class="btn-group pull-left">
+            <div ng-click="goBack()" class="btn">
+                <i class="fa fa-arrow-left fa-lg"></i>
+            </div>
+        </div>
+        <div class="btn-group pull-right" ui-yield-to="navbarAction">
+            <div class="btn" ng-click="footer = !footer">
+                <i class="fa fa-share-alt fa-lg"></i>
+            </div>
+        </div>
+    </div>
+    <div class="app-body" ng-class="{loading: loading}">
+        <div ng-show="loading" class="app-content-loading">
+            <i class="fa fa-spinner fa-spin loading-spinner"></i>
+        </div>
+        <div class="app-content">
+            <div class="scrollable-content" id="view-disc" ng-class="{'has-footer': footer}">
+                <div class="disc-image" ng-show="$def(disc)">
+                    <div>
+                        <img ng-src="{{getPrimaryImage()}}" ng-click="showImageList()">
+                    </div>
+                </div>
+                <table class="disc-info-table" ng-show="$def(disc)">
+                    <tr>
+                        <td>Brand:</td>
+                        <td>{{disc.brand}}</td>
+                    </tr>
+                    <tr>
+                        <td>Name:</td>
+                        <td>{{disc.name}}</td>
+                    </tr>
+                    <tr>
+                        <td>Type:</td>
+                        <td>{{disc.type}}</td>
+                    </tr>
+                    <tr>
+                        <td>Material:</td>
+                        <td>{{disc.material}}</td>
+                    </tr>
+                    <tr>
+                        <td>Color:</td>
+                        <td>{{disc.color}}</td>
+                    </tr>
+                    <tr>
+                        <td>Weight:</td>
+                        <td>{{disc.weight}}<span ng-show="disc.weight">g</span></td>
+                    </tr>
+                    <tr>
+                        <td>Condition:</td>
+                        <td>{{disc.condition}}<span ng-show="disc.weight">/10</span></td>
+                    </tr>
+                </table>
+                <table class="disc-stats" ng-show="$def(disc)">
+                    <tr>
+                        <td class="disc-flight-number">
+                            <p class="fn-title">Speed</p>
+                            <p class="fn-value">{{disc.speed}}</p>
+                        </td>
+                        <td class="disc-flight-number">
+                            <p class="fn-title">Glide</p>
+                            <p class="fn-value">{{disc.glide}}</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="disc-flight-number">
+                            <p class="fn-title">Turn</p>
+                            <p class="fn-value">{{disc.turn}}</p>
+                        </td>
+                        <td class="disc-flight-number">
+                            <p class="fn-title">Fade</p>
+                            <p class="fn-value">{{disc.fade}}</p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="share-container" ng-show="footer" class="fade">
+    <a class="share-item" ng-href="">
+        <span><i class="fa fa-link"></i></span>
+    </a>
+    <a class="share-item facebook" ng-href="{{shareLink()}}">
+        <span><i class="fa fa-facebook-square"></i></span>
+    </a>
+    <div class="clearfix"></div>
+</div>

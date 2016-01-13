@@ -1,0 +1,35 @@
+<div class="scrollable" id="sort-list">
+    <div class="navbar navbar-app navbar-absolute-top">
+        <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
+            Sort
+        </div>
+        <div class="btn-group pull-left">
+            <div ng-click="goBack()" class="btn">
+                <i class="fa fa-arrow-left fa-lg"></i>
+            </div>
+        </div>
+        <div class="btn-group pull-right" ui-yield-to="navbarAction">
+            <div class="btn" ng-click="addSort()">
+                <i class="fa fa-plus-circle fa-lg"></i>
+            </div>
+        </div>
+    </div>
+    <div class="app-body" ng-class="{loading: loading}">
+        <div ng-show="loading" class="app-content-loading">
+            <i class="fa fa-spinner fa-spin loading-spinner"></i>
+        </div>
+        <div class="app-content">
+            <div class="scrollable-content">
+                <ul id="sort-props-list" as-sortable="dragControlListeners" ng-model="sortItems" class="item-list">
+                    <li as-sortable-item ng-click="toggleDirection(sortItem)" ng-repeat="sortItem in sortItems | filter:filterSort | orderBy:'sortOrder'" class="sort-prop dz-list-item">
+                        {{sortItem.text}}
+                        <div class="sort-drag" as-sortable-item-handle><i class="fa fa-bars"></i></div>
+                        <div class="sort-remove" ng-click="removeSort(sortItem); $event.stopPropagation();"><i class="fa fa-minus-circle"></i></div>
+                        <span ng-show="sortItem.sortAsc" class="item-note">ascending</span>
+                        <span ng-show="!sortItem.sortAsc" class="item-note">descending</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

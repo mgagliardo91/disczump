@@ -1,0 +1,30 @@
+<div class="scrollable" id="settings">
+    <div class="navbar navbar-app navbar-absolute-top">
+        <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
+            Settings
+        </div>
+        <div class="btn-group pull-left">
+            <div ng-click="goBack()" class="btn">
+                <i class="fa fa-arrow-left fa-lg"></i>
+            </div>
+        </div>
+    </div>
+    <div class="app-body" ng-class="{loading: loading}">
+        <div ng-show="loading" class="app-content-loading">
+            <i class="fa fa-spinner fa-spin loading-spinner"></i>
+        </div>
+        <div class="app-content">
+            <div class="scrollable-content" id="view-disc-images">
+                <div class="header-row">Defaults</div>
+                <div class="item-row row-label">View:</div>
+                <div class="item-row bordered">
+                    <select class="select-block select-large" ng-model="defaults.view" ng-options="item.text for item in viewItems"></select>
+                </div>
+                <div class="item-row row-label">Display Count:</div>
+                <div class="item-row bordered">
+                    <select class="select-block select-large" ng-model="defaults.view" ng-options="item.text for item in viewItems"></select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
