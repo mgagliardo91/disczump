@@ -188,16 +188,22 @@ angular.module('disczump.services', ['underscore'])
         var pubDisc = _.findWhere(pubDiscs, {_id: id});
         
         if (typeof(disc) !== 'undefined') {
-            return callback(disc);
+            return callback(disc, account);
         }
         
         if (typeof(pubDisc) !== 'undefined') {
-            return callback(pubDisc);
+            return callback(pubDisc, account);
         }
         
         APIService.Get('/discs/' + id, function(success, data) {
             if (success) {
-                return callback(data);
+                APIService.Get('/users/' + data.userId, function(success, user) {
+                    if (success) {
+                        return callback(data, user);
+                    } else {
+                        return callback();
+                    }
+                });
             } else {
                 return callback();
             }
@@ -244,6 +250,10 @@ angular.module('disczump.services', ['underscore'])
     function getActiveDiscList() {
         return publicActive ? pubDiscs : discs;
     }
+    
+    function isPublic() {
+        return publicActive;
+    }
 
     return {
         initialize: initialize,
@@ -255,12 +265,13 @@ angular.module('disczump.services', ['underscore'])
         getDisc: getDisc,
         getPublicDiscs: getPublicDiscs,
         setPublicState: setPublicState,
-        getActiveDiscList: getActiveDiscList
+        getActiveDiscList: getActiveDiscList,
+        isPublic: isPublic
     }
 }])
 
 .factory('SearchService', ['_', function(_) {
-    var searchProps = ['brand', 'name', 'type', 'color', 'material', 'tagList'];
+    var searchProps = ['brand', 'name', 'type', 'color', 'weight', 'material', 'tagList'];
     var lastQuery = '';
     
     function search(query, obj) {

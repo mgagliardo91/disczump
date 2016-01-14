@@ -68,16 +68,21 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.loading = true;
         if ($routeParams.userId) {
             DataService.getPublicDiscs($routeParams.userId, function(discs, account) {
-                DataService.setPublicState(true);
-                FilterService.clearFilters();
+                if (!DataService.isPublic()) {
+                    DataService.setPublicState(true);
+                    FilterService.clearFilters();
+                }
+                
                 $scope.discList = discs;
                 $scope.title = (account ? account.username + '\'s Discs' : 'Unknown');
                 $scope.loading = false;
             });
         }
         else {
-            DataService.setPublicState(false);
-            FilterService.clearFilters();
+            if (DataService.isPublic()) {
+                DataService.setPublicState(false);
+                FilterService.clearFilters();
+            }
             $scope.discList = DataService.discs;
             $scope.title = 'My Dashboard';
             $scope.loading = false;
@@ -120,6 +125,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('DiscController', ['$rootScope', '$scope', '$routeParams', '$window', '$location', 'DataService',
     function($rootScope, $scope, $routeParams, $window, $location, DataService) {
         $scope.disc = undefined;
+        $scope.user = undefined;
         $scope.footer = false;
         $scope.title = 'Loading...';
 
@@ -128,6 +134,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
 
         $scope.showImageList = function() {
+            if (!$scope.disc.imageList.length) return;
             $location.path('/disc/' + $scope.disc._id + '/images');
         }
 
@@ -143,12 +150,13 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
 
         $scope.loading = true;
-        DataService.getDisc($routeParams.discId, function(disc) {
+        DataService.getDisc($routeParams.discId, function(disc, user) {
             if (typeof disc === 'undefined') {
                 $location.path('/');
             }
             else {
                 $scope.disc = disc;
+                $scope.user = user;
                 $scope.title = $scope.disc.name;
             }
             $scope.loading = false;

@@ -20,9 +20,13 @@
         </div>
         <div class="app-content">
             <div class="scrollable-content" id="view-disc" ng-class="{'has-footer': footer}">
+                <div class="page-info" ng-show="!disc.visible">
+                    <span><i class="fa fa-eye-slash"></i></span> This disc can only be viewed by you.
+                </div>
                 <div class="disc-image" ng-show="$def(disc)">
-                    <div>
-                        <img ng-src="{{getPrimaryImage()}}" ng-click="showImageList()">
+                    <div ng-click="showImageList()">
+                        <span class="disc-icon" ng-show="disc.imageList.length"><i class="fa fa-photo"></i></span>
+                        <img ng-src="{{getPrimaryImage()}}">
                     </div>
                 </div>
                 <table class="disc-info-table" ng-show="$def(disc)">
@@ -34,46 +38,54 @@
                         <td>Name:</td>
                         <td>{{disc.name}}</td>
                     </tr>
-                    <tr>
+                    <tr ng-show="$def(user)">
+                        <td>Owner:</td>
+                        <td>{{user.username}}</td>
+                    </tr>
+                    <tr ng-show="disc.type">
                         <td>Type:</td>
                         <td>{{disc.type}}</td>
                     </tr>
-                    <tr>
+                    <tr ng-show="disc.material">
                         <td>Material:</td>
                         <td>{{disc.material}}</td>
                     </tr>
-                    <tr>
+                    <tr ng-show="disc.color">
                         <td>Color:</td>
                         <td>{{disc.color}}</td>
                     </tr>
-                    <tr>
+                    <tr ng-show="disc.weight">
                         <td>Weight:</td>
-                        <td>{{disc.weight}}<span ng-show="disc.weight">g</span></td>
+                        <td>{{disc.weight}}g</td>
                     </tr>
-                    <tr>
+                    <tr ng-show="disc.condition">
                         <td>Condition:</td>
-                        <td>{{disc.condition}}<span ng-show="disc.weight">/10</span></td>
+                        <td>{{disc.condition}}/10</td>
                     </tr>
                 </table>
                 <table class="disc-stats" ng-show="$def(disc)">
                     <tr>
                         <td class="disc-flight-number">
                             <p class="fn-title">Speed</p>
-                            <p class="fn-value">{{disc.speed}}</p>
+                            <p class="fn-value" ng-show="disc.speed">{{disc.speed}}</p>
+                            <p class="fn-value" ng-show="!disc.speed">--</p>
                         </td>
                         <td class="disc-flight-number">
                             <p class="fn-title">Glide</p>
-                            <p class="fn-value">{{disc.glide}}</p>
+                            <p class="fn-value" ng-show="disc.glide">{{disc.glide}}</p>
+                            <p class="fn-value" ng-show="!disc.glide">--</p>
                         </td>
                     </tr>
                     <tr>
                         <td class="disc-flight-number">
                             <p class="fn-title">Turn</p>
-                            <p class="fn-value">{{disc.turn}}</p>
+                            <p class="fn-value" ng-show="disc.turn">{{disc.turn}}</p>
+                            <p class="fn-value" ng-show="!disc.turn">--</p>
                         </td>
                         <td class="disc-flight-number">
                             <p class="fn-title">Fade</p>
-                            <p class="fn-value">{{disc.fade}}</p>
+                            <p class="fn-value" ng-show="disc.fade">{{disc.fade}}</p>
+                            <p class="fn-value" ng-show="!disc.fade">--</p>
                         </td>
                     </tr>
                 </table>
