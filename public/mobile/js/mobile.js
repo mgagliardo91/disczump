@@ -17,6 +17,10 @@ app.config(['$routeProvider', '$httpProvider', function($routeProvider, $httpPro
         templateUrl: '/static/mobile/templates/dashboard.html',
         controller: 'DashboardController',
         reloadOnSearch: false
+    }).when('/disc/create', {
+        templateUrl: '/static/mobile/templates/createDisc.html', 
+        controller: 'CreateDiscController',
+        reloadOnSearch: false
     }).when('/disc/:discId', {
         templateUrl: '/static/mobile/templates/disc.html', 
         controller: 'DiscController',

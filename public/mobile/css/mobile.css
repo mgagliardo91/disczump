@@ -126,15 +126,46 @@ ul.item-list {
     line-height: 30px;
 }
 
+.dz-switch {
+    line-height: 34px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.dz-switch .switch {
+    float: right;
+}
+
 .header-row {
     padding: 5px;
+    margin-bottom: 10px;
     text-align: left;
     font-size: 1em;
     background-color: #eee;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    font-weight: bold;
 }
 
-.item-row {
-    padding: 10px 20px;
+.item-row, .dual-item-row {
+    padding: 0px 20px 10px 20px;
+}
+
+.item-row:first-child, .dual-item-row:first-child {
+    padding-top: 10px;
+}
+
+.dual-item-row .dual-item {
+    float: right;
+    width: 45%;
+}
+
+.dual-item-row .dual-item:first-child {
+    float: left;
+}
+
+.dual-item-row .btn-block+.btn-block {
+    margin-top: 0px;
 }
 
 .item-row.bordered {
@@ -183,6 +214,10 @@ ul.item-list {
     font-weight: bold;
 }
 
+.has-footer {
+    padding-bottom: 50px;
+}
+
 .footer-btn {
     position: fixed;
     bottom: 0;
@@ -194,6 +229,8 @@ ul.item-list {
 .footer-btn > button {
     width: 100%;
     height: 40px;
+    font-size: 1.3em;
+    font-weight: bold;
 }
 
 .page-info {
@@ -324,10 +361,6 @@ ul.item-list {
 
 #view-disc {
     font-family: 'Helvetica Neue', Roboto, 'Segoe UI', sans-serif;
-}
-
-#view-disc.has-footer {
-    padding-bottom: 50px;
 }
 
 #view-disc .disc-title {
@@ -546,4 +579,51 @@ ul.item-list {
 .sort-dual-select {
     line-height: 40px;
     padding: 10px 20px;
+}
+
+
+/*-----------------------------------*/
+/*-------- Create Disc Page ---------*/
+/*-----------------------------------*/
+#tag-option-list, #tag-list {
+    padding: 0px;
+    margin: 0px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: auto;
+    max-height: 100px;
+    background-color: #F9F9F9;
+}
+
+#tag-option-list .tag-option,
+#tag-list .tag-item {
+    margin: 3px;
+    display: inline-block;
+    padding-left: 5px;
+    padding-right: 5px;
+    font-size: 0.9em;
+    text-decoration: underline;
+}
+
+#tag-list {
+    max-height: 150px;
+    height: 150px;
+    background-color: #fff;
+}
+
+#tag-list .tag-item {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-size: 0.8em;
+    text-decoration: none;
+    background-color: #BEBEBE;
+    border-radius: 2px;
+    font-weight: bold;
+    letter-spacing: .1em;
+    font-family: "Lucida Console", "Lucida Sans Typewriter", Monaco, "Bitstream Vera Sans Mono", monospace;
+}
+
+#tag-list .tag-item.active {
+    color: #fff;
+    background-color: #008eed;
 }

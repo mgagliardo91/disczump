@@ -316,6 +316,68 @@ angular.module('disczump.services', ['underscore'])
     }
 }])
 
+.factory('AutoFillService', ['_', 'APIService', 'DataService', function(_, APIService, DataService) {
+    var templates = [];
+    var initialized = false;
+    
+    function initialize(callback) {
+        if (initialized) return callback();
+        
+        APIService.GET('/templates', function(success, data) {
+            if (success) {
+                templates = data;
+            }
+            
+            initialized = true;
+            callback();
+        })
+    }
+    
+    function getOptions(prop, val) {
+        var queryArr = templates.concat(DataService.discs);
+        var properties = getProperties(queryArr, prop);
+        
+        var results = _.filter(properties, function(item) {
+            var curItem;
+            
+    		if (typeof item === 'undefined') {
+    			return false;
+    		}
+    		
+    		if (_.isNumber(item)) {
+    			curItem = String(item);
+    		} else {
+    			curItem = item;
+    		}
+    		return curItem.toLowerCase().indexOf(val.toLowerCase()) >= 0;	
+    	});
+    	
+    	return _.sortBy(results, function(item) {
+    		return item.toLowerCase();
+    	});
+    }
+    
+    function getProperties(items, property) {
+    	var list = [];
+    	if (items.length && _.isArray(items[0][property])) {
+    		var arrList = _.pluck(items, property);
+    		_.each(arrList, function(arr) { 
+    			list = list.concat(arr);	
+    		});
+    	} else {
+    		list = _.pluck(items, property);
+    	}
+    	
+    	return _.uniq(list);
+    }
+    
+    
+    return {
+        initialize: initialize,
+        getOptions: getOptions
+    }
+}])
+
 .factory('FilterService', ['$window', '_', 'DataService', function($window, _, DataService) {
     var filterProps = [{property: 'brand', text: 'Brand', filters: []},
                         {property: 'name', text: 'Name', filters: []},

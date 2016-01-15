@@ -3,6 +3,26 @@ var dzID = '1433417853616595';
 
 angular.module('disczump.controllers', ['disczump.services'])
 
+// Directives
+
+// .directive('dropzone', function() {
+//     return function(scope, element, attrs) {
+//         var config, dropzone;
+
+//         config = scope[attrs.dropzone];
+
+//         // create a Dropzone for the element with the given options
+//         dropzone = new Dropzone(element[0], config.options);
+
+//         // bind the given event handlers
+//         angular.forEach(config.eventHandlers, function(handler, event) {
+//             dropzone.on(event, handler);
+//         });
+//     };
+// })
+
+// Controllers
+
 .controller('MainController', ['$rootScope', '$scope', '$location', '$window', 'DataService',
     function($rootScope, $scope, $location, $window, DataService) {
         $rootScope.init = function() {
@@ -37,7 +57,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.loadSize = 20;
         $scope.title = 'Loading...';
 
-        $scope.$on("$destroy", function(){
+        $scope.$on("$destroy", function() {
             SearchService.lastQuery = $scope.query.valueOf();
         });
 
@@ -72,7 +92,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                     DataService.setPublicState(true);
                     FilterService.clearFilters();
                 }
-                
+
                 $scope.discList = discs;
                 $scope.title = (account ? account.username + '\'s Discs' : 'Unknown');
                 $scope.loading = false;
@@ -121,6 +141,31 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
     };
 }])
+
+.controller('CreateDiscController', ['$rootScope', '$scope', '$routeParams', '$window', '$location', 'DataService',
+    function($rootScope, $scope, $routeParams, $window, $location, DataService) {
+        $scope.loading = false;
+        $scope.disc = {
+            visible: true
+        };
+        
+        $scope.forms = {};
+        
+        $scope.settings = {
+            page: 0
+        }
+
+        $scope.dropzoneConfig = {
+            'options': { // passed into the Dropzone constructor
+                'url': 'upload.php'
+            },
+            'eventHandlers': {
+                'sending': function(file, xhr, formData) {},
+                'success': function(file, response) {}
+            }
+        };
+    }
+])
 
 .controller('DiscController', ['$rootScope', '$scope', '$routeParams', '$window', '$location', 'DataService',
     function($rootScope, $scope, $routeParams, $window, $location, DataService) {
