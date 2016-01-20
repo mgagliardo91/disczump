@@ -25,8 +25,15 @@ angular.module('disczump.controllers', ['disczump.services'])
 
 .controller('MainController', ['$rootScope', '$scope', '$location', '$window', 'DataService',
     function($rootScope, $scope, $location, $window, DataService) {
+        
         $rootScope.init = function() {
-            DataService.initialize(function() {
+            DataService.initialize(function(isLoggedIn) {
+                $rootScope.isLoggedIn = isLoggedIn;
+                
+                if (!$rootScope.isLoggedIn) {
+                    $window.location.href = '/login';
+                }
+                
                 console.log('Initialized');
             });
         }
@@ -53,7 +60,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.userPrefs = DataService.userPrefs;
         $scope.filterDisc = FilterService.filterObj;
         $scope.query = SearchService.lastQuery.valueOf();
-        $scope.searchActive = SearchService.lastQuery.valueOf().length > 0;
+        $scope.searchFocus = $scope.searchActive = SearchService.lastQuery.valueOf().length > 0;
         $scope.loadSize = 20;
         $scope.title = 'Loading...';
 
@@ -135,24 +142,97 @@ angular.module('disczump.controllers', ['disczump.services'])
                 if (value === true) {
                     $timeout(function() {
                         element[0].focus();
-                    }, 200);
+                        scope.trigger = false;
+                    }, 300);
                 }
             });
         }
     };
 }])
 
-.controller('CreateDiscController', ['$rootScope', '$scope', '$routeParams', '$window', '$location', 'DataService',
-    function($rootScope, $scope, $routeParams, $window, $location, DataService) {
-        $scope.loading = false;
+.directive('dzFill', ['$compile', 'AutoFillService', function($compile, AutoFillService){
+    return {
+        restrict: 'A',
+        scope : {
+            ngModel: "="
+        },
+        replace: false,
+        link: function(scope, element, attrs) {
+            scope.fill = {
+                results: [],
+                interact: false,
+                selected: false,
+                onSelect: false
+            }
+            
+            var input = angular.element(element[0]);
+            var resultList = angular.element('<ul ng-show="fill.results.length && fill.interact && !fill.selected" class="auto-fill-list"><li ng-repeat="result in fill.results | limitTo:20" ng-click="setValue(result)">{{result}}</li></ul>');
+            
+            
+            scope.setValue = function(result) {
+                scope.fill.selected = true;
+                scope.fill.onSelect = true;
+                element[0].focus();
+                scope.ngModel = result;
+            }
+            
+            scope.$watch('ngModel', function(newValue, oldValue) {
+                if (oldValue == newValue) return;
+                
+                if (scope.fill.onSelect) {
+                    scope.fill.onSelect = false;
+                    return;
+                }
+                
+                scope.fill.selected = false;
+                scope.fill.results = AutoFillService.getOptions(attrs.dzFill, newValue);
+            });
+            
+            
+            input.bind('focus', function() {
+                scope.fill.interact = true;
+            });
+            
+            input.bind('blur', function() {
+                scope.fill.interact = false;
+            });
+            
+            input.after(resultList);
+            $compile(resultList)(scope);
+        }
+    }
+}])
+
+.directive('ngEnter', function () {
+    return function (scope, element, attrs) {
+        element.bind("keydown keypress", function (event) {
+            if(event.which === 13) {
+                scope.$apply(attrs.ngEnter);
+                event.preventDefault();
+            }
+        });
+    };
+})
+
+.controller('ModifyDiscController', ['$scope', '$window', '$location', '$routeParams', '_', 'AutoFillService', 'DataService', 
+    function($scope, $location, $window, $routeParams, _, AutoFillService, DataService) {
+        $scope.imgSize = Math.floor(($window.innerWidth - 48) / 4);    //Subtracted 48 for 20px padding on each side of screen and 1px padding on each side of img.
+        console.log($scope.imgSize);
+        $scope.loading = true;
         $scope.disc = {
-            visible: true
+            visible: true,
+            tagList: []
         };
-        
+        $scope.temp = {
+            tag: '',
+            tagOptions: [],
+            focus: false,
+        };
         $scope.forms = {};
         
         $scope.settings = {
-            page: 0
+            page: 2,
+            editMode: typeof $routeParams.discId !== 'undefined'
         }
 
         $scope.dropzoneConfig = {
@@ -164,6 +244,73 @@ angular.module('disczump.controllers', ['disczump.services'])
                 'success': function(file, response) {}
             }
         };
+        
+        $scope.$watch('temp.tag', function(newValue, oldValue) {
+            if (!$scope.temp.tag.length) {
+                $scope.temp.tagOptions = [];
+                return;
+            }
+            
+            $scope.temp.tagOptions = AutoFillService.getOptions('tagList', newValue);
+        });
+        
+        $scope.appendTag = function(tag, reset) {
+            if (!tag.length) return;
+            
+            if (!_.contains($scope.disc.tagList, tag)) {
+                $scope.disc.tagList.push(tag);
+            }
+            
+            if (reset) $scope.temp.tag = '';
+            
+            $scope.temp.focus = true;
+        }
+        
+        $scope.toggleTag = function(tag) {
+            if (tag == $scope.temp.activeTag) {
+                $scope.temp.activeTag = undefined;
+            } else {
+                $scope.temp.activeTag = tag;
+            }
+        }
+        
+        $scope.resetDisc = function() {
+            $scope.disc = {
+                visible: true,
+                tagList: []
+            };
+            $scope.settings.page = 0;
+        }
+        
+        $scope.removeTag = function() {
+            if ($scope.temp.activeTag) {
+                $scope.disc.tagList = _.without($scope.disc.tagList, $scope.temp.activeTag);
+                $scope.temp.activeTag = undefined;
+            }
+        }
+        
+        $scope.toggleImage = function(id) {
+            if (id == $scope.temp.activeImage) {
+                $scope.temp.activeImage = undefined;
+            } else {
+                $scope.temp.activeImage = id;
+            }
+        }
+        
+        AutoFillService.initialize(function() {
+            if ($scope.settings.editMode) {
+                DataService.getDisc($routeParams.discId, function(disc, user) {
+                    if (typeof disc === 'undefined') {
+                        $location.path('/');
+                    } else {
+                        $scope.disc = disc;
+                    }
+                    $scope.loading = false;
+                });
+            } else {
+                $scope.loading = false;  
+            }
+        });
     }
 ])
 
@@ -171,7 +318,7 @@ angular.module('disczump.controllers', ['disczump.services'])
     function($rootScope, $scope, $routeParams, $window, $location, DataService) {
         $scope.disc = undefined;
         $scope.user = undefined;
-        $scope.footer = false;
+        $scope.dropdown = false;
         $scope.title = 'Loading...';
 
         $scope.getPrimaryImage = function() {
@@ -214,7 +361,7 @@ angular.module('disczump.controllers', ['disczump.services'])
     function($location, $scope, $routeParams, $window, DataService) {
         $scope.disc = undefined;
         $scope.title = 'Loading...';
-        $scope.windowWidth = $window.innerWidth - 20
+        $scope.windowWidth = $window.innerWidth - 20;
 
         $scope.showImage = function(fileId) {
             $window.open(siteUrl + '/files/' + fileId);

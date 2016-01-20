@@ -4,12 +4,12 @@
             {{title}}
         </div>
         <div class="btn-group pull-left">
-            <div ng-click="goBack()" class="btn">
-                <i class="fa fa-arrow-left fa-lg"></i>
+            <div ng-click="nav('/#')" class="btn">
+                <i class="fa fa-home fa-lg"></i>
             </div>
         </div>
         <div class="btn-group pull-right" ui-yield-to="navbarAction">
-            <div class="btn" ng-click="footer = !footer">
+            <div class="btn" ng-click="dropdown = !dropdown">
                 <i class="fa fa-share-alt fa-lg"></i>
             </div>
         </div>
@@ -93,12 +93,14 @@
         </div>
     </div>
 </div>
-<div id="share-container" ng-show="footer" class="fade">
-    <a class="share-item" ng-href="">
-        <span><i class="fa fa-link"></i></span>
+<div id="options-container" ng-show="dropdown" class="fade">
+    <a class="option-item" ng-href="#/disc/{{disc._id}}/edit">
+        <span><i class="fa fa-pencil fa-lg"></i>Edit Disc</span>
     </a>
-    <a class="share-item facebook" ng-href="{{shareLink()}}">
-        <span><i class="fa fa-facebook-square"></i></span>
+    <a class="option-item" ng-href="">
+        <span><i class="fa fa-link fa-lg"></i>Share Public Link</span>
     </a>
-    <div class="clearfix"></div>
+    <a class="option-item facebook" ng-href="{{shareLink()}}">
+        <span><i class="fa fa-facebook-square fa-lg"></i>Share to Facebook</span>
+    </a>
 </div>

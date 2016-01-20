@@ -1,7 +1,8 @@
 <div class="scrollable">
     <div class="navbar navbar-app navbar-absolute-top">
         <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
-            Create Disc
+            <span ng-show="!settings.editMode">Create Disc</span>
+            <span ng-show="settings.editMode">Edit Disc</span>
         </div>
         <div class="btn-group pull-left">
             <div ng-click="goBack()" class="btn">
@@ -9,7 +10,7 @@
             </div>
         </div>
         <div class="btn-group pull-right" ui-yield-to="navbarAction">
-            <div class="btn" ng-click="">
+            <div class="btn" ng-click="resetDisc()">
                 <i class="fa fa-eraser fa-lg"></i>
             </div>
         </div>
@@ -19,14 +20,14 @@
             <i class="fa fa-spinner fa-spin loading-spinner"></i>
         </div>
         <div class="app-content">
-            <div class="scrollable-content" id="create-disc-pg1" ng-show="settings.page==0">
+            <div class="scrollable-content" id="modify-disc-pg1" ng-show="settings.page==0">
                 <ng-form name="forms.discData" novalidate >
                     <div class="header-row">General</div>
                     <div class="item-row">
-                        <input ng-model="disc.brand" ng-required="true" type="text" class="form-control" placeholder="Brand (ex. Innova)"/>
+                        <input dz-fill="brand" ng-model="disc.brand" ng-required="true" type="text" class="form-control" placeholder="Brand (ex. Innova)"/>
                     </div>
                     <div class="item-row">
-                        <input ng-model="disc.name" ng-required="true" type="text" class="form-control" placeholder="Name (ex. Destroyer)"/>
+                        <input dz-fill="name" ng-model="disc.name" ng-required="true" type="text" class="form-control" placeholder="Name (ex. Destroyer)"/>
                     </div>
                     <div ng-model="disc.type" class="item-row">
                         <select class="form-control">
@@ -38,31 +39,31 @@
                         </select>
                     </div>
                     <div class="item-row">
-                        <input ng-model="disc.material" type="text" class="form-control" placeholder="Material (ex. Champion)"/>
+                        <input dz-fill="material" ng-model="disc.material" type="text" class="form-control" placeholder="Material (ex. Champion)"/>
                     </div>
                     <div class="item-row">
-                        <input ng-model="disc.weight" type="number" ng-pattern="/^[0-9]{1,3}$/" class="form-control" placeholder="Weight (ex. 172)"/>
+                        <input ng-model="disc.weight" type="text" ng-pattern="/^[0-9]{1,3}$/" class="form-control" placeholder="Weight (ex. 172)"/>
                     </div>
-                    <div ng-model="disc.color" class="item-row">
-                        <input type="text" class="form-control" placeholder="Color (ex. Orange)"/>
+                    <div class="item-row">
+                        <input dz-fill="color" ng-model="disc.color" type="text" class="form-control" placeholder="Color (ex. Orange)"/>
                     </div>
                     <div style="height: 10px"></div>
                     <div class="header-row">Advanced</div>
                     <div class="dual-item-row">
-                        <input ng-model="disc.speed" type="number" ng-min="-5" ng-max="12" ng-pattern="/^-?[0-9]{1,2}$/" class="dual-item form-control" placeholder="Speed [-5 - 12]"/>
-                        <input ng-model="disc.glide" type="number" ng-min="-5" ng-max="12" ng-pattern="/^-?[0-9]{1,2}$/" class="dual-item form-control" placeholder="Glide [-5 - 12]"/>
+                        <input ng-model="disc.speed" type="text" ng-pattern="/^[0-9]{1,2}$/" class="dual-item form-control" placeholder="Speed [1 - 15]"/>
+                        <input ng-model="disc.glide" type="text" ng-pattern="/^-?[0-9]{1,2}$/" class="dual-item form-control" placeholder="Glide [1 - 7]"/>
                         <div class="clearfix"></div>
                     </div>
                     <div class="dual-item-row">
-                        <input ng-model="disc.turn" type="number" ng-min="-5" ng-max="12" ng-pattern="/^-?[0-9]{1,2}$/" class="dual-item form-control" placeholder="Turn [-5 - 12]"/>
-                        <input ng-model="disc.fade" type="number" ng-min="-5" ng-max="12" ng-pattern="/^-?[0-9]{1,2}$/"" class="dual-item form-control" placeholder="Fade [-5 - 12]"/>
+                        <input ng-model="disc.turn" type="text" ng-pattern="/^-?[0-9]{1,2}$/" class="dual-item form-control" placeholder="Turn [-5 - 1]"/>
+                        <input ng-model="disc.fade" type="text" ng-pattern="/^-?[0-9]{1,2}$/" class="dual-item form-control" placeholder="Fade [0 - 6]"/>
                         <div class="clearfix"></div>
                     </div>
                     <div class="item-row">
                         <textarea ng-model="disc.notes" class="form-control" rows="3" placeholder="ex. Found on hole 7 at..."></textarea>
                     </div>
                     <div class="item-row">
-                        <input ng-model="disc.condition" type="number" ng-min="1" ng-max="10" ng-pattern="/^[0-9]{1,2}$/" class="form-control" placeholder="Condition [1 - 10]"/>
+                        <input ng-model="disc.condition" type="text" ng-min="1" ng-max="10" ng-pattern="/^[0-9]{1,2}$/" class="form-control" placeholder="Condition [1 - 10]"/>
                     </div>
                     <div class="item-row">
                         <div class="dz-switch">
@@ -76,30 +77,22 @@
                     </div>
                 </ng-form>
             </div>
-            <div class="scrollable-content" id="create-disc-pg1" ng-show="settings.page==1">
+            <div class="scrollable-content" id="modify-disc-pg1" ng-show="settings.page==1">
                 <div style="height: 20px"></div>
                 <div class="item-row">
                     <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Add Tag (ex. Destroyer Collection)"/>
-                        <div class="input-group-addon"><span><i class="fa fa-lg fa-angle-double-down"></i></span></div>
+                        <input focus-on="temp.focus" ng-enter="appendTag(temp.tag, true)" ng-model="temp.tag" type="text" class="form-control" placeholder="Add Tag (ex. Destroyer Collection)"/>
+                        <div class="input-group-addon"><span ng-click="appendTag(temp.tag, true)"><i class="fa fa-lg fa-angle-double-down"></i></span></div>
                     </div>
                 </div>
-                <div class="item-row">
+                <div class="item-row" ng-show="temp.tagOptions.length">
                     <div id="tag-option-list">
-                        <div class="tag-option">Tag1</div>
-                        <div class="tag-option">Tag Option</div>
-                        <div class="tag-option">Long Tag Option</div>
-                        <div class="tag-option">Long Tag Option</div>
-                        <div class="tag-option">Long Tag Option</div>
-                        <div class="tag-option">Long Tag Option</div>
-                        <div class="tag-option">Tag1</div>
+                        <div class="tag-option" ng-repeat="tag in temp.tagOptions" ng-click="appendTag(tag)">{{tag}}</div>
                     </div>
                 </div>
                 <div class="item-row">
                     <div id="tag-list">
-                        <div class="tag-item">Tag1</div>
-                        <div class="tag-item active">Tag Option</div>
-                        <div class="tag-item">Tag Option</div>
+                        <div ng-repeat="tag in disc.tagList" class="tag-item" ng-click="toggleTag(tag)" ng-class="{active: temp.activeTag == tag}">{{tag}}</div>
                     </div>
                 </div>
                 <div style="height: 20px"></div>
@@ -109,16 +102,33 @@
                     <div class="clearfix"></div>
                 </div>
             </div>
-            <div class="scrollable-content" id="create-disc-pg2" ng-show="settings.page==2">
+            <div class="scrollable-content" id="modify-disc-pg2" ng-show="settings.page==2">
                 <div style="height: 20px"></div>
-                
+                <div class="item-row">
+                    <button type="button" id="add-image" class="btn btn-block"><span><i class="fa fa-camera fa-2x"></i></span></button>
+                </div>
+                <div class="item-row">
+                    <div id="image-list">
+                        <div ng-repeat="image in disc.imageList" class="image-item" style="width:{{imgSize}}px;height:{{imgSize}}px;" ng-click="toggleImage(image._id)" ng-class="{active: temp.activeImage == image._id}">
+                            <img ng-src="/files/{{image.thumbnailId}}" src="/files/{{image.thumbnailId}}" style="width:{{imgSize}}px;height:{{imgSize}}px;">
+                        </div>
+                    </div>
+                </div>
                 <div style="height: 20px"></div>
                 <div class="dual-item-row">
                     <button type="button" class="dual-item btn btn-block btn-primary" ng-click="settings.page=1">Back</button>
                     <button type="button" class="dual-item btn btn-block btn-primary" ng-click="done()">Create</button>
                     <div class="clearfix"></div>
                 </div>
+                <div class="footer-btn footer-dz" ng-show="settings.page==2 && temp.activeImage">
+                    <button type="button" class="dual-btn" ng-click="makePrimary()"><span><i class="fa fa-star fa-lg"></i></span></button>
+                    <button type="button" class="dual-btn" ng-click="removeImage()"><span><i class="fa fa-trash fa-lg"></i></span></button>
+                    <div class="clearfix"></div>
+                </div>
             </div>
         </div>
     </div>
+</div>
+<div class="footer-btn footer-dz" ng-show="settings.page==1 && temp.activeTag">
+    <button type="button" ng-click="removeTag()">Remove Tag</button>
 </div>

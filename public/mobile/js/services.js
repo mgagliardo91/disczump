@@ -113,6 +113,7 @@ angular.module('disczump.services', ['underscore'])
     var pubDiscs = undefined;
     var pubAccount = undefined;
     var publicActive = false;
+    var isLoggedIn = false;
 
     function initialize(callback) {
         var tasks = [];
@@ -122,6 +123,7 @@ angular.module('disczump.services', ['underscore'])
         APIService.Get('/account', function(success, data) {
             if (success) {
                 angular.copy(data, account);
+                isLoggedIn = true;
             } else {
                 console.log(data);
             }
@@ -152,7 +154,7 @@ angular.module('disczump.services', ['underscore'])
         });
 
         $q.all(tasks).then(function() {
-            if (callback) callback();
+            if (callback) callback(isLoggedIn);
         });
     }
 
@@ -254,6 +256,10 @@ angular.module('disczump.services', ['underscore'])
     function isPublic() {
         return publicActive;
     }
+    
+    function isAuthenticated() {
+        return isLoggedIn;
+    }
 
     return {
         initialize: initialize,
@@ -266,7 +272,8 @@ angular.module('disczump.services', ['underscore'])
         getPublicDiscs: getPublicDiscs,
         setPublicState: setPublicState,
         getActiveDiscList: getActiveDiscList,
-        isPublic: isPublic
+        isPublic: isPublic,
+        isAuthenticated: isAuthenticated
     }
 }])
 
@@ -323,7 +330,7 @@ angular.module('disczump.services', ['underscore'])
     function initialize(callback) {
         if (initialized) return callback();
         
-        APIService.GET('/templates', function(success, data) {
+        APIService.Get('/templates', function(success, data) {
             if (success) {
                 templates = data;
             }
@@ -334,7 +341,11 @@ angular.module('disczump.services', ['underscore'])
     }
     
     function getOptions(prop, val) {
-        var queryArr = templates.concat(DataService.discs);
+        if (typeof val === 'undefined') {
+            return [];
+        }
+        
+        var queryArr = prop == 'tagList' ? DataService.discs : templates.concat(DataService.discs);
         var properties = getProperties(queryArr, prop);
         
         var results = _.filter(properties, function(item) {

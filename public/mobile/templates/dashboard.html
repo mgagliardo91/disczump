@@ -9,7 +9,7 @@
             </div>
         </div>
         <div class="btn-group pull-right" ui-yield-to="navbarAction">
-            <div class="btn" ng-click="searchActive = true">
+            <div class="btn" ng-click="searchActive = true; searchFocus = true">
                 <i class="fa fa-search fa-lg"></i>
             </div>
         </div>
@@ -23,7 +23,7 @@
                 <i class="fa fa-close fa-lg"></i>
             </div>
             <div class="search-area">
-                <input placeholder="Search name, brand, color..." debounce="300" type="text" ng-model="query" focus-on="searchActive" />
+                <input placeholder="Search name, brand, color..." debounce="300" type="text" ng-model="query" focus-on="searchFocus" />
             </div>
         </div>
     </div>

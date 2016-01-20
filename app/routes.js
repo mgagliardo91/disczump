@@ -245,6 +245,20 @@ module.exports = function(app, passport, gridFs) {
                    });
                 }
                 
+                if (req.device.isMobile) {
+                    return res.render('mobile/discview', {
+                        layout: 'mobile',
+                        isRelease: localConfig.release,
+                        disc: disc,
+                        discStr: disc.toDescString(),
+                        user : req.user,
+                        owner : owner,
+                        userString : userString,
+                        serverURL : localConfig.serverURL,
+                        primaryImage: disc.getImage()
+                    });
+                }
+                
                 return res.render('discview', {
                     isRelease: localConfig.release,
                     disc: disc,

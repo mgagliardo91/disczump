@@ -40,6 +40,7 @@
 
 #main-body .navbar, #main-body .navbar .btn-group i {
     color: #EEEEEE;
+    border-width: 0px;
 }
 
 /* Animate */
@@ -231,6 +232,11 @@ ul.item-list {
     height: 40px;
     font-size: 1.3em;
     font-weight: bold;
+}
+
+.footer-btn.footer-dz > button {
+    background-color: #008EED;
+    color: white;
 }
 
 .page-info {
@@ -482,38 +488,39 @@ ul.item-list {
     vertical-align: middle;
 }
 
-#share-container {
+#options-container {
     position: fixed;
-    bottom: 0;
-    width: 100%;
+    top: 50px;
+    right: 0px;
+    width: 225px;
     z-index: 100;
-    border-top: 1px solid #777777;
+    border-bottom: 1px solid #777777;
+    border-left: 1px solid #777777;
+    border-right: 1px solid #777777;
+    background-color: #EEEEEE;
 }
 
-#share-container .share-item {
-    float: left;
-    width: 50%;
-    height: 50px;
-    text-align: center;
-    line-height: 50px;
-    font-size: 30px;
-    background-color: #eee;
-    color: #000;
+#options-container .option-item {
+    display: block;
+    width: 100%;
+    line-height: 40px;
+    color: #4A4A4A;
+    border-bottom: 1px solid #777777;
+    padding: 0px 20px;
+    font-size: 16px;
 }
 
-#share-container .share-item:hover {
-    background-color: #DBDBDB;
+#options-container .option-item.facebook i {
+    color: #3b5999;
 }
 
-#share-container .share-item.facebook {
-    background-color: #3b5999;
-    color: white;
+#options-container .option-item:last-child {
+    border-bottom: 0px;
 }
 
-#share-container .share-item.facebook:hover {
-    background-color: #324B81;
+#options-container .option-item i {
+    padding-right: 10px;
 }
-
 
 /*-----------------------------------*/
 /*----------- Filter Pages ----------*/
@@ -626,4 +633,49 @@ ul.item-list {
 #tag-list .tag-item.active {
     color: #fff;
     background-color: #008eed;
+}
+
+.auto-fill-list {
+    list-style: none;
+    padding: 0px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: auto;
+    max-height: 100px;
+    margin-bottom: 0px;
+    background-color: #F9F9F9;
+}
+
+.auto-fill-list li {
+    padding: 2px 10px;
+    text-decoration: underline;
+}
+
+#add-image {
+    background-color: #BEBEBE;
+    color: #4A4A4A;
+}
+
+#image-list .image-item {
+    float: left;
+    margin: 1px;
+}
+
+#image-list .image-item.active {
+    /*add border*/
+}
+
+
+#modify-disc-pg2 .footer-btn.footer-dz > button {
+    background-color: #BEBEBE;
+}
+
+#modify-disc-pg2 .footer-dz .dual-btn {
+    width: 50%;
+    float: left;
+}
+
+#modify-disc-pg2 .footer-dz .dual-btn i.fa-star {
+    color: #ffe800;
 }

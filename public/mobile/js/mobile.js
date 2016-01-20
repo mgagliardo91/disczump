@@ -18,12 +18,16 @@ app.config(['$routeProvider', '$httpProvider', function($routeProvider, $httpPro
         controller: 'DashboardController',
         reloadOnSearch: false
     }).when('/disc/create', {
-        templateUrl: '/static/mobile/templates/createDisc.html', 
-        controller: 'CreateDiscController',
+        templateUrl: '/static/mobile/templates/modifyDisc.html', 
+        controller: 'ModifyDiscController',
         reloadOnSearch: false
     }).when('/disc/:discId', {
         templateUrl: '/static/mobile/templates/disc.html', 
         controller: 'DiscController',
+        reloadOnSearch: false
+    }).when('/disc/:discId/edit', {
+        templateUrl: '/static/mobile/templates/modifyDisc.html', 
+        controller: 'ModifyDiscController',
         reloadOnSearch: false
     }).when('/disc/:discId/images', {
         templateUrl: '/static/mobile/templates/discImages.html', 
