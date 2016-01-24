@@ -312,6 +312,9 @@
             thumbnailElement = _ref[_i];
             thumbnailElement.alt = file.name;
             thumbnailElement.src = dataUrl;
+            thumbnailElement.onload = function() {
+              file.previewElement.classList.remove("dz-thumbnail-loading");
+            }
           }
           return setTimeout(((function(_this) {
             return function() {
@@ -406,6 +409,7 @@
     function Dropzone(element, options) {
       var elementOptions, fallback, _ref;
       this.element = element;
+      this.trigInput = undefined;
       this.version = Dropzone.version;
       this.defaultOptions.previewTemplate = this.defaultOptions.previewTemplate.replace(/\n*/g, "");
       this.clickableElements = [];
@@ -554,6 +558,7 @@
             _this.hiddenFileInput.style.height = "0";
             _this.hiddenFileInput.style.width = "0";
             document.body.appendChild(_this.hiddenFileInput);
+            this.trigInput = _this.hiddenFileInput;
             return _this.hiddenFileInput.addEventListener("change", function() {
               var file, files, _i, _len;
               files = _this.hiddenFileInput.files;
@@ -659,6 +664,13 @@
             events: {
               "click": function(evt) {
                 if ((clickableElement !== _this.element) || (evt.target === _this.element || Dropzone.elementInside(evt.target, _this.element.querySelector(".dz-message")))) {
+                  evt.preventDefault();
+                  return _this.hiddenFileInput.click();
+                }
+              },
+                "touchend": function(evt) {
+                if ((clickableElement !== _this.element) || (evt.target === _this.element || Dropzone.elementInside(evt.target, _this.element.querySelector(".dz-message")))) {
+                  evt.preventDefault();
                   return _this.hiddenFileInput.click();
                 }
               }
@@ -668,6 +680,10 @@
       })(this));
       this.enable();
       return this.options.init.call(this);
+    };
+    
+    Dropzone.prototype.progTrigger = function() {
+      return this.trigInput.click();
     };
 
     Dropzone.prototype.destroy = function() {
@@ -954,7 +970,6 @@
       this.files.push(file);
       file.status = Dropzone.ADDED;
       this.emit("addedfile", file);
-      this._enqueueThumbnail(file);
       return this.accept(file, (function(_this) {
         return function(error) {
           if (error) {
@@ -962,6 +977,7 @@
             _this._errorProcessing([file], error);
           } else {
             file.accepted = true;
+            _this._enqueueThumbnail(file);
             if (_this.options.autoQueue) {
               _this.enqueueFile(file);
             }
@@ -1052,6 +1068,7 @@
     Dropzone.prototype.createThumbnail = function(file, callback) {
       var fileReader;
       fileReader = new FileReader;
+      file.previewElement.classList.add("dz-thumbnail-loading");
       fileReader.onload = (function(_this) {
         return function() {
           if (file.type === "image/svg+xml") {

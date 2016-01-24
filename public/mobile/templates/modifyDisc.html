@@ -10,7 +10,7 @@
             </div>
         </div>
         <div class="btn-group pull-right" ui-yield-to="navbarAction">
-            <div class="btn" ng-click="resetDisc()">
+            <div class="btn" ng-click="confirmResetDisc()">
                 <i class="fa fa-eraser fa-lg"></i>
             </div>
         </div>
@@ -19,8 +19,8 @@
         <div ng-show="loading" class="app-content-loading">
             <i class="fa fa-spinner fa-spin loading-spinner"></i>
         </div>
-        <div class="app-content">
-            <div class="scrollable-content" id="modify-disc-pg1" ng-show="settings.page==0">
+        <div class="app-content" id="modify-disc-pg">
+            <div class="scrollable-content has-footer" id="modify-disc-pg0" ng-show="settings.page==0">
                 <ng-form name="forms.discData" novalidate >
                     <div class="header-row">General</div>
                     <div class="item-row">
@@ -29,8 +29,9 @@
                     <div class="item-row">
                         <input dz-fill="name" ng-model="disc.name" ng-required="true" type="text" class="form-control" placeholder="Name (ex. Destroyer)"/>
                     </div>
-                    <div ng-model="disc.type" class="item-row">
-                        <select class="form-control">
+                    <div class="item-row">
+                        <select ng-model="disc.type" class="form-control" placeholder="Select Type">
+                            <option value="" disabled selected hidden>Select Type...</option>
                             <option value="Distance Driver">Distance Driver</option>
                             <option value="Fairway Driver">Fairway Driver</option>
                             <option value="Mid-range">Mid-range</option>
@@ -60,7 +61,7 @@
                         <div class="clearfix"></div>
                     </div>
                     <div class="item-row">
-                        <textarea ng-model="disc.notes" class="form-control" rows="3" placeholder="ex. Found on hole 7 at..."></textarea>
+                        <textarea ng-model="disc.notes" class="form-control" rows="3" placeholder="ex. Found on hole 7 at..." style="resize:none;"></textarea>
                     </div>
                     <div class="item-row">
                         <input ng-model="disc.condition" type="text" ng-min="1" ng-max="10" ng-pattern="/^[0-9]{1,2}$/" class="form-control" placeholder="Condition [1 - 10]"/>
@@ -72,12 +73,17 @@
                         </div>
                     </div>
                     <div style="height: 20px"></div>
-                    <div class="item-row">
-                        <button type="button" class="btn btn-block btn-primary" ng-click="settings.page=1" ng-disabled="forms.discData.$invalid">Continue</button>
+                    <div class="nav-footer dual-btn">
+                        <div class="nav-footer-btn"></div>
+                        <div class="nav-footer-btn text" ng-show="forms.discData.$invalid">Form Invalid</div>
+                        <div class="nav-footer-btn" ng-click="settings.page=1" ng-hide="forms.discData.$invalid">
+                            <span><i class="fa fa-long-arrow-right"></i></span>
+                        </div>
+                        <div class="clearfix"></div>
                     </div>
                 </ng-form>
             </div>
-            <div class="scrollable-content" id="modify-disc-pg1" ng-show="settings.page==1">
+            <div class="scrollable-content has-footer" id="modify-disc-pg1" ng-show="settings.page==1">
                 <div style="height: 20px"></div>
                 <div class="item-row">
                     <div class="input-group">
@@ -92,43 +98,79 @@
                 </div>
                 <div class="item-row">
                     <div id="tag-list">
-                        <div ng-repeat="tag in disc.tagList" class="tag-item" ng-click="toggleTag(tag)" ng-class="{active: temp.activeTag == tag}">{{tag}}</div>
+                        <div ng-repeat="tag in disc.tagList" class="tag-item" ng-click="selectTag(tag)" ng-class="{active: temp.activeTag == tag}">{{tag}}</div>
                     </div>
                 </div>
                 <div style="height: 20px"></div>
-                <div class="dual-item-row">
-                    <button type="button" class="dual-item btn btn-block btn-primary" ng-click="settings.page=0">Back</button>
-                    <button type="button" class="dual-item btn btn-block btn-primary" ng-click="settings.page=2">Continue</button>
+                <div class="nav-footer dual-btn">
+                    <div class="nav-footer-btn" ng-click="settings.page=0">
+                        <span><i class="fa fa-long-arrow-left"></i></span>
+                    </div>
+                    <div class="nav-footer-btn" ng-click="settings.page=2">
+                        <span><i class="fa fa-long-arrow-right"></i></span>
+                    </div>
                     <div class="clearfix"></div>
+                </div>
+                <div class="backdrop" ng-show="temp.activeTag">
+                    <div class="dz-modal">
+                        <div class="dz-modal-title">{{temp.activeTag}}</div>
+                        <div class="dz-modal-item" ng-click="removeTag()">Remove Tag</div>
+                        <div class="dz-modal-item close-modal" ng-click="closeModal()">Close</div>
+                    </div>
                 </div>
             </div>
-            <div class="scrollable-content" id="modify-disc-pg2" ng-show="settings.page==2">
-                <div style="height: 20px"></div>
+            <div class="scrollable-content has-footer" id="modify-disc-pg2" ng-show="settings.page==2">
+                <div class="header-row">Current Images</div>
                 <div class="item-row">
-                    <button type="button" id="add-image" class="btn btn-block"><span><i class="fa fa-camera fa-2x"></i></span></button>
-                </div>
-                <div class="item-row">
-                    <div id="image-list">
-                        <div ng-repeat="image in disc.imageList" class="image-item" style="width:{{imgSize}}px;height:{{imgSize}}px;" ng-click="toggleImage(image._id)" ng-class="{active: temp.activeImage == image._id}">
-                            <img ng-src="/files/{{image.thumbnailId}}" src="/files/{{image.thumbnailId}}" style="width:{{imgSize}}px;height:{{imgSize}}px;">
+                    <div class="image-list">
+                        <div ng-repeat="image in disc.imageList" class="image-item" style="width:{{imgSize}}px;height:{{imgSize}}px;" ng-click="selectImage(image._id, image.thumbnailId)">
+                            <img ng-src="/files/{{image.thumbnailId}}" style="width:{{imgSize}}px;height:{{imgSize}}px;">
+                            <div class="primary-image" ng-show="disc.primaryImage == image._id"><span ng-show="disc.primaryImage == image._id"><i class="fa fa-star fa-lg"></i></span></div>
                         </div>
+                        <div class="clearfix"></div>
                     </div>
                 </div>
                 <div style="height: 20px"></div>
-                <div class="dual-item-row">
-                    <button type="button" class="dual-item btn btn-block btn-primary" ng-click="settings.page=1">Back</button>
-                    <button type="button" class="dual-item btn btn-block btn-primary" ng-click="done()">Create</button>
+                <div class="header-row" ng-show="dropzoneProcessing">Processing...</div>
+                <div class="item-row">
+                    <div>
+                        <div class="image-list" id="dropzone-container" directive-on="modulesLoaded" directive-set="{dropzone: 'dropzoneConfig'}">
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+                <div id="add-image-pos">
+                    <button type="button" id="add-image" class="btn"><span><i class="fa fa-camera fa-2x"></i></span></button>
+                </div>
+                <div class="nav-footer dual-btn">
+                    <div class="nav-footer-btn" ng-click="settings.page=1">
+                        <span><i class="fa fa-long-arrow-left"></i></span>
+                    </div>
+                    <div class="nav-footer-btn text" ng-click="saveDisc()">
+                        Save
+                    </div>
                     <div class="clearfix"></div>
                 </div>
-                <div class="footer-btn footer-dz" ng-show="settings.page==2 && temp.activeImage">
-                    <button type="button" class="dual-btn" ng-click="makePrimary()"><span><i class="fa fa-star fa-lg"></i></span></button>
-                    <button type="button" class="dual-btn" ng-click="removeImage()"><span><i class="fa fa-trash fa-lg"></i></span></button>
-                    <div class="clearfix"></div>
+                <div class="backdrop" ng-show="temp.activeImage">
+                    <div class="dz-modal">
+                        <img ng-src="/files/{{temp.activeImageThumbnail}}">
+                        <div class="dz-modal-item" ng-click="makePrimary()">Make Primary</div>
+                        <div class="dz-modal-item" ng-click="removeImage()">Remove Image</div>
+                        <div class="dz-modal-item close-modal" ng-click="closeModal()">Close</div>
+                    </div>
+                </div>
+            </div>
+            <div class="backdrop" ng-show="temp.resetDisc">
+                <div class="dz-modal">
+                    <div class="dz-modal-title">This will erase all form data, tags, and images. Continue?</div>
+                    <div class="dz-modal-item" ng-click="resetDisc()">Continue</div>
+                    <div class="dz-modal-item close-modal" ng-click="closeModal()">Close</div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<div class="footer-btn footer-dz" ng-show="settings.page==1 && temp.activeTag">
-    <button type="button" ng-click="removeTag()">Remove Tag</button>
+<div class="loading-container" ng-show="discImageCropper.cropperLoading">
+    <i class="fa fa-spinner fa-spin loading-spinner"></i>
 </div>
+<image-cropper cropper-options="discImageCropper"></image-cropper>

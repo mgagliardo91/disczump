@@ -2,13 +2,16 @@
     <link rel="stylesheet" href="/static/mobile/css/mobile-angular-ui-base.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="/static/mobile/css/ng-sortable.min.css">
+    <link rel="stylesheet" href="https://cdn.rawgit.com/fengyuanchen/cropperjs/master/dist/cropper.min.css">
     {{!--<link rel="stylesheet" href="/static/mobile/css/animate.css">--}}
     <link rel="stylesheet" href="/static/mobile/css/mobile.css">
 
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-route.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-touch.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-animate.min.js"></script>
     <script src="https://cdn.rawgit.com/jashkenas/underscore/master/underscore.js"></script>
+    <script src="https://cdn.rawgit.com/ocombe/ocLazyLoad/master/dist/ocLazyLoad.js"></script>
     <script src="/static/mobile/js/mobile-angular-ui.min.js"></script>
     <script src="/static/mobile/js/mobile-angular-ui.gestures.min.js"></script>
     <script src="/static/mobile/js/ng-sortable.min.js"></script>
@@ -48,10 +51,22 @@
                                 <i class="fa fa fa-sign-out fa-lg fa-pad-right"></i> Sign Out  
                                 <i class="fa fa-chevron-right pull-right"></i>
                             </a>
+                            <a class="list-group-item" href="" ng-click="showError('Real bad error!', 'Type stuff here to tell them what happened.')">
+                                <i class="fa fa fa-sign-out fa-lg fa-pad-right"></i> Error test  
+                                <i class="fa fa-chevron-right pull-right"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="backdrop" ng-show="">
+        <div class="dz-modal">
+            <div class="dz-modal-error"><span><i class="fa fa-exclamation-triangle"></i></span></div>
+            <div class="dz-modal-title">Title goes here</div>
+            <div class="dz-modal-text">Error text goes here</div>
+            <div class="dz-modal-item close-modal" ng-click="closeModal()">Close</div>
         </div>
     </div>
     <div class="app main-app" id="main-body">

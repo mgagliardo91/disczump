@@ -4,36 +4,203 @@ var dzID = '1433417853616595';
 angular.module('disczump.controllers', ['disczump.services'])
 
 // Directives
+// .directive('onLongPress', function($timeout) {
+// 	return {
+// 		restrict: 'A',
+// 		link: function($scope, $elm, $attrs) {
+// 			$elm.bind('touchstart', function(evt) {
+// 				// Locally scoped variable that will keep track of the long press
+// 				$scope.longPress = true;
 
-// .directive('dropzone', function() {
-//     return function(scope, element, attrs) {
-//         var config, dropzone;
+// 				// We'll set a timeout for 600 ms for a long press
+// 				$timeout(function() {
+// 					if ($scope.longPress) {
+// 						// If the touchend event hasn't fired,
+// 						// apply the function given in on the element's on-long-press attribute
+// 						$scope.safeApply(function() {
+// 							$scope.$eval($attrs.onLongPress)
+// 						});
+// 					}
+// 				}, 600);
+// 			});
 
-//         config = scope[attrs.dropzone];
-
-//         // create a Dropzone for the element with the given options
-//         dropzone = new Dropzone(element[0], config.options);
-
-//         // bind the given event handlers
-//         angular.forEach(config.eventHandlers, function(handler, event) {
-//             dropzone.on(event, handler);
-//         });
-//     };
+// 			$elm.bind('touchend', function(evt) {
+// 				// Prevent the onLongPress event from firing
+// 				$scope.longPress = false;
+// 				// If there is an on-touch-end function attached to this element, apply it
+// 				if ($attrs.onTouchEnd) {
+// 					$scope.safeApply(function() {
+// 						$scope.$eval($attrs.onTouchEnd)
+// 					});
+// 				}
+// 			});
+// 		}
+// 	};
 // })
+
+.directive('dropzone', function() {
+    return function(scope, element, attrs) {
+        var config, dropzone;
+
+        config = scope[attrs.dropzone];
+
+        // create a Dropzone for the element with the given options
+        dropzone = new Dropzone(element[0], config.options);
+
+        // bind the given event handlers
+        angular.forEach(config.eventHandlers, function(handler, event) {
+            dropzone.on(event, handler);
+        });
+
+        scope[attrs.dropzone].getDropzone = function() {
+            return dropzone
+        };
+        
+        // var clickable = angular.element(document.getElementById(config.options.clickable.replace('#', '')));
+        // clickable.on('touchstart', function(event) {
+        //     clickable.triggerHandler('click');
+        //     event.preventDefault();
+        // });
+    };
+})
+
+.directive('imageCropper', ['$window', 'ImageService', function($window, ImageService) {
+    return {
+        restrict: 'E',
+        scope: {
+            cropperOptions: "="
+        },
+        template: '<div class="image-cropper backdrop" ng-show="show">' +
+            '<div class="image-container"><div class="image-area" style="margin-top: {{margin}}px;" id="image-parent">' +
+
+            '</div></div>' +
+            '<div class="dual-item-row cropper-footer">' +
+            '<button type="button" class="dual-item btn btn-block btn-primary" ng-click="cancel($event)">Cancel</button>' +
+            '<button type="button" class="dual-item btn btn-block btn-primary" ng-click="finish($event)">Finish</button>' +
+            '<div class="clearfix"></div>' +
+            '</div>' +
+            '</div>',
+        replace: true,
+        link: function(scope, element, attrs) {
+            var cropper, imageName, imageSrc;
+            scope.show = false;
+            scope.width = $window.innerWidth - 40;
+            scope.margin = ($window.innerHeight - 50 - scope.width) / 2;
+
+            scope.cropperOptions.showCropper = function(name, src) {
+                imageName = name;
+                imageSrc = src;
+                scope.safeApply(function() {
+                    scope.show = true;
+                });
+                var parent = document.getElementById('image-parent');
+                parent.innerHTML = '<img src="' + src + '" id="test-crop" filename="' + name + '" style="width:' + scope.width + 'px;height:' + scope.width + 'px"/>';
+                initCropper();
+            }
+
+            scope.cancel = function(e) {
+                e.preventDefault();
+                cropper.destroy();
+                scope.safeApply(function() {
+                    scope.show = false;
+                });
+            }
+
+            scope.finish = function(e) {
+                e.preventDefault();
+                scope.safeApply(function() {
+                    scope.cropperOptions.cropperLoading = true;
+                    scope.show = false;
+                });
+                setTimeout(function() {
+                    var blob = cropper.getCroppedCanvas().toDataURL();
+                    var newFile = ImageService.dataURItoBlob(blob);
+                    cropper.destroy();
+                    newFile.cropped = true;
+                    newFile.name = imageName;
+                    scope.cropperOptions.onFinish(newFile);
+                    
+                }, 100);
+            }
+
+            var initCropper = function() {
+                var image = document.getElementById('test-crop');
+                cropper = new Cropper(image, {
+                    checkOrientation: false,
+                    aspectRatio: 1 / 1,
+                    autoCropArea: 1,
+                    dragMode: 'move',
+                    dragCrop: false,
+                    cropBoxMovable: false,
+                    cropBoxResizable: false,
+                    viewMode: 3,
+                    built: function() {
+                        scope.safeApply(function() {
+                            scope.cropperOptions.cropperLoading = false;
+                        });
+                    }
+                });
+            }
+
+            scope.safeApply = function(fn) {
+                var phase = this.$root.$$phase;
+                if (phase == '$apply' || phase == '$digest') {
+                    if (fn && (typeof(fn) === 'function')) {
+                        fn();
+                    }
+                }
+                else {
+                    this.$apply(fn);
+                }
+            };
+        }
+    }
+}])
+
+.directive('directiveOn', ['$compile', function($compile) {
+    return {
+        scope: {
+            trigger: '=directiveOn'
+        },
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            var directive = eval('(' + attrs.directiveSet + ')');
+
+            if (typeof directive === 'object') {
+                scope.$watch('trigger', function(newValue, oldValue) {
+                    if (newValue == true) {
+                        for (var a in directive) {
+                            element.attr(a, directive[a]);
+                        }
+
+                        element.removeAttr('directive-on');
+                        element.removeAttr('directive-set');
+                        $compile(angular.element(element[0]))(scope.$parent);
+                    }
+                });
+            }
+        }
+    };
+}])
 
 // Controllers
 
 .controller('MainController', ['$rootScope', '$scope', '$location', '$window', 'DataService',
     function($rootScope, $scope, $location, $window, DataService) {
         
+        $scope.error = {
+            title: '',
+            text: ''
+        }
+        
         $rootScope.init = function() {
             DataService.initialize(function(isLoggedIn) {
                 $rootScope.isLoggedIn = isLoggedIn;
-                
+
                 if (!$rootScope.isLoggedIn) {
                     $window.location.href = '/login';
                 }
-                
+
                 console.log('Initialized');
             });
         }
@@ -49,6 +216,24 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.$def = function(obj) {
             return typeof obj !== 'undefined';
         }
+        
+        $scope.closeModal = function() {
+            $scope.temp.activeImage = undefined;
+            $scope.temp.activeTag = undefined;
+            $scope.temp.resetDisc = undefined;
+        }
+        
+        $scope.safeApply = function(fn) {
+            var phase = this.$root.$$phase;
+            if (phase == '$apply' || phase == '$digest') {
+                if (fn && (typeof(fn) === 'function')) {
+                    fn();
+                }
+            }
+            else {
+                this.$apply(fn);
+            }
+        };
 
         $rootScope.init();
     }
@@ -150,10 +335,10 @@ angular.module('disczump.controllers', ['disczump.services'])
     };
 }])
 
-.directive('dzFill', ['$compile', 'AutoFillService', function($compile, AutoFillService){
+.directive('dzFill', ['$compile', 'AutoFillService', function($compile, AutoFillService) {
     return {
         restrict: 'A',
-        scope : {
+        scope: {
             ngModel: "="
         },
         replace: false,
@@ -164,49 +349,49 @@ angular.module('disczump.controllers', ['disczump.services'])
                 selected: false,
                 onSelect: false
             }
-            
+
             var input = angular.element(element[0]);
             var resultList = angular.element('<ul ng-show="fill.results.length && fill.interact && !fill.selected" class="auto-fill-list"><li ng-repeat="result in fill.results | limitTo:20" ng-click="setValue(result)">{{result}}</li></ul>');
-            
-            
+
+
             scope.setValue = function(result) {
                 scope.fill.selected = true;
                 scope.fill.onSelect = true;
                 element[0].focus();
                 scope.ngModel = result;
             }
-            
+
             scope.$watch('ngModel', function(newValue, oldValue) {
                 if (oldValue == newValue) return;
-                
+
                 if (scope.fill.onSelect) {
                     scope.fill.onSelect = false;
                     return;
                 }
-                
+
                 scope.fill.selected = false;
                 scope.fill.results = AutoFillService.getOptions(attrs.dzFill, newValue);
             });
-            
-            
+
+
             input.bind('focus', function() {
                 scope.fill.interact = true;
             });
-            
+
             input.bind('blur', function() {
                 scope.fill.interact = false;
             });
-            
+
             input.after(resultList);
             $compile(resultList)(scope);
         }
     }
 }])
 
-.directive('ngEnter', function () {
-    return function (scope, element, attrs) {
-        element.bind("keydown keypress", function (event) {
-            if(event.which === 13) {
+.directive('ngEnter', function() {
+    return function(scope, element, attrs) {
+        element.bind("keydown keypress", function(event) {
+            if (event.which === 13) {
                 scope.$apply(attrs.ngEnter);
                 event.preventDefault();
             }
@@ -214,108 +399,265 @@ angular.module('disczump.controllers', ['disczump.services'])
     };
 })
 
-.controller('ModifyDiscController', ['$scope', '$window', '$location', '$routeParams', '_', 'AutoFillService', 'DataService', 
-    function($scope, $location, $window, $routeParams, _, AutoFillService, DataService) {
-        $scope.imgSize = Math.floor(($window.innerWidth - 48) / 4);    //Subtracted 48 for 20px padding on each side of screen and 1px padding on each side of img.
-        console.log($scope.imgSize);
+.controller('ModifyDiscController', ['$scope', '$window', '$location', '$routeParams', '$ocLazyLoad', '_', 'AutoFillService', 'DataService', 'ImageService',
+    function($scope, $window, $location, $routeParams, $ocLazyLoad, _, AutoFillService, DataService, ImageService) {
+        $scope.imgSize = Math.floor(($window.innerWidth - 48) / 3); //Subtracted 48 for 20px padding on each side of screen and 1px padding on each side of img.
         $scope.loading = true;
+        $scope.modulesLoaded = false;
         $scope.disc = {
             visible: true,
-            tagList: []
+            tagList: [],
+            imageList: []
         };
         $scope.temp = {
             tag: '',
             tagOptions: [],
-            focus: false,
+            focus: false
         };
         $scope.forms = {};
-        
+
+        $scope.$watch('disc.imageList', function(newValue, oldValue) {
+            console.log('seen');
+        });
+
         $scope.settings = {
-            page: 2,
+            page: 0,
             editMode: typeof $routeParams.discId !== 'undefined'
         }
 
+        var template = '<div class="image-item">' +
+            '<img data-dz-thumbnail />' + 
+            '<div class="image-loading" style="width:' + $scope.imgSize + 'px;height:' + $scope.imgSize + 'px;"><i class="fa fa-spinner fa-spin"></i></div>' +
+            '<div class="image-progress" data-dz-uploadprogress></div>' +
+            '</div>';
+            
+        $scope.dropzoneProcessing = false;
         $scope.dropzoneConfig = {
-            'options': { // passed into the Dropzone constructor
-                'url': 'upload.php'
+            getDropzone: function() {
+                return undefined;
+            },
+            options: {
+                url: "/api/images",
+                method: "POST",
+                thumbnailWidth: $scope.imgSize,
+                thumbnailHeight: $scope.imgSize,
+                parallelUploads: 10,
+                maxFiles: 10,
+                paramName: 'discImage',
+                previewTemplate: template,
+                acceptedFiles: "image/*",
+                autoProcessQueue: true,
+                previewsContainer: '#dropzone-container',
+                clickable: '#add-image',
+                accept: function(file, done) {
+                    if (this.files[10] != null) {
+                        return this.removeFile(this.files[10]);
+                    }
+                    
+                    if (file.cropped || file.width < 200) {
+                        $scope.discImageCropper.cropperLoading = false;
+                        $scope.dropzoneProcessing = true;
+                        $scope.safeApply();
+                        return done();
+                    }
+                    
+                    
+                    $scope.discImageCropper.cropperLoading = true;
+                    $scope.safeApply();
+                    $scope.dropzoneConfig.getDropzone().removeFile(file);
+                    ImageService.getDataUri(file, function(dataUri) {
+                        $scope.discImageCropper.showCropper(file.name, dataUri);
+                    });
+                    
+                    return done('Processing');
+                },
             },
             'eventHandlers': {
-                'sending': function(file, xhr, formData) {},
-                'success': function(file, response) {}
+                'success': function(file, response) {
+                    if (typeof response._id !== 'undefined') {
+                        $scope.disc.imageList.push(response);
+                        
+                        if ($scope.disc.imageList.length == 1) {
+                            $scope.disc.primaryImage = response._id;
+                        }
+                        
+                        $scope.safeApply();
+                    }
+
+                    this.removeFile(file);
+                },
+                'queuecomplete': function() {
+                    $scope.dropzoneProcessing = false;
+                    $scope.safeApply();
+                }
             }
         };
         
+        
+        $scope.triggerDropzone = function() {
+             $scope.dropzoneConfig.getDropzone().progTrigger();
+        }
+
+        $scope.cropper = {
+            cropperShouldShow: false
+        }
+
+        $scope.discImageCropper = {
+            onFinish: function(file) {
+                $scope.discImageCropper.cropperLoading = false;
+                $scope.safeApply();
+                console.log(file);
+                if (file) {
+                    $scope.dropzoneConfig.getDropzone().addFile(file);
+                }
+            },
+            cropperLoading: false
+        }
+
         $scope.$watch('temp.tag', function(newValue, oldValue) {
             if (!$scope.temp.tag.length) {
                 $scope.temp.tagOptions = [];
                 return;
             }
-            
+
             $scope.temp.tagOptions = AutoFillService.getOptions('tagList', newValue);
         });
-        
+
         $scope.appendTag = function(tag, reset) {
             if (!tag.length) return;
-            
+
             if (!_.contains($scope.disc.tagList, tag)) {
                 $scope.disc.tagList.push(tag);
             }
-            
+
             if (reset) $scope.temp.tag = '';
-            
+
             $scope.temp.focus = true;
         }
         
-        $scope.toggleTag = function(tag) {
-            if (tag == $scope.temp.activeTag) {
-                $scope.temp.activeTag = undefined;
-            } else {
-                $scope.temp.activeTag = tag;
-            }
+        $scope.confirmResetDisc = function() {
+            $scope.temp.resetDisc = true;
         }
-        
+
         $scope.resetDisc = function() {
             $scope.disc = {
                 visible: true,
                 tagList: []
             };
             $scope.settings.page = 0;
+            $scope.temp.resetDisc = undefined;
         }
-        
+
+        $scope.selectTag = function(tag) {
+            $scope.temp.activeTag = tag;
+        }
+
         $scope.removeTag = function() {
             if ($scope.temp.activeTag) {
                 $scope.disc.tagList = _.without($scope.disc.tagList, $scope.temp.activeTag);
                 $scope.temp.activeTag = undefined;
             }
         }
-        
-        $scope.toggleImage = function(id) {
-            if (id == $scope.temp.activeImage) {
+
+        $scope.selectImage = function(id, thumbnail) {
+            $scope.temp.activeImage = id;
+            $scope.temp.activeImageThumbnail = thumbnail;
+        }
+
+        $scope.makePrimary = function() {
+            if ($scope.temp.activeImage) {
+                $scope.disc.primaryImage = $scope.temp.activeImage;
                 $scope.temp.activeImage = undefined;
-            } else {
-                $scope.temp.activeImage = id;
+            }
+        }
+
+        $scope.removeImage = function() {
+            if ($scope.temp.activeImage) {
+
+                $scope.disc.imageList = _.without($scope.disc.imageList, _.findWhere($scope.disc.imageList, {
+                    _id: $scope.temp.activeImage
+                }));
+
+                if ($scope.temp.activeImage == $scope.disc.primaryImage) {
+                    if ($scope.disc.imageList.length) {
+                        $scope.disc.primaryImage = $scope.disc.imageList[0]._id;
+                    }
+                    else {
+                        $scope.disc.primaryImage = undefined;
+                    }
+                }
+
+                $scope.temp.activeImage = undefined;
             }
         }
         
+        $scope.closeModal = function() {
+            $scope.temp.activeImage = undefined;
+            $scope.temp.activeTag = undefined;
+            $scope.temp.resetDisc = undefined;
+        }
+
+        $scope.done = function() {
+            $scope.cropper.cropperShouldShow = true;
+        }
+        
+        $scope.saveDisc = function() {
+            $scope.loading = true;
+            if ($scope.settings.editMode) {
+                DataService.updateDisc($scope.disc, function(success, data) {
+                    $scope.loading = false;
+                    if (!success) {
+                        return console.log(data);
+                    }
+                    
+                    $location.path('/disc/' + data);
+                });
+            } else {
+                DataService.createDisc($scope.disc, function(success, data) {
+                    $scope.loading = false;
+                    if (!success) {
+                        return console.log(data);
+                    }
+                    
+                    $location.path('/disc/' + data);
+                });
+            }
+        }
+
         AutoFillService.initialize(function() {
             if ($scope.settings.editMode) {
                 DataService.getDisc($routeParams.discId, function(disc, user) {
                     if (typeof disc === 'undefined') {
                         $location.path('/');
-                    } else {
-                        $scope.disc = disc;
+                    }
+                    else {
+                        $scope.disc = angular.copy(disc);
                     }
                     $scope.loading = false;
                 });
-            } else {
-                $scope.loading = false;  
+            }
+            else {
+                $scope.loading = false;
             }
         });
+
+        if (typeof Dropzone === 'undefined' || typeof EXIF === 'undefined' || typeof Cropper === 'undefined') {
+            $ocLazyLoad.load(['https://cdn.rawgit.com/exif-js/exif-js/master/exif.js',
+                '/static/js/dropzone.js'
+            ]).then(function() {
+                $ocLazyLoad.load('/static/mobile/js/cropper.js').then(function() {
+                    $scope.modulesLoaded = true;
+                });
+            });
+        }
+        else {
+            $scope.modulesLoaded = true;
+        }
     }
 ])
 
-.controller('DiscController', ['$rootScope', '$scope', '$routeParams', '$window', '$location', 'DataService',
-    function($rootScope, $scope, $routeParams, $window, $location, DataService) {
+.controller('DiscController', ['$location', '$scope', '$routeParams', '$window', '$location', 'DataService',
+    function($location, $scope, $routeParams, $window, $location, DataService) {
         $scope.disc = undefined;
         $scope.user = undefined;
         $scope.dropdown = false;
@@ -341,6 +683,17 @@ angular.module('disczump.controllers', ['disczump.services'])
 
         }
 
+        $scope.deleteDisc = function() {
+            DataService.deleteDisc($scope.disc, function(success, data) {
+                if (success) {
+                    // alert deleted!
+                    $location.path('/');
+                } else {
+                    console.log(data);
+                }
+            });
+        }
+    
         $scope.loading = true;
         DataService.getDisc($routeParams.discId, function(disc, user) {
             if (typeof disc === 'undefined') {

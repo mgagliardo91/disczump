@@ -16,6 +16,7 @@ function saveImage(gm, gfs, readStream, fileParams, callback) {
       
     gm(readStream).autoOrient().identify({bufferStream: true}, function(err, identify) {
         var filesize = identify.Filesize.match(/^([\d.]+)([A-Z]+)$/);
+        console.log(filesize);
         if (filesize && (filesize.length < 2 || filesize[2] != 'KB' || parseInt(filesize[1]) > 500)) {
             this.quality(90);
         }

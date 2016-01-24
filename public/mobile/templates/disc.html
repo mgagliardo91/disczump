@@ -42,23 +42,23 @@
                         <td>Owner:</td>
                         <td>{{user.username}}</td>
                     </tr>
-                    <tr ng-show="disc.type">
+                    <tr ng-show="$def(disc.type)">
                         <td>Type:</td>
                         <td>{{disc.type}}</td>
                     </tr>
-                    <tr ng-show="disc.material">
+                    <tr ng-show="$def(disc.material)">
                         <td>Material:</td>
                         <td>{{disc.material}}</td>
                     </tr>
-                    <tr ng-show="disc.color">
+                    <tr ng-show="$def(disc.color)">
                         <td>Color:</td>
                         <td>{{disc.color}}</td>
                     </tr>
-                    <tr ng-show="disc.weight">
+                    <tr ng-show="$def(disc.weight)">
                         <td>Weight:</td>
                         <td>{{disc.weight}}g</td>
                     </tr>
-                    <tr ng-show="disc.condition">
+                    <tr ng-show="$def(disc.condition)">
                         <td>Condition:</td>
                         <td>{{disc.condition}}/10</td>
                     </tr>
@@ -96,6 +96,9 @@
 <div id="options-container" ng-show="dropdown" class="fade">
     <a class="option-item" ng-href="#/disc/{{disc._id}}/edit">
         <span><i class="fa fa-pencil fa-lg"></i>Edit Disc</span>
+    </a>
+    <a class="option-item" ng-click="deleteDisc()">
+        <span><i class="fa fa-trash fa-lg"></i>Delete Disc</span>
     </a>
     <a class="option-item" ng-href="">
         <span><i class="fa fa-link fa-lg"></i>Share Public Link</span>

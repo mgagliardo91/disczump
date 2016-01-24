@@ -219,26 +219,6 @@ ul.item-list {
     padding-bottom: 50px;
 }
 
-.footer-btn {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    z-index: 100;
-    border-top: 1px solid #777777;
-}
-
-.footer-btn > button {
-    width: 100%;
-    height: 40px;
-    font-size: 1.3em;
-    font-weight: bold;
-}
-
-.footer-btn.footer-dz > button {
-    background-color: #008EED;
-    color: white;
-}
-
 .page-info {
     width: 80%;
     margin: auto;
@@ -592,6 +572,38 @@ ul.item-list {
 /*-----------------------------------*/
 /*-------- Create Disc Page ---------*/
 /*-----------------------------------*/
+#modify-disc-pg .nav-footer {
+    position: fixed;
+    bottom: 0px;
+    width: 100%;
+    height: 50px;
+    z-index: 100;
+    background-color: #008EDD;
+    color: #EEEEEE;
+    padding: 5px 0px;
+}
+
+#modify-disc-pg .nav-footer .nav-footer-btn {
+    text-align: center;
+    font-weight: bold;
+    font-size: 30px;
+    line-height: 40px;
+}
+
+#modify-disc-pg .nav-footer.dual-btn .nav-footer-btn {
+    width: 50%;
+    float: left;
+    height: 40px;
+}
+
+#modify-disc-pg .nav-footer.dual-btn .nav-footer-btn:first-child {
+    border-right: 1px solid #EEEEEE;
+}
+
+#modify-disc-pg .nav-footer .nav-footer-btn.text {
+    font-size: 18px;
+}
+
 #tag-option-list, #tag-list {
     padding: 0px;
     margin: 0px;
@@ -606,8 +618,7 @@ ul.item-list {
 #tag-list .tag-item {
     margin: 3px;
     display: inline-block;
-    padding-left: 5px;
-    padding-right: 5px;
+    padding: 5px;
     font-size: 0.9em;
     text-decoration: underline;
 }
@@ -619,8 +630,6 @@ ul.item-list {
 }
 
 #tag-list .tag-item {
-    padding-top: 2px;
-    padding-bottom: 2px;
     font-size: 0.8em;
     text-decoration: none;
     background-color: #BEBEBE;
@@ -628,11 +637,6 @@ ul.item-list {
     font-weight: bold;
     letter-spacing: .1em;
     font-family: "Lucida Console", "Lucida Sans Typewriter", Monaco, "Bitstream Vera Sans Mono", monospace;
-}
-
-#tag-list .tag-item.active {
-    color: #fff;
-    background-color: #008eed;
 }
 
 .auto-fill-list {
@@ -652,30 +656,152 @@ ul.item-list {
     text-decoration: underline;
 }
 
-#add-image {
+#modify-disc-pg2 #add-image-pos {
+    position: absolute;
+    bottom: 60px;
+    right: 20px;
+}
+
+#modify-disc-pg2 #add-image-pos #add-image {
     background-color: #BEBEBE;
+    color: #4A4A4A;
+    height: 80px;
+    width: 80px;
+    border-radius: 40px;
+}
+
+#modify-disc-pg2 .image-list .image-item {
+    float: left;
+    margin: 1px;
+    position: relative;
+}
+
+#modify-disc-pg2 .image-list .image-item .image-progress {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    background-color: rgba(150, 51, 0, 0.71);
+}
+
+#modify-disc-pg2 .image-list .image-item.dz-thumbnail-loading .image-loading {
+    display: block !important;
+}
+
+#modify-disc-pg2 .image-list .image-item .image-loading {
+    display: none !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    border: 1px solid #B9B9B9;
+    background-color: #eee;
+    text-align: center;
+}
+
+#modify-disc-pg2 .image-list .image-item .image-loading i {
+    font-size: 4em;
+    line-height: 109px;
+}
+
+
+#modify-disc-pg2 .image-list .image-item .primary-image {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-bottom-right-radius: 5px;
+    text-align: center;
+    font-size: 16px;
+}
+
+#modify-disc-pg2 .image-list .image-item .primary-image i {
+    color: #ffba00;
+}
+
+.dz-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: transparent;
+    padding: 20px;
+    text-align: center;
+    font-size: 16px;
+    width: 100%;
+}
+
+.dz-modal .dz-modal-title {
+    margin-bottom: 20px;
+    color: #EEEEEE;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.dz-modal img {
+    margin-bottom: 20px;
+    max-width: 150px;
+    max-height: 150px;
+}
+
+.dz-modal .dz-modal-item {
+    width: 180px;
+    margin: 0px auto 5px auto;
+    height: 40px;
+    line-height: 40px;
+    border-radius: 20px;
+    background-color: #008EDD;
+    color: #EEEEEE;
+}
+
+.dz-modal .dz-modal-item.close-modal {
+    margin-bottom: 0px;
+    background-color: #EEEEEE;
     color: #4A4A4A;
 }
 
-#image-list .image-item {
-    float: left;
-    margin: 1px;
+.backdrop {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.90);
+    z-index: 1000;
 }
 
-#image-list .image-item.active {
-    /*add border*/
+.image-cropper .cropper-footer {
+    position: fixed;
+    width: 100%;
+    bottom: 0;
 }
 
-
-#modify-disc-pg2 .footer-btn.footer-dz > button {
-    background-color: #BEBEBE;
+.image-cropper .image-container {
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+    padding: 0px 20px;
 }
 
-#modify-disc-pg2 .footer-dz .dual-btn {
-    width: 50%;
-    float: left;
+.image-cropper .image-area {
+    width: 100%;
 }
 
-#modify-disc-pg2 .footer-dz .dual-btn i.fa-star {
-    color: #ffe800;
+.image-cropper .image-area > img {
+    border: 2px solid #ffba00;
+}
+
+.loading-container {
+    width: 100%;
+    position: absolute;
+    z-index: 1001;
+    height: 100%;
+    text-align: center;
+    padding-top: 40%;
+    font-size: 5em;
+    background-color: rgba(0,0,0,0.25);
+    color: #fff;
 }

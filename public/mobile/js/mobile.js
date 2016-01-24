@@ -1,4 +1,4 @@
-var app = angular.module('disczump', ['ngRoute', 'ngAnimate', 'mobile-angular-ui', 'mobile-angular-ui.gestures', 'as.sortable', 'disczump.controllers']);
+var app = angular.module('disczump', ['ngRoute', 'ngAnimate', 'mobile-angular-ui', 'mobile-angular-ui.gestures', 'as.sortable', 'oc.lazyLoad', 'disczump.controllers']);
 app.config(['$routeProvider', '$httpProvider', function($routeProvider, $httpProvider) {
     if (!$httpProvider.defaults.headers.get) {
         $httpProvider.defaults.headers.get = {};    
