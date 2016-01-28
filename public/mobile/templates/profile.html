@@ -1,0 +1,60 @@
+<div class="scrollable" id="disc">
+    <div class="navbar navbar-app navbar-absolute-top">
+        <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
+            {{title}}
+        </div>
+        <div class="btn-group pull-left">
+            <div ng-click="goBack()" class="btn">
+                <i class="fa fa-arrow-left fa-lg"></i>
+            </div>
+        </div>
+        <div class="btn-group pull-right" ui-yield-to="navbarAction">
+            <div class="btn" ng-click="dropdown = !dropdown">
+                <i class="fa fa-ellipsis-v fa-lg"></i>
+            </div>
+        </div>
+    </div>
+    <div class="app-body" ng-class="{loading: loading}">
+        <div ng-show="loading" class="app-content-loading">
+            <i class="fa fa-spinner fa-spin loading-spinner"></i>
+        </div>
+        <div class="app-content">
+            <div class="scrollable-content view-model" id="view-user" ng-class="{'has-footer': footer}">
+                <div class="model-image" ng-show="$def(user)">
+                    <div>
+                        <img ng-src="{{user.image}}" ng-if="user.image">
+                        <img src="/static/logo/logo_high_nobg.svg" ng-if="!user.image">
+                    </div>
+                </div>
+                <table class="model-info-table" ng-show="$def(user)">
+                    <tr>
+                        <td>Username:</td>
+                        <td>{{user.username}}</td>
+                    </tr>
+                    <tr ng-if="user.firstName || user.lastName">
+                        <td>Name:</td>
+                        <td>{{user.firstName}}<span ng-if="user.firstName && user.lastName"> </span>{{user.lastName}}</td>
+                    </tr>
+                    <tr>
+                        <td>Location:</td>
+                        <td>{{user.shortLocation}}</td>
+                    </tr>
+                    <tr>
+                        <td>Join Date:</td>
+                        <td>{{user.dateJoined | date:'MMMM dd, yyyy'}}</td>
+                    </tr>
+                    <tr ng-show="$def(preview)">
+                        <td>Public Discs:</td>
+                        <td>{{preview.count}}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="options-container" ng-show="dropdown" class="fade">
+    <a class="option-item" ng-href="#/d/{{user._id}}">
+        <span><i class="fa fa-tachometer fa-lg"></i>View Dashboard</span>
+    </a>
+</div>
+<error-modal error-options="errorOpts"></error-modal>

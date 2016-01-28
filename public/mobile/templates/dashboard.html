@@ -1,0 +1,77 @@
+<div class="scrollable" id="dashboard">
+    <div class="navbar navbar-app navbar-absolute-top" ng-show="!searchActive">
+        <div class="navbar-brand navbar-brand-center" ui-yield-to="title" ng-click="nav('')">
+            {{title}}
+        </div>
+        <div class="btn-group pull-left">
+            <div ui-toggle="uiSidebarLeft" class="btn sidebar-toggle">
+                <i class="fa fa-bars fa-lg"></i>
+            </div>
+        </div>
+        <div class="btn-group pull-right" ui-yield-to="navbarAction">
+            <div class="btn" ng-click="searchActive = true; searchFocus = true">
+                <i class="fa fa-search fa-lg"></i>
+            </div>
+        </div>
+    </div>
+    <div class="navbar navbar-app navbar-absolute-top" ng-show="searchActive">
+        <div class="btn-group pull-left">
+            <div class="btn" ng-click="searchActive = false;">
+                <i class="fa fa-ban fa-lg"></i>
+            </div>
+        </div>
+        <div id="search-bar-container">
+            <div id="search-bar">
+                <div class="icon search-icon">
+                    <i class="fa fa-search fa-lg"></i>
+                </div>
+                <div class="icon close-icon" ng-click="query='';">
+                    <i class="fa fa-close fa-lg"></i>
+                </div>
+                <div class="search-area">
+                    <input placeholder="Search name, brand, color..." debounce="300" type="text" ng-model="query" focus-on="searchFocus" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="app-body" ng-class="{loading: loadParams.loading}">
+        <div ng-show="loadParams.loading" class="app-content-loading">
+            <i class="fa fa-spinner fa-spin loading-spinner"></i>
+        </div>
+        <div class="app-content">
+            <div class="scrollable-content" infinite-scroll="loadMore()">
+                <ul id="disc-list" class="item-list" ng-show="$def(discList)">
+                    <div class="no-results" ng-show="!filteredList.length">
+                        <i class="fa fa-exclamation-circle"></i>
+                        <h1>No Results</h1>
+                    </div>
+                    <li ng-repeat="disc in filteredList = (discList | filter:filterDisc | filter:searchDisc | discSort | limitTo:loadSize)" class="item" ng-click="nav('disc/' + disc._id)">
+                        <div class="item-content">
+                            <img ng-src="{{getPrimaryImage(disc)}}">
+                            <div class="colorize-stripe" ng-if="userPrefs.colorizeVisibility" style="background-color:{{getColorize(disc)}};"></div>
+                            <div>
+                                <h1>{{disc.name}}</h1>
+                                <h2>{{disc.brand}}</h2>
+                                <p>{{disc.material}}
+                                    <span class="item-note" ng-if="disc.weight">{{disc.weight}}g</span>
+                                </p>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="circle-float" id="dashboard-options"">
+    <button type="button" class="btn btn-circle" ng-click="showOptions = !showOptions;" ng-class="{active: showOptions}"><span><i class="fa fa-cogs fa-2x"></i></span></button>
+    <button type="button" class="btn btn-circle-small" ng-show="!showOptions && filtering" id="filter-indicator"><div><i class="fa fa-filter"></i></div></button>
+</div>
+<div class="backdrop" id="dashboard-option-container" ng-show="showOptions">
+    <div class="circle-float" id="dashboard-option-filter">
+        <button type="button" class="btn btn-circle" ng-click="nav('filter');" ng-class="{active: filtering}"><span><i class="fa fa-filter fa-2x"></i></span></button>
+    </div>
+    <div class="circle-float" id="dashboard-option-sort">
+        <button type="button" class="btn btn-circle" ng-click="nav('sort');"><span><i class="fa fa-sort fa-2x"></i></span></button>
+    </div>
+</div>

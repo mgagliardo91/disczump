@@ -1,0 +1,230 @@
+{{#section 'head'}}
+    <title>disc|zump - Public View</title>
+    <link rel="stylesheet" href="/static/mobile/css/mobile-angular-ui-base.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/mobile/css/mobile.css">
+    {{#if isRelease}}
+        <link rel="stylesheet" href="/static/css-dist/mobile/discview.min.css">
+    {{else}}
+        <link rel="stylesheet" href="/static/css/mobile/discview.css">
+    {{/if}}
+    {{#if disc.visible}}
+        <meta property="og:site_name" content="disc|zump">
+        <meta property="og:title" content="{{disc.brand}} {{disc.name}}" />
+        <meta property="og:url" content="{{serverURL}}/disc/{{disc._id}}" />
+        <meta property="og:type" content="product" />
+        <meta property="og:description" content="{{discStr}} | Owner: {{owner.local.username}}" />
+        <meta property="fb:app_id" content="1433417853616595" />
+        {{#if primaryImage}}
+            <meta property="og:image" content="{{serverURL}}/files/{{primaryImage.fileId}}/600" />
+        {{else}}
+            <meta property="og:image" content="{{serverURL}}/static/logo/logo_small.png" />
+        {{/if}}
+    {{/if}}
+
+    <script>
+        window.fbAsyncInit = function() {
+            FB.init({
+                appId: '1433417853616595',
+                xfbml: true,
+                version: 'v2.5'
+            });
+        };
+
+        (function(d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) {
+                return;
+            }
+            js = d.createElement(s);
+            js.id = id;
+            js.src = "//connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/jashkenas/underscore/master/underscore.js"></script>
+    {{#if isRelease}}
+    <script src="/static/js-dist/main.min.js"></script>
+    {{else}}
+    <script src="/static/js/main.js"></script>
+    {{/if}}
+    </head>
+{{/section}}
+<body class="has-navbar-top" id="main-body">
+    <div style="display: none;" firstUse="{{firstUse}}" serverURL="{{serverURL}}" id="server-params"></div>
+    <div class="app main-app" id="public-disc-view" discid="{{disc._id}}">
+        <div class="scrollable" id="disc-container">
+            <div class="navbar navbar-app navbar-absolute-top">
+                <div class="navbar-brand navbar-brand-center">
+                    {{disc.name}}
+                </div>
+                <div class="btn-group pull-left" id="nav-home">
+                    <div class="btn">
+                        <i class="fa fa-home fa-lg"></i>
+                    </div>
+                </div>
+                <div class="btn-group pull-left" id="nav-back" style="display: none;">
+                    <div class="btn">
+                        <i class="fa fa-arrow-left fa-lg"></i>
+                    </div>
+                </div>
+                <div class="btn-group pull-right" id="show-options">
+                    <div class="btn ">
+                        <i class="fa fa-share-alt fa-lg "></i>
+                    </div>
+                </div>
+            </div>
+            <div class="app-body">
+                <div class="app-content-loading" id="disc-loading">
+                    <i class="fa fa-spinner fa-spin loading-spinner"></i>
+                </div>
+                <div class="app-content">
+                    <div class="scrollable-content view-model" id="view-disc">
+                        <div class="model-image">
+                            <div id="disc-primary-image">
+                                <span class="disc-icon"><i class="fa fa-photo"></i></span>
+                                {{#if primaryImage}}
+                                <img src="/files/{{primaryImage.fileId}}">
+                                {{else}}
+                                <img src="/static/logo/logo_small.svg">
+                                {{/if}}
+                            </div>
+                        </div>
+                        <table class="model-info-table">
+                            <tr>
+                                <td>Brand:</td>
+                                <td>{{disc.brand}}</td>
+                            </tr>
+                            <tr>
+                                <td>Name:</td>
+                                <td>{{disc.name}}</td>
+                            </tr>
+                            <tr>
+                                <td>Owner:</td>
+                                <td><a href="/dashboard#view=profile&user_id={{owner._id}}">{{owner.local.username}}</a></td>
+                            </tr>
+                            {{#if disc.type}}
+                            <tr>
+                                <td>Type:</td>
+                                <td>{{disc.type}}</td>
+                            </tr>
+                            {{/if}}
+                            {{#if disc.material}}
+                            <tr>
+                                <td>Material:</td>
+                                <td>{{disc.material}}</td>
+                            </tr>
+                            {{/if}}
+                            {{#if disc.color}}
+                            <tr>
+                                <td>Color:</td>
+                                <td>{{disc.color}}</td>
+                            </tr>
+                            {{/if}}
+                            {{#if disc.weight}}
+                            <tr>
+                                <td>Weight:</td>
+                                <td>{{disc.weight}}g</td>
+                            </tr>
+                            {{/if}}
+                            {{#if disc.condition}}
+                            <tr>
+                                <td>Condition:</td>
+                                <td>{{disc.condition}}/10</td>
+                            </tr>
+                            {{/if}}
+                        </table>
+                        <table class="disc-stats">
+                            <tr>
+                                <td class="disc-flight-number">
+                                    <p class="fn-title">Speed</p>
+                                    {{#if disc.speed}}
+                                    <p class="fn-value">{{disc.speed}}</p>
+                                    {{else}}
+                                    <p class="fn-value">--</p>
+                                    {{/if}}
+                                </td>
+                                <td class="disc-flight-number">
+                                    <p class="fn-title">Glide</p>
+                                    {{#if disc.glide}}
+                                    <p class="fn-value">{{disc.glide}}</p>
+                                    {{else}}
+                                    <p class="fn-value">--</p>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="disc-flight-number">
+                                    <p class="fn-title">Turn</p>
+                                    {{#if disc.turn}}
+                                    <p class="fn-value">{{disc.turn}}</p>
+                                    {{else}}
+                                    <p class="fn-value">--</p>
+                                    {{/if}}
+                                </td>
+                                <td class="disc-flight-number">
+                                    <p class="fn-title">Fade</p>
+                                    {{#if disc.fade}}
+                                    <p class="fn-value">{{disc.fade}}</p>
+                                    {{else}}
+                                    <p class="fn-value">--</p>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                        </table>
+                        {{#if disc.notes}}
+                        <div class="view-label">Notes:</div>
+                        <div id="notes-container">
+                            {{disc.notes}}
+                        </div>
+                        {{/if}}
+                        {{#if disc.tagList.length}}
+                        <div class="view-label">Tags:</div>
+                        <div id="tag-list">
+                            {{#each disc.tagList}}
+                            <div ng-repeat="tag in disc.tagList" class="tag-item">{{this}}</div>
+                            {{/each}}
+                        </div>
+                        {{/if}}
+                    </div>
+                    <div class="scrollable-content" id="view-disc-images">
+                        <ul class="disc-image-list">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scrollable" id="image-container" style="display: none;">
+            <div class="navbar navbar-app navbar-absolute-top">
+                <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
+                    {{disc.name}}: Images
+                </div>
+                <div class="btn-group pull-left" id="go-back">
+                    <div class="btn">
+                        <i class="fa fa-arrow-left fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="app-body">
+                <div class="app-content">
+                    <div class="scrollable-content" id="view-disc-images">
+                        <ul class="disc-image-list">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="options-container" style="display: none;">
+        <a class="option-item facebook" id="share-facebook">
+            <span><i class="fa fa-facebook-square fa-lg"></i>Share to Facebook</span>
+        </a>
+    </div>
+    
+    {{#if isRelease}}
+    <script src="/static/js-dist/mobile/discview.min.js "></script>
+    {{else}}
+    <script src="/static/js/mobile/discview.js "></script>
+    {{/if}}
+</body>

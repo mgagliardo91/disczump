@@ -16,6 +16,7 @@ var localConfig = require('../config/localConfig.js');
 module.exports = function(app, passport, gridFs) {
 
     // Site
+    
     app.get('/', function(req, res) {
        res.render('home', {
            isRelease: localConfig.release,
@@ -57,25 +58,11 @@ module.exports = function(app, passport, gridFs) {
         
         if (req.device.isMobile) {
             req.user.updateAccessCount('mobile');
-            return res.render('notification', {
+            return res.render('mobile/index', {
+                layout: 'mobile',
                 isRelease: localConfig.release,
-                isMobile: req.device.isMobile,
-                user : req.user,
-                userString: req.user.accountToString(),
-                notify : {
-                   pageHeader: 'Unsupported Platform',
-                   header: 'Unsupported Platform',
-                   strong: 'Your dashboard is not currently accessible by a mobile device.',
-                   text: 'We are working to bring mobile capability to the disc|zump ' + 
-                            'dashboard, but at this time you will need to access the ' + 
-                            'dashboard from a desktop/laptop. Check out our ' +
-                            '<a href="/faq#faq-mobile">FAQ</a> for more information on ' +
-                            'mobile support.',
-                   buttonIcon: 'fa-home',
-                   buttonText: 'Return Home',
-                   buttonLink: '/'
-               }
-           });
+                serverURL : localConfig.serverURL
+            });
         }
         
         var firstUse = req.user.local.accessCount.desktop < 1;
@@ -96,6 +83,19 @@ module.exports = function(app, passport, gridFs) {
                 error: req.flash('infoError')
             }
         });
+    });
+    
+    
+    app.get('/dashboard/*', isLoggedIn, function(req, res) {
+        if (req.device.isMobile) {
+            req.user.updateAccessCount('mobile');
+            
+            return res.render('mobile/index', {
+                layout: 'mobile',
+            });
+        } else {
+            res.redirect('/dashboard');
+        }
     });
     
     app.get('/account/delete', isLoggedIn, function(req, res) {
@@ -226,6 +226,20 @@ module.exports = function(app, passport, gridFs) {
                            buttonLink: '/'
                        }
                    });
+                }
+                
+                if (req.device.isMobile) {
+                    return res.render('mobile/discview', {
+                        layout: 'mobile',
+                        isRelease: localConfig.release,
+                        disc: disc,
+                        discStr: disc.toDescString(),
+                        user : req.user,
+                        owner : owner,
+                        userString : userString,
+                        serverURL : localConfig.serverURL,
+                        primaryImage: disc.getImage()
+                    });
                 }
                 
                 return res.render('discview', {

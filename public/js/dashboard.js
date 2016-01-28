@@ -2661,10 +2661,10 @@ var ZumpEditor = function(opt) {
     		{id: 'disc-material', optional: true, type: 'none'},
     		{id: 'disc-weight', optional: true, type: 'number', max: 3},
     		{id: 'disc-color', optional: true, type: 'none'},
-    		{id: 'disc-speed', optional: true, type: 'number', max: 2},
-    		{id: 'disc-glide', optional: true, type: 'number', max: 2},
-    		{id: 'disc-turn', optional: true, type: 'number', max: 2},
-    		{id: 'disc-fade', optional: true, type: 'number', max: 2},
+    		{id: 'disc-speed', optional: true, type: 'function', fn: function(val) { return /^([0-9]{1,2})$/.test(val) }},
+    		{id: 'disc-glide', optional: true, type: 'function', fn: function(val) { return /^([0-9]{1,2})$/.test(val) }},
+    		{id: 'disc-turn', optional: true, type: 'function', fn: function(val) { return /^(-?[0-9])$/.test(val) }},
+    		{id: 'disc-fade', optional: true, type: 'function', fn: function(val) { return /^(-?[0-9])$/.test(val) }},
     		{id: 'disc-condition', optional: true, type:'function', fn: function(val) { return /^(10|[0-9])$/.test(val) }, max: 2}
     	]
     });
@@ -3570,6 +3570,7 @@ var ZumpDashboard = function(opt) {
 		});
 		unfilteredList.push(upDisc);
 		updateDiscItem(upDisc);
+		myGallery.updateObject(upDisc);
 		if (currentDisc && currentDisc._id == upDisc._id) forceRefresh = true;
 	}
 	
@@ -6286,13 +6287,15 @@ var ZumpGallery = function(opt) {
 	/*
 	* Updates an item
 	*/
-	this.updateObject = function(objId, params) {
-		var $galleryItem = $('.disc-gallery-item[objId="' + objId + '"]');
+	this.updateObject = function(disc) {
+		var $galleryItem = $('.disc-gallery-item[objId="' + disc._id + '"]');
 		
-		if ($galleryItem.length && params.image) {
-			$galleryItem.find('.disc-gallery-image > img').attr('src', '/files/' + params.image);
-			var galItem = _.first(_.where(objList, {'_id' : objId}));
-			galItem.tempFileId = '/files/' + params.image;
+		if ($galleryItem.length) {
+			var pImage = disc.primaryImage ? '/files/' + _.findWhere(disc.imageList, {_id: disc.primaryImage}).fileId : '/static/logo/logo_small_faded.svg';
+			
+			$galleryItem.find('.disc-gallery-image > img').attr('src', pImage);
+			var galItem = _.first(_.where(objList, {'_id' : disc._id}));
+			galItem.tempFileId = pImage;
 		}
 	}
 	

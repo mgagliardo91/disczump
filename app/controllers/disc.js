@@ -115,10 +115,24 @@ function createDisc(userId, data, callback) {
     
     disc.brand = data.brand.trim();
     disc.name = data.name.trim();
-    disc.material = data.material.trim();
-    disc.type = data.type.trim();
-    disc.color = data.color.trim();
-    disc.notes = data.notes;
+    
+    if (typeof data.material !== 'undefined') {
+        disc.material = data.material.trim();
+    }
+    
+    
+    if (typeof data.type !== 'undefined') {
+        disc.type = data.type.trim();
+    }
+    
+    
+    if (typeof data.color !== 'undefined') {
+        disc.color = data.color.trim();
+    }
+    
+    if (typeof data.notes !== 'undefined') {
+        disc.notes = data.notes;
+    }
     
     if (typeof data.visible !== 'undefined') {
         disc.visible = data.visible;

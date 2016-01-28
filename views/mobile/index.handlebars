@@ -1,0 +1,70 @@
+{{#section 'head'}}
+    {{#if isRelease}}
+    <link rel="stylesheet" href="/static/mobile/css-dist/dashboard-concat.min.css">
+    {{else}}
+    <link rel="stylesheet" href="/static/mobile/css-dist/mobile-angular-ui-base.min.css">
+    <link rel="stylesheet" href="/static/mobile/css-dist/ng-sortable.min.css">
+    <link rel="stylesheet" href="/static/mobile/css/mobile.css">
+    {{/if}}
+    
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-route.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-touch.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-animate.min.js"></script>
+    <script src="https://cdn.rawgit.com/jashkenas/underscore/master/underscore.js"></script>
+    <script src="https://cdn.rawgit.com/ocombe/ocLazyLoad/master/dist/ocLazyLoad.js"></script>
+    <script src="https://cdn.rawgit.com/zenorocha/clipboard.js/master/dist/clipboard.min.js"></script>
+
+    {{#if isRelease}}
+    <script src="/static/mobile/js-dist/dashboard-concat.min.js"></script>
+    {{else}}
+    <script src="/static/mobile/js-dist/mobile-angular-ui.min.js"></script>
+    <script src="/static/mobile/js-dist/mobile-angular-ui.gestures.min.js"></script>
+    <script src="/static/mobile/js-dist/ng-sortable.min.js"></script>
+    <script src="/static/mobile/js-dist/ngclipboard.min.js"></script>
+    <script src="/static/mobile/js/mobile.js"></script>
+    <script src="/static/mobile/js/controllers.js"></script>
+    <script src="/static/mobile/js/services.js"></script>
+    {{/if}}
+    
+{{/section}}
+<body ng-app="disczump" ng-controller="MainController">
+    <div class="sidebar sidebar-left">
+        <div class="navbar navbar-app navbar-absolute-top" id="sidebar-header">
+            <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
+                {{siteUrl}}
+            </div>
+        </div>
+        <div class="app-body" ng-init="setUrl('{{serverURL}}')">
+            <div class="app-content">
+                <div class="scrollable">
+                    <div class="scrollable-content" id="sidebar-content">
+                        <div class="list-group" ui-turn-off='uiSidebarLeft'>
+                            <a class="list-group-item" href="#/">
+                                <i class="fa fa fa-tachometer  fa-lg fa-pad-right"></i> My Dashboard 
+                                <i class="fa fa-chevron-right pull-right"></i>
+                            </a>
+                            <a class="list-group-item" href="#/disc/create">
+                                <i class="fa fa fa-plus fa-lg fa-pad-right"></i> Create Disc 
+                                <i class="fa fa-chevron-right pull-right"></i>
+                            </a>
+                            <a class="list-group-item" href="#/profile">
+                                <i class="fa fa fa-user fa-lg fa-pad-right"></i> Profiles
+                                <i class="fa fa-chevron-right pull-right"></i>
+                            </a>
+                            <a class="list-group-item" href="/logout">
+                                <i class="fa fa fa-sign-out fa-lg fa-pad-right"></i> Sign Out  
+                                <i class="fa fa-chevron-right pull-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="app main-app" id="main-body">
+        <ng-view></ng-view>
+    </div>
+</body>
