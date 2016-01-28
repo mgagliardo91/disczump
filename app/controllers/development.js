@@ -22,7 +22,7 @@ function createDiscData(gridfs, userId, callback) {
                 mimetype: image.mimetype,
                 filename: image.image,
                 maxSize: config.images.maxSize
-                }, function(newFile) {
+                }, function(err, newFile) {
                     ImageController.pushImageCache(gm, gridfs, userId, newFile._id, function(err, discImage) {
                         if (err)
                             return cb(err);

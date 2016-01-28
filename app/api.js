@@ -184,7 +184,9 @@ module.exports = function(app, passport, gridFs) {
                         mimetype: mimetype,
                         filename: filename,
                         maxSize: config.images.maxSize
-                        }, function(newFile) {
+                        }, function(err, newFile) {
+                            if (err) return res.json(err);
+                            
                             UserController.postUserImage(req.user._id, newFile._id, gfs, function(err, user) {
                                 if (err)
                                     return res.json(err);
@@ -422,7 +424,9 @@ module.exports = function(app, passport, gridFs) {
                         mimetype: mimetype,
                         filename: filename,
                         maxSize: config.images.maxSize
-                        }, function(newFile) {
+                        }, function(err, newFile) {
+                            if (err) return res.json(err);
+                            
                             ImageController.pushImageCache(gm, gfs, req.user._id, newFile._id, function(err, imageObj) {
                                 if (err)
                                     return res.json(err);

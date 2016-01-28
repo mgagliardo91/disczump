@@ -95,7 +95,9 @@ function createThumbnail(gm, gfs, fileId, callback) {
         	mimetype: file.contentType, 
         	filename: file.filename, 
         	maxSize: config.images.thumbnailSize
-        }, function(newFile) {
+        }, function(err, newFile) {
+            if (err) return callback(err);
+            
         	return callback(null, newFile._id);
         });
     });
