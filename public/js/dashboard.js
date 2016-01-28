@@ -2661,10 +2661,10 @@ var ZumpEditor = function(opt) {
     		{id: 'disc-material', optional: true, type: 'none'},
     		{id: 'disc-weight', optional: true, type: 'number', max: 3},
     		{id: 'disc-color', optional: true, type: 'none'},
-    		{id: 'disc-speed', optional: true, type: 'number', max: 2},
-    		{id: 'disc-glide', optional: true, type: 'number', max: 2},
-    		{id: 'disc-turn', optional: true, type: 'number', max: 2},
-    		{id: 'disc-fade', optional: true, type: 'number', max: 2},
+    		{id: 'disc-speed', optional: true, type: 'function', fn: function(val) { return /^([0-9]{1,2})$/.test(val) }},
+    		{id: 'disc-glide', optional: true, type: 'function', fn: function(val) { return /^([0-9]{1,2})$/.test(val) }},
+    		{id: 'disc-turn', optional: true, type: 'function', fn: function(val) { return /^(-?[0-9])$/.test(val) }},
+    		{id: 'disc-fade', optional: true, type: 'function', fn: function(val) { return /^(-?[0-9])$/.test(val) }},
     		{id: 'disc-condition', optional: true, type:'function', fn: function(val) { return /^(10|[0-9])$/.test(val) }, max: 2}
     	]
     });

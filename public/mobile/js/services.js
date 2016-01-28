@@ -23,6 +23,10 @@ angular.module('disczump.services', ['underscore'])
         if (params.view == 'dashboard' && params.user_id) {
             return $location.path('/d/' + params.user_id);
         }
+        
+        if (params.view == 'profile' && params.user_id) {
+            return $location.path('/profile/' + params.user_id);
+        }
     }
 
     function transformToAssocArray(prmstr) {
@@ -139,6 +143,11 @@ angular.module('disczump.services', ['underscore'])
     var account = {};
     var userPrefs = {};
     var discs = [];
+    
+    var userCache = [];
+    var users = [];
+    var userQuery = '';
+    
     var pubDiscs = undefined;
     var pubAccount = undefined;
     var publicActive = false;
@@ -153,11 +162,10 @@ angular.module('disczump.services', ['underscore'])
             if (success) {
                 angular.copy(data, account);
                 isLoggedIn = true;
+                acctReq.resolve();
+            } else {
+                acctReq.reject({process:'Error loading account.', error: data});
             }
-            else {
-                console.log(data);
-            }
-            acctReq.resolve();
         });
 
         var prefsReq = $q.defer();
@@ -165,12 +173,10 @@ angular.module('disczump.services', ['underscore'])
         APIService.Get('/account/preferences', function(success, data) {
             if (success) {
                 angular.copy(data, userPrefs);
-                $rootScope.$emit('DZUserPrefsUpdated');
+                prefsReq.resolve();
+            } else {
+                prefsReq.reject({process:'Error loading preferences.', error: data});
             }
-            else {
-                console.log(data);
-            }
-            prefsReq.resolve();
         });
 
         var discReq = $q.defer();
@@ -178,15 +184,17 @@ angular.module('disczump.services', ['underscore'])
         APIService.Get('/discs', function(success, data) {
             if (success) {
                 angular.copy(data, discs);
+                discReq.resolve();
+            } else {
+                discReq.reject({process:'Error loading discs.', error: data});
             }
-            else {
-                console.log(data);
-            }
-            discReq.resolve();
         });
 
-        $q.all(tasks).then(function() {
-            if (callback) callback(isLoggedIn);
+        $q.all(tasks).then(function(results) {
+            if (callback) callback(true);
+        }, function(err) {
+            console.log(err);
+            if (callback) callback(false, err);
         });
     }
 
@@ -234,26 +242,65 @@ angular.module('disczump.services', ['underscore'])
         });
 
         if (typeof(disc) !== 'undefined') {
-            return callback(disc, account);
+            return callback(true, {disc: disc, user: account});
         }
 
         if (typeof(pubDisc) !== 'undefined') {
-            return callback(pubDisc, account);
+            APIService.Get('/users/' + pubDisc.userId, function(success, user) {
+                if (success) {
+                    return callback(true, {disc: pubDisc, user: user});
+                }
+                else {
+                    return callback(false, user);
+                }
+            });
         }
 
-        APIService.Get('/discs/' + id, function(success, data) {
+        APIService.Get('/discs/' + id, function(success, disc) {
             if (success) {
-                APIService.Get('/users/' + data.userId, function(success, user) {
+                APIService.Get('/users/' + disc.userId, function(success, user) {
                     if (success) {
-                        return callback(data, user);
+                        return callback(true, {disc: disc, user: user});
                     }
                     else {
-                        return callback();
+                        return callback(false, user);
                     }
                 });
             }
             else {
-                return callback();
+                return callback(false, disc);
+            }
+        });
+    }
+    
+    function getUser(id, callback) {
+        var user = _.findWhere(userCache, {
+            _id: id
+        });
+
+        if (typeof(user) !== 'undefined') {
+            return getUserPreview(user, callback);
+        }
+
+        APIService.Get('/users/' + id, function(success, user) {
+            if (success) {
+                userCache = _.uniq(_.union(userCache,  [user]), false, _.property('_id'));
+                return getUserPreview(user, callback);
+            }
+            else {
+                return callback(false, user);
+            }
+        });
+    }
+    
+    function getUserPreview(user, callback) {
+        if (typeof(user) === 'undefined') return callback();
+        
+        APIService.Get('/users/' +user._id + '/preview', function(success, preview) {
+            if (success) {
+                return callback(true, {user: user, preview: preview});
+            } else {
+                return callback(false, preview);
             }
         });
     }
@@ -318,7 +365,7 @@ angular.module('disczump.services', ['underscore'])
 
     function getPublicDiscs(userId, callback) {
         if (userId == account._id) {
-            callback(discs);
+            callback(true, {discs: discs, user: account});
         }
         else {
             var tasks = [];
@@ -327,11 +374,12 @@ angular.module('disczump.services', ['underscore'])
             APIService.Get('/users/' + userId, function(success, data) {
                 if (success) {
                     pubAccount = data;
+                    accReq.resolve();
                 }
                 else {
                     pubAccount = undefined;
+                    accReq.reject({process: 'Error loading user account.', error: data});
                 }
-                accReq.resolve();
             });
 
             var discReq = $q.defer();
@@ -339,16 +387,19 @@ angular.module('disczump.services', ['underscore'])
             APIService.Get('/users/' + userId + '/discs', function(success, data) {
                 if (success) {
                     pubDiscs = data;
+                    discReq.resolve();
                 }
                 else {
                     pubDiscs = undefined;
+                    discReq.reject({process: 'Error loading user account.', error: data});
                 }
-                discReq.resolve();
             });
 
             $q.all(tasks).then(function() {
-                callback(pubDiscs, pubAccount);
-            });
+                callback(true, {discs: pubDiscs, user: pubAccount});
+            }), function(errorObj) {
+                callback(false, errorObj);
+            };
         }
     }
 
@@ -363,6 +414,25 @@ angular.module('disczump.services', ['underscore'])
     function isPublic() {
         return publicActive;
     }
+    
+    function queryUsers(query) {
+        userQuery = query;
+        
+        if (typeof(query) === 'undefined' || !query.trim().length) {
+            users.splice(0, users.length);
+            return;
+        }
+        
+        APIService.Get('/users?q=' + query.trim(), function(success, qResults) {
+            if (success) {
+                if (qResults.query != userQuery) return;
+                
+                userCache = _.uniq(_.union(userCache,  qResults.results), false, _.property('_id'));
+                users.splice(0,users.length);
+                qResults.results.forEach(function(v) {users.push(v)}, users);    
+            }
+        });
+    }
 
     function isAuthenticated() {
         return isLoggedIn;
@@ -371,6 +441,8 @@ angular.module('disczump.services', ['underscore'])
     return {
         initialize: initialize,
         discs: discs,
+        users: users,
+        userQuery: userQuery,
         account: account,
         userPrefs: userPrefs,
         getPrimaryImage: getPrimaryImage,
@@ -383,6 +455,8 @@ angular.module('disczump.services', ['underscore'])
         deleteDisc: deleteDisc,
         getActiveDiscList: getActiveDiscList,
         isPublic: isPublic,
+        getUser: getUser,
+        queryUsers: queryUsers,
         isAuthenticated: isAuthenticated
     }
 }])
@@ -566,6 +640,11 @@ angular.module('disczump.services', ['underscore'])
 
         return 0;
     }
+    
+    function isFilterActive() {
+        var sum = _.reduce(filterProps, function(memo, filter){ return memo + filter.filters.length }, 0);
+        return sum > 0;
+    }
 
     function getFilterItem(prop) {
         return _.findWhere(filterProps, {
@@ -714,7 +793,8 @@ angular.module('disczump.services', ['underscore'])
         clearOption: clearOption,
         isOptionActive: isOptionActive,
         executeFilter: executeFilter,
-        filterObj: filterObj
+        filterObj: filterObj,
+        isFilterActive: isFilterActive
     }
 }])
 
@@ -1035,8 +1115,8 @@ angular.module('disczump.services', ['underscore'])
 
                     canvas = document.createElement("canvas");
                     ctx = canvas.getContext("2d");
-                    canvas.width = targetHeight;
-                    canvas.height = targetWidth;
+                    canvas.width =  Math.abs(orientation) == 90 ? targetHeight : targetWidth;
+                    canvas.height = Math.abs(orientation) == 90 ? targetWidth : targetHeight;
                     drawImageIOSFix(orientation, ctx, img, 0, 0, img.width, img.height, 0, 0, targetWidth, targetHeight);
                     dataURL = canvas.toDataURL(file.type, 0.6);
                     callback(dataURL);

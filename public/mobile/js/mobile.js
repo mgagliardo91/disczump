@@ -1,4 +1,4 @@
-var app = angular.module('disczump', ['ngRoute', 'ngAnimate', 'mobile-angular-ui', 'mobile-angular-ui.gestures', 'as.sortable', 'oc.lazyLoad', 'disczump.controllers']);
+var app = angular.module('disczump', ['ngRoute', 'ngAnimate', 'mobile-angular-ui', 'mobile-angular-ui.gestures', 'as.sortable', 'oc.lazyLoad', 'ngclipboard', 'disczump.controllers']);
 app.config(['$routeProvider', '$httpProvider', function($routeProvider, $httpProvider) {
     if (!$httpProvider.defaults.headers.get) {
         $httpProvider.defaults.headers.get = {};    
@@ -53,8 +53,17 @@ app.config(['$routeProvider', '$httpProvider', function($routeProvider, $httpPro
         templateUrl: '/static/mobile/templates/settings.html',
         controller: 'SettingsController',
         reloadOnSearch: false
+    }).when('/profile', {
+        templateUrl: '/static/mobile/templates/profileList.html',
+        controller: 'ProfileListController',
+        reloadOnSearch: false
+    }).when('/profile/:userId', {
+        templateUrl: '/static/mobile/templates/profile.html', 
+        controller: 'ProfileController',
+        reloadOnSearch: false
     }).otherwise({ redirectTo: '/' });
 }]);
+
 app.run(['$location', 'ConfigService', function($location, ConfigService) {
     ConfigService.initUrl($location.absUrl());
 }]);

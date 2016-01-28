@@ -60,26 +60,9 @@ module.exports = function(app, passport, gridFs) {
             req.user.updateAccessCount('mobile');
             return res.render('mobile/index', {
                 layout: 'mobile',
+                isRelease: localConfig.release,
+                serverURL : localConfig.serverURL
             });
-        //     return res.render('notification', {
-        //         isRelease: localConfig.release,
-        //         isMobile: req.device.isMobile,
-        //         user : req.user,
-        //         userString: req.user.accountToString(),
-        //         notify : {
-        //           pageHeader: 'Unsupported Platform',
-        //           header: 'Unsupported Platform',
-        //           strong: 'Your dashboard is not currently accessible by a mobile device.',
-        //           text: 'We are working to bring mobile capability to the disc|zump ' + 
-        //                     'dashboard, but at this time you will need to access the ' + 
-        //                     'dashboard from a desktop/laptop. Check out our ' +
-        //                     '<a href="/faq#faq-mobile">FAQ</a> for more information on ' +
-        //                     'mobile support.',
-        //           buttonIcon: 'fa-home',
-        //           buttonText: 'Return Home',
-        //           buttonLink: '/'
-        //       }
-        //   });
         }
         
         var firstUse = req.user.local.accessCount.desktop < 1;

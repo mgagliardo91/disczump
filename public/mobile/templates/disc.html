@@ -4,13 +4,13 @@
             {{title}}
         </div>
         <div class="btn-group pull-left">
-            <div ng-click="nav('/#')" class="btn">
-                <i class="fa fa-home fa-lg"></i>
+            <div ng-click="goBack()" class="btn">
+                <i class="fa fa-arrow-left fa-lg"></i>
             </div>
         </div>
         <div class="btn-group pull-right" ui-yield-to="navbarAction">
             <div class="btn" ng-click="dropdown = !dropdown">
-                <i class="fa fa-share-alt fa-lg"></i>
+                <i class="fa fa-ellipsis-v fa-lg"></i>
             </div>
         </div>
     </div>
@@ -19,17 +19,17 @@
             <i class="fa fa-spinner fa-spin loading-spinner"></i>
         </div>
         <div class="app-content">
-            <div class="scrollable-content" id="view-disc" ng-class="{'has-footer': footer}">
+            <div class="scrollable-content view-model" id="view-disc" ng-class="{'has-footer': footer}">
                 <div class="page-info" ng-show="!disc.visible">
                     <span><i class="fa fa-eye-slash"></i></span> This disc can only be viewed by you.
                 </div>
-                <div class="disc-image" ng-show="$def(disc)">
+                <div class="model-image" ng-show="$def(disc)">
                     <div ng-click="showImageList()">
                         <span class="disc-icon" ng-show="disc.imageList.length"><i class="fa fa-photo"></i></span>
                         <img ng-src="{{getPrimaryImage()}}">
                     </div>
                 </div>
-                <table class="disc-info-table" ng-show="$def(disc)">
+                <table class="model-info-table" ng-show="$def(disc)">
                     <tr>
                         <td>Brand:</td>
                         <td>{{disc.brand}}</td>
@@ -40,7 +40,7 @@
                     </tr>
                     <tr ng-show="$def(user)">
                         <td>Owner:</td>
-                        <td>{{user.username}}</td>
+                        <td><a ng-href="#/profile/{{user._id}}">{{user.username}}</a></td>
                     </tr>
                     <tr ng-show="$def(disc.type)">
                         <td>Type:</td>
@@ -89,6 +89,14 @@
                         </td>
                     </tr>
                 </table>
+                <div class="view-label" ng-show="disc.notes">Notes:</div>
+                <div id="notes-container" ng-show="disc.notes">
+                    {{disc.notes}}
+                </div>
+                <div class="view-label" ng-show="disc.tagList.length">Tags:</div>
+                <div id="tag-list" ng-show="disc.tagList.length">
+                    <div ng-repeat="tag in disc.tagList" class="tag-item">{{tag}}</div>
+                </div>
             </div>
         </div>
     </div>
@@ -97,13 +105,31 @@
     <a class="option-item" ng-href="#/disc/{{disc._id}}/edit">
         <span><i class="fa fa-pencil fa-lg"></i>Edit Disc</span>
     </a>
-    <a class="option-item" ng-click="deleteDisc()">
+    <a class="option-item" ng-click=" dropdown = false; reqDeleteDisc = true">
         <span><i class="fa fa-trash fa-lg"></i>Delete Disc</span>
     </a>
-    <a class="option-item" ng-href="">
+    <a class="option-item" ng-click=" dropdown = false; modal.reqShareDisc = true" ng-show="disc.visible">
         <span><i class="fa fa-link fa-lg"></i>Share Public Link</span>
     </a>
-    <a class="option-item facebook" ng-href="{{shareLink()}}">
+    <a class="option-item facebook" ng-href="{{shareLink()}}" ng-show="disc.visible">
         <span><i class="fa fa-facebook-square fa-lg"></i>Share to Facebook</span>
     </a>
 </div>
+<div class="backdrop" ng-show="modal.reqShareDisc">
+    <div class="dz-modal">
+        <div class="dz-modal-title modal-row">Public URL</div>
+        <input type="text" class="form-control" style="margin: 0px auto 20px auto; max-width: 300px;" value="{{publicUrl}}" id="public-url" />
+        <div class="dz-modal-btn" ngclipboard data-clipboard-target="#public-url" ngclipboard-success="onSuccess(e);">
+            <span style="margin-right: 10px;"><i class="fa fa-clipboard" alt="Copy to clipboard"></i></span>Copy Link
+        </div>
+        <div class="dz-modal-btn close-modal" ng-click="modal.reqShareDisc = false;">Close</div>
+    </div>
+</div>
+<div class="backdrop" ng-show="reqDeleteDisc">
+    <div class="dz-modal">
+        <div class="dz-modal-title modal-row">Are you sure you want to delete this disc?</div>
+        <div class="dz-modal-btn" ng-click="deleteDisc()">Delete</div>
+        <div class="dz-modal-btn close-modal" ng-click="reqDeleteDisc = false;">Close</div>
+    </div>
+</div>
+<error-modal error-options="errorOpts"></error-modal>

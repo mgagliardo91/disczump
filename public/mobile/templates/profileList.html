@@ -1,0 +1,50 @@
+<div class="scrollable" id="profile">
+    <div class="navbar navbar-app navbar-absolute-top">
+        <div class="btn-group pull-left">
+            <div ui-toggle="uiSidebarLeft" class="btn sidebar-toggle">
+                <i class="fa fa-bars fa-lg"></i>
+            </div>
+        </div>
+        <div id="search-bar-container">
+            <div id="search-bar">
+                <div class="icon search-icon">
+                    <i class="fa fa-search fa-lg"></i>
+                </div>
+                <div class="icon close-icon" ng-click="query=''; searchFocus=true;">
+                    <i class="fa fa-close fa-lg"></i>
+                </div>
+                <div class="search-area">
+                    <input placeholder="Search profiles..." debounce="500" type="text" ng-model="query" focus-on="searchFocus" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="app-body" ng-class="{loading: loading}">
+        <div ng-show="loading" class="app-content-loading">
+            <i class="fa fa-spinner fa-spin loading-spinner"></i>
+        </div>
+        <div class="app-content">
+            <div class="scrollable-content" infinite-scroll="loadMore()">
+                <ul id="user-list" class="item-list">
+                    <div class="no-results" ng-show="!userList.length">
+                        <i class="fa fa-exclamation-circle"></i>
+                        <h1>No Results</h1>
+                    </div>
+                    <li ng-repeat="user in userList" class="item" ng-click="nav('profile/' + user._id)">
+                        <div class="item-content">
+                            <img ng-src="{{user.image}}" ng-if="user.image" />
+                            <img src="/static/logo/logo_high_nobg.svg" ng-if="!user.image" />
+                            <div>
+                                <h1>{{user.username}}</h1>
+                                <h2 ng-if="user.firstName || user.lastName">{{user.firstName}}<span ng=if="user.firstName && user.lastName"> </span>{{user.lastName}}</h2>
+                                <p>{{user.shortLocation}}
+                                    <span class="item-note" ng-if="user.pdgaNumber">#{{user.pdgaNumber}}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

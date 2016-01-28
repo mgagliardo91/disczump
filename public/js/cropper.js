@@ -820,6 +820,21 @@
           // flip vertical
           case 4:
             scaleY = -1;
+            break;
+
+          // flip vertical + rotate right 90°
+          case 5:
+            rotate = 90;
+            scaleY = -1;
+            break;
+
+          // rotate right 90°
+          case 6:
+            rotate = 90;
+            break;
+
+          // flip horizontal + rotate right 90°
+          case 7:
             rotate = 90;
             scaleX = -1;
             break;

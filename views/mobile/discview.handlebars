@@ -54,10 +54,10 @@
 <body class="has-navbar-top" id="main-body">
     <div style="display: none;" firstUse="{{firstUse}}" serverURL="{{serverURL}}" id="server-params"></div>
     <div class="app main-app" id="public-disc-view" discid="{{disc._id}}">
-        <div class="scrollable" id="disc">
+        <div class="scrollable" id="disc-container">
             <div class="navbar navbar-app navbar-absolute-top">
                 <div class="navbar-brand navbar-brand-center">
-                    Demo Disc 1
+                    {{disc.name}}
                 </div>
                 <div class="btn-group pull-left" id="nav-home">
                     <div class="btn">
@@ -76,13 +76,13 @@
                 </div>
             </div>
             <div class="app-body">
-                <div class="app-content-loading">
+                <div class="app-content-loading" id="disc-loading">
                     <i class="fa fa-spinner fa-spin loading-spinner"></i>
                 </div>
                 <div class="app-content">
-                    <div class="scrollable-content" id="view-disc">
-                        <div class="disc-image">
-                            <div>
+                    <div class="scrollable-content view-model" id="view-disc">
+                        <div class="model-image">
+                            <div id="disc-primary-image">
                                 <span class="disc-icon"><i class="fa fa-photo"></i></span>
                                 {{#if primaryImage}}
                                 <img src="/files/{{primaryImage.fileId}}">
@@ -91,7 +91,7 @@
                                 {{/if}}
                             </div>
                         </div>
-                        <table class="disc-info-table">
+                        <table class="model-info-table">
                             <tr>
                                 <td>Brand:</td>
                                 <td>{{disc.brand}}</td>
@@ -102,7 +102,7 @@
                             </tr>
                             <tr>
                                 <td>Owner:</td>
-                                <td>{{owner.local.username}}</td>
+                                <td><a href="/dashboard#view=profile&user_id={{owner._id}}">{{owner.local.username}}</a></td>
                             </tr>
                             {{#if disc.type}}
                             <tr>
@@ -173,7 +173,41 @@
                                 </td>
                             </tr>
                         </table>
+                        {{#if disc.notes}}
+                        <div class="view-label">Notes:</div>
+                        <div id="notes-container">
+                            {{disc.notes}}
+                        </div>
+                        {{/if}}
+                        {{#if disc.tagList.length}}
+                        <div class="view-label">Tags:</div>
+                        <div id="tag-list">
+                            {{#each disc.tagList}}
+                            <div ng-repeat="tag in disc.tagList" class="tag-item">{{this}}</div>
+                            {{/each}}
+                        </div>
+                        {{/if}}
                     </div>
+                    <div class="scrollable-content" id="view-disc-images">
+                        <ul class="disc-image-list">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scrollable" id="image-container" style="display: none;">
+            <div class="navbar navbar-app navbar-absolute-top">
+                <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
+                    {{disc.name}}: Images
+                </div>
+                <div class="btn-group pull-left" id="go-back">
+                    <div class="btn">
+                        <i class="fa fa-arrow-left fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="app-body">
+                <div class="app-content">
                     <div class="scrollable-content" id="view-disc-images">
                         <ul class="disc-image-list">
                         </ul>
@@ -183,9 +217,6 @@
         </div>
     </div>
     <div id="options-container" style="display: none;">
-        {{!--<a class="option-item" id="share-public">--}}
-        {{!--    <span><i class="fa fa-link fa-lg"></i>Share Public Link</span>--}}
-        {{!--</a>--}}
         <a class="option-item facebook" id="share-facebook">
             <span><i class="fa fa-facebook-square fa-lg"></i>Share to Facebook</span>
         </a>

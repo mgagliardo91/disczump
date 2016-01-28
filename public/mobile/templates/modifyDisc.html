@@ -1,22 +1,27 @@
 <div class="scrollable">
     <div class="navbar navbar-app navbar-absolute-top">
         <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
-            <span ng-show="!settings.editMode">Create Disc</span>
-            <span ng-show="settings.editMode">Edit Disc</span>
+            <span ng-if="!settings.editMode">Create Disc</span>
+            <span ng-if="settings.editMode">Edit Disc</span>
         </div>
-        <div class="btn-group pull-left">
+        <div class="btn-group pull-left" ng-if="settings.editMode">
             <div ng-click="goBack()" class="btn">
                 <i class="fa fa-ban fa-lg"></i>
             </div>
         </div>
-        <div class="btn-group pull-right" ui-yield-to="navbarAction">
-            <div class="btn" ng-click="confirmResetDisc()">
+        <div class="btn-group pull-left" ng-if="!settings.editMode">
+            <div ui-toggle="uiSidebarLeft" class="btn sidebar-toggle">
+                <i class="fa fa-bars fa-lg"></i>
+            </div>
+        </div>
+        <div class="btn-group pull-right" ui-yield-to="navbarAction" ng-if="!settings.editMode">
+            <div class="btn" ng-click="temp.resetDisc = true">
                 <i class="fa fa-eraser fa-lg"></i>
             </div>
         </div>
     </div>
-    <div class="app-body" ng-class="{loading: loading}">
-        <div ng-show="loading" class="app-content-loading">
+    <div class="app-body" ng-class="{loading: 'settings.loading || (!settings.modulesLoaded && settings.page == 2)'}">
+        <div ng-show="settings.loading || (!settings.modulesLoaded && settings.page == 2)" class="app-content-loading">
             <i class="fa fa-spinner fa-spin loading-spinner"></i>
         </div>
         <div class="app-content" id="modify-disc-pg">
@@ -51,13 +56,13 @@
                     <div style="height: 10px"></div>
                     <div class="header-row">Advanced</div>
                     <div class="dual-item-row">
-                        <input ng-model="disc.speed" type="text" ng-pattern="/^[0-9]{1,2}$/" class="dual-item form-control" placeholder="Speed [1 - 15]"/>
-                        <input ng-model="disc.glide" type="text" ng-pattern="/^-?[0-9]{1,2}$/" class="dual-item form-control" placeholder="Glide [1 - 7]"/>
+                        <input ng-model="disc.speed" type="text" ng-pattern="/^[0-9]{1,2}$/" class="dual-item form-control" placeholder="Speed (ex. 12)"/>
+                        <input ng-model="disc.glide" type="text" ng-pattern="/^[0-9]{1,2}$/" class="dual-item form-control" placeholder="Glide (ex. 5)"/>
                         <div class="clearfix"></div>
                     </div>
                     <div class="dual-item-row">
-                        <input ng-model="disc.turn" type="text" ng-pattern="/^-?[0-9]{1,2}$/" class="dual-item form-control" placeholder="Turn [-5 - 1]"/>
-                        <input ng-model="disc.fade" type="text" ng-pattern="/^-?[0-9]{1,2}$/" class="dual-item form-control" placeholder="Fade [0 - 6]"/>
+                        <input ng-model="disc.turn" type="text" ng-pattern="/^-?[0-9]$/" class="dual-item form-control" placeholder="Turn (ex. -1)"/>
+                        <input ng-model="disc.fade" type="text" ng-pattern="/^-?[0-9]$/" class="dual-item form-control" placeholder="Fade (ex. 3)"/>
                         <div class="clearfix"></div>
                     </div>
                     <div class="item-row">
@@ -98,7 +103,7 @@
                 </div>
                 <div class="item-row">
                     <div id="tag-list">
-                        <div ng-repeat="tag in disc.tagList" class="tag-item" ng-click="selectTag(tag)" ng-class="{active: temp.activeTag == tag}">{{tag}}</div>
+                        <div ng-repeat="tag in disc.tagList" class="tag-item" ng-click="temp.activeTag = tag" ng-class="{active: 'temp.activeTag == tag'}">{{tag}}</div>
                     </div>
                 </div>
                 <div style="height: 20px"></div>
@@ -113,9 +118,9 @@
                 </div>
                 <div class="backdrop" ng-show="temp.activeTag">
                     <div class="dz-modal">
-                        <div class="dz-modal-title">{{temp.activeTag}}</div>
-                        <div class="dz-modal-item" ng-click="removeTag()">Remove Tag</div>
-                        <div class="dz-modal-item close-modal" ng-click="closeModal()">Close</div>
+                        <div class="dz-modal-title modal-row">{{temp.activeTag}}</div>
+                        <div class="dz-modal-btn" ng-click="removeTag()">Remove Tag</div>
+                        <div class="dz-modal-btn close-modal" ng-click="temp.activeTag = undefined">Close</div>
                     </div>
                 </div>
             </div>
@@ -131,10 +136,10 @@
                     </div>
                 </div>
                 <div style="height: 20px"></div>
-                <div class="header-row" ng-show="dropzoneProcessing">Processing...</div>
+                <div class="header-row" ng-show="settings.dropzoneProcessing">Processing...</div>
                 <div class="item-row">
                     <div>
-                        <div class="image-list" id="dropzone-container" directive-on="modulesLoaded" directive-set="{dropzone: 'dropzoneConfig'}">
+                        <div class="image-list" id="dropzone-container" directive-on="settings.modulesLoaded" directive-set="{dropzone: 'dropzoneConfig'}">
                         </div>
                         <div class="clearfix"></div>
                     </div>
@@ -153,18 +158,18 @@
                 </div>
                 <div class="backdrop" ng-show="temp.activeImage">
                     <div class="dz-modal">
-                        <img ng-src="/files/{{temp.activeImageThumbnail}}">
-                        <div class="dz-modal-item" ng-click="makePrimary()">Make Primary</div>
-                        <div class="dz-modal-item" ng-click="removeImage()">Remove Image</div>
-                        <div class="dz-modal-item close-modal" ng-click="closeModal()">Close</div>
+                        <img class="modal-row" ng-src="/files/{{temp.activeImageThumbnail}}">
+                        <div class="dz-modal-btn" ng-click="makePrimary()">Make Primary</div>
+                        <div class="dz-modal-btn" ng-click="removeImage()">Remove Image</div>
+                        <div class="dz-modal-btn close-modal" ng-click="temp.activeImage = undefined">Close</div>
                     </div>
                 </div>
             </div>
             <div class="backdrop" ng-show="temp.resetDisc">
                 <div class="dz-modal">
-                    <div class="dz-modal-title">This will erase all form data, tags, and images. Continue?</div>
-                    <div class="dz-modal-item" ng-click="resetDisc()">Continue</div>
-                    <div class="dz-modal-item close-modal" ng-click="closeModal()">Close</div>
+                    <div class="dz-modal-title modal-row">This will erase all form data, tags, and images. Continue?</div>
+                    <div class="dz-modal-btn" ng-click="resetDisc()">Continue</div>
+                    <div class="dz-modal-btn close-modal" ng-click="temp.resetDisc = undefined">Close</div>
                 </div>
             </div>
         </div>
@@ -174,3 +179,4 @@
     <i class="fa fa-spinner fa-spin loading-spinner"></i>
 </div>
 <image-cropper cropper-options="discImageCropper"></image-cropper>
+<error-modal error-options="errorOpts"></error-modal>

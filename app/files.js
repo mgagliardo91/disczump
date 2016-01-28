@@ -66,7 +66,8 @@ module.exports = function(app, gridFs) {
     app.route('/:fileId')
         .get(function(req, res) {
             
-            gfs.files.find({_id:mongoose.Types.ObjectId(req.params.fileId)}).toArray(function(err, files) {
+            try {
+                gfs.files.find({_id:mongoose.Types.ObjectId(req.params.fileId)}).toArray(function(err, files) {
                 if(err)
                     return res.status(404).send(Error.createError(err, Error.internalError));
                 
@@ -87,6 +88,11 @@ module.exports = function(app, gridFs) {
                 
                 rs.pipe(res);
             });
+            } catch (err) {
+                console.log('Error obtaining file: ' + err);
+                return res.status(404).send(Error.createError(err, Error.internalError));
+            }
+            
         });
         
     app.route('/:fileId/:resize')

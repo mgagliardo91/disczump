@@ -23,7 +23,19 @@ $(document).ready(function() {
   	
   	$('#nav-home').click(function() {
   	    window.location.href = '/dashboard';
-  	})
+  	});
+  	
+  	$('#go-back').click(function() {
+  	    $('#image-container').hide();
+  	    $('#disc-container').show();
+  	});
+  	
+  	$('#disc-primary-image').click(function() {
+  	    if (currentDisc.imageList.length) {
+  	    $('#disc-container').hide();
+  	    $('#image-container').show();
+  	    }
+  	});
   	
   	$('#nav-back').click(function() {
        $('#view-image').hide();
@@ -71,19 +83,9 @@ function initialize() {
      getDiscById(discId, function(success, disc) {
         if (success) {
             currentDisc = disc;
-            
-            // Get disc images
-            getAllDiscImages(currentDisc._id, function(success, images) {
-                if (success) {
-                    if (images.length > 0) {
-                        imageArray = images;
-                        generateImageList();
-                        $('.app-content-loading').hide();
-                    }
-                } else {
-                    handleError(images);
-                }
-            });
+            generateImageList();
+            if (!disc.imageList.length) $('.disc-icon').hide(); 
+            $('#disc-loading').hide();
         } else {
             handleError(disc);
         }
@@ -93,7 +95,7 @@ function initialize() {
 function generateImageList() {
     var width = $(window).innerWidth() - 20;
     
-    _.each(imageArray, function(img) {
+    _.each(currentDisc.imageList, function(img) {
         $discImageTable.append('<li class="disc-image" style="width:' + width + 'px;height:' + width + 'px">' +
                                     '<a href="/files/' + img.fileId + '"><img src="/files/' + img.fileId + '" /></a>' +
                                 '</li>');
