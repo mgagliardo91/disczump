@@ -1,5 +1,3 @@
-var siteUrl = 'https://disczumpserver-mgagliardo.c9.io';
-
 angular.module('underscore', [])
 
 .factory('_', ['$window', function($window) {

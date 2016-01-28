@@ -1,4 +1,4 @@
-var siteUrl = 'https://disczumpserver-mgagliardo.c9.io';
+var siteUrl = 'https://www.disczump.com';
 var dzID = '1433417853616595';
 
 angular.module('disczump.controllers', ['disczump.services'])
@@ -360,7 +360,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         
         $scope.setUrl = function(url) {
             siteUrl = url;
-            console.log(url);
+            $scope.init();
         }
         
         $scope.toast = function(message) {
@@ -428,8 +428,6 @@ angular.module('disczump.controllers', ['disczump.services'])
                 this.$apply(fn);
             }
         };
-
-        $scope.init();
     }
 ])
 
