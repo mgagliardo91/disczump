@@ -3570,6 +3570,7 @@ var ZumpDashboard = function(opt) {
 		});
 		unfilteredList.push(upDisc);
 		updateDiscItem(upDisc);
+		myGallery.updateObject(upDisc);
 		if (currentDisc && currentDisc._id == upDisc._id) forceRefresh = true;
 	}
 	
@@ -6286,13 +6287,15 @@ var ZumpGallery = function(opt) {
 	/*
 	* Updates an item
 	*/
-	this.updateObject = function(objId, params) {
-		var $galleryItem = $('.disc-gallery-item[objId="' + objId + '"]');
+	this.updateObject = function(disc) {
+		var $galleryItem = $('.disc-gallery-item[objId="' + disc._id + '"]');
 		
-		if ($galleryItem.length && params.image) {
-			$galleryItem.find('.disc-gallery-image > img').attr('src', '/files/' + params.image);
-			var galItem = _.first(_.where(objList, {'_id' : objId}));
-			galItem.tempFileId = '/files/' + params.image;
+		if ($galleryItem.length) {
+			var pImage = disc.primaryImage ? '/files/' + _.findWhere(disc.imageList, {_id: disc.primaryImage}).fileId : '/static/logo/logo_small_faded.svg';
+			
+			$galleryItem.find('.disc-gallery-image > img').attr('src', pImage);
+			var galItem = _.first(_.where(objList, {'_id' : disc._id}));
+			galItem.tempFileId = pImage;
 		}
 	}
 	
