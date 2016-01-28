@@ -189,6 +189,7 @@ angular.module('disczump.services', ['underscore'])
         });
 
         $q.all(tasks).then(function(results) {
+            $rootScope.$emit('DZUserPrefsUpdated');
             if (callback) callback(true);
         }, function(err) {
             console.log(err);
@@ -889,6 +890,11 @@ angular.module('disczump.services', ['underscore'])
         });
 
         function setUserPrefs() {
+            _.each(sortItems, function(sortItem) {
+                sortItem.sortOn = false;
+                sortItem.sortOrder = -1;
+            });
+            
             _.each(DataService.userPrefs.defaultSort, function(pref) {
                 addSortItem(pref.property, pref.sortAsc);
             });
