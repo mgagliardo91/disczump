@@ -15,9 +15,16 @@
  <tr>
   <td bgcolor="#ffffff" style="padding: 10px 40px 10px 40px; font-family: 'PT Sans', sans-serif;">
    <p style="padding-bottom: 10px;">Hello, <strong>{{user.local.username}}</strong>!</p>
-    <p style="padding-bottom: 10px; font-size: 0.9em">
-        {{{compileToHtml content}}}
-    </p>
+   {{#if textContent}}
+    <div style="padding-bottom: 10px; font-size: 0.9em">
+        {{{compileToHtml textContent}}}
+    </div>
+    {{/if}}
+    {{#if htmlContent}}
+    <div style="padding-bottom: 10px; font-size: 0.9em">
+        {{{compileAsHtml htmlContent}}}
+    </div>
+    {{/if}}
     <p style="text-align: right;">Happy Zumping!</p>
     <p style="text-align: right;"><strong>disc|zump Staff</strong></p>
   </td>

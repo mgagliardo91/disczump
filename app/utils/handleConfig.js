@@ -61,6 +61,9 @@ function getExpressHandle() {
               },
               compileToHtml: function(data) {
                 return processLinks(data).replace(/\n/g, '<br>');
+              },
+              compileAsHtml: function(data) {
+                return data.replace(/\n/g, '<br>');
               }
             }
         });
@@ -96,5 +99,9 @@ function registerHelpers(hb) {
   
   hb.registerHelper("compileToHtml", function(data) {
       return processLinks(data).replace(/\n/g, '<br>');
+  });
+  
+    hb.registerHelper("compileAsHtml", function(data) {
+      return data.replace(/\n/g, '<br>');
   });
 }

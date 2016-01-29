@@ -27,7 +27,7 @@ mongoose.connection.on('connected', function() {
         
         var html = fs.readFileSync('./private/html/simpleTemplate.handlebars', 'utf8');
         var template = Handlebars.compile(html);
-        var message = template({user: user, content: content, serverURL: localConfig.serverURL});
+        var message = template({user: user, textContent: content, serverURL: localConfig.serverURL});
         
         Mailer.sendMail(user.local.email, 'disc|zump Notification', message, function(err, result) {
            if (err) {
