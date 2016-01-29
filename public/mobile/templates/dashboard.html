@@ -9,7 +9,7 @@
             </div>
         </div>
         <div class="btn-group pull-right" ui-yield-to="navbarAction">
-            <div class="btn" ng-click="searchActive = true; searchFocus = true">
+            <div class="btn" ng-click="searchActive = true; searchFocus = true" ng-class="{'active': query.length}" id="search-icon">
                 <i class="fa fa-search fa-lg"></i>
             </div>
         </div>

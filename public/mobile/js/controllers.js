@@ -446,7 +446,6 @@ angular.module('disczump.controllers', ['disczump.services'])
             $scope.searchActive = SearchService.lastQuery.valueOf().length > 0;
         $scope.loadSize = 20;
         $scope.title = 'Loading...';
-        $scope.filtering = FilterService.isFilterActive();
 
         $scope.$on("$destroy", function() {
             SearchService.lastQuery = $scope.query.valueOf();
@@ -473,20 +472,24 @@ angular.module('disczump.controllers', ['disczump.services'])
                 Math.min($scope.discList.length, $scope.loadSize + 20);
         }
 
-        $scope.loading = true;
+        $scope.loadParams = {
+            loading: true
+        };
+        
         if ($routeParams.userId) {
             DataService.getPublicDiscs($routeParams.userId, 
                 function(success, retData) {
-                    $scope.loading = false;
+                    $scope.loadParams.loading = false;
                     if (success) {
                         if (!DataService.isPublic()) {
                             DataService.setPublicState(true);
                             FilterService.clearFilters();
                         }
-        
+                        
                         $scope.discList = retData.discs;
                         $scope.title = (retData.user ? 
                             retData.user.username + '\'s Discs' : 'Unknown');
+                        $scope.filtering = FilterService.isFilterActive();
                     } else {
                         $scope.showError($scope.errorOpts, retData.type, 
                         'Error retrieving public discs.', retData.message, 
@@ -503,7 +506,8 @@ angular.module('disczump.controllers', ['disczump.services'])
             }
             $scope.discList = DataService.discs;
             $scope.title = 'My Dashboard';
-            $scope.loading = false;
+            $scope.filtering = FilterService.isFilterActive();
+            $scope.loadParams.loading = false;
         }
     }
 ])
