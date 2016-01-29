@@ -538,11 +538,12 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         ProfileController
 * Description:  Handles obtaining and displaying a user's profile
 *******************************************************************************/
-.controller('ProfileController', ['$scope', '$routeParams', 'DataService',
-    function($scope, $routeParams, DataService) {
+.controller('ProfileController', ['$scope', '$routeParams', '$window', 'DataService',
+    function($scope, $routeParams, $window, DataService) {
         $scope.user = undefined;
         $scope.preview = undefined;
         $scope.dropdown = false;
+        $scope.windowWidth = $window.innerWidth * .8;
         $scope.title = 'Loading...';
     
         $scope.errorOpts = {
@@ -806,10 +807,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         DiscController
 * Description:  Handles obtaining/showing discs
 *******************************************************************************/
-.controller('DiscController', ['$scope', '$routeParams', 'DataService',
-    function($scope, $routeParams, DataService) {
+.controller('DiscController', ['$scope', '$routeParams', '$window', 'DataService',
+    function($scope, $routeParams, $window, DataService) {
         $scope.disc = undefined;
         $scope.user = undefined;
+        $scope.windowWidth = $window.innerWidth * .8;
         $scope.dropdown = false;
         $scope.title = 'Loading...';
         $scope.errorOpts = {active: false};
@@ -879,6 +881,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.disc = undefined;
         $scope.title = 'Loading...';
         $scope.windowWidth = $window.innerWidth - 20;
+        $scope.imageWidth = $window.innerWidth - 42;
         
         $scope.errorOpts = {
             active: false

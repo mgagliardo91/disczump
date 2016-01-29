@@ -25,7 +25,7 @@
             <i class="fa fa-spinner fa-spin loading-spinner"></i>
         </div>
         <div class="app-content">
-            <div class="scrollable-content has-footer" id="modify-disc-pg0" ng-show="settings.page==0">
+            <div class="scrollable-content" id="modify-disc-pg0" ng-show="settings.page==0">
                 <ng-form name="forms.discData" novalidate >
                     <div class="header-row">General</div>
                     <div class="item-row">
@@ -77,10 +77,10 @@
                             <ui-switch ng-model="disc.visible"></ui-switch>
                         </div>
                     </div>
-                    <div style="height: 20px"></div>
+                    <div style="height: 70px"></div>
                 </ng-form>
             </div>
-            <div class="scrollable-content has-footer" id="modify-disc-pg1" ng-show="settings.page==1">
+            <div class="scrollable-content" id="modify-disc-pg1" ng-show="settings.page==1">
                 <div style="height: 20px"></div>
                 <div class="item-row">
                     <div class="input-group">
@@ -98,7 +98,7 @@
                         <div ng-repeat="tag in disc.tagList" class="tag-item" ng-click="temp.activeTag = tag" ng-class="{active: 'temp.activeTag == tag'}">{{tag}}</div>
                     </div>
                 </div>
-                <div style="height: 20px"></div>
+                <div style="height: 70px"></div>
                 <div class="backdrop" ng-show="temp.activeTag">
                     <div class="dz-modal">
                         <div class="dz-modal-title modal-row">{{temp.activeTag}}</div>
@@ -107,7 +107,7 @@
                     </div>
                 </div>
             </div>
-            <div class="scrollable-content has-footer" id="modify-disc-pg2" ng-show="settings.page==2">
+            <div class="scrollable-content" id="modify-disc-pg2" ng-show="settings.page==2">
                 <div class="header-row">Current Images</div>
                 <div class="item-row">
                     <div class="image-list">
@@ -127,6 +127,7 @@
                         <div class="clearfix"></div>
                     </div>
                 </div>
+                <div style="height: 70px"></div>
                 <div id="add-image-pos">
                     <button type="button" id="add-image" class="btn"><span><i class="fa fa-camera fa-2x"></i></span></button>
                 </div>

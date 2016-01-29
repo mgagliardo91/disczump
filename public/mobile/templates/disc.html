@@ -26,7 +26,7 @@
                 <div class="model-image" ng-show="$def(disc)">
                     <div ng-click="showImageList()">
                         <span class="disc-icon" ng-show="disc.imageList.length"><i class="fa fa-photo"></i></span>
-                        <img ng-src="{{getPrimaryImage()}}">
+                        <img ng-src="{{getPrimaryImage()}}" style="max-width: {{windowWidth}}px;">
                     </div>
                 </div>
                 <table class="model-info-table" ng-show="$def(disc)">

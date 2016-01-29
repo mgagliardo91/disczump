@@ -22,8 +22,8 @@
             <div class="scrollable-content view-model" id="view-user" ng-class="{'has-footer': footer}">
                 <div class="model-image" ng-show="$def(user)">
                     <div>
-                        <img ng-src="{{user.image}}" ng-if="user.image">
-                        <img src="/static/logo/logo_high_nobg.svg" ng-if="!user.image">
+                        <img ng-src="{{user.image}}" ng-if="user.image" style="width:{{windowWidth}}px">
+                        <img src="/static/logo/logo_high_nobg.svg" ng-if="!user.image" style="width:{{windowWidth}}px">
                     </div>
                 </div>
                 <table class="model-info-table" ng-show="$def(user)">

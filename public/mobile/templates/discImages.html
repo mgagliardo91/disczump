@@ -17,7 +17,7 @@
             <div class="scrollable-content" id="view-disc-images">
                 <ul class="disc-image-list" ng-show="$def(disc)">
                     <li class="disc-image" ng-repeat="image in disc.imageList" style="width:{{windowWidth}}px;height:{{windowWidth}}px">
-                        <a ng-href="/files/{{image.fileId}}"><img ng-src="/files/{{image.fileId}}" /></a>
+                        <a ng-href="/files/{{image.fileId}}"><img ng-src="/files/{{image.fileId}}" style="width:{{imageWidth}}px"/></a>
                     </li>
                 </ul>
             </div>
