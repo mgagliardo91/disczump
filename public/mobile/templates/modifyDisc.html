@@ -1,4 +1,4 @@
-<div class="scrollable">
+<div class="scrollable" id="modify-disc-pg">
     <div class="navbar navbar-app navbar-absolute-top">
         <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
             <span ng-if="!settings.editMode">Create Disc</span>
@@ -24,7 +24,7 @@
         <div ng-show="settings.loading || (!settings.modulesLoaded && settings.page == 2)" class="app-content-loading">
             <i class="fa fa-spinner fa-spin loading-spinner"></i>
         </div>
-        <div class="app-content" id="modify-disc-pg">
+        <div class="app-content">
             <div class="scrollable-content has-footer" id="modify-disc-pg0" ng-show="settings.page==0">
                 <ng-form name="forms.discData" novalidate >
                     <div class="header-row">General</div>
@@ -78,14 +78,6 @@
                         </div>
                     </div>
                     <div style="height: 20px"></div>
-                    <div class="nav-footer dual-btn">
-                        <div class="nav-footer-btn"></div>
-                        <div class="nav-footer-btn text" ng-show="forms.discData.$invalid">Form Invalid</div>
-                        <div class="nav-footer-btn" ng-click="settings.page=1" ng-hide="forms.discData.$invalid">
-                            <span><i class="fa fa-long-arrow-right"></i></span>
-                        </div>
-                        <div class="clearfix"></div>
-                    </div>
                 </ng-form>
             </div>
             <div class="scrollable-content has-footer" id="modify-disc-pg1" ng-show="settings.page==1">
@@ -107,15 +99,6 @@
                     </div>
                 </div>
                 <div style="height: 20px"></div>
-                <div class="nav-footer dual-btn">
-                    <div class="nav-footer-btn" ng-click="settings.page=0">
-                        <span><i class="fa fa-long-arrow-left"></i></span>
-                    </div>
-                    <div class="nav-footer-btn" ng-click="settings.page=2">
-                        <span><i class="fa fa-long-arrow-right"></i></span>
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
                 <div class="backdrop" ng-show="temp.activeTag">
                     <div class="dz-modal">
                         <div class="dz-modal-title modal-row">{{temp.activeTag}}</div>
@@ -147,15 +130,6 @@
                 <div id="add-image-pos">
                     <button type="button" id="add-image" class="btn"><span><i class="fa fa-camera fa-2x"></i></span></button>
                 </div>
-                <div class="nav-footer dual-btn">
-                    <div class="nav-footer-btn" ng-click="settings.page=1">
-                        <span><i class="fa fa-long-arrow-left"></i></span>
-                    </div>
-                    <div class="nav-footer-btn text" ng-click="saveDisc()">
-                        Save
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
                 <div class="backdrop" ng-show="temp.activeImage">
                     <div class="dz-modal">
                         <img class="modal-row" ng-src="/files/{{temp.activeImageThumbnail}}">
@@ -173,6 +147,32 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="nav-footer dual-btn" ng-show="settings.page == 0">
+        <div class="nav-footer-btn"></div>
+        <div class="nav-footer-btn text" ng-show="forms.discData.$invalid">Form Invalid</div>
+        <div class="nav-footer-btn" ng-click="settings.page=1" ng-hide="forms.discData.$invalid">
+            <span><i class="fa fa-long-arrow-right"></i></span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="nav-footer dual-btn" ng-show="settings.page == 1">
+        <div class="nav-footer-btn" ng-click="settings.page=0">
+            <span><i class="fa fa-long-arrow-left"></i></span>
+        </div>
+        <div class="nav-footer-btn" ng-click="settings.page=2">
+            <span><i class="fa fa-long-arrow-right"></i></span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="nav-footer dual-btn" ng-show="settings.page == 2">
+        <div class="nav-footer-btn" ng-click="settings.page=1">
+            <span><i class="fa fa-long-arrow-left"></i></span>
+        </div>
+        <div class="nav-footer-btn text" ng-click="saveDisc()">
+            Save
+        </div>
+        <div class="clearfix"></div>
     </div>
 </div>
 <div class="loading-container" ng-show="discImageCropper.cropperLoading">

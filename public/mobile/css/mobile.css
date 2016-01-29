@@ -758,7 +758,7 @@ ul.item-list .item .item-content .item-note {
 /*-------- Create Disc Page ---------*/
 /*-----------------------------------*/
 #modify-disc-pg .nav-footer {
-    position: fixed;
+    position: absolute;
     bottom: 0px;
     width: 100%;
     height: 50px;
