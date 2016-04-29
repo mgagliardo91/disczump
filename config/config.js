@@ -20,7 +20,7 @@ module.exports = {
     },
     'images': {
         'maxSize': 800,
-        'thumbnailSize': 150
+        'thumbnailSize': 200
     },
     'development': {
         'beta': false,
