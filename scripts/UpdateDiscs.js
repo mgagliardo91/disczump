@@ -11,7 +11,10 @@ Disc.find(function(err, discs) {
     async.each(discs, function(disc, callback) {
         
         //Update here
-        disc['condition'] = '10';
+        disc.marketplace = {
+            forSale: false,
+            forTrade: false
+        };
         
         disc.save(function(err) {
             if (err)
