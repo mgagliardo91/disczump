@@ -25,8 +25,12 @@ var discSchema = mongoose.Schema({
     tagList: [String],
     visible: {type:Boolean, default: false},
     condition: String,
-    createDate: {type: Date, default: Date.now}
-    
+    createDate: {type: Date, default: Date.now},
+    marketplace: {
+        forSale: {type: Boolean, default: false},
+        forTrade: {type: Boolean, default: false},
+        value: String
+    }
 });
 
 discSchema.methods.getImage = function() {
@@ -55,5 +59,6 @@ discSchema.methods.toDescString = function() {
     return retString;
 }
 
+discSchema.index({name: 'text', brand: 'text', material: 'text', type: 'text', color: 'text', weight: 'text', tagList: 'text'}, {name: '_fsIndex', weights: {name: 10, brand: 10, color: 10, weight: 10, type: 10, material: 10, tagList: 1}});
 
 module.exports = mongoose.model('Disc', discSchema);
