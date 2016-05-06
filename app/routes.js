@@ -17,6 +17,28 @@ module.exports = function(app, passport, gridFs) {
 
     // Site
     
+    app.get('/portal', function(req, res) {
+       res.render('portal', {
+           layout: 'desktop',
+           isRelease: localConfig.release,
+           serverURL : localConfig.serverURL,
+           user : req.user,
+            admin: req.session.admin,
+           reqScroll: req.device.isMobile
+       });
+    });
+    
+    app.all('/portal/*', function(req, res) {
+       res.render('portal', {
+           layout: 'desktop',
+           isRelease: localConfig.release,
+           serverURL : localConfig.serverURL,
+           user : req.user,
+            admin: req.session.admin,
+           reqScroll: req.device.isMobile
+       });
+    });
+    
     app.get('/', function(req, res) {
        res.render('home', {
            isRelease: localConfig.release,

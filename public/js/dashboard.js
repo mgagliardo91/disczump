@@ -6952,7 +6952,7 @@ var ZumpSort = function(opt) {
     		array = _.sortBy(array, function(obj) { return new Date(obj[sorter.sortProp])});
     	} else {
     		array = _.sortBy(array, function(obj) {
-    			return obj[sorter.sortProp].toLowerCase();
+    			return obj[sorter.sortProp] ? obj[sorter.sortProp].toLowerCase() : obj[sorter.sortProp];
     		});
     	}
     	

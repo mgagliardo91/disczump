@@ -1,0 +1,30 @@
+<div class="scrollable main-body has-profile" id="portal">
+    <div class="page-content">
+        <div class="portal-title cont-sm">
+            <img src="/static/logo/logo_portal.png" />
+        </div>
+        <div class="portal-intro cont-sm">
+            <div class="search-container">
+                <div class="search-btn round-left no-right float-left active">
+                    <i class="fa fa-database"></i>
+                </div>
+                <div class="search-btn round-right no-left float-right" ng-click="navExplore(searchParam)">
+                    <i class="fa fa-search"></i>
+                </div>
+                <div class="search-bar-wrapper">
+                    <input id="search-explore" ng-enter="navExplore(searchParam)" ng-model="searchParam" class="search-bar" type="text" placeholder="Search discs...">
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="intro-sep">
+                - OR -
+            </div>
+            <div style="text-align: center;">
+                <a class="btn btn-default dz-blue-background" id="explore-btn" href="/portal/explore">Start Exploring</a>
+            </div>
+        </div>
+        <explore-category field="brand" fvalue="Innova"></explore-category>
+        <explore-category field="brand" fvalue="Discraft"></explore-category>
+        <explore-category field="name" fvalue="Aviar"></explore-category>
+    </div>
+</div>

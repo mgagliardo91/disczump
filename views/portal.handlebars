@@ -1,0 +1,62 @@
+{{#section 'head'}}
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" media="screen">
+    <link rel="stylesheet" href="/static/desktop/css/main.css">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-route.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-animate.min.js"></script>
+    <script src="https://cdn.rawgit.com/jashkenas/underscore/master/underscore.js"></script>
+
+    <script src="/static/desktop/js/main.js"></script>
+    <script src="/static/desktop/js/controllers.js"></script>
+    <script src="/static/desktop/js/services.js"></script>
+    <base href="/portal/">
+    
+{{/section}}
+<body ng-app="disczump" ng-controller="MainController" {{#if user}}ng-init="init('{{user._id}}')"{{/if}}>
+    <div class="dz-navbar min-window-width">
+        <div class="dz-navbar-btn-container float-left">
+            <div class="dz-navbar-btn-list">
+                <a href="/"><img src="/static/logo/logo_text.svg" class="dz-navbar-logo"></a>
+            </div>
+        </div>
+        <div class="dz-navbar-btn-container float-right">
+            <div class="dz-navbar-btn-list">
+                {{#if user}}
+                <div class="dz-navbar-item dz-navbar-dropdown" ng-click="accountDropdown = !accountDropdown">
+                    <img src="/static/logo/logo_small_faded.svg">
+                    <span>
+                        <i class="fa fa-angle-double-down fa-lg"></i>
+                    </span>
+                </div>
+                <div class="backdrop" ng-show="accountDropdown" ng-click="accountDropdown = false"></div>
+                <ul class="dz-dropdown-menu" ng-show="accountDropdown">
+                    <li><a href="#" id="menu-tutorial"><span><i class="fa fa-info-circle fa-tools"></i></span>Tutorial</a></li>
+                    <li><a href="#"><span><i class="fa fa-question-circle fa-tools"></i></span>FAQ</a></li>
+                    <li><a href="#" id="menu-feedback"><span><i class="fa fa-comment fa-tools"></i></span>Feedback</a></li>
+                    {{#if admin}}<li><a href="#"><span><i class="fa fa-wrench fa-tools"></i></span>Admin Console</a></li>{{/if}}
+                    <li><a href="#" data-ajax="false"><span><i class="fa fa-sign-out fa-tools"></i></span>Logout</a></li>
+                </ul>
+                {{else}}
+                <div class="dz-navbar-item dz-navbar-btn"><a href="/login" style="text-decoration: none; color: #fff">Sign In</a></div>
+                <div class="dz-navbar-item dz-navbar-btn"><a href="/signup" style="text-decoration: none; color: #fff">Sign Up</a></div>
+                {{/if}}
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="dz-portal-nav-container min-window-width">
+        <div>
+            <div class="dz-portal-nav-item" ng-click="activePage = 0; nav()" ng-class="{'active': activePage == 0}">Explore</div>
+            {{#if user}}
+            <div class="dz-portal-nav-item" ng-click="activePage = 2; nav('dashboard')" ng-class="{'active': activePage == 2}">My Trunk</div>
+            <div class="dz-portal-nav-item" ng-click="activePage = 3; nav('inbox')" ng-class="{'active': activePage == 3}">Inbox</div>
+            <div class="dz-portal-nav-item" ng-click="activePage = 4; nav('account')" ng-class="{'active': activePage == 4}">Account</div>
+            {{else}}
+            {{/if}}
+        </div>
+    </div>
+    <div class="app main-app min-window-width">
+        <ng-view autoscroll="true"></ng-view>
+    </div>
+</body>

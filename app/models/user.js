@@ -103,6 +103,7 @@ userSchema.methods.accountToString = function() {
     account.dateJoined = this.local.dateJoined;
     account.username = this.local.username;
     account.linked = typeof(this.facebook.id) !== 'undefined';
+    account.lastAccess = this.local.lastAccess;
     
     if (account.linked) {
         account.facebookImage = this.facebook.image;

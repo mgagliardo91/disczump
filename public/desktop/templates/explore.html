@@ -1,0 +1,159 @@
+<div class="breadcrumb-container header-color">
+    <div class="pagination-container" title="Showing {{resultList.length}} of {{pagination.total}} results">
+        {{resultList.length}} | <span class="dz-blue">{{pagination.total}}</span>
+    </div>
+    <div ng-show="!loading">
+        <span class="hover-underline" title="Explore Home" ng-click="navFilter()"><i class="fa fa-home" style="font-size: 1.1em; color: #008edd"></i></span>
+        <span class="breadcrumb-item-container" ng-repeat="filter in activeFilters">
+            <span><i class="fa fa-chevron-right" style="margin-right: 5px"></i>{{filter.text}}:</span>
+            <span class="breadcrumb-item" ng-repeat="field in filter.fields">
+                <span ng-if="$index > 0">|</span>
+                <span class="dz-blue hover-underline" ng-click="navFilter(filter, field)">{{getFormattedField(field)}}</span>
+            </span>
+        </span>
+    </div>
+    <div class="clearfix"></div>
+</div>
+<div class="scrollable main-body has-profile" id="explore">
+    <div class="page-content">
+        <div class="loader" ng-show="loading">
+            <div>
+                <img src="/static/logo/logo_small_loading_dark.svg">
+            </div>
+        </div>
+        <div class="left-container">
+            <div class="filter-container">
+                <div class="sidebar-section" ng-show="resultFilters.statFilters">
+                    <div class="sidebar-title-container no-select" ng-click="mFacet.open = !mFacet.open" ng-init="mFacet.open = true">
+                        <div class="sidebar-title-icon" style="color: #000"><i class="fa fa-plus-square" ng-show="!mFacet.open"></i></div>
+                        <div class="sidebar-title-icon"><i class="fa fa-minus-square" ng-show="mFacet.open"></i></div>
+                        <div class="sidebar-title">Marketplace <span class="filter-clear hover-underline" ng-show="">[Clear]</span></div>
+                    </div>
+                    <div class="sidebar-item-container" ng-show="mFacet.open">
+                        <div ng-repeat="facet in resultFilters.statFilters">
+                            <div class="sidebar-item hover-underline no-select" ng-repeat="filter in statFilterOpts = (facet.filters | filter:{'val': true})" ng-click="toggleFilter(facet, filter);">
+                                <span class="sidebar-item-icon">
+                                    <i class="fa fa-square-o" ng-show="!isFilterActive(facet, filter)"></i>
+                                    <i class="fa fa-check-square-o" ng-show="isFilterActive(facet, filter)"></i>
+                                </span>
+                                <div class="filter-item-val handle-overflow">{{facet.text}}</div>
+                                <div class="filter-item-count handle-overflow">({{filter.count}})</div>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="sidebar-item inactive no-select" ng-show="!statFilterOpts.length">
+                                <span class="sidebar-item-icon">
+                                    <i class="fa fa-square-o"></i>
+                                </span>
+                                <div class="filter-item-val handle-overflow">{{facet.text}}</div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar-section" ng-if="marketMode()" ng-repeat="facet in resultFilters.rangeFilters" ng-show="facet.filters.length" ng-init="facet.open = true">
+                    <div class="sidebar-title-container no-select" ng-click="facet.open = !facet.open">
+                        <div class="sidebar-title-icon" style="color: #000"><i class="fa fa-plus-square" ng-show="!facet.open"></i></div>
+                        <div class="sidebar-title-icon"><i class="fa fa-minus-square" ng-show="facet.open"></i></div>
+                        <div class="sidebar-title">{{facet.text}} <span class="filter-clear hover-underline" ng-show="hasActiveFilters(facet)" ng-click="clearActiveFilters(facet); $event.stopPropagation();">[Clear]</span></div>
+                    </div>
+                    <div class="sidebar-item-container" ng-show="facet.open">
+                        <div class="sidebar-item hover-underline no-select" ng-repeat="filter in facet.filters" ng-class="{inactive: facet.custom.enable || filter.count == 0}" ng-click="filter.count && toggleFilter(facet, filter);">
+                            <span class="sidebar-item-icon">
+                                <i class="fa fa-square-o" ng-show="!isFilterActive(facet, filter)"></i>
+                                <i class="fa fa-check-square-o" ng-show="isFilterActive(facet, filter)"></i>
+                            </span>
+                            <div class="filter-item-val handle-overflow">{{filter.text}}</div>
+                            <div class="filter-item-count handle-overflow" ng-if="filter.count">({{filter.count}})</div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="filter-show-more hover-underline" ng-show="!facet.custom.enable" ng-click="facet.custom.enable = true">Set Custom...</div>
+                        <div class="sidebar-item no-select custom-range" ng-show="facet.custom.enable" ng-form name="rangeForm">
+                            <span class="sidebar-item-icon">
+                                <i class="fa fa-times" ng-click="facet.custom.enable = false"></i>
+                            </span>
+                            <input ng-class="{'has-error' : rangeForm.lBound.$invalid}" name="lBound" class="hide-spinner" type="number" ng-model="facet.custom.lBound" pattern="^[0-9]{1,4}$" ng-required="true"/>
+                            <span class="custom-range-label">To</span>
+                            <input ng-class="{'has-error' : rangeForm.uBound.$invalid}" name="uBound"  class="hide-spinner" type="number" ng-model="facet.custom.uBound" pattern="^[0-9]{1,4}$" ng-required="true" min="{{facet.custom.lBound}}"/>
+                            <button class="btn btn-default" ng-disabled="rangeForm.$invalid" ng-click="clearActiveFilters(facet, true); toggleFilter(facet, {val: '[' + facet.custom.lBound + ' TO ' + facet.custom.uBound + ']'})">Set</button>
+                            <div class="clearfix"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar-section" ng-repeat="facet in resultFilters.dynFilters" ng-show="facet.filters.length">
+                    <div class="sidebar-title-container no-select" ng-click="facet.open = !facet.open">
+                        <div class="sidebar-title-icon" style="color: #000"><i class="fa fa-plus-square" ng-show="!facet.open"></i></div>
+                        <div class="sidebar-title-icon"><i class="fa fa-minus-square" ng-show="facet.open"></i></div>
+                        <div class="sidebar-title">{{facet.text}} <span class="filter-clear hover-underline" ng-show="hasActiveFilters(facet)" ng-click="clearActiveFilters(facet); $event.stopPropagation();">[Clear]</span></div>
+                    </div>
+                    <div class="sidebar-item-container" ng-show="facet.open">
+                        <div class="sidebar-item hover-underline no-select" ng-repeat="filter in facet.filters | orderBy:resultOrder | limitTo: facet.limit" ng-click="toggleFilter(facet, filter);">
+                            <span class="sidebar-item-icon">
+                                <i class="fa fa-square-o" ng-show="!isFilterActive(facet, filter)"></i>
+                                <i class="fa fa-check-square-o" ng-show="isFilterActive(facet, filter)"></i>
+                            </span>
+                            <div class="filter-item-val handle-overflow">{{filter.val}}</div>
+                            <div class="filter-item-count handle-overflow" ng-if="filter.count">({{filter.count}})</div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="filter-show-more hover-underline" ng-if="facet.filters.length > facet.limit" ng-click="facet.limit = facet.filters.length">Show More...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="right-container" id="results-container">
+            <div class="result-header">
+                <div id="result-sort">
+                    <select class="form-control" ng-model="sortParam" ng-change="updateSort()" ng-init="sortParam = sortParam || 'dAsc'">
+                      <option value="rel">Sort by Relevance</option>
+                      <option value="dAsc">Sort by Date Ascending</option>
+                      <option value="dDesc">Sort by Date Descending</option>
+                    </select>
+                </div>
+                <div class="search-container pad">
+                    <div class="search-btn round-left no-right float-left active">
+                        <i class="fa fa-database"></i>
+                    </div>
+                    <div class="search-btn round-right no-left float-right" ng-click="updateUrl()">
+                        <i class="fa fa-search"></i>
+                    </div>
+                    <div class="search-bar-wrapper">
+                        <input id="search-explore" ng-enter="updateUrl()" ng-model="searchParam" class="search-bar" type="text" placeholder="Search discs...">
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+            <div class="explore-container" id="results-list" infinite-scroll="loadMore()">
+                <div class="disc-content-info-container no-results" ng-show="!resultList.length">
+                    <span class="no-results"><i class="fa fa-exclamation-triangle"></i> No Results</span>
+                </div>
+                <div class="grid-item" ng-repeat="disc in resultList" ng-repeat-finish="resizeRes()">
+                    <div class="grid-item-icon top-left" ng-show="disc['marketplace.forSale']">
+                        <i class="fa fa-usd sale-icon"></i>
+                    </div>
+                    <div class="grid-item-icon top-right" ng-show="disc['marketplace.forTrade']">
+                        <i class="fa fa-refresh trade-icon"></i>
+                    </div>
+                    <div class="grid-img-container">
+                        <img ng-src="{{getSolrPrimaryImage(disc)}}">
+                    </div>
+                    <div class="grid-item-info">
+                        <div class="grid-item-label handle-overflow">
+                            {{disc.brand}} | <span class="dz-blue">{{disc.name}}</span>
+                        </div>
+                        <div class="grid-item-text float-left hover-underline" ng-show="!disc.user">
+                            {{disc.userId}}
+                        </div>
+                        <div class="grid-item-text float-left hover-underline" ng-show="disc.user">
+                            <a ng-href="/portal/trunk/{{disc.user._id}}">{{disc.user.username}}</a>
+                        </div>
+                        <div class="grid-item-text float-right" ng-if="disc.weight">
+                            {{disc.weight}}g
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+</div>

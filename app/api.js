@@ -18,6 +18,8 @@ var config = require('../config/config.js');
 var FileUtil = require('./utils/file.js');
 var Confirm = require('./utils/confirm');
 var Mailer = require('./utils/mailer.js');
+var request = require('request');
+var Solr = require('./utils/solr.js');
 
 // app/api.js
 module.exports = function(app, passport, gridFs) {
@@ -294,12 +296,18 @@ module.exports = function(app, passport, gridFs) {
         });
         
     app.route('/users/:userId')
-        .get(hasAccess, function(req, res) {
+        .get(optAccess, function(req, res) {
             UserController.getAccount(req.params.userId, function(err, user) {
                if (err)
                     return res.json(err);
                     
-                return res.json(user);
+                DiscController.getDiscCountByUser(user._id, function(err, count) {
+                    if (err)
+                        return res.json(err);
+                        
+                    user.discCount = count;
+                    return res.json(user);
+                });
            })
         });
         
@@ -315,17 +323,44 @@ module.exports = function(app, passport, gridFs) {
     
     app.route('/users/:userId/discs')
     
-        .get(hasAccess, function(req, res) {
+        .get(function(req, res) {
             var userId = undefined;
             if (req.user) userId = req.user._id;
             
             
-            DiscController.getDiscs(userId, req.params.userId, function(err, discs) {
+            DiscController.getDiscsByUser(userId, req.params.userId, function(err, discs) {
                 if (err)
                     return res.json(err);
                 
                 return res.json(discs);
             });
+        });
+    
+    app.route('/search/discs/')
+        .get(hasAccess, function(req, res) {
+            
+            var params = {
+                search: req.query.q,
+                sort: [],
+                filter: {},
+                size: 50,
+                page: 1
+            };
+            
+            DiscController.browseDiscs(params, function(err, discs) {
+                if (err)
+                    return res.json(err);
+                    
+                return res.json(discs);
+            });
+            
+            
+            // DiscController.testTextSearch(req.query.q, function(err, discs) {
+            //     if (err)
+            //         return res.json(err);
+                    
+            //     return res.json(discs);
+            // });
         });
     
     app.route('/discs')
@@ -342,7 +377,7 @@ module.exports = function(app, passport, gridFs) {
     
         
         .get(hasAccess, function(req, res) {
-            DiscController.getDiscs(req.user._id, req.user._id, function(err, discs) {
+            DiscController.getDiscsByUser(req.user._id, req.user._id, function(err, discs) {
                 if (err)
                   return res.json(err);
             
@@ -408,6 +443,16 @@ module.exports = function(app, passport, gridFs) {
                 return res.json(discImage);
             });
         });
+        
+    app.route('/discs/:discId/primaryImage')
+        .get(optAccess, function(req, res) {
+            DiscController.getDiscImage(req.user._id, req.params.discId, req.params.imageId, function(err, discImage) {
+                if (err)
+                    return res.json(err);
+                    
+                return res.json(discImage);
+            });
+        });
     
     app.route('/images')
         .post(hasAccess, function(req, res) {
@@ -456,6 +501,64 @@ module.exports = function(app, passport, gridFs) {
                 
                 return res.json(templates);
             });
+        });
+        
+    app.route('/explore')
+        .post(function(req, res) {
+            console.log(req.get('origin'));
+            var requestString = Solr.createDiscReq(req.body, req.params.userId);
+            var options = {
+                url: 'http://ec2-54-218-32-190.us-west-2.compute.amazonaws.com:8983/solr/discs/query',
+                json: true,
+                body: requestString,
+                method: 'POST'
+            }
+            
+            request(options, function (err, response, body) {
+                if (err || response.statusCode != 200 || body.error) {
+                    return res.json(Error.createError('Error processing query request.', Error.internalError));
+                }
+                
+                return res.json(body);
+            })
+        });
+    
+    app.route('/trunk/:userId')
+        .post(function(req, res) {
+            var requestString = Solr.createDiscReq(req.body, req.params.userId);
+            var options = {
+                url: 'http://ec2-54-218-32-190.us-west-2.compute.amazonaws.com:8983/solr/discs/query',
+                json: true,
+                body: requestString,
+                method: 'POST'
+            }
+            
+            request(options, function (err, response, body) {
+                if (err || response.statusCode != 200) {
+                    return res.json(Error.createError('Error processing query request.', Error.internalError));
+                }
+                
+                return res.json(body);
+            })
+        });
+    
+    app.route('/facet')
+        .post(function(req, res) {
+            var requestString = Solr.createFacetReq(req.body);
+            var options = {
+                url: 'http://ec2-54-218-32-190.us-west-2.compute.amazonaws.com:8983/solr/discs/query',
+                json: true,
+                body: requestString,
+                method: 'POST'
+            }
+            console.log(requestString);
+            request(options, function (err, response, body) {
+                if (err || response.statusCode != 200) {
+                    return res.json(Error.createError('Error processing query request.', Error.internalError));
+                }
+                
+                return res.json(body);
+            })
         });
     
     app.get('*', function(req, res){

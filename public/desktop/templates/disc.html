@@ -1,0 +1,171 @@
+<div class="breadcrumb-container header-color">
+    <div ng-show="!loading">
+        <span title="Explore Home">
+            <a ng-href="/portal/explore" href="/portal/explore"><i class="fa fa-home" style="font-size: 1.1em; color: #008edd"></i></a>
+        </span>
+        <span ng-show="user.username"><i class="fa fa-chevron-right"></i></span>
+        <span class="hover-underline"><a ng-href="/portal/trunk/{{disc.userId}}">{{user.username}}'s Trunk</a></span>
+        <span><i class="fa fa-chevron-right" style="margin-right: 5px"></i>Disc View</span>
+    </div>
+    <div class="clearfix"></div>
+</div>
+<div class="private-warning dz-blue-background" ng-show="!loading && !disc.visible">
+    <span><i class="fa fa-eye-slash fa-lg"></i>This disc is private!<i class="fa fa-eye-slash fa-lg"></i></span>
+</div>
+<div class="scrollable main-body">
+    <div class="page-content dv">
+        <div class="loader" ng-show="loading">
+            <div>
+                <img src="/static/logo/logo_small_loading_dark.svg">
+            </div>
+        </div>
+        <div class="dv-left-container">
+            <div class="dv-profile-title">Meet the Owner</div>
+            <div class="dv-profile-preview">
+                <div class="dv-profile-preview-image">
+                    <img ng-src="{{getUserImage(user)}}" class="fit-parent" img-load>
+                </div>
+                <div class="dv-profile-preview-info">
+                    <div class="dv-profile-preview-text-lg handle-overflow">
+                        <a ng-href="/portal/trunk/{{disc.userId}}" class="hover-underline">{{user.username}}</a>
+                    </div>
+                    <div class="dv-profile-preview-text-sm handle-overflow" ng-if="user.shortLocation">{{user.shortLocation}}</div>
+                    <div class="dv-profile-preview-text-sm handle-overflow" ng-if="user.pdgaNumber">PDGA #{{user.pdgaNumber}}</div>
+                    <div class="dv-profile-preview-text-sm handle-overflow" ng-if="user.discCount">{{user.discCount}} Public Discs</div>
+                </div>
+            </div>
+            <div class="dv-profile-preview-btn-container">
+                <div class="dv-profile-preview-btn float-left">
+                    <i class="fa fa-user-plus"></i> Follow
+                </div>
+                <div class="dv-profile-preview-btn float-right">
+                    <i class="fa fa-envelope"></i> Message
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <div class="dv-right-container">
+            <div class="title-row">
+                <div class="title-btn-container float-right">
+                    <span class="title-btn"><i class="fa fa-facebook-square hover-fb-color hover-pointer" title="Share Disc"></i></span>
+                    <span class="title-btn"><i class="fa fa-link hover-link-color hover-pointer" title="Copy Link"></i></span>
+                    <span class="title-btn"><i class="fa fa-pencil hover-edit-color hover-pointer" title="Edit Disc"></i></span>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="page-title handle-overflow">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></div>
+                <hr>
+            </div>
+            <div class="dv-content">
+                <div class="dv-image-container float-left">
+                    <div class="dv-image-block">
+                        <img directive-on="discInit" directive-set="{'ng-src':'/files/{{imageBlock.fileId}\}'}" ng-show="imageBlock" class="fit-parent" img-load>
+                        <img ng-src="/static/logo/logo_small_faded.svg" ng-show="!imageBlock" class="fit-parent" img-load>
+                    </div>
+                    <div class="image-list">
+                        <div class="image-list-container simple">
+                            <div class="image-list-table">
+                                <div class="image-item-container" ng-repeat="img in disc.imageList">
+                                    <div class="image-item">
+                                        <div class="image-preview" ng-class="{active: img._id == imageBlock._id}" ng-click="setImage(img)">
+                                            <img ng-src="/files/{{img.thumbnailId}}" class="fit-parent" img-load>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dv-info-container">
+                    <div class="dv-row disc-info">
+                        <div class="flight-container float-right">
+                            <table class="flight-number-table">
+                                <tbody>
+                                    <tr>
+                                        <td class="flight-number-table-cell">
+                                            <p class="flight-number-table-cell-title">Speed</p>
+                                            <p class="flight-number-table-cell-value hover-underline">
+                                                <a ng-href="/portal/explore?s=rel&f_0=speed:{{disc.speed}}" href="/portal/explore?s=rel&f_0=speed:{{disc.speed}}">{{disc.speed}}</a>
+                                            </p>
+                                        </td>
+                                        <td class="flight-number-table-cell">
+                                            <p class="flight-number-table-cell-title">Glide</p>
+                                            <p class="flight-number-table-cell-value hover-underline">
+                                                <a ng-href="/portal/explore?s=rel&f_0=glide:{{disc.glide}}" href="/portal/explore?s=rel&f_0=glide:{{disc.glide}}">{{disc.glide}}</a>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="flight-number-table-cell">
+                                            <p class="flight-number-table-cell-title">Turn</p>
+                                            <p class="flight-number-table-cell-value hover-underline">
+                                                <a ng-href="/portal/explore?s=rel&f_0=turn:{{disc.turn}}" href="/portal/explore?s=rel&f_0=turn:{{disc.turn}}">{{disc.turn}}</a>
+                                            </p>
+                                        </td>
+                                        <td class="flight-number-table-cell">
+                                            <p class="flight-number-table-cell-title">Fade</p>
+                                            <p class="flight-number-table-cell-value hover-underline">
+                                                <a ng-href="/portal/explore?s=rel&f_0=fade:{{disc.fade}}" href="/portal/explore?s=rel&f_0=fade:{{disc.fade}}">{{disc.fade}}</a>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="dv-info">
+                            <div>
+                                <div class="dv-info-row">
+                                    <div class="dv-info-label float-left">Type:</div>
+                                    <div class="dv-info-data" ng-if="!disc.type">-</div>
+                                    <div class="dv-info-data hover-underline handle-overflow" ng-if="disc.type">
+                                        <a ng-href="/portal/explore?s=rel&f_0=type:{{disc.type}}" href="/portal/explore?s=rel&f_0=type:{{disc.type}}">{{disc.type}}</a>
+                                    </div>
+                                </div>
+                                <div class="dv-info-row">
+                                    <div class="dv-info-label float-left">Material:</div>
+                                    <div class="dv-info-data" ng-if="!disc.material">-</div>
+                                    <div class="dv-info-data hover-underline handle-overflow" ng-if="disc.material">
+                                        <a ng-href="/portal/explore?s=rel&f_0=material:{{disc.material}}" href="/portal/explore?s=rel&f_0=material:{{disc.material}}">{{disc.material}}</a>
+                                    </div>
+                                </div>
+                                <div class="dv-info-row">
+                                    <div class="dv-info-label float-left">Color:</div>
+                                    <div class="dv-info-data" ng-if="!disc.color">-</div>
+                                    <div class="dv-info-data hover-underline handle-overflow" ng-if="disc.color">
+                                        <a ng-href="/portal/explore?s=rel&f_0=color:{{disc.color}}" href="/portal/explore?s=rel&f_0=color:{{disc.color}}">{{disc.color}}</a>
+                                    </div>
+                                </div>
+                                <div class="dv-info-row">
+                                    <div class="dv-info-label float-left">Weight:</div>
+                                    <div class="dv-info-data" ng-if="!disc.weight">-</div>
+                                    <div class="dv-info-data hover-underline handle-overflow" ng-if="disc.weight">
+                                        <a ng-href="/portal/explore?s=rel&f_0=weight:{{disc.weight}}" href="/portal/explore?s=rel&f_0=weight:{{disc.weight}}">{{disc.weight}}g</a>
+                                    </div>
+                                </div>
+                                <div class="dv-info-row">
+                                    <div class="dv-info-label float-left">Condition:</div>
+                                    <div class="dv-info-data" ng-if="!disc.condition">-</div>
+                                    <div class="dv-info-data hover-underline handle-overflow" ng-if="disc.condition">
+                                        <a ng-href="/portal/explore?s=rel&f_0=condition:{{disc.condition}}" href="/portal/explore?s=rel&f_0=condition:{{disc.condition}}">{{disc.condition}}/10</a></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="dv-row short">
+                        <div class="dv-info-label float-left">Tags:</div>
+                        <div class="dv-info-data">
+                            <div class="tag-item hover-underline no-select" ng-repeat="tag in disc.tagList">
+                                <p class="tag-item-text">{{tag}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dv-row short">
+                        <div class="dv-info-label float-left">Notes:</div>
+                        <div class="dv-info-data">{{disc.notes}}</div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+</div>
