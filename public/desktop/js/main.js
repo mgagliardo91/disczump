@@ -1,4 +1,4 @@
-var app = angular.module('disczump', ['ngRoute', 'ngAnimate', 'disczump.controllers']);
+var app = angular.module('disczump', ['ngRoute', 'ngAnimate', 'smoothScroll', 'as.sortable', 'oc.lazyLoad', 'uiSwitch', 'disczump.controllers']);
     
 app.config(['$routeProvider', '$httpProvider', '$locationProvider', function($routeProvider, $httpProvider, $locationProvider) {
     if (!$httpProvider.defaults.headers.get) {
@@ -17,12 +17,16 @@ app.config(['$routeProvider', '$httpProvider', '$locationProvider', function($ro
         controller: 'ExploreController',
         reloadOnSearch: false
     }).when('/trunk/:userId', {
-        templateUrl: '/static/desktop/templates/trunk.html',
-        controller: 'TrunkController',
+        templateUrl: '/static/desktop/templates/explore.html',
+        controller: 'ExploreController',
         reloadOnSearch: false
     }).when('/d/:discId', {
         templateUrl: '/static/desktop/templates/disc.html',
         controller: 'DiscController',
+        reloadOnSearch: false
+    }).when('/d/:discId/edit', {
+        templateUrl: '/static/desktop/templates/discEdit.html',
+        controller: 'DiscEditController',
         reloadOnSearch: false
     }).when('/newsfeed', {
         templateUrl: '/static/desktop/templates/newsfeed.html',

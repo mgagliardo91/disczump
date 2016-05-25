@@ -44,6 +44,7 @@ function createDiscReq(opts, userId) {
             material: {type:"terms", field: 'material',mincount: 1,limit: 20, numBuckets: true},
             color: {type:"terms", field: 'color',mincount: 1,limit: 20, numBuckets: true},
             weight: {type:"terms", field: 'weight',mincount: 1,limit: 20, numBuckets: true},
+            condition: {type:"terms", field: 'condition',mincount: 1,limit: 10, numBuckets: true},
             speed: {type:"terms", field: 'speed',mincount: 1,limit: 20, numBuckets: true},
             glide: {type:"terms", field: 'glide',mincount: 1,limit: 20, numBuckets: true},
             turn: {type:"terms", field: 'turn',mincount: 1,limit: 20, numBuckets: true},

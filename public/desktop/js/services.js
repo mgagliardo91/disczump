@@ -6,6 +6,27 @@ angular.module('underscore', [])
 
 angular.module('disczump.services', ['underscore'])
 
+.factory('PageUtils', [function() {
+    function getScrollPos(){
+        if(window.pageYOffset) {
+			return window.pageYOffset;
+		} else {
+			return document.documentElement.scrollTop;
+		}
+    }
+    
+    function getFullHeight(elem) {
+        var rectObject = elem.getBoundingClientRect();
+        var rectTop = rectObject.top + window.pageYOffset - document.documentElement.clientTop;
+        return rectTop + elem.offsetHeight;
+    }
+    
+    return {
+        getScrollPos: getScrollPos,
+        getFullHeight: getFullHeight
+    }
+}])
+
 .factory('ConfigService', ['$location', '_', function($location, _) {
 
     function parseParams(url) {
@@ -209,6 +230,8 @@ angular.module('disczump.services', ['underscore'])
     }
     
     function queryAll(opts, callback) {
+        var urlString = '/explore';
+        
         if (!opts.query || opts.query == '') opts.query = '*';
         
         var reqParam = {
@@ -236,7 +259,10 @@ angular.module('disczump.services', ['underscore'])
             reqParam.valueRange = valueRangeConfig;
         }
         
-        var urlString = '/explore';
+        if (opts.userId) {
+            urlString = '/trunk' + (opts.userId ? '/' + opts.userId : '');
+        }
+        
         
         APIService.Post(urlString, reqParam, function(success, data) {
             if (success) {
@@ -371,12 +397,34 @@ angular.module('disczump.services', ['underscore'])
     }
     
     function validateFilters(filters) {
-        var validTypes = ['brand', 'name', 'type', 'tag', 'material', 'color', 'weight', 'speed', 'glide', 'turn', 'fade', 'forSale', 'forTrade', 'value_i'];
+        var validTypes = ['brand', 'name', 'type', 'tag', 'material', 'color', 'weight', 'condition', 'speed', 'glide', 'turn', 'fade', 'forSale', 'forTrade', 'value_i'];
+        var propText = {
+            brand: 'Brand',
+            name: 'Name',
+            type: 'Type',
+            tag: 'Tags',
+            material: 'Material',
+            color: 'Color',
+            weight: 'Weight',
+            condition: 'Condition',
+            speed: 'Speed',
+            glide: 'Glide',
+            turn: 'Turn',
+            fade: 'Fade',
+            forSale: 'For Sale',
+            forTrade: 'For Trade',
+            value_i: 'Value'
+        }
+        
         var validFilters = [];
         
         validFilters = _.filter(filters, function(filter) {
             return _.contains(validTypes, filter.name);
         });
+        
+        _.each(validFilters, function(filter) {
+            filter.text = propText[filter.name];
+        })
         
         var valueFilter = _.findWhere(validFilters, {name: 'value_i'});
         if (valueFilter) {
@@ -408,6 +456,7 @@ angular.module('disczump.services', ['underscore'])
             material: {text: 'Material', prop: 'material', filters: []},
             color: {text: 'Color', prop: 'color', filters: []},
             weight: {text: 'Weight', prop: 'weight', filters: []},
+            condition: {text: 'Condition', prop: 'condition', filters: []},
             speed: {text: 'Speed', prop: 'speed', filters: []},
             glide: {text: 'Glide', prop: 'glide', filters: []},
             turn: {text: 'Turn', prop: 'turn', filters: []},
@@ -443,13 +492,25 @@ angular.module('disczump.services', ['underscore'])
         };
     }
     
+    function getSolrPrimaryImage(disc) {
+        if (disc.primaryImage) {
+            for (var key in disc) {
+                if (/^imageList\.\d+\._id$/.test(key) && disc[key] == disc.primaryImage) {
+                    return 'http://ec2-54-218-32-190.us-west-2.compute.amazonaws.com/files/' + disc[key.replace('_id', 'thumbnailId')];
+                }
+            }
+        }
+        return '/static/logo/logo_small_faded.svg';
+    }
+    
     return {
         parseUrlQuery: parseUrlQuery,
         getQueryString: getQueryString,
         queryAll: queryAll,
         queryTrunk: queryTrunk,
         queryFacet: queryFacet,
-        isCustomRange: isCustomRange
+        isCustomRange: isCustomRange,
+        getSolrPrimaryImage: getSolrPrimaryImage
     }
 }])
 

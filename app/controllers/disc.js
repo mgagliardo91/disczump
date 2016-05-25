@@ -395,10 +395,11 @@ function updateDisc(userId, discId, data, gfs, callback) {
         }
         
         
-        var curImageArray = disc.imageList;
+        var curImageArray = [];
         async.series([
             function(cb) {
                  if (typeof data.imageList !== 'undefined' && _.isArray(data.imageList)) {
+                    curImageArray = disc.imageList;
                     var imageArray = [];
                      
                     async.eachSeries(data.imageList, function(imageItem, imgCb){

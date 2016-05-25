@@ -551,7 +551,6 @@ module.exports = function(app, passport, gridFs) {
                 body: requestString,
                 method: 'POST'
             }
-            console.log(requestString);
             request(options, function (err, response, body) {
                 if (err || response.statusCode != 200) {
                     return res.json(Error.createError('Error processing query request.', Error.internalError));

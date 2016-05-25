@@ -15,6 +15,564 @@ angular.module('disczump.controllers', ['disczump.services'])
 * DIRECTIVES
 * 
 *******************************************************************************/
+.directive('dzHeader', ['$window', '$location', 'PageUtils', function($window, $location, PageUtils) {
+    return {
+        restrict: 'E',
+        scope: {
+            user: "="
+        },
+        replace: true,
+        template: '<div class="dz-navbar min-window-width" ng-class="{\'fixed\':fixed}" ng-style="{\'background-color\':\'rgba(74,74,74,\' + (alphaValue/ 100) +\')\'}">' +
+                        '<div class="dz-navbar-btn-container float-left">' +
+                            '<div class="dz-navbar-btn-list">' +
+                                '<a href="/" ng-style="{\'opacity\': alphaValue}"><img src="/static/logo/logo_text.svg" class="dz-navbar-logo"></a>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="dz-navbar-btn-container float-right">' +
+                            '<div class="dz-navbar-btn-list">' + 
+                                '<div class="dz-navbar-item dz-navbar-dropdown" ng-click="accountDropdown = !accountDropdown" ng-show="user">' +
+                                    '<img ng-src="{{getAccountImage()}}">' +
+                                    '<span>' +
+                                        '<i class="fa fa-angle-double-down fa-lg"></i>' +
+                                    '</span>' +
+                                '</div>' +
+                                '<div class="backdrop" ng-show="accountDropdown" ng-click="accountDropdown = false"></div>' +
+                                '<ul class="dz-dropdown-menu" ng-show="accountDropdown">' +
+                                    '<li><a href="#" id="menu-tutorial"><span><i class="fa fa-info-circle fa-tools"></i></span>Tutorial</a></li>' +
+                                    '<li><a href="#"><span><i class="fa fa-question-circle fa-tools"></i></span>FAQ</a></li>' +
+                                    '<li><a href="#" id="menu-feedback"><span><i class="fa fa-comment fa-tools"></i></span>Feedback</a></li>' +
+                                    '<li><a href="/logout" data-ajax="false"><span><i class="fa fa-sign-out fa-tools"></i></span>Logout</a></li>' +
+                                '</ul>' +
+                                '<div class="dz-navbar-links">' +
+                                    '<div class="dz-navbar-item dz-navbar-btn" ng-class="{\'active\':isItemActive(\'explore\')}"><a href="/portal/explore">Explore</a></div>' +
+                                    '<div class="dz-navbar-item dz-navbar-btn" ng-show="user" ng-class="{\'active\':isItemActive(\'trunk/{{user._id}}\')}"><a ng-href="/portal/trunk/{{user._id}}">My Trunk</a></div>' +
+                                    '<div class="dz-navbar-item dz-navbar-btn" ng-show="!user"><a href="/login">Sign In</a></div>' +
+                                    '<div class="dz-navbar-item dz-navbar-btn" ng-show="!user"><a href="/signup">Sign Up</a></div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="clearfix"></div>' +
+                    '</div>',
+        link: function(scope, element, attrs) {
+            scope.safeApply = function(fn) {
+                var phase = this.$root.$$phase;
+                if (phase == '$apply' || phase == '$digest') {
+                    if (fn && (typeof(fn) === 'function')) {
+                        fn();
+                    }
+                }
+                else {
+                    this.$apply(fn);
+                }
+            }
+            
+            var blendHeader = function(){
+                var x = PageUtils.getScrollPos();
+                var height = $window.innerHeight - 50;
+                
+                scope.safeApply(function() {
+                    scope.alphaValue = Math.min(100, (x / height) * 100);
+                });
+            }
+            
+            if (attrs.blend === 'true') {
+                scope.alphaValue = 0;
+                
+                angular.element(document).bind('scroll', blendHeader);
+                
+            } else {
+                scope.alphaValue = 100;
+            }
+            
+            if (attrs.fixed === 'true') {
+                scope.fixed = true;
+            }
+            
+            scope.getAccountImage = function() {
+                return scope.user ? scope.user.image : '/static/logo/logo_small_faded.svg';
+            }
+            
+            scope.isItemActive = function(item) {
+                return $location.url().indexOf(item) >= 0;
+            }
+            
+            scope.$on('$destroy', function() {
+                angular.element(document).unbind('scroll', blendHeader);
+            });
+            
+        }
+    }
+}])
+
+.directive('dzFooter', ['$timeout', 'PageUtils', function($timeout, PageUtils) {
+    return {
+        restrict: 'E',
+        replace: true,
+        template: '<div class="footer-bar" ng-class="{\'sticky-footer\':sticky}">' + 
+                    '<div>' + 
+                        '<span class="footer-copyright">' + 
+                            '<span class="cr-main">' + 
+                            'Copyright <i class="fa fa-copyright"></i> disc|zump, LLC' + 
+                            '</span>' + 
+                            '<span class="cr-links">' + 
+                            '<a href="mailto:support@disczump.com">Contact Us</a>' + 
+                            '<a href="/faq">FAQ</a>' + 
+                            '<a href="/privacy">Privacy Policy</a>' + 
+                            '<a href="/terms">Terms and Conditions</a>' + 
+                            '</span>' + 
+                        '</span>' + 
+                        '<span class="footer-links">' + 
+                          '<a href="https://www.facebook.com/disczump/" target="_blank">' + 
+                            '<span class="fa-stack fa-lg">' + 
+                              '<i class="fa fa-circle fa-stack-2x"></i>' + 
+                              '<i class="fa fa-facebook fa-stack-1x fa-inverse"></i>' + 
+                            '</span>' + 
+                          '</a>' + 
+                          '<a href="https://twitter.com/disczump" target="_blank">' + 
+                            '<span class="fa-stack fa-lg">' + 
+                              '<i class="fa fa-circle fa-stack-2x"></i>' + 
+                              '<i class="fa fa-twitter fa-stack-1x fa-inverse"></i>' + 
+                            '</span>' + 
+                          '</a>' + 
+                          '<a href="https://instagram.com/disczump/" target="_blank">' + 
+                            '<span class="fa-stack fa-lg">' + 
+                              '<i class="fa fa-circle fa-stack-2x"></i>' + 
+                              '<i class="fa fa-instagram fa-stack-1x fa-inverse"></i>' + 
+                            '</span>' + 
+                          '</a>' + 
+                        '</span>' + 
+                        '<div class="clearfix"></div>' + 
+                    '</div>' + 
+              '</div>',
+        link: function(scope, element, attrs) {
+            var wrapper = angular.element(document.getElementById(attrs.wrapper))[0];
+            
+            scope.sticky = false;
+            
+            var makeSticky = function() {
+                scope.sticky = PageUtils.getFullHeight(wrapper) < window.innerHeight;
+                scope.safeApply();
+            }
+            
+            scope.$watch(function(){ return wrapper.offsetHeight; }, function(newVal) {
+                makeSticky();
+            });
+            
+            scope.safeApply = function(fn) {
+                var phase = this.$root.$$phase;
+                if (phase == '$apply' || phase == '$digest') {
+                    if (fn && (typeof(fn) === 'function')) {
+                        fn();
+                    }
+                }
+                else {
+                    this.$apply(fn);
+                }
+            };
+            
+            angular.element(window).bind('resize load', makeSticky);
+            
+            scope.$on('$destroy', function() {
+                angular.element(window).unbind('resize load', makeSticky);
+            });
+            
+            $timeout(makeSticky);
+            
+        }
+    }
+}])
+
+.directive('dzProfile', ['CacheService', function(CacheService) {
+    return {
+        restrict: 'E',
+        replace: true,
+        scope: {
+            userId: '@'
+        },
+        template: '<div class="profile-container" ng-show="user">' +
+                   '<div class="profile-inner">' +
+                        '<div class="profile-image float-left">' +
+                            '<img ng-src="{{getAccountImage()}}">' +
+                        '</div>' +
+                        '<div class="profile-info-left float-left">' +
+                            '<div class="profile-text-lg handle-overflow" ng-show="user.username">' +
+                                '{{user.username}}' +
+                            '</div>' +
+                            '<div class="profile-text-sm handle-overflow" ng-show="user.firstName && user.lastName">' +
+                                '{{user.firstName}} {{user.lastName}}' +
+                            '</div>' +
+                            '<div class="profile-text-sm handle-overflow" ng-show="user.shortLocation">' +
+                                '{{user.shortLocation}}' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="profile-info-center float-left">' +
+                            '<div class="slogan-container">' +
+                                '<div class="slogan-text handle-overflow">' +
+                                    'Don\'t make me pop the trunk!' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="btn-container">' +
+                                '<div class="profile-btn" title="Add Disc">' +
+                                    '<i class="fa fa-lg fa-plus-circle"></i>' +
+                                '</div>' +
+                                '<div class="profile-btn" title="Follow User">' +
+                                    '<i class="fa fa-user-plus"></i>' +
+                                '</div>' +
+                                '<div class="profile-btn" title="Send Message">' +
+                                    '<i class="fa fa-envelope"></i>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="profile-info-right float-left">' +
+                            '<div class="profile-text-sm handle-overflow" ng-show="user.dateJoined">' +
+                                'Member since {{user.dateJoined | date:\'MM/dd/yyyy\'}}' +
+                            '</div>' +
+                            '<div class="profile-text-sm handle-overflow" ng-show="user.discCount">' +
+                                '{{user.discCount}} Public Discs' +
+                            '</div>' +
+                            '<div class="profile-text-sm handle-overflow" ng-show="user.pdgaNumber">' +
+                                'PDGA #{{user.pdgaNumber}}' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="clearfix"></div>' +
+                    '</div>' +
+                '</div>',
+        link: function(scope, element, attrs) {
+            if (typeof(scope.userId) !== 'undefined') {
+                CacheService.getUser(scope.userId, function(success, user) {
+                    if (success) {
+                        scope.user = user;
+                    }
+                });
+            }
+            
+            scope.getAccountImage = function() {
+                return scope.user ? scope.user.image : '/static/logo/logo_small_faded.svg';
+            }
+            
+        }
+    }
+}])
+
+.directive('dzStatusBar', [function() {
+    return {
+        restrict: 'E',
+        replace: true,
+        scope: {
+            showCount: '=',
+            totalCount: '=',
+            activeFilters: '=',
+            onFilter: '&',
+            hideOn: '='
+        },
+        template: '<div class="breadcrumb-container">' +
+                    '<div class="pagination-container" title="Showing {{showCount}} of {{totalCount}} results" ng-show="$def(showCount)">' +
+                        '{{showCount}} | <span class="dz-blue">{{totalCount}}</span>' +
+                    '</div>' +
+                    '<div class="breadcrumb-trail" ng-show="!hideOn">' +
+                        '<span class="hover-underline" title="Explore Home" ng-show="activeFilters.length"><a href="/portal/explore"><i class="fa fa-home" style="font-size: 1.1em; color: #008edd"></i></a></span>' +
+                        '<span class="breadcrumb-item-container" ng-repeat="filter in activeFilters">' +
+                            '<span ng-if="!$def(filter.fields)">' + 
+                                '<i class="fa fa-chevron-right" style="margin-right: 5px"></i>' +
+                                '<span class="dz-blue hover-underline" ng-if="filter.href"><a href="{{filter.href}}">{{filter.text}}</a></span>'  +  
+                                '<span ng-if="!filter.href">{{filter.text}}</span>' + 
+                            '</span>' +
+                            '<span ng-if="$def(filter.fields)"><i class="fa fa-chevron-right" style="margin-right: 5px"></i>{{filter.text}}:</span>' +
+                            '<span ng-if="$def(filter.fields)" class="breadcrumb-item" ng-repeat="field in filter.fields">' +
+                                '<span ng-if="$index > 0">|</span>' +
+                                '<span class="dz-blue hover-underline" ng-click="callOnFilter(filter, field)">{{getFormattedField(field)}}</span>' +
+                            '</span>' +
+                        '</span>' +
+                    '</div>' +
+                    '<div class="clearfix"></div>' +
+                '</div>',
+        link: function(scope, element, attrs) {
+            
+            scope.$def = function(elem) {
+                return (typeof(elem) !== 'undefined');
+            }
+            
+            scope.callOnFilter = function(filter, field) {
+                scope.onFilter({filter: filter, field: field});
+            }
+            
+            scope.getFormattedField = function(field) {
+                if (field === 'true') {
+                    return 'Active';
+                }
+                
+                return field;
+            }
+        }
+    }
+}])
+
+.directive('discItem', ['QueryService', function(QueryService) {
+    return {
+        restrict: 'E',
+        replace: true,
+        scope: {
+            disc: '=',
+            currentUser: '='
+        },
+        template: '<div class="grid-item">' +
+                    '<div class="grid-item-icon top-left for-sale" ng-show="disc[\'marketplace.forSale\']">' +
+                        '<i class="fa fa-usd"></i>' +
+                    '</div>' +
+                    '<div class="grid-item-icon top-right for-trade" ng-show="disc[\'marketplace.forTrade\']">' +
+                        '<i class="fa fa-refresh"></i>' +
+                    '</div>' +
+                    '<div class="grid-img-container flip" ng-mouseenter="displayHoverIcon=true;" ng-mouseleave="displayHoverIcon=false;">' +
+                        '<div class="grid-img-inner">' + 
+                            '<div class="grid-hover-icon grid-info-icon" ng-show="displayHoverIcon" ng-click="flip=!flip;" ng-class="{\'show\': displayHoverIcon, \'remain\': flip}" title="More Info">' + 
+                                '<span class="fa-stack">' +
+                                  '<i class="fa fa-circle fa-stack-2x"></i>' +
+                                  '<i class="fa fa-info fa-stack-1x fa-inverse"></i>' +
+                                '</span>' +
+                            '</div>' + 
+                            '<a ng-href="/portal/d/{{disc._id}}/edit" class="grid-hover-icon grid-edit-icon" ng-show="displayHoverIcon" ng-class="{\'show\': displayHoverIcon && !flip}" ng-if="currentUser && currentUser._id == disc.userId" title="Edit Disc">' + 
+                                '<span class="fa-stack">' +
+                                  '<i class="fa fa-circle fa-stack-2x"></i>' +
+                                  '<i class="fa fa-pencil fa-stack-1x fa-inverse"></i>' +
+                                '</span>' +
+                            '</a>' +
+                            '<div class="grid-img-content flip-card" ng-class="{\'flipped\':flip}">' + 
+                                '<div class="flip-face flip-front">' + 
+                                    '<a class="grid-item-nav" ng-href="/portal/d/{{disc._id}}"></a>' +
+                                    '<img ng-src="{{getSolrPrimaryImage(disc)}}">' +
+                                '</div>' +
+                                '<div class="grid-quick-info flip-face flip-back">' +
+                                    '<div class="qi-content fancy-scroll">' + 
+                                        '<div class="qi-title">Disc Info</div>' + 
+                                        '<div class="qi-item"><div>Brand:</div><div class="handle-overflow">{{disc.brand}}</div></div>' + 
+                                        '<div class="qi-item"><div>Name:</div><div class="handle-overflow">{{disc.name}}</div></div>' + 
+                                        '<div class="qi-item" ng-if="disc.type"><div>Type:</div><div class="handle-overflow">{{disc.type}}</div></div>' + 
+                                        '<div class="qi-item" ng-if="disc.material"><div>Material:</div><div class="handle-overflow">{{disc.material}}</div></div>' + 
+                                        '<div class="qi-item" ng-if="disc.color"><div>Color:</div><div class="handle-overflow">{{disc.color}}</div></div>' + 
+                                        '<div class="qi-item" ng-if="disc.weight"><div>Weight:</div><div class="handle-overflow">{{disc.weight}}g</div></div>' + 
+                                        '<div class="qi-item" ng-if="disc.condition"><div>Condition:</div><div class="handle-overflow">{{disc.condition}}/10</div></div>' + 
+                                        '<div class="qi-item" ng-if="disc.speed"><div>Speed:</div><div class="handle-overflow">{{disc.speed}}</div></div>' + 
+                                        '<div class="qi-item" ng-if="disc.glide"><div>Glide:</div><div class="handle-overflow">{{disc.glide}}</div></div>' + 
+                                        '<div class="qi-item" ng-if="disc.turn"><div>Turn:</div><div class="handle-overflow">{{disc.turn}}</div></div>' + 
+                                        '<div class="qi-item" ng-if="disc.fade"><div>Fade:</div><div class="handle-overflow">{{disc.fade}}</div></div>' + 
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' + 
+                        '</div>' + 
+                    '</div>' +
+                    '<div class="grid-item-info">' +
+                        '<div class="grid-item-label handle-overflow">' +
+                            '<a class="hover-underline" ng-href="/portal/d/{{disc._id}}">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></a>' +
+                        '</div>' +
+                        '<div class="grid-item-text float-left hover-underline" ng-show="!disc.user">' +
+                            '{{disc.userId}}' +
+                        '</div>' +
+                        '<div class="grid-item-text float-left hover-underline" ng-show="disc.user">' +
+                            '<a ng-href="/portal/trunk/{{disc.user._id}}">{{disc.user.username}}</a>' +
+                        '</div>' +
+                        '<div class="grid-item-text float-right" ng-if="disc.weight">' +
+                            '{{disc.weight}}g' +
+                        '</div>' +
+                        '<div class="clearfix"></div>' +
+                    '</div>' +
+                '</div>',
+        link: function(scope, element, attrs) {
+            scope.getSolrPrimaryImage = function(disc) {
+                return QueryService.getSolrPrimaryImage(disc);
+            }
+        }
+    }
+}])
+
+.directive('dropzonePreview', ['$compile', function($compile){
+    return {
+        restrict: 'A',
+        scope: {},
+        link: function(scope, element, attrs) {
+            if (attrs.compiled !== 'true') {
+                var overlay = element[0].querySelector('.image-overlay');
+                element.attr('ng-mouseenter', 'displayOverlay=true;');
+                element.attr('ng-mouseleave', 'displayOverlay=false;');
+                element.attr('compiled', 'true');
+                angular.element(overlay).attr('ng-show', 'displayOverlay');
+                $compile(element)(scope.$parent);
+            }
+        }
+    }
+}])
+
+.directive('dropzone', function() {
+    return function(scope, element, attrs) {
+        var config, dropzone;
+
+        config = scope[attrs.dropzone];
+
+        dropzone = new Dropzone(element[0], config.options);
+
+        angular.forEach(config.eventHandlers, function(handler, event) {
+            dropzone.on(event, handler);
+        });
+
+        scope[attrs.dropzone].getDropzone = function() {
+            return dropzone
+        };
+    };
+})
+
+.directive('imageCropper', ['$window', 'ImageService', 'PageUtils', 
+    function($window, ImageService, PageUtils) {
+        return {
+            restrict: 'E',
+            scope: {
+                cropperOptions: "="
+            },
+            template: '<div class="backdrop backdrop-dark photo-crop" ng-show="show" ng-style="{\'top\':topMarg + \'px\'}">' + 
+                            '<div class="crop-container" ng-style="{\'top\':topInnerMarg + \'px\', \'left\':leftInnerMarg + \'px\'}">' + 
+                				'<div class="crop-area" id="image-parent">' + 
+                				'</div>' + 
+                				'<div class="crop-control-area">' + 
+                					'<div class="crop-control">' + 
+                						'<button type="button" class="btn btn-default" ng-click="cancel($event)"><span><i class="fa fa-trash fa-tools"></i></span>Cancel</button>' + 
+                						'<button type="button" class="btn btn-primary" ng-click="finish($event)"><span><i class="fa fa-save fa-tools"></i></span>Accept</button>' + 
+                					'</div>' +
+                				'</div>' + 
+                			'</div>' + 
+                        '</div>',
+            replace: true,
+            link: function(scope, element, attrs) {
+                if (!scope.cropperOptions) {
+                    return;
+                }
+                
+                var cropper, imageName, imageSrc;
+                scope.topMarg = PageUtils.getScrollPos();
+                scope.topInnerMarg = ($window.innerHeight - 500) / 2;
+                scope.leftInnerMarg = ($window.innerWidth - 500) / 2;
+                
+                scope.show = false;
+    
+                scope.cropperOptions.showCropper = function(name, src) {
+                    imageName = name;
+                    imageSrc = src;
+                    scope.safeApply(function() {
+                        scope.show = true;
+                    });
+                    var parent = document.getElementById('image-parent');
+                    parent.innerHTML = '<img src="' + src + '" id="test-crop"' + 
+                        ' filename="' + name + '"/>';
+                    initCropper();
+                }
+    
+                scope.cancel = function(e) {
+                    e.preventDefault();
+                    cropper.destroy();
+                    scope.safeApply(function() {
+                        scope.show = false;
+                    });
+                }
+    
+                scope.finish = function(e) {
+                    e.preventDefault();
+                    scope.safeApply(function() {
+                        scope.cropperOptions.cropperLoading = true;
+                        scope.show = false;
+                    });
+                    setTimeout(function() {
+                        var blob = cropper.getCroppedCanvas().toDataURL();
+                        var newFile = ImageService.dataURItoBlob(blob);
+                        cropper.destroy();
+                        newFile.cropped = true;
+                        newFile.name = imageName;
+                        scope.cropperOptions.onFinish(newFile);
+                        
+                    }, 100);
+                }
+    
+                var initCropper = function() {
+                    var image = document.getElementById('test-crop');
+                    cropper = new Cropper(image, {
+                        checkOrientation: false,
+                        aspectRatio: 1 / 1,
+                        autoCropArea: 1,
+                        dragMode: 'move',
+                        dragCrop: false,
+                        cropBoxMovable: false,
+                        cropBoxResizable: false,
+                        viewMode: 3,
+                        built: function() {
+                            scope.safeApply(function() {
+                                scope.cropperOptions.cropperLoading = false;
+                            });
+                        }
+                    });
+                }
+    
+                scope.safeApply = function(fn) {
+                    var phase = this.$root.$$phase;
+                    if (phase == '$apply' || phase == '$digest') {
+                        if (fn && (typeof(fn) === 'function')) {
+                            fn();
+                        }
+                    }
+                    else {
+                        this.$apply(fn);
+                    }
+                };
+            }
+        }
+    }])
+
+.directive('fitPage', ['$window', function($window) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            
+            var resize = function() {
+                angular.element(element).css('height', $window.innerHeight + 'px');
+            }
+            
+            
+            angular.element($window).bind('resize', resize);
+            
+            scope.$on('$destroy', function() {
+                angular.element($window).unbind('resize', resize);
+            })
+            
+            resize();
+        }
+    }
+}])
+
+.directive('fitBelowPage', ['$window', function($window) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            var resize = function() {
+                angular.element(element).css('marginTop', $window.innerHeight + 'px');
+            }
+            
+            
+            angular.element($window).bind('resize', resize);
+            
+            scope.$on('$destroy', function() {
+                angular.element($window).unbind('resize', resize);
+            });
+            
+            resize();
+        }
+    }
+}])
+
+.directive('centerAlign', function() {
+    return {
+        restrict: 'A',
+        transclude: true,
+        template: '<div style="margin: auto; display: table-cell; vertical-align: middle;" ng-transclude></div>',
+        link: function(scope, element, attrs) {
+            angular.element(element).css('display', 'table').css('width', '100%');
+        }
+    }
+})
 
 /******************************************************************************
 * Name:         toggleClass
@@ -70,15 +628,20 @@ angular.module('disczump.controllers', ['disczump.services'])
         link: function(scope, element, attrs) {
             var raw = element[0];
             
-            angular.element(window).bind('scroll load', function(evt) {
-                console.log("event fired: " + evt.type);
+            var onScroll = function(evt) {
                 var rectObject = raw.getBoundingClientRect();
                 var rectTop = rectObject.top + window.pageYOffset - document.documentElement.clientTop;
                 
                 if (rectTop + raw.clientHeight <= $window.scrollY + window.innerHeight) {
                     scope.$apply(attrs.infiniteScroll);
                 }
-            });
+            }
+            
+            angular.element(window).bind('scroll load', onScroll);
+            
+            scope.$on('$destroy', function() {
+                angular.element(window).unbind('scroll load', onScroll);
+            })
         }
     };
 }])
@@ -127,7 +690,7 @@ angular.module('disczump.controllers', ['disczump.services'])
             restrict: 'E',
             scope: true,
             template: '<div class="explore-category">' + 
-                        '<div class="explore-cat-label">' + 
+                        '<div class="explore-cat-label dz-label">' + 
                             'Explore | <span class="dz-blue">{{fvalue}} Discs</span><span class="dz-blue hover-underline" style="float: right; cursor: pointer"><a ng-href="{{getLink()}}">See More...</a></span>' + 
                         '</div>' + 
                         '<div class="explore-cat-list">' + 
@@ -181,7 +744,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                 }
                 
                 scope.safeApply = function(fn) {
-                    var phase = this.$parent.$root.$$phase;
+                    var phase = this.$root.$$phase;
                     if (phase == '$apply' || phase == '$digest') {
                         if (fn && (typeof(fn) === 'function')) {
                             fn();
@@ -201,9 +764,15 @@ angular.module('disczump.controllers', ['disczump.services'])
                     });
                 }
                 
-                angular.element($window).bind('resize', function() {
+                var resizeCat = function() {
                     scope.getDisplayCount();
-                });
+                }
+                
+                angular.element($window).bind('resize', resizeCat);
+                
+                scope.$on('$destroy', function() {
+                    angular.element($window).unbind('resize', resizeCat);
+                })
                 
                 QueryService.queryAll({
                     query: '*',
@@ -238,14 +807,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Description:  Parent controller for all child scopes in the app. Initializes 
 *               the dashboard and sets app-related settings.
 *******************************************************************************/
-.controller('MainController', ['$rootScope', '$scope', '$location', 'AccountService', '_',
-    function($rootScope, $scope, $location, AccountService, _) {
-        $scope.accountDropdown = false;
-        $scope.loggedIn = true;
-        $scope.activePage = 0;
-        
-        $scope.errorOpts = {
-            active: false
+.controller('MainController', ['$rootScope', '$scope', '$location', 'AccountService', '_', 'QueryService', 
+    function($rootScope, $scope, $location, AccountService, _, QueryService) {
+        $scope.account = {
+            user: undefined
         };
         
         $scope.nav = function(url, replace) {
@@ -265,15 +830,18 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
         
         $scope.safeApply = function(fn) {
-            var phase = this.$root.$$phase;
-            if (phase == '$apply' || phase == '$digest') {
-                if (fn && (typeof(fn) === 'function')) {
-                    fn();
+            if (this.$root && this.$root.$$phase) {
+                var phase = this.$root.$$phase;
+                if (phase == '$apply' || phase == '$digest') {
+                    if (fn && (typeof(fn) === 'function')) {
+                        fn();
+                    }
+                }
+                else {
+                    this.$apply(fn);
                 }
             }
-            else {
-                this.$apply(fn);
-            }
+            
         }
         
         $scope.containsStr = function(parent, child) {
@@ -281,10 +849,8 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
         
         $scope.getUserImage = function(user) {
-            if (user.image) {
-                return user.image;
-            }
-            return '/static/logo/logo_small_faded.svg';
+        
+            return user.image ? user.image : '/static/logo/logo_small_faded.svg';
         }
         
         $scope.getPrimaryImage = function(disc) {
@@ -301,21 +867,13 @@ angular.module('disczump.controllers', ['disczump.services'])
             console.log(obj);
         }
         
-        
         $scope.getSolrPrimaryImage = function(disc) {
-            if (disc.primaryImage) {
-                for (var key in disc) {
-                    if (/^imageList\.\d+\._id$/.test(key) && disc[key] == disc.primaryImage) {
-                        return 'http://ec2-54-218-32-190.us-west-2.compute.amazonaws.com/files/' + disc[key.replace('_id', 'thumbnailId')];
-                    }
-                }
-            }
-            return '/static/logo/logo_small_faded.svg';
+            return QueryService.getSolrPrimaryImage(disc);
         }
         
         $rootScope.$on('AccountInit', function(event, data) {
             if (data.success) {
-                console.log(AccountService.getAccount());
+                $scope.account.user = AccountService.getAccount();
                 // Handle account logged in
             }
         });
@@ -325,26 +883,6 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
         
         
-    }
-])
-
-/******************************************************************************
-* Name:         HeaderController
-* Description:  Controller for handling profile bar and breadcrumb bar. 
-*******************************************************************************/
-.controller('HeaderController', ['$scope',
-    function($scope) {
-        $scope.trunk = {};
-    }
-])
-
-/******************************************************************************
-* Name:         PortalController
-* Description:  Controller for explore/marketplace functionality. 
-*******************************************************************************/
-.controller('PortalController', ['$scope', '$location', '$window',
-    function($scope, $location, $window) {
-        //$location.url($location.path());
     }
 ])
 
@@ -362,40 +900,80 @@ angular.module('disczump.controllers', ['disczump.services'])
     };
 })
 
+
+/******************************************************************************
+* Name:         PortalController
+* Description:  Controller for explore/marketplace functionality. 
+*******************************************************************************/
+.controller('PortalController', ['$scope', '$location', '$window', 'smoothScroll', 'PageUtils',
+    function($scope, $location, $window, smoothScroll, PageUtils) {
+        $scope.transform = 'rotate(0deg)';
+        var topExplore = document.getElementById('explore-start');
+        
+        $scope.scrollPage = function() {
+            var options = {
+                duration: 700,
+                easing: 'easeInQuad',
+                offset: 50
+            }
+            
+            smoothScroll(topExplore, options);
+        }
+        
+        var updatePageIcon = function() {
+            var x = Math.min(180, PageUtils.getScrollPos());
+            $scope.safeApply(function() {
+                $scope.transform = 'rotate(' + x + 'deg)';
+            });
+        }
+        
+        angular.element(document).bind('scroll', updatePageIcon);
+        
+        $scope.$on('$destroy', function() {
+            angular.element(document).unbind('scroll', updatePageIcon);
+        });
+    }
+])
+
 /******************************************************************************
 * Name:         ExploreController
 * Description:  Controller for explore functionality. 
 *******************************************************************************/
-.controller('ExploreController', ['$scope', '$location', '$routeParams', '$window', '_', 'APIService', 'QueryService', 'CacheService',
-    function($scope, $location, $routeParams, $window, _, APIService, QueryService, CacheService) {
-        var resCont = document.getElementById('results-container');
-        var resList = document.getElementById('results-list');
+.controller('ExploreController', ['$scope', '$location', '$routeParams', '$window', '_', '$timeout', 'QueryService', 'CacheService', 'AccountService', 
+    function($scope, $location, $routeParams, $window, _, $timeout, QueryService, CacheService, AccountService) {
         var init = true;
         var sortSet = false;
-        
+        var reqSize = 20;
+        $scope.curUser = AccountService.getAccount();
         $scope.activeFilters = [];
         $scope.resultList = [];
         $scope.resultFilters = [];
+        $scope.trunk = {
+            userId: $routeParams.userId
+        };
         $scope.pagination = { start: 0, total: 0 };
         
         $scope.searchParam = '';
         $scope.sortParam = 'dAsc';
         
         $scope.loading = true;
+        $scope.loadingMore = false;
         
         $scope.loadMore = function() {
             if ($scope.loading || init) return;
             
             if ($scope.resultList.length < $scope.pagination.total) {
-                var nextStart = $scope.pagination.start + Math.min($scope.pagination.total - $scope.resultList.length, 20);
+                var nextStart = $scope.pagination.start + Math.min($scope.pagination.total - $scope.resultList.length, reqSize);
                 $scope.pagination.start = nextStart;
                 $scope.performSearch(true);
             }
         }
         
-        angular.element($window).bind('resize', function() {
-            $scope.resizeRes();
-        });
+        angular.element($window).bind('resize', $scope.resizeRes);
+        
+        $scope.$on('$destroy', function() {
+            angular.element($window).unbind('resize', $scope.resizeRes);
+        })
         
         $scope.updateUrl = function() {
             $scope.pagination.start = 0;
@@ -410,14 +988,6 @@ angular.module('disczump.controllers', ['disczump.services'])
             return _.some($scope.activeFilters, function(filter) {
                 return filter.name == 'forSale' || filter.name == 'forTrade';
             });
-        }
-        
-        $scope.getFormattedField = function(field) {
-            if (field === 'true') {
-                return 'Active';
-            }
-            
-            return field;
         }
         
         var processRngFilters = function(rangeFilters) {
@@ -454,14 +1024,20 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
         
         $scope.performSearch = function(appendOnly) {
-            $scope.loading = true;
+            if (appendOnly) {
+                $scope.loadingMore = true;
+            } else {
+                $scope.loading = true;
+            }
+            
             QueryService.queryAll({
                 query: $scope.searchParam,
                 sort: $scope.sortParam,
                 filter: $scope.activeFilters,
                 start: $scope.pagination.start,
                 valueRange: true,
-                limit: 20
+                limit: reqSize,
+                userId: $scope.trunk.userId || undefined
             }, function(success, response) {
                     if (success) {
                         $scope.pagination.start = response.start;
@@ -491,7 +1067,6 @@ angular.module('disczump.controllers', ['disczump.services'])
                                             _.each(prop.fields, function(field) {
                                                 limit = Math.max(limit, _.findIndex(facet.filters, function(filter) { return filter.val == field }) + 1);
                                             });
-                                            prop.text = facet.text;
                                         }
                                         facet.limit = limit;
                                         i++;
@@ -505,6 +1080,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                         $scope.getUsers();
                     }
                     $scope.loading = false;
+                    $scope.loadingMore = false;
                 });
         }
         
@@ -527,7 +1103,11 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
         
         $scope.resizeRes = function(){
+            var resCont = document.getElementById('results-container');
+            var resList = document.getElementById('results-list');
+            $timeout(function() {
              angular.element(resList).css('width',  Math.floor(resCont.clientWidth / 206) * 206 + 'px');
+            });
         }
         
         $scope.isFilterActive = function(facet, filter) {
@@ -588,8 +1168,15 @@ angular.module('disczump.controllers', ['disczump.services'])
             $scope.updateUrl();
         }
         
+        $scope.$watch('fullscreen', function(newVal) {
+            $timeout(function() {
+                $scope.resizeRes();
+            });
+        });
+        
         $scope.$watch(function () { return $location.url(); }, function (url) {
             if (url) {
+                
                 var ret = QueryService.parseUrlQuery($location.search());
                 
                 $scope.activeFilters = ret.filters;
@@ -625,8 +1212,20 @@ angular.module('disczump.controllers', ['disczump.services'])
             $scope.activeFilters = _.filter($scope.activeFilters, function(item) { return item.fields.length > 0});
             $scope.updateUrl();
         }
-
-        init = false;
+        
+        if ($routeParams.userId) {
+            CacheService.getUser($scope.trunk.userId, function(success, user) {
+                if (!success) {
+                    return $scope.nav();
+                }
+                
+                $scope.trunk.user = user;
+                init = false;
+                $scope.performSearch();
+            });
+        } else {
+            init = false;
+        }
     }
 ])
 
@@ -688,7 +1287,9 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
         
         angular.element($window).bind('resize', function() {
-            $scope.resizeRes();
+            $timeout(function() {
+                $scope.resizeRes();
+            });
         });
         
         $scope.updateUrl = function() {
@@ -885,6 +1486,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.user = null;
         $scope.disc = null;
         $scope.imageBlock = {};
+        $scope.breadcrumbList = [];
         
         $scope.loading = true;
         
@@ -900,6 +1502,11 @@ angular.module('disczump.controllers', ['disczump.services'])
                         return $scope.nav();
                     }
                     $scope.user = user;
+                    $scope.userInit = true;
+                    $scope.breadcrumbList = [
+                        {text: user.username + '\'s Trunk', href: '/portal/trunk/' + user._id},
+                        {text: 'Disc View'}
+                    ];
                 });
             }
             $scope.loading = false;
@@ -908,6 +1515,153 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.setImage = function(img) {
             $scope.imageBlock = img;
         }
+    }
+])
+
+/******************************************************************************
+* Name:         DiscEditController
+* Description:  Controller for disc page functionality. 
+*******************************************************************************/
+.controller('DiscEditController', ['$compile', '$scope', '$location', '$routeParams', '$window', '_', '$ocLazyLoad', 'APIService', 'CacheService', 'ImageService', 'AccountService', 
+    function($compile, $scope, $location, $routeParams, $window, _, $ocLazyLoad, APIService, CacheService, ImageService, AccountService) {
+        var discId = $routeParams.discId;
+        var account = AccountService.getAccount();
+		var dropzoneTemplate = '<div class="image-item-container image-template">' +
+                    '<div class="image-item">' +
+                        '<div class="image-entity">' +
+                            '<img data-dz-thumbnail />' +
+                        '</div>' +
+                        '<div class="image-progress" data-dz-uploadprogress></div>' +
+                        '<div class="image-overlay">' +
+                            '<span class="image-remove" data-dz-remove><i class="fa fa-times fa-lg"></i></span>' +
+                            '<div class="image-title"><span data-dz-name></span></div>' +
+                            '<div class="image-size" data-dz-size></div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+                
+        if (!account) {
+            return $scope.nav();
+        }
+            
+        $scope.disc = {_id: discId, visible: true, tagList: [], imageList: []};
+        $scope.settings = {
+            discReady: false,
+            dropzoneReady: false,
+            dropzoneProcessing: false
+        }
+        
+        $scope.removeImage = function(index) {
+            var image = $scope.disc.imageList.splice(index,1)[0];
+            
+            if (image._id == $scope.disc.primaryImage) {
+                $scope.disc.primaryImage = $scope.disc.imageList.length ? $scope.disc.imageList[0]._id : undefined;
+            }
+            
+        }
+        
+        $scope.dropzoneConfig = {
+            options: {
+                url: '/api/images',
+                method: "POST",
+                thumbnailWidth: 100,
+                thumbnailHeight: 100,
+                parallelUploads: 10,
+                maxFiles: 10,
+                paramName: 'discImage',
+                previewTemplate: dropzoneTemplate,
+                acceptedFiles: "image/*",
+                autoProcessQueue: true,
+                previewsContainer: '#dropzone-previews',
+                clickable: '#add-image',
+                accept: function(file, done) {
+                    if (this.files[10] != null) {
+                        return this.removeFile(this.files[10]);
+                    }
+                    
+                    if (file.cropped || file.width < 200) {
+                        $scope.discImageCropper.cropperLoading = false;
+                        $scope.settings.dropzoneProcessing = true;
+                        file.previewElement.setAttribute('dropzone-preview', '');
+                        $compile(angular.element(file.previewElement))($scope);
+                        $scope.safeApply();
+                        return done();
+                    }
+                    
+                    
+                    $scope.discImageCropper.cropperLoading = true;
+                    $scope.safeApply();
+                    $scope.dropzoneConfig.getDropzone().removeFile(file);
+                    ImageService.getDataUri(file, function(dataUri) {
+                        $scope.discImageCropper.showCropper(file.name, dataUri);
+                    });
+                    
+                    return done('Processing');
+                },
+            },
+            'eventHandlers': {
+                'success': function(file, response) {
+                    if (typeof response._id !== 'undefined') {
+                        $scope.disc.imageList.push(response);
+                        
+                        if ($scope.disc.imageList.length == 1) {
+                            $scope.disc.primaryImage = response._id;
+                        }
+                        $scope.safeApply();
+                    }
+                    this.removeFile(file);
+                },
+                'queuecomplete': function() {
+                    $scope.safeApply(function() {
+                        $scope.settings.dropzoneProcessing = false;
+                    });
+                }
+            }
+        };
+        
+        $scope.discImageCropper = {
+            onFinish: function(file) {
+                $scope.safeApply(function() {
+                    $scope.discImageCropper.cropperLoading = false;
+                });
+                if (file) {
+                    $scope.dropzoneConfig.getDropzone().addFile(file);
+                }
+            },
+            cropperLoading: false
+        }
+        
+        $scope.triggerDropzone = function() {
+             $scope.dropzoneConfig.getDropzone().progTrigger();
+        }
+        
+        if (typeof Dropzone === 'undefined' || typeof EXIF === 'undefined' || 
+            typeof Cropper === 'undefined') {
+            $ocLazyLoad.load(
+                ['https://cdn.rawgit.com/exif-js/exif-js/master/exif.js',
+                '/static/js-dist/dropzone.min.js'
+                ]).then(function() {
+                    $ocLazyLoad.load([
+                        '/static/js-dist/cropper.min.js',
+                        {type: 'css', path: 'https://cdn.rawgit.com/fengyuanchen/cropperjs/master/dist/cropper.min.css'}
+                    ]).then(function() {
+                            $scope.settings.dropzoneReady = true;
+                        });
+                });
+        } else {
+            $scope.settings.dropzoneReady = true;
+        }
+        
+        APIService.Get('/discs/' + discId, function(success, disc) {
+            if (!success) {
+                return $scope.nav();
+            } else {
+                $scope.disc = disc;
+                if (disc.userId != account._id) {
+                    return $scope.nav();
+                }
+            }
+        });
     }
 ])
 

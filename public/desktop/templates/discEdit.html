@@ -1,0 +1,186 @@
+<dz-header user="account.user"></dz-header>
+<div class="breadcrumb-container header-color-2">
+    <div class="pagination-container" title="Showing {{resultList.length}} of {{pagination.total}} results">
+        {{resultList.length}} | <span class="dz-blue">{{pagination.total}}</span>
+    </div>
+    <div ng-show="!loading">
+        <span class="hover-underline" title="Explore Home" ng-click="navFilter()" ng-show="activeFilters.length"><i class="fa fa-home" style="font-size: 1.1em; color: #008edd"></i></span>
+        <span class="breadcrumb-item-container" ng-repeat="filter in activeFilters">
+            <span><i class="fa fa-chevron-right" style="margin-right: 5px"></i>{{filter.text}}:</span>
+            <span class="breadcrumb-item" ng-repeat="field in filter.fields">
+                <span ng-if="$index > 0">|</span>
+                <span class="dz-blue hover-underline" ng-click="navFilter(filter, field)">{{getFormattedField(field)}}</span>
+            </span>
+        </span>
+    </div>
+    <div class="clearfix"></div>
+</div>
+<div class="scrollable main-body" id="disc-edit">
+    <div class="page-content full-width">
+        <div class="title-row">
+            <div class="title-btn-container float-right">
+                <span class="title-btn"><i class="fa fa-eraser hover-icon-color hover-pointer" title="Reset Form" ng-click="disc = {_id: disc._id, visible: true, tagList: [], imageList: []}"></i></span>
+                <div class="clearfix"></div>
+            </div>
+            <div class="page-title handle-overflow"><span ng-show="!$def(disc._id)">Create</span><span ng-show="$def(disc._id)">Edit</span> | <span class="dz-blue">Disc</span></div>
+            <hr>
+        </div>
+        <div class="form-horizontal">
+            <div class="dz-label">
+                General
+                <span class="dz-label-icon"><i class="fa fa-question-circle" title="Help" section="general"></i></span>
+            </div>
+            <div class="modify-form-section">
+    			<div class="form-group">
+                    <label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" placeholder="ex. Innova" ng-model="disc.brand">
+                    </div>
+                    <label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" placeholder="ex. Destroyer" ng-model="disc.name">
+                    </div>
+                </div>
+                 <div class="form-group">
+                    <label class="col-sm-2 control-label">Type</label>
+                    <div class="col-sm-4">
+                        <select class="form-control" placeholder="ex. Distance Driver" ng-model="disc.type">
+                            <option value="" selected=""></option>
+                            <option value="Distance Driver">Distance Driver</option>
+                            <option value="Fairway Driver">Fairway Driver</option>
+                            <option value="Mid-range">Mid-range</option>
+                            <option value="Putt/Approach">Putt/Approach</option>
+                            <option value="Mini">Mini</option>
+                         </select>
+                    </div>
+                    <label class="col-sm-2 control-label">Material</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" placeholder="ex. Champion" ng-model="disc.material">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Weight</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" placeholder="ex. 172" ng-model="disc.weight">
+                    </div>
+                    <label class="col-sm-2 control-label">Color</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" placeholder="ex. Orange" ng-model="disc.color">
+                    </div>
+                </div>
+            </div>
+            <div class="dz-label">
+                Advanced
+                <span class="dz-label-icon"><i class="fa fa-question-circle" title="Help" section="advanced"></i></span>
+            </div>
+            <div class="modify-form-section">
+	            <div class="form-group">
+	                <label class="col-sm-2 control-label">Speed</label>
+	                <div class="col-sm-3">
+	                    <input type="text" class="form-control" placeholder="ex. 12" ng-model="disc.speed">
+	                </div>
+	                <label class="col-sm-2 col-sm-offset-2 control-label">Glide</label>
+	                <div class="col-sm-3">
+	                    <input type="text" class="form-control" placeholder="ex. 5" ng-model="disc.glide">
+	                </div>
+	            </div>
+	            <div class="form-group">
+	                <label class="col-sm-2 control-label">Turn</label>
+	                <div class="col-sm-3">
+	                    <input type="text" class="form-control" placeholder="ex. -1" ng-model="disc.turn">
+	                </div>
+	                <label class="col-sm-2 col-sm-offset-2 control-label">Fade</label>
+	                <div class="col-sm-3">
+	                    <input type="text" class="form-control" placeholder="ex. 3" ng-model="disc.fade">
+	                </div>
+	            </div>
+	            <div class="form-group tag-input-group">
+	                <label class="col-sm-2 control-label">Tags</label>
+	                <div class="col-sm-10">
+	                    <div style="position:relative;">
+	                        <div class="input-group add-disc-tag-container">
+	                            <input type="text" class="form-control" placeholder="ex. Destroyer Collection">
+	                            <span class="input-group-btn">
+	                                <button class="btn btn-default" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>
+	                            </span>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="col-sm-10 col-sm-offset-2">
+	                    <div class="tag-list-container">
+    	                    <div class="tag-item hover-underline no-select" ng-repeat="tag in disc.tagList">
+                                <p class="tag-item-text">{{tag}}</p>
+                            </div>
+	                    </div>
+	                </div>
+	            </div>
+	            <div class="form-group">
+	                <label class="col-sm-2 control-label">Notes</label>
+	                <div class="col-sm-10">
+	                    <textarea class="form-control" style="resize: vertical;" rows="3" placeholder="ex. Found on hole 7 at..." ng-model="disc.notes"></textarea>
+	                </div>
+	            </div>
+	            <div class="form-group">
+	                <label class="col-sm-2 control-label">Public</label>
+	                <div class="col-sm-4">
+	                    <switch type="checkbox" param="visible" ng-model="disc.visible"></switch>
+	                </div>
+	                <label class="col-sm-2 col-sm-offset-1 control-label allow-icon">Condition</label>
+	                <div class="col-sm-3">
+	                    <input type="text" class="form-control" placeholder="ex. 9" ng-model="disc.condition">
+	                </div>
+                </div>
+            </div>
+            <div ng-show="disc.imageList.length">
+                <div class="dz-label">Current Images</div>
+                <div class="page-info">
+                    Drag images to reorder. Click the star to select a primary image.
+                </div>
+                <div class="modify-form-section">
+                    <div class="image-list">
+		                <div class="image-list-container image-list-container simple" id="existing-image-container">
+		                    <div class="image-list-table">
+		                        <div class="image-item-container" ng-repeat="image in disc.imageList" ng-mouseenter="showOverlay=true;" ng-mouseleave="showOverlay=false;">
+		                            <div class="image-item">
+		                                <div class="image-entity">
+		                                    <img ng-src="/files/{{image.thumbnailId}}" class="fit-parent">
+	                                    </div>
+    	                                <div class="image-overlay" ng-show="showOverlay">
+    	                                    <span class="image-remove">
+    	                                        <i class="fa fa-times fa-lg" ng-click="removeImage($index)"></i>
+    	                                    </span>
+    	                                    <div class="image-make-primary" title="Make Primary" ng-show="disc.primaryImage != image._id" ng-click="disc.primaryImage = image._id"><i class="fa fa-star-o fa-lg"></i></div>
+    	                                </div>
+        	                            <div class="image-overlay-static" ng-show="disc.primaryImage == image._id">
+        	                                <div class="primary-image-banner-static">
+        	                                    <i class="fa fa-star fa-lg"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+		                    </div>
+		                </div>
+		            </div>
+		        </div>
+		    </div>
+                <div class="dz-label">Add Images (max. 5)</div>
+		    <div class="modify-form-section">
+                <div class="image-list" directive-on="settings.dropzoneReady" directive-set="{dropzone: 'dropzoneConfig'}">
+                    <div class="image-list-container">
+                        <div class="image-list-table" id="dropzone-previews">
+                            <div class="image-item-container image-add dz-clickable" id="add-image">
+                                <div class="image-item">
+                                    <div class="image-entity">
+                                        <span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>  
+            </div>
+        </div>
+    </div>
+</div>
+<dropzone-load-item></dropzone-load-item>
+<image-cropper cropper-options="discImageCropper"></image-cropper>
