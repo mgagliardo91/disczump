@@ -918,6 +918,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                 var imgObj = _.findWhere(disc.imageList, {_id: disc.primaryImage});
                 if (imgObj) {
                     return 'http://ec2-54-218-32-190.us-west-2.compute.amazonaws.com/files/' + imgObj.fileId;
+                    // return '/files/' + imgObj.fileId;
                 }
             }
             return '/static/logo/logo_small_faded.svg';

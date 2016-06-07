@@ -15,6 +15,7 @@ var FeedbackController = require('./controllers/feedback');
 var DiscTemplateController = require('./controllers/discTemplate');
 var logger = require('../config/logger.js').logger;
 var config = require('../config/config.js');
+var localConfig = require('../config/localConfig.js');
 var FileUtil = require('./utils/file.js');
 var Confirm = require('./utils/confirm');
 var Mailer = require('./utils/mailer.js');
@@ -508,7 +509,7 @@ module.exports = function(app, passport, gridFs) {
             console.log(req.get('origin'));
             var requestString = Solr.createDiscReq(req.body, req.params.userId);
             var options = {
-                url: 'http://ec2-54-218-32-190.us-west-2.compute.amazonaws.com:8983/solr/discs/query',
+                url: localConfig.solrURL + ':8983/solr/discs/query',
                 json: true,
                 body: requestString,
                 method: 'POST'
@@ -527,7 +528,7 @@ module.exports = function(app, passport, gridFs) {
         .post(function(req, res) {
             var requestString = Solr.createDiscReq(req.body, req.params.userId);
             var options = {
-                url: 'http://ec2-54-218-32-190.us-west-2.compute.amazonaws.com:8983/solr/discs/query',
+                url: localConfig.solrURL + ':8983/solr/discs/query',
                 json: true,
                 body: requestString,
                 method: 'POST'
@@ -546,7 +547,7 @@ module.exports = function(app, passport, gridFs) {
         .post(function(req, res) {
             var requestString = Solr.createFacetReq(req.body);
             var options = {
-                url: 'http://ec2-54-218-32-190.us-west-2.compute.amazonaws.com:8983/solr/discs/query',
+                url: localConfig.solrURL + ':8983/solr/discs/query',
                 json: true,
                 body: requestString,
                 method: 'POST'

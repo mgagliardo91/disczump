@@ -497,6 +497,7 @@ angular.module('disczump.services', ['underscore'])
             for (var key in disc) {
                 if (/^imageList\.\d+\._id$/.test(key) && disc[key] == disc.primaryImage) {
                     return 'http://ec2-54-218-32-190.us-west-2.compute.amazonaws.com/files/' + disc[key.replace('_id', 'thumbnailId')];
+                    // return '/files/' + disc[key.replace('_id', 'thumbnailId')];
                 }
             }
         }
