@@ -445,11 +445,23 @@ angular.module('disczump.controllers', ['disczump.services'])
                 }
                 
                 var cropper, imageName, imageSrc;
-                scope.topMarg = PageUtils.getScrollPos();
-                scope.topInnerMarg = ($window.innerHeight - 500) / 2;
-                scope.leftInnerMarg = ($window.innerWidth - 500) / 2;
                 
                 scope.show = false;
+                
+                var resizeCropper = function() {
+                    var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+                    var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+                    scope.safeApply(function() {
+                        scope.topInnerMarg = ($window.innerHeight - 500) / 2;
+                        scope.leftInnerMarg = (width - 500) / 2;
+                    });
+                }
+                
+                angular.element(window).bind('resize', resizeCropper);
+            
+                scope.$on('$destroy', function() {
+                    angular.element(window).unbind('resize load', resizeCropper);
+                });
     
                 scope.cropperOptions.showCropper = function(name, src) {
                     imageName = name;
@@ -518,9 +530,57 @@ angular.module('disczump.controllers', ['disczump.services'])
                         this.$apply(fn);
                     }
                 };
+                
+                resizeCropper();
             }
         }
     }])
+    
+.directive('dzAlert', [function(){
+    return {
+        restrict: 'E',
+        scope: {
+            alertData: '='
+        },
+        replace: true,
+        template: '<div>' +
+                    '<div class="alert alert-success" ng-show="alertData.success.show">' +
+                        '<button type="button" class="close" aria-label="Close" ng-click="alertData.success.show=false;"><span aria-hidden="true">×</span></button>' +
+                        '<div class="alert-body">' +
+                            '<strong>{{alertData.success.title}}! </strong>' +
+                            '{{alertData.success.message}}' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="alert alert-danger" ng-show="alertData.error.show">' +
+                        '<button type="button" class="close" aria-label="Close" ng-click="alertData.error.show=false;"><span aria-hidden="true">×</span></button>' +
+                        '<div class="alert-body">' +
+                            '<strong>{{alertData.error.title}}</strong>' +
+                            '{{alertData.error.message}}' +
+                        '</div>' +
+                    '</div>' +
+                '</div>',
+        link: function(scope, element, attrs) {
+            scope.$watch('alertData.success.show', function(val) {
+                scope.alertData.error = {};
+            });
+            
+            scope.$watch('alertData.error.show', function(val) {
+                scope.alertData.success = {};
+            });
+        }
+    }
+}])
+    
+.directive('navBack', ['$window', function($window) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+             element.on('click', function() {
+                 $window.history.back();
+             });
+         }
+    }
+}])
 
 .directive('fitPage', ['$window', function($window) {
     return {
@@ -1175,8 +1235,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         });
         
         $scope.$watch(function () { return $location.url(); }, function (url) {
-            if (url) {
-                
+            if (url && /^\/(trunk|explore)/.test(url)) {
                 var ret = QueryService.parseUrlQuery($location.search());
                 
                 $scope.activeFilters = ret.filters;
@@ -1522,10 +1581,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         DiscEditController
 * Description:  Controller for disc page functionality. 
 *******************************************************************************/
-.controller('DiscEditController', ['$compile', '$scope', '$location', '$routeParams', '$window', '_', '$ocLazyLoad', 'APIService', 'CacheService', 'ImageService', 'AccountService', 
-    function($compile, $scope, $location, $routeParams, $window, _, $ocLazyLoad, APIService, CacheService, ImageService, AccountService) {
+.controller('DiscEditController', ['$compile', '$scope', '$routeParams', '$timeout', '_', 'smoothScroll', '$ocLazyLoad', 'APIService', 'ImageService', 'AccountService', 
+    function($compile, $scope, $routeParams, $timeout, _, smoothScroll, $ocLazyLoad, APIService, ImageService, AccountService) {
         var discId = $routeParams.discId;
-        var account = AccountService.getAccount();
+        var topEdit = document.getElementById('disc-edit');
 		var dropzoneTemplate = '<div class="image-item-container image-template">' +
                     '<div class="image-item">' +
                         '<div class="image-entity">' +
@@ -1540,24 +1599,26 @@ angular.module('disczump.controllers', ['disczump.services'])
                     '</div>' +
                 '</div>';
                 
-        if (!account) {
-            return $scope.nav();
+        $scope.editAlert = {}
+                
+        $scope.currentTagDrag = {
+            accept: function (sourceItemHandleScope, destSortableScope) {
+                return sourceItemHandleScope.itemScope.sortableScope.$id === destSortableScope.$id;
+            }
+        }
+        
+        $scope.currentImageDrag = {
+            accept: function (sourceItemHandleScope, destSortableScope) {
+                return sourceItemHandleScope.itemScope.sortableScope.$id === destSortableScope.$id;
+            }
         }
             
         $scope.disc = {_id: discId, visible: true, tagList: [], imageList: []};
+        
         $scope.settings = {
             discReady: false,
             dropzoneReady: false,
             dropzoneProcessing: false
-        }
-        
-        $scope.removeImage = function(index) {
-            var image = $scope.disc.imageList.splice(index,1)[0];
-            
-            if (image._id == $scope.disc.primaryImage) {
-                $scope.disc.primaryImage = $scope.disc.imageList.length ? $scope.disc.imageList[0]._id : undefined;
-            }
-            
         }
         
         $scope.dropzoneConfig = {
@@ -1580,17 +1641,18 @@ angular.module('disczump.controllers', ['disczump.services'])
                     }
                     
                     if (file.cropped || file.width < 200) {
-                        $scope.discImageCropper.cropperLoading = false;
-                        $scope.settings.dropzoneProcessing = true;
-                        file.previewElement.setAttribute('dropzone-preview', '');
-                        $compile(angular.element(file.previewElement))($scope);
-                        $scope.safeApply();
+                        $timeout(function() {
+                             $scope.discImageCropper.cropperLoading = false;
+                            $scope.settings.dropzoneProcessing = true;
+                            file.previewElement.setAttribute('dropzone-preview', '');
+                            $compile(angular.element(file.previewElement))($scope);
+                        });
                         return done();
                     }
                     
-                    
-                    $scope.discImageCropper.cropperLoading = true;
-                    $scope.safeApply();
+                    $timeout(function() {
+                        $scope.discImageCropper.cropperLoading = true;
+                    });
                     $scope.dropzoneConfig.getDropzone().removeFile(file);
                     ImageService.getDataUri(file, function(dataUri) {
                         $scope.discImageCropper.showCropper(file.name, dataUri);
@@ -1598,9 +1660,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                     
                     return done('Processing');
                 },
-            },
-            'eventHandlers': {
-                'success': function(file, response) {
+                success: function(file, response) {
                     if (typeof response._id !== 'undefined') {
                         $scope.disc.imageList.push(response);
                         
@@ -1611,11 +1671,14 @@ angular.module('disczump.controllers', ['disczump.services'])
                     }
                     this.removeFile(file);
                 },
-                'queuecomplete': function() {
-                    $scope.safeApply(function() {
+                queuecomplete: function() {
+                    $timeout(function() {
                         $scope.settings.dropzoneProcessing = false;
                     });
                 }
+            },
+            'eventHandlers': {
+                
             }
         };
         
@@ -1635,11 +1698,84 @@ angular.module('disczump.controllers', ['disczump.services'])
              $scope.dropzoneConfig.getDropzone().progTrigger();
         }
         
+        $scope.removeImage = function(index) {
+            var image = $scope.disc.imageList.splice(index,1)[0];
+            
+            if (image._id == $scope.disc.primaryImage) {
+                $scope.disc.primaryImage = $scope.disc.imageList.length ? $scope.disc.imageList[0]._id : undefined;
+            }
+        }
+        
+        $scope.removeTag = function(index) {
+            $scope.disc.tagList.splice(index,1)[0];
+        }
+        
+        $scope.pushTempTag = function() {
+            if ($scope.tempTag && $scope.tempTag.length && !_.contains($scope.disc.tagList, $scope.tempTag)) {
+                $scope.disc.tagList.push($scope.tempTag);
+                $scope.tempTag = '';
+            }
+        }
+        
+        var scrollTop = function() {
+            var options = {
+                duration: 300,
+                easing: 'easeInQuad'
+            }
+            
+            smoothScroll(topEdit, options);
+        }
+        
+        $scope.submitDisc = function() {
+            if ($scope.disc._id) {
+                APIService.Put('/discs/' + $scope.disc._id, $scope.disc, function(success, disc) {
+                    if (success) {
+                        console.log(disc);
+                        $scope.disc = disc;
+                        $scope.editAlert.success = {
+                            title: 'Success',
+                            message: disc.brand + ' ' + disc.name + ' has been updated successfully.',
+                            show: true
+                        }
+                        scrollTop();
+                    } else {
+                        $scope.editAlert.error = {
+                            title: 'Error',
+                            message: 'Unable to update disc. ' + disc.type + ': ' + disc.message,
+                            show: true
+                        }
+                        scrollTop();
+                    }
+                });
+            } else {
+                APIService.Post('/discs/', $scope.disc, function(success, disc) {
+                    if (success) {
+                        console.log(disc);
+                        $scope.disc = disc;
+                        $scope.editAlert.success = {
+                            title: 'Success',
+                            message: disc.brand + ' ' + disc.name + ' has been created successfully.',
+                            show: true
+                        }
+                        scrollTop();
+                    } else {
+                        $scope.editAlert.error = {
+                            title: 'Error',
+                            message: 'Unable to update disc. ' + disc.type + ': ' + disc.message,
+                            show: true
+                        }
+                        scrollTop();
+                    }
+                });
+                
+            }
+        }
+        
         if (typeof Dropzone === 'undefined' || typeof EXIF === 'undefined' || 
             typeof Cropper === 'undefined') {
             $ocLazyLoad.load(
                 ['https://cdn.rawgit.com/exif-js/exif-js/master/exif.js',
-                '/static/js-dist/dropzone.min.js'
+                '/static/js/dropzone.js'
                 ]).then(function() {
                     $ocLazyLoad.load([
                         '/static/js-dist/cropper.min.js',
@@ -1656,10 +1792,11 @@ angular.module('disczump.controllers', ['disczump.services'])
             if (!success) {
                 return $scope.nav();
             } else {
-                $scope.disc = disc;
-                if (disc.userId != account._id) {
+                if (disc.userId != AccountService.getAccountId()) {
                     return $scope.nav();
                 }
+                
+                $scope.disc = disc;
             }
         });
     }

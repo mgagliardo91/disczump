@@ -69,7 +69,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="width-33">Marketplace:</td>
+                        <td class="width-33">Marketplace</td>
                         <td colspan="2" class="dv-table-cell width-33">
                             <p class="dv-table-cell-title">Price</p>
                             <p class="dv-table-cell-value handle-overflow" ng-if="disc.marketplace.value">
@@ -97,7 +97,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="width-33">Type:</td>
+                        <td class="width-33">Type</td>
                         <td colspan="4">
                             <div ng-if="!disc.type">-</div>
                             <div class="handle-overflow" ng-if="disc.type">
@@ -106,7 +106,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="width-33">Material:</td>
+                        <td class="width-33">Material</td>
                         <td colspan="4">
                             <div ng-if="!disc.material">-</div>
                             <div class="handle-overflow" ng-if="disc.material">
@@ -115,7 +115,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="width-33">Color:</td>
+                        <td class="width-33">Color</td>
                         <td colspan="4">
                             <div ng-if="!disc.color">-</div>
                             <div class="handle-overflow" ng-if="disc.color">
@@ -124,7 +124,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="width-33">Weight:</td>
+                        <td class="width-33">Weight</td>
                         <td colspan="4">
                             <div ng-if="!disc.weight">-</div>
                             <div class="handle-overflow" ng-if="disc.weight">
@@ -133,7 +133,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="width-33">Condition:</td>
+                        <td class="width-33">Condition</td>
                         <td colspan="4">
                             <div ng-if="!disc.condition">-</div>
                             <div class="handle-overflow" ng-if="disc.condition">
@@ -142,7 +142,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="width-33">Flight Numbers:</td>
+                        <td class="width-33">Flight Numbers</td>
                         <td class="dv-table-cell width-16">
                             <p class="dv-table-cell-title">Speed</p>
                             <p class="dv-table-cell-value">
@@ -169,20 +169,20 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="width-33">Tags:</td>
+                        <td class="width-33">Tags</td>
                         <td colspan="4">
                             <div ng-if="!disc.tagList.length">-</div>
                             <div ng-if="disc.tagList.length">
                                 <div class="tag-item hover-underline no-select" ng-repeat="tag in disc.tagList">
-                                    <p class="tag-item-text">
+                                    <span class="tag-item-text">
                                         <a ng-href="/portal/trunk/{{user._id}}?s=rel&f_0=tag:{{tag}}" class="hover-underline">{{tag}}</a>
-                                    </p>
+                                    </span>
                                 </div>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <td class="width-33">Notes:</td>
+                        <td class="width-33">Notes</td>
                         <td colspan="4">
                             <div ng-if="!disc.notes">-</div>
                             <div ng-if="disc.notes">{{disc.notes}}</div>

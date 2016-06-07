@@ -516,13 +516,24 @@ angular.module('disczump.services', ['underscore'])
 
 .factory('AccountService', ['$rootScope', '_', 'APIService', function($rootScope, _, APIService) {
     var account = undefined;
+    var accountId = undefined;
     
     var init = function(userId) {
         if (userId) {
+            
+            if (typeof(account) !== 'undefined' && account._id == userId) {
+                return;
+            }
+            
+            accountId = userId;
+            
             APIService.Get('/account', function(success, data) {
                 if (success) {
                     account = data;
                     $rootScope.$emit('AccountInit', {success: true});
+                } else {
+                    account = undefined;
+                    $rootScope.$emit('AccountInit', {success: false});
                 }
             });
         } else {
@@ -539,10 +550,15 @@ angular.module('disczump.services', ['underscore'])
         return account;
     }
     
+    var getAccountId = function() {
+        return accountId;
+    }
+    
     return {
         init: init,
         isLoggedIn: isLoggedIn,
-        getAccount: getAccount
+        getAccount: getAccount,
+        getAccountId: getAccountId
     }
     
 }])

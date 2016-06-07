@@ -1,20 +1,4 @@
 <dz-header user="account.user"></dz-header>
-<div class="breadcrumb-container header-color-2">
-    <div class="pagination-container" title="Showing {{resultList.length}} of {{pagination.total}} results">
-        {{resultList.length}} | <span class="dz-blue">{{pagination.total}}</span>
-    </div>
-    <div ng-show="!loading">
-        <span class="hover-underline" title="Explore Home" ng-click="navFilter()" ng-show="activeFilters.length"><i class="fa fa-home" style="font-size: 1.1em; color: #008edd"></i></span>
-        <span class="breadcrumb-item-container" ng-repeat="filter in activeFilters">
-            <span><i class="fa fa-chevron-right" style="margin-right: 5px"></i>{{filter.text}}:</span>
-            <span class="breadcrumb-item" ng-repeat="field in filter.fields">
-                <span ng-if="$index > 0">|</span>
-                <span class="dz-blue hover-underline" ng-click="navFilter(filter, field)">{{getFormattedField(field)}}</span>
-            </span>
-        </span>
-    </div>
-    <div class="clearfix"></div>
-</div>
 <div class="scrollable main-body" id="disc-edit">
     <div class="page-content full-width">
         <div class="title-row">
@@ -25,7 +9,8 @@
             <div class="page-title handle-overflow"><span ng-show="!$def(disc._id)">Create</span><span ng-show="$def(disc._id)">Edit</span> | <span class="dz-blue">Disc</span></div>
             <hr>
         </div>
-        <div class="form-horizontal">
+        <dz-alert alert-data="editAlert"></dz-alert>
+        <div class="form-horizontal" ng-form name="discForm">
             <div class="dz-label">
                 General
                 <span class="dz-label-icon"><i class="fa fa-question-circle" title="Help" section="general"></i></span>
@@ -34,11 +19,11 @@
     			<div class="form-group">
                     <label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>
                     <div class="col-sm-4">
-                        <input type="text" class="form-control" placeholder="ex. Innova" ng-model="disc.brand">
+                        <input type="text" class="form-control" placeholder="ex. Innova" ng-model="disc.brand" required>
                     </div>
                     <label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>
                     <div class="col-sm-4">
-                        <input type="text" class="form-control" placeholder="ex. Destroyer" ng-model="disc.name">
+                        <input type="text" class="form-control" placeholder="ex. Destroyer" ng-model="disc.name" required>
                     </div>
                 </div>
                  <div class="form-group">
@@ -61,7 +46,7 @@
                 <div class="form-group">
                     <label class="col-sm-2 control-label">Weight</label>
                     <div class="col-sm-4">
-                        <input type="text" class="form-control" placeholder="ex. 172" ng-model="disc.weight">
+                        <input type="text" class="form-control" placeholder="ex. 172" ng-model="disc.weight" ng-pattern="/^[0-9]{0,3}$/">
                     </div>
                     <label class="col-sm-2 control-label">Color</label>
                     <div class="col-sm-4">
@@ -77,21 +62,21 @@
 	            <div class="form-group">
 	                <label class="col-sm-2 control-label">Speed</label>
 	                <div class="col-sm-3">
-	                    <input type="text" class="form-control" placeholder="ex. 12" ng-model="disc.speed">
+	                    <input type="text" class="form-control" placeholder="ex. 12" ng-model="disc.speed" ng-pattern="/^[-]?\d{1,2}$/">
 	                </div>
 	                <label class="col-sm-2 col-sm-offset-2 control-label">Glide</label>
 	                <div class="col-sm-3">
-	                    <input type="text" class="form-control" placeholder="ex. 5" ng-model="disc.glide">
+	                    <input type="text" class="form-control" placeholder="ex. 5" ng-model="disc.glide" ng-pattern="/^[-]?\d{1,2}$/">
 	                </div>
 	            </div>
 	            <div class="form-group">
 	                <label class="col-sm-2 control-label">Turn</label>
 	                <div class="col-sm-3">
-	                    <input type="text" class="form-control" placeholder="ex. -1" ng-model="disc.turn">
+	                    <input type="text" class="form-control" placeholder="ex. -1" ng-model="disc.turn" ng-pattern="/^[-]?\d{1,2}$/">
 	                </div>
 	                <label class="col-sm-2 col-sm-offset-2 control-label">Fade</label>
 	                <div class="col-sm-3">
-	                    <input type="text" class="form-control" placeholder="ex. 3" ng-model="disc.fade">
+	                    <input type="text" class="form-control" placeholder="ex. 3" ng-model="disc.fade" ng-pattern="/^[-]?\d{1,2}$/">
 	                </div>
 	            </div>
 	            <div class="form-group tag-input-group">
@@ -99,19 +84,19 @@
 	                <div class="col-sm-10">
 	                    <div style="position:relative;">
 	                        <div class="input-group add-disc-tag-container">
-	                            <input type="text" class="form-control" placeholder="ex. Destroyer Collection">
+	                            <input type="text" class="form-control" placeholder="ex. Destroyer Collection" ng-model="tempTag" ng-enter="pushTempTag();">
 	                            <span class="input-group-btn">
-	                                <button class="btn btn-default" type="button"><span><i class="fa fa-angle-double-down"></i></span></button>
+	                                <button class="btn btn-default" type="button" ng-click="pushTempTag();"><span><i class="fa fa-angle-double-down"></i></span></button>
 	                            </span>
 	                        </div>
 	                    </div>
 	                </div>
 	                <div class="col-sm-10 col-sm-offset-2">
-	                    <div class="tag-list-container">
-    	                    <div class="tag-item hover-underline no-select" ng-repeat="tag in disc.tagList">
-                                <p class="tag-item-text">{{tag}}</p>
-                            </div>
-	                    </div>
+	                    <ul class="tag-list-container" ng-model="disc.tagList" as-sortable="currentTagDrag" id="tag-list">
+	                        <li class="tag-item" ng-repeat="tag in disc.tagList" as-sortable-item>
+	                            <div class="draggable" as-sortable-item-handle>{{tag}}<span class="tag-item-remove" ng-click="removeTag($index)"><i class="fa fa-times"></i></span></div>
+	                        </li>
+	                    </ul>
 	                </div>
 	            </div>
 	            <div class="form-group">
@@ -127,7 +112,7 @@
 	                </div>
 	                <label class="col-sm-2 col-sm-offset-1 control-label allow-icon">Condition</label>
 	                <div class="col-sm-3">
-	                    <input type="text" class="form-control" placeholder="ex. 9" ng-model="disc.condition">
+	                    <input type="text" class="form-control" placeholder="ex. 9" ng-model="disc.condition" ng-pattern="/^\d{1,2}$/">
 	                </div>
                 </div>
             </div>
@@ -139,13 +124,13 @@
                 <div class="modify-form-section">
                     <div class="image-list">
 		                <div class="image-list-container image-list-container simple" id="existing-image-container">
-		                    <div class="image-list-table">
-		                        <div class="image-item-container" ng-repeat="image in disc.imageList" ng-mouseenter="showOverlay=true;" ng-mouseleave="showOverlay=false;">
-		                            <div class="image-item">
+		                    <div class="image-list-table" ng-model="disc.imageList" as-sortable="currentImageDrag">
+		                        <div class="image-item-container" ng-repeat="image in disc.imageList" ng-mouseenter="showOverlay=true;" ng-mouseleave="showOverlay=false;" as-sortable-item>
+		                            <div class="image-item" as-sortable-item-handle>
 		                                <div class="image-entity">
 		                                    <img ng-src="/files/{{image.thumbnailId}}" class="fit-parent">
 	                                    </div>
-    	                                <div class="image-overlay" ng-show="showOverlay">
+    	                                <div class="image-overlay draggable" ng-show="showOverlay">
     	                                    <span class="image-remove">
     	                                        <i class="fa fa-times fa-lg" ng-click="removeImage($index)"></i>
     	                                    </span>
@@ -179,8 +164,13 @@
                     </div>
                 </div>  
             </div>
+            <div class="modify-button-container">
+                <button type="button" class="btn btn-default" nav-back><span><i class="fa fa-save fa-tools"></i></span>Cancel</button>
+                <button type="button" class="btn btn-primary" ng-click="discForm.$valid && !settings.dropzoneProcessing && !discImageCropper.cropperLoading && submitDisc()" ng-disabled="!discForm.$valid || settings.dropzoneProcessing || discImageCropper.cropperLoading">
+                    <span><i class="fa fa-save fa-tools" ng-show="!settings.dropzoneProcessing && !discImageCropper.cropperLoading"></i><i class="fa fa-spinner fa-spin fa-tools" ng-show="settings.dropzoneProcessing || discImageCropper.cropperLoading"></i></span>Save
+                </button>
+            </div>
         </div>
     </div>
 </div>
-<dropzone-load-item></dropzone-load-item>
 <image-cropper cropper-options="discImageCropper"></image-cropper>
