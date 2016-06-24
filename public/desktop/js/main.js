@@ -20,13 +20,21 @@ app.config(['$routeProvider', '$httpProvider', '$locationProvider', function($ro
         templateUrl: '/static/desktop/templates/explore.html',
         controller: 'ExploreController',
         reloadOnSearch: false
+    }).when('/d/create/templates', {
+        templateUrl: '/static/desktop/templates/discTemplates.html',
+        controller: 'DiscTemplateController',
+        reloadOnSearch: false
+    }).when('/d/create', {
+        templateUrl: '/static/desktop/templates/modifyDisc.html',
+        controller: 'ModifyDiscController',
+        reloadOnSearch: false
     }).when('/d/:discId', {
         templateUrl: '/static/desktop/templates/disc.html',
         controller: 'DiscController',
         reloadOnSearch: false
     }).when('/d/:discId/edit', {
-        templateUrl: '/static/desktop/templates/discEdit.html',
-        controller: 'DiscEditController',
+        templateUrl: '/static/desktop/templates/modifyDisc.html',
+        controller: 'ModifyDiscController',
         reloadOnSearch: false
     }).when('/newsfeed', {
         templateUrl: '/static/desktop/templates/newsfeed.html',
@@ -44,7 +52,12 @@ app.config(['$routeProvider', '$httpProvider', '$locationProvider', function($ro
         templateUrl: '/static/desktop/templates/account.html',
         controller: 'AccountController',
         reloadOnSearch: false
-    }).otherwise({ redirectTo: '/' });
+    }).otherwise({
+        templateUrl: '/static/desktop/templates/redirect.html',
+        controller: 'RedirectController',
+        reloadOnSearch: false
+    });
+    // }).otherwise({ redirectTo: '/' });
     
     $locationProvider.html5Mode(true);
 }]);

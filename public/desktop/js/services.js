@@ -72,6 +72,7 @@ angular.module('disczump.services', ['underscore'])
 }])
 
 .factory('APIService', ['$http', '$window',
+
     function($http, $window) {
         return {
             Get: Get,
@@ -126,8 +127,7 @@ angular.module('disczump.services', ['underscore'])
         function request(params, callback) {
             return $http({
                 method: params.method,
-                // url: siteUrl + '/api' + params.path,
-                url: 'https://disczumpserver-mgagliardo.c9.io/api' + params.path,
+                url: '/api' + params.path,
                 data: params.data,
                 timeout: 5000
             }).then(function(response) {
@@ -515,6 +515,41 @@ angular.module('disczump.services', ['underscore'])
     }
 }])
 
+.factory('RedirectService', ['$location', 'AccountService', function($location, AccountService) {
+    var redirect = undefined;
+    
+    var resolvePath = function(path) {
+        if (/^\/trunk(\/)?$/.test(path)) {
+            if (AccountService.hasAccountId()) {
+                return 'trunk/' + AccountService.getAccountId();
+            }
+            
+            return 'login';
+        }
+        
+        return '';
+    }
+    
+    var getRedirectPath = function() {
+        if (typeof (redirect) === 'undefined') {
+            return resolvePath($location.path());
+        } else {
+            var redPath = redirect;
+            setRedirect(undefined);
+            return redPath;
+        }
+    }
+    
+    var setRedirect = function(path) {
+        redirect = path;
+    }
+    
+    return {
+        getRedirectPath: getRedirectPath,
+        setRedirect: setRedirect
+    }
+}])
+
 .factory('AccountService', ['$rootScope', '_', 'APIService', function($rootScope, _, APIService) {
     var account = undefined;
     var accountId = undefined;
@@ -555,9 +590,14 @@ angular.module('disczump.services', ['underscore'])
         return accountId;
     }
     
+    var hasAccountId = function() {
+        return typeof accountId !== 'undefined';
+    }
+    
     return {
         init: init,
         isLoggedIn: isLoggedIn,
+        hasAccountId: hasAccountId,
         getAccount: getAccount,
         getAccountId: getAccountId
     }

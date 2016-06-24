@@ -495,12 +495,22 @@ module.exports = function(app, passport, gridFs) {
         });
         
     app.route('/templates')
-        .get(hasAccess, function(req, res) {
-            DiscTemplateController.getTemplates(function(err, templates) {
+        .get(function(req, res) {
+            DiscTemplateController.queryTemplates(req.query.q, function(err, templates) {
                 if (err)
                     return res.json(err);
                 
                 return res.json(templates);
+            });
+        });
+        
+    app.route('/templates/:templateId')
+        .get(function(req, res) {
+            DiscTemplateController.getTemplateById(req.params.templateId, function(err, template) {
+                if (err)
+                    return res.json(err);
+                
+                return res.json(template);
             });
         });
         

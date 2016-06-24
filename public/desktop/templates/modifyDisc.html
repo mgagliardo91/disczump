@@ -19,17 +19,17 @@
     			<div class="form-group">
                     <label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>
                     <div class="col-sm-4">
-                        <input type="text" class="form-control" placeholder="ex. Innova" ng-model="disc.brand" required>
+                        <input type="text" class="form-control validation" placeholder="ex. Innova" ng-model="disc.brand" required>
                     </div>
                     <label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>
                     <div class="col-sm-4">
-                        <input type="text" class="form-control" placeholder="ex. Destroyer" ng-model="disc.name" required>
+                        <input type="text" class="form-control validation" placeholder="ex. Destroyer" ng-model="disc.name" required>
                     </div>
                 </div>
                  <div class="form-group">
                     <label class="col-sm-2 control-label">Type</label>
                     <div class="col-sm-4">
-                        <select class="form-control" placeholder="ex. Distance Driver" ng-model="disc.type">
+                        <select class="form-control validation" placeholder="ex. Distance Driver" ng-model="disc.type">
                             <option value="" selected=""></option>
                             <option value="Distance Driver">Distance Driver</option>
                             <option value="Fairway Driver">Fairway Driver</option>
@@ -40,17 +40,17 @@
                     </div>
                     <label class="col-sm-2 control-label">Material</label>
                     <div class="col-sm-4">
-                        <input type="text" class="form-control" placeholder="ex. Champion" ng-model="disc.material">
+                        <input type="text" class="form-control validation" placeholder="ex. Champion" ng-model="disc.material">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-2 control-label">Weight</label>
                     <div class="col-sm-4">
-                        <input type="text" class="form-control" placeholder="ex. 172" ng-model="disc.weight" ng-pattern="/^[0-9]{0,3}$/">
+                        <input type="text" class="form-control validation" placeholder="ex. 172" ng-model="disc.weight" ng-pattern="/^[0-9]{0,3}$/">
                     </div>
                     <label class="col-sm-2 control-label">Color</label>
                     <div class="col-sm-4">
-                        <input type="text" class="form-control" placeholder="ex. Orange" ng-model="disc.color">
+                        <input type="text" class="form-control validation" placeholder="ex. Orange" ng-model="disc.color">
                     </div>
                 </div>
             </div>
@@ -62,21 +62,21 @@
 	            <div class="form-group">
 	                <label class="col-sm-2 control-label">Speed</label>
 	                <div class="col-sm-3">
-	                    <input type="text" class="form-control" placeholder="ex. 12" ng-model="disc.speed" ng-pattern="/^[-]?\d{1,2}$/">
+	                    <input type="text" class="form-control validation" placeholder="ex. 12" ng-model="disc.speed" ng-pattern="/^[-]?\d{1,2}$/">
 	                </div>
 	                <label class="col-sm-2 col-sm-offset-2 control-label">Glide</label>
 	                <div class="col-sm-3">
-	                    <input type="text" class="form-control" placeholder="ex. 5" ng-model="disc.glide" ng-pattern="/^[-]?\d{1,2}$/">
+	                    <input type="text" class="form-control validation" placeholder="ex. 5" ng-model="disc.glide" ng-pattern="/^[-]?\d{1,2}$/">
 	                </div>
 	            </div>
 	            <div class="form-group">
 	                <label class="col-sm-2 control-label">Turn</label>
 	                <div class="col-sm-3">
-	                    <input type="text" class="form-control" placeholder="ex. -1" ng-model="disc.turn" ng-pattern="/^[-]?\d{1,2}$/">
+	                    <input type="text" class="form-control validation" placeholder="ex. -1" ng-model="disc.turn" ng-pattern="/^[-]?\d{1,2}$/">
 	                </div>
 	                <label class="col-sm-2 col-sm-offset-2 control-label">Fade</label>
 	                <div class="col-sm-3">
-	                    <input type="text" class="form-control" placeholder="ex. 3" ng-model="disc.fade" ng-pattern="/^[-]?\d{1,2}$/">
+	                    <input type="text" class="form-control validation" placeholder="ex. 3" ng-model="disc.fade" ng-pattern="/^[-]?\d{1,2}$/">
 	                </div>
 	            </div>
 	            <div class="form-group tag-input-group">
@@ -84,7 +84,7 @@
 	                <div class="col-sm-10">
 	                    <div style="position:relative;">
 	                        <div class="input-group add-disc-tag-container">
-	                            <input type="text" class="form-control" placeholder="ex. Destroyer Collection" ng-model="tempTag" ng-enter="pushTempTag();">
+	                            <input type="text" class="form-control validation" placeholder="ex. Destroyer Collection" ng-model="tempTag" ng-enter="pushTempTag();">
 	                            <span class="input-group-btn">
 	                                <button class="btn btn-default" type="button" ng-click="pushTempTag();"><span><i class="fa fa-angle-double-down"></i></span></button>
 	                            </span>
@@ -112,7 +112,7 @@
 	                </div>
 	                <label class="col-sm-2 col-sm-offset-1 control-label allow-icon">Condition</label>
 	                <div class="col-sm-3">
-	                    <input type="text" class="form-control" placeholder="ex. 9" ng-model="disc.condition" ng-pattern="/^\d{1,2}$/">
+	                    <input type="text" class="form-control validation" placeholder="ex. 9" ng-model="disc.condition" ng-pattern="/^\d{1,2}$/">
 	                </div>
                 </div>
             </div>

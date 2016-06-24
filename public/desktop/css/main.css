@@ -1,6 +1,22 @@
 /*-----------------------------------*/
 /*----------- Public Classes --------*/
 /*-----------------------------------*/
+* { padding: 0; margin: 0; }
+
+html {
+    min-height: 100% !important;
+    height: 100%;
+}
+
+body {
+    min-height: 100% !important;
+}
+
+.wrapper {
+    position: relative;
+    padding-bottom:60px;
+}
+
 a, a:hover, a:visited, a:link, a:active  {
     color: inherit;
     text-decoration: none;
@@ -19,12 +35,12 @@ a, a:hover, a:visited, a:link, a:active  {
   user-select: none;
 }
 
-input.ng-invalid, select.ng-invalid {
+input.validation.ng-invalid, select.validation.ng-invalid {
     border-color: #a94442;
     -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
     box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
 }
-input.ng-valid, select.ng-valid {
+input.validation.ng-valid, select.validation.ng-valid {
     border-color: #3c763d;
     -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
     box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
@@ -46,7 +62,7 @@ input.ng-valid, select.ng-valid {
 }
 
 .dz-blue {
-    color: #008EDD;
+    color: #008EDD !important;
 }
 
 .dz-blue-hover:hover {
@@ -95,6 +111,12 @@ input.ng-valid, select.ng-valid {
 
 .float-right {
     float: right;
+}
+
+.absolute-top-right {
+    position: absolute;
+    top: 0px;
+    right: 0px;
 }
 
 .draggable {
@@ -247,6 +269,17 @@ img.fit-parent {
     left: 0px;
     right: 0px;
 }
+
+.redirect-loader {
+    margin-bottom: 20px;
+}
+
+.redirect-container {
+    text-align: center;
+    font-size: 4em;
+    margin-bottom: 20px;
+}
+
 /*-----------------------------------*/
 /*--------- Header Bar CSS ----------*/
 /*-----------------------------------*/
@@ -466,6 +499,15 @@ img.fit-parent {
     border-color: #bce8f1;
 }
 
+.page-info.small {
+    max-width: 500px;
+}
+
+.page-info-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
 /*-----------------------------------*/
 /*------------- Portal --------------*/
 /*-----------------------------------*/
@@ -606,6 +648,10 @@ img.fit-parent {
 
 .footer-bar {
     background-color: #4A4A4A;
+    position: absolute;
+    width: 100%;
+    left: 0;
+    bottom: 0;
 }
 
 .footer-bar > div {
@@ -1214,6 +1260,90 @@ input.search-bar {
      -webkit-transform: rotatey(-180deg);
 }
 
+.grid-item.template {
+    width: auto;
+    display: table;
+    overflow: hidden;
+}
+
+.grid-item-template-outer {
+    width: 196px;
+    z-index: 10;
+    position: relative;
+    float:left;
+}
+
+.grid-item-template-inner {
+    width: 196px;
+    height: 100%;
+    background-color: #FBFBFB;
+    margin-left: -196px;
+    opacity: 0;
+    display: inline-block;
+    -webkit-transition: all 0.5s ease-out;
+    -moz-transition: all 0.5s ease-out;
+    -o-transition: all 0.5s ease-out;
+    transition: all 0.5s ease-out;
+    position: relative;
+}
+
+.grid-item.template .grid-item-label {
+    padding: 0px;
+    font-size: 1.2em;
+    position: absolute;
+    left: 0px;
+    right: 0;
+}
+
+.grid-item.template .grid-item-info {
+    background-color: #EEEEEE;
+    padding: 0px;
+    height: 35px;
+    line-height: 35px;
+}
+
+
+.grid-item.template.open {
+}
+
+.grid-item.template.open .grid-item-template-outer {
+    -webkit-box-shadow: 2px 0px 5px 0px rgba(0,0,0,0.39);
+    -moz-box-shadow: 2px 0px 5px 0px rgba(0,0,0,0.39);
+    box-shadow: 2px 0px 5px 0px rgba(0,0,0,0.39);
+}
+
+.grid-item.template.open .grid-item-template-inner {
+    opacity: 1;
+    margin-left: 0px;
+}
+
+.grid-item-list-label {
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    padding: 5px 0px;
+    background-color: #008edd;
+    color: #fff;
+}
+
+ul.grid-item-list {
+    list-style: none;
+    padding: 0px 15px;
+    overflow: auto;
+    position: absolute;
+    top: 33px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin-bottom: 0px;
+}
+
+ul.grid-item-list li {
+    padding: 3px 0px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
 /*-----------------------------------*/
 /*---------- Sidebar CSS ------------*/
 /*-----------------------------------*/
@@ -1357,22 +1487,37 @@ input.search-bar {
 /*-----------------------------------*/
 
 .profile-container {
-    height: 140px;
+    /*height: 140px;*/
+    padding: 10px 0px;
+    background-color: #ababab;
+    background-image: url("http://www.transparenttextures.com/patterns/diagmonds-light.png");
+    border-bottom: 1px solid #8a8989;
 }
 
 .profile-inner {
-    width: 980px;
+    display: table;
     margin: 0 auto;
-    padding: 20px 0px;
+    border-radius: 5px;
+    border: 2px solid #585858;
+    overflow: hidden;
+    background-color: rgba(238, 140, 37, 0.18);
+}
+
+.profile-container .profile-image {
+    border-right: 2px solid #585858;
+    padding: 10px;
+    overflow: hidden;
+    background: #ee8c25 linear-gradient(140deg, #ee8c25 0%, #ee8c25 10%, #e28523 10%, #e28523 20%, #d17b21 19%, #d67e21 21%, #d67e21 20%, #d67e21 30%, #c6741f 29%, #ca7720 31%, #ca7720 30%, #ca7720 40%, #ba6d1d 39%, #be701e 41%, #be701e 40%, #be701e 50%, #ae661b 49%, #b2691c 51%, #b2691c 50%, #b2691c 60%, #a25f19 59%, #a7621a 61%, #a7621a 60%, #a7621a 70%, #965817 69%, #9b5b18 71%, #9b5b18 70%, #9b5b18 80%, #8a5116 79%, #8f5416 81%, #8f5416 80%, #8f5416 90%, #7e4a14 89%, #834d14 91%, #834d14 90%, #834d14 100%);
 }
 
 .profile-container .profile-image > img {
     max-width: 100px;
     max-height: 100px;
+    border: 1px solid #565656;
 }
 
 .profile-info-left {
-    padding-left: 30px;
+    padding-left: 10px;
     width: 250px;
 }
 
@@ -1383,6 +1528,7 @@ input.search-bar {
 .profile-info-right {
     width: 230px;
     text-align: right;
+    margin-right: 10px;
 }
 
 .profile-container .slogan-container {
@@ -1421,7 +1567,7 @@ input.search-bar {
     margin: 0px 5px;
     border-radius: 3px;
     border: 1px solid #777777;
-    color: #777777;
+    color: #008edd;
     cursor: pointer;
     line-height: 26px;
 }
@@ -1505,8 +1651,8 @@ input.search-bar {
 }
 
 .dv-image-block {
-    width: 500px;
-    height: 500px;
+    width: 450px;
+    height: 450px;
     vertical-align: middle;
     display: table-cell;
     border: 2px solid #848484;
@@ -1930,6 +2076,94 @@ input.search-bar {
     margin-right: 0px;
 }
 
+/*-----------------------------------*/
+/*---------- Lightbox CSS -----------*/
+/*-----------------------------------*/
+
+.lb-backdrop {
+    background-color: rgba(0, 0, 0, 0.8);
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+}
+
+.lb-x {
+    height: 70px;
+    width: 70px;
+}
+
+.lb-close {
+    font-family: Garamond,'Apple Garamond','Lucida Sans Unicode';
+    font-size: 350%;
+    color: #BEBEBE;
+    margin: 0px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.lb-close:hover {
+    color: #EEEEEE;
+}
+
+.lb-container {
+    display: table;
+    height: 100%;
+    margin: auto;
+}
+
+.lb-image-block {
+    max-width: 800px;
+    max-height: 800px;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+/*-----------------------------------*/
+/*---------- Template Search---------*/
+/*-----------------------------------*/
+
+.ts-container {
+    margin-top: 200px;
+    text-align: center;
+    font-family: 'Architects Daughter', cursive;
+    margin-bottom: 50px;
+    -webkit-transition: all 0.1s ease-in;
+    -moz-transition: all 0.1s ease-in;
+    -o-transition: all 0.1s ease-in;
+    transition: all 0.1s ease-in;
+}
+
+.ts-container.search-active {
+    margin-top: 50px;
+}
+
+.ts-label {
+    display: inline-block;
+    margin-right: 10px;
+    font-size: 3em;
+}
+
+.ts-input {
+    border: 0px;
+    border-bottom: 1px solid #666;
+    color: #666;
+    outline: none;
+    text-align: center;
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+.ts-results {
+   max-width: 1400px;
+   margin: auto;
+   width: 75%;
+}
+
+.ts-results > div {
+   margin: auto;
+}
 
 /*-----------------------------------*/
 /*-----------------------------------*/

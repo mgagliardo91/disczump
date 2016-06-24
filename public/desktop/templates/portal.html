@@ -1,39 +1,39 @@
 <dz-header blend="true" fixed="true" user="account.user"></dz-header>
 <div class="scrollable main-body has-profile" id="portal">
-    <div id="wrapper">
-        <div class="nav-arrow">
-            <i class="fa fa-arrow-circle-down" ng-click="scrollPage()" id="nav-arrow-icon" ng-style="{'transform': transform, '-webkit-transform': transform, '-ms-transform': transform }"></i>
+    <div class="nav-arrow">
+        <i class="fa fa-arrow-circle-down" ng-click="scrollPage()" id="nav-arrow-icon" ng-style="{'transform': transform, '-webkit-transform': transform, '-ms-transform': transform }"></i>
+    </div> 
+    <div center-align fit-page id="explore-search">
+        <div class="portal-title cont-sm">
+            <img src="/static/logo/logo_portal.png" />
         </div>
-        <div center-align fit-page id="explore-search">
-            <div class="portal-title cont-sm">
-                <img src="/static/logo/logo_portal.png" />
+        <div class="portal-intro cont-sm">
+            <div class="search-container">
+                <div class="search-btn round-left no-right float-left active">
+                    <i class="fa fa-database"></i>
+                </div>
+                <div class="search-btn round-right no-left float-right" ng-click="navExplore(searchParam)">
+                    <i class="fa fa-search"></i>
+                </div>
+                <div class="search-bar-wrapper">
+                    <input id="search-explore" ng-enter="navExplore(searchParam)" ng-model="searchParam" class="search-bar" type="text" placeholder="Search discs...">
+                </div>
+                <div class="clearfix"></div>
             </div>
-            <div class="portal-intro cont-sm">
-                <div class="search-container">
-                    <div class="search-btn round-left no-right float-left active">
-                        <i class="fa fa-database"></i>
-                    </div>
-                    <div class="search-btn round-right no-left float-right" ng-click="navExplore(searchParam)">
-                        <i class="fa fa-search"></i>
-                    </div>
-                    <div class="search-bar-wrapper">
-                        <input id="search-explore" ng-enter="navExplore(searchParam)" ng-model="searchParam" class="search-bar" type="text" placeholder="Search discs...">
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
-                <div class="intro-sep">
-                    - OR -
-                </div>
-                <div style="text-align: center;">
-                    <a class="btn btn-default dz-blue-background" id="explore-btn" href="/portal/explore">Start Exploring</a>
-                </div>
+            <div class="intro-sep">
+                - OR -
+            </div>
+            <div style="text-align: center;">
+                <a class="btn btn-default dz-blue-background" id="explore-btn" href="/portal/explore">Start Exploring</a>
             </div>
         </div>
+    </div>
+    <div dz-wrapper>
         <div fit-below-page id="explore-start">
             <explore-category field="brand" fvalue="Innova"></explore-category>
             <explore-category field="brand" fvalue="Discraft"></explore-category>
             <explore-category field="name" fvalue="Aviar"></explore-category>
         </div>
+        <dz-footer></dz-footer>
     </div>
-    <dz-footer wrapper="wrapper"></dz-footer>
 </div>

@@ -108,7 +108,7 @@ angular.module('disczump.controllers', ['disczump.services'])
     return {
         restrict: 'E',
         replace: true,
-        template: '<div class="footer-bar" ng-class="{\'sticky-footer\':sticky}">' + 
+        template: '<div class="footer-bar" ng-init="pgSettings.hasFooter=true;">' + 
                     '<div>' + 
                         '<span class="footer-copyright">' + 
                             '<span class="cr-main">' + 
@@ -145,38 +145,6 @@ angular.module('disczump.controllers', ['disczump.services'])
                     '</div>' + 
               '</div>',
         link: function(scope, element, attrs) {
-            var wrapper = angular.element(document.getElementById(attrs.wrapper))[0];
-            
-            scope.sticky = false;
-            
-            var makeSticky = function() {
-                scope.sticky = PageUtils.getFullHeight(wrapper) < window.innerHeight;
-                scope.safeApply();
-            }
-            
-            scope.$watch(function(){ return wrapper.offsetHeight; }, function(newVal) {
-                makeSticky();
-            });
-            
-            scope.safeApply = function(fn) {
-                var phase = this.$root.$$phase;
-                if (phase == '$apply' || phase == '$digest') {
-                    if (fn && (typeof(fn) === 'function')) {
-                        fn();
-                    }
-                }
-                else {
-                    this.$apply(fn);
-                }
-            };
-            
-            angular.element(window).bind('resize load', makeSticky);
-            
-            scope.$on('$destroy', function() {
-                angular.element(window).unbind('resize load', makeSticky);
-            });
-            
-            $timeout(makeSticky);
             
         }
     }
@@ -212,9 +180,9 @@ angular.module('disczump.controllers', ['disczump.services'])
                                 '</div>' +
                             '</div>' +
                             '<div class="btn-container">' +
-                                '<div class="profile-btn" title="Add Disc">' +
+                                '<a class="profile-btn" title="Add Disc" href="/portal/d/create/templates">' +
                                     '<i class="fa fa-lg fa-plus-circle"></i>' +
-                                '</div>' +
+                                '</a>' +
                                 '<div class="profile-btn" title="Follow User">' +
                                     '<i class="fa fa-user-plus"></i>' +
                                 '</div>' +
@@ -307,6 +275,34 @@ angular.module('disczump.controllers', ['disczump.services'])
     }
 }])
 
+.directive('templateItem', function() {
+    return {
+        restrict: 'E',
+        replace: true,
+        scope: {
+            template: '='
+        },
+        template: '<div class="grid-item">' +
+                    '<div class="grid-img-container">' +
+                        '<div class="grid-img-inner">' +
+                            '<div class="grid-img-content">' + 
+                                '<div>' + 
+                                    '<a class="grid-item-nav"></a>' +
+                                    '<img ng-src="{{getPrimaryImage(disc)}}">' +
+                                '</div>' +
+                            '</div>' + 
+                        '</div>' + 
+                    '</div>' +
+                    '<div class="grid-item-info">' +
+                        '<div class="grid-item-label handle-overflow">' +
+                            '<a class="hover-underline" ng-href="/portal/d/{{disc._id}}">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></a>' +
+                        '</div>' +
+                        '<div class="clearfix"></div>' +
+                    '</div>' +
+                '</div>',
+    }
+})
+
 .directive('discItem', ['QueryService', function(QueryService) {
     return {
         restrict: 'E',
@@ -380,6 +376,33 @@ angular.module('disczump.controllers', ['disczump.services'])
             scope.getSolrPrimaryImage = function(disc) {
                 return QueryService.getSolrPrimaryImage(disc);
             }
+        }
+    }
+}])
+
+.directive('lightbox', [function() {
+    return {
+        restrict: 'E',
+        replace: true,
+        scope: {
+            imageList: '=',
+            trigger: '='
+        },
+        template:   '<div class="lb-backdrop" ng-show="trigger">' +
+                        '<div class="lb-container">' +
+                            '<div class="lb-image-block">' +
+                                '<img class="fit-parent" img-load="" ng-src="/files/570409f349f0983623435356" src="/files/570409f349f0983623435356">' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="lb-x absolute-top-right">' +
+                            '<p class="lb-close">×</p>' +
+                        '</div>' +
+                    '</div>',
+        link: function(scope, element, attrs) {
+            // scope.showLightbox = true;
+            // scope.getSolrPrimaryImage = function(disc) {
+            //     return ;
+            // }
         }
     }
 }])
@@ -551,6 +574,13 @@ angular.module('disczump.controllers', ['disczump.services'])
                             '{{alertData.success.message}}' +
                         '</div>' +
                     '</div>' +
+                    '<div class="alert alert-info" ng-show="alertData.info.show">' +
+                        '<button type="button" class="close" aria-label="Close" ng-click="alertData.info.show=false;"><span aria-hidden="true">×</span></button>' +
+                        '<div class="alert-body">' +
+                            '<strong>{{alertData.info.title}}! </strong>' +
+                            '{{alertData.info.message}}' +
+                        '</div>' +
+                    '</div>' +
                     '<div class="alert alert-danger" ng-show="alertData.error.show">' +
                         '<button type="button" class="close" aria-label="Close" ng-click="alertData.error.show=false;"><span aria-hidden="true">×</span></button>' +
                         '<div class="alert-body">' +
@@ -561,11 +591,24 @@ angular.module('disczump.controllers', ['disczump.services'])
                 '</div>',
         link: function(scope, element, attrs) {
             scope.$watch('alertData.success.show', function(val) {
-                scope.alertData.error = {};
+                if (typeof val !== 'undefined') {
+                    scope.alertData.error = {};
+                    scope.alertData.info = {};
+                }
             });
             
             scope.$watch('alertData.error.show', function(val) {
-                scope.alertData.success = {};
+                if (typeof val !== 'undefined') {
+                    scope.alertData.success = {};
+                    scope.alertData.info = {};
+                }
+            });
+            
+            scope.$watch('alertData.info.show', function(val) {
+                if (typeof val !== 'undefined') {
+                    scope.alertData.success = {};
+                    scope.alertData.error = {};
+                }
             });
         }
     }
@@ -586,9 +629,32 @@ angular.module('disczump.controllers', ['disczump.services'])
     return {
         restrict: 'A',
         link: function(scope, element, attrs) {
+            var offset = attrs.offset ? parseInt(attrs.offset) | 0 : 0;
             
             var resize = function() {
-                angular.element(element).css('height', $window.innerHeight + 'px');
+                angular.element(element).css('height', ($window.innerHeight + offset) + 'px');
+            }
+            
+            
+            angular.element($window).bind('resize', resize);
+            
+            scope.$on('$destroy', function() {
+                angular.element($window).unbind('resize', resize);
+            })
+            
+            resize();
+        }
+    }
+}])
+
+.directive('dzWrapper', ['$window', function($window) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            element.addClass('wrapper');
+            
+            var resize = function() {
+                angular.element(element).css('min-height', $window.innerHeight + 'px');
             }
             
             
@@ -607,8 +673,10 @@ angular.module('disczump.controllers', ['disczump.services'])
     return {
         restrict: 'A',
         link: function(scope, element, attrs) {
+            var offset = attrs.offset ? parseInt(attrs.offset) | 0 : 0;
+            
             var resize = function() {
-                angular.element(element).css('marginTop', $window.innerHeight + 'px');
+                angular.element(element).css('marginTop', ($window.innerHeight + offset) + 'px');
             }
             
             
@@ -867,13 +935,18 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Description:  Parent controller for all child scopes in the app. Initializes 
 *               the dashboard and sets app-related settings.
 *******************************************************************************/
-.controller('MainController', ['$rootScope', '$scope', '$location', 'AccountService', '_', 'QueryService', 
-    function($rootScope, $scope, $location, AccountService, _, QueryService) {
+.controller('MainController', ['$rootScope', '$scope', '$location', 'AccountService', '_', 'APIService', 'QueryService', 
+    function($rootScope, $scope, $location, AccountService, _, APIService, QueryService) {
+        $scope.pgSettings = {
+            hasFooter: false
+        };
+        
         $scope.account = {
             user: undefined
         };
         
         $scope.nav = function(url, replace) {
+            console.log($location.path());
             $location.path('/' + (url ? url : '')).search({});
             
             if (replace) {
@@ -1289,6 +1362,14 @@ angular.module('disczump.controllers', ['disczump.services'])
     }
 ])
 
+.controller('RedirectController', ['$scope', '$timeout', 'RedirectService',
+    function($scope, $timeout, RedirectService) {
+        $timeout(function() {
+            $scope.nav(RedirectService.getRedirectPath());
+        }, 1000);
+    }
+])
+
 /******************************************************************************
 * Name:         TrunkController
 * Description:  Controller for trunk (profile) functionality. 
@@ -1547,6 +1628,8 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.disc = null;
         $scope.imageBlock = {};
         $scope.breadcrumbList = [];
+        $scope.imageListStrArray = [];
+        $scope.showLightbox = true;
         
         $scope.loading = true;
         
@@ -1575,16 +1658,78 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.setImage = function(img) {
             $scope.imageBlock = img;
         }
+        
+        //$scope.initLightbox = function(disc.im)
     }
 ])
 
 /******************************************************************************
-* Name:         DiscEditController
+* Name:         DiscTemplateController
+* Description:  Controller for disc template search
+*******************************************************************************/
+.controller('DiscTemplateController', ['$scope', '$window', '$routeParams', '$timeout', '_', 'APIService', 
+    function($scope, $window, $routeParams, $timeout, _, APIService) {
+        
+        $scope.templates = [];
+        $scope.loading = false;
+        
+        $scope.$watch('query', function(q) {
+            if (typeof(q) === 'undefined' || q == '') {
+                return $scope.templates = [];
+            }
+            
+            $scope.loading = true;
+            
+            APIService.Get('/templates?q=' + q, function(success, templates) {
+                var procGroups = [];
+                
+                if (success) {
+                    var templateGroups = _.groupBy(templates, 'textSearch');
+                    for (var key in templateGroups) {
+                        procGroups.push({fullName: key, name: templateGroups[key][0].name, brand: templateGroups[key][0].brand, templates: templateGroups[key]});
+                    }
+                }
+                
+                $scope.templates = _.sortBy(procGroups, 'fullName');
+                $scope.loading = false;
+            });
+        });
+        
+        $scope.showVowel = function() {
+            return $scope.query && /[aeiou]/i.test($scope.query.charAt(0));
+        }
+        
+        $scope.resizeRes = function(){
+            var resCont = document.getElementById('results-container');
+            var resList = document.getElementById('results-list');
+            $timeout(function() {
+             angular.element(resList).css('width',  Math.floor(resCont.clientWidth / 208) * 208 + 'px');
+            });
+        }
+        
+        angular.element($window).bind('resize', $scope.resizeRes);
+        
+        $scope.$on('$destroy', function() {
+            angular.element($window).unbind('resize', $scope.resizeRes);
+        });
+        
+        $scope.resizeRes();
+    }
+])
+
+
+/******************************************************************************
+* Name:         ModifyDiscController
 * Description:  Controller for disc page functionality. 
 *******************************************************************************/
-.controller('DiscEditController', ['$compile', '$scope', '$routeParams', '$timeout', '_', 'smoothScroll', '$ocLazyLoad', 'APIService', 'ImageService', 'AccountService', 
-    function($compile, $scope, $routeParams, $timeout, _, smoothScroll, $ocLazyLoad, APIService, ImageService, AccountService) {
+.controller('ModifyDiscController', ['$compile', '$scope', '$routeParams', '$location', '$timeout', '_', 'smoothScroll', '$ocLazyLoad', 'APIService', 'ImageService', 'AccountService', 
+    function($compile, $scope, $routeParams, $location, $timeout, _, smoothScroll, $ocLazyLoad, APIService, ImageService, AccountService) {
+        if (!AccountService.hasAccountId()) {
+            return $location.path('/login');
+        }
+        
         var discId = $routeParams.discId;
+        var templateId = $routeParams.templateId;
         var topEdit = document.getElementById('disc-edit');
 		var dropzoneTemplate = '<div class="image-item-container image-template">' +
                     '<div class="image-item">' +
@@ -1601,26 +1746,18 @@ angular.module('disczump.controllers', ['disczump.services'])
                 '</div>';
                 
         $scope.editAlert = {}
-                
         $scope.currentTagDrag = {
             accept: function (sourceItemHandleScope, destSortableScope) {
                 return sourceItemHandleScope.itemScope.sortableScope.$id === destSortableScope.$id;
             }
         }
-        
         $scope.currentImageDrag = {
             accept: function (sourceItemHandleScope, destSortableScope) {
                 return sourceItemHandleScope.itemScope.sortableScope.$id === destSortableScope.$id;
             }
         }
-            
         $scope.disc = {_id: discId, visible: true, tagList: [], imageList: []};
-        
-        $scope.settings = {
-            discReady: false,
-            dropzoneReady: false,
-            dropzoneProcessing: false
-        }
+        $scope.settings = {discReady: false,dropzoneReady: false,dropzoneProcessing: false}
         
         $scope.dropzoneConfig = {
             options: {
@@ -1677,9 +1814,6 @@ angular.module('disczump.controllers', ['disczump.services'])
                         $scope.settings.dropzoneProcessing = false;
                     });
                 }
-            },
-            'eventHandlers': {
-                
             }
         };
         
@@ -1789,17 +1923,52 @@ angular.module('disczump.controllers', ['disczump.services'])
             $scope.settings.dropzoneReady = true;
         }
         
-        APIService.Get('/discs/' + discId, function(success, disc) {
-            if (!success) {
-                return $scope.nav();
-            } else {
-                if (disc.userId != AccountService.getAccountId()) {
+        if (typeof(discId) !== 'undefined') { // Edit Mode
+            APIService.Get('/discs/' + discId, function(success, disc) {
+                if (!success) {
                     return $scope.nav();
+                } else {
+                    if (disc.userId != AccountService.getAccountId()) {
+                        return $scope.nav();
+                    }
+                    
+                    $scope.disc = disc;
+                    $scope.settings.discReady = true;
                 }
-                
-                $scope.disc = disc;
+            });
+        } else { // Create Mode
+            if (typeof(templateId) !== 'undefined') {
+                APIService.Get('/templates/' + templateId, function(success, template) {
+                    if (success) {
+                        $scope.disc = {
+                            brand: template.brand,
+                            name: template.name,
+                            type: template.type,
+                            material: template.material,
+                            speed: template.speed,
+                            glide: template.glide,
+                            turn: template.turn,
+                            fade: template.fade,
+                            visible: true, 
+                            tagList: [], 
+                            imageList: []
+                        }
+                        
+                        $scope.editAlert.info = {
+                            title: 'Template Applied',
+                            message: 'The selected template was applied to the form.',
+                            show: true
+                        }
+                    }
+                    
+                    $scope.settings.discReady = true;
+                });
+            } else {
+                $scope.settings.discReady = true;
             }
-        });
+        }
+        
+        
     }
 ])
 

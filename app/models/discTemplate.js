@@ -7,6 +7,7 @@ var discTemplateSchema = mongoose.Schema({
 	    unique: true,
 	    default: shortId.generate
 	},
+	textSearch: String,
     brand: String,
     name: String,
     type: String,
