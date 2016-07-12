@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var XDate = require('xdate');
 var async = require('async');
 var Error = require('../utils/error');
 var Disc = require('../models/disc');
@@ -6,6 +7,7 @@ var UserController = require('./user.js');
 var ArchiveController = require('./archive.js');
 var ImageController = require('./imageCache.js');
 var FileUtil = require('../utils/file.js');
+var DiscConfig = require('../../config/config.js').disc;
 
 module.exports = {
     /* Standard Functions */
@@ -151,51 +153,57 @@ function createDisc(userId, data, callback) {
         disc.visible = data.visible;
     }
     
-    if (typeof data.weight !== 'undefined') {
-        if (data.weight == '') {
+	if (data.hasOwnProperty('weight')) {
+        if (data.weight === null) {
             disc.weight = undefined;
-        } else if (/^\d{1,3}$/.test(data.weight)){
-            disc.weight = data.weight;
+        } else {
+			var weight = parseInt(data.weight);
+			if (weight < 1000 && weight > 0) disc.weight = weight;
         }
     }
-    
-    if (typeof data.speed !== 'undefined') {
-        if (data.speed == '') {
+	
+	if (data.hasOwnProperty('speed')) {
+        if (data.speed === null) {
             disc.speed = undefined;
-        } else if (/^[-]?\d{1,2}$/.test(data.speed)){
-            disc.speed = data.speed;
+        } else {
+			var speed = parseInt(data.speed);
+			if (!isNaN(speed) && speed < 100 && speed > 0) disc.speed = speed;
         }
     }
-    
-    if (typeof data.glide !== 'undefined') {
-        if (data.glide == '') {
+	
+	if (data.hasOwnProperty('glide')) {
+        if (data.glide === null) {
             disc.glide = undefined;
-        } else if (/^[-]?\d{1,2}$/.test(data.glide)){
-            disc.glide = data.glide;
+        } else {
+			var glide = parseInt(data.glide);
+			if (!isNaN(glide) && glide < 100 && glide > 0) disc.glide = glide;
         }
     }
-    
-    if (typeof data.turn !== 'undefined') {
-        if (data.turn == '') {
+	
+	if (data.hasOwnProperty('turn')) {
+        if (data.turn === null) {
             disc.turn = undefined;
-        } else if (/^[-]?\d{1,2}$/.test(data.turn)){
-            disc.turn = data.turn;
+        } else {
+			var turn = parseInt(data.turn);
+			if (!isNaN(turn) && turn < 100 && turn > -100) disc.turn = turn;
         }
     }
-    
-    if (typeof data.fade !== 'undefined') {
-        if (data.fade == '') {
+	
+	if (data.hasOwnProperty('fade')) {
+        if (data.fade === null) {
             disc.fade = undefined;
-        } else if (/^[-]?\d{1,2}$/.test(data.fade)){
-            disc.fade = data.fade;
+        } else {
+			var fade = parseInt(data.fade);
+			if (!isNaN(fade) && fade < 100 && fade > -100) disc.fade = fade;
         }
     }
-    
-    if (typeof data.condition !== 'undefined') {
-        if (data.condition == '') {
+	
+	if (data.hasOwnProperty('condition')) {
+        if (data.condition === null) {
             disc.condition = undefined;
-        } else if (/^\d{1,2}$/.test(data.condition)){
-            disc.condition = data.condition;
+        } else {
+			var condition = parseInt(data.condition);
+			if (!isNaN(condition) && condition <= 10 && condition >= 0) disc.condition = condition;
         }
     }
     
@@ -211,14 +219,15 @@ function createDisc(userId, data, callback) {
         if (typeof data.marketplace.forTrade !== 'undefined') {
             disc.marketplace.forTrade = data.marketplace.forTrade;
         }
-        
-        if (typeof data.marketplace.value !== 'undefined') {
-            if (data.marketplace.value == '') {
-                disc.marketplace.value = undefined;
-            } else if (/^[0-9]{1,3}(?:,?[0-9]{3})*(?:\.[0-9]{1,2})?$/.test(data.marketplace.value)){
-                disc.marketplace.value = data.marketplace.value;
-            }
-        }
+			
+		if (data.marketplace.hasOwnProperty('value')) {
+			if (data.marketplace.value === null) {
+					disc.marketplace.value = undefined;
+			} else {
+					var value = parseFloat(data.marketplace.value);
+					if (!isNaN(value) && value >= 0) disc.marketplace.value = value.toFixed(2);
+			}
+		}
     }
     
     disc.tagList = [];
@@ -315,53 +324,59 @@ function updateDisc(userId, discId, data, gfs, callback) {
             disc.visible = data.visible;
         }
         
-        if (typeof data.weight !== 'undefined') {
-            if (data.weight == '') {
-                disc.weight = undefined;
-            } else if (/^\d{1,3}$/.test(data.weight)){
-                disc.weight = data.weight;
-            }
-        }
-        
-        if (typeof data.speed !== 'undefined') {
-            if (data.speed == '') {
-                disc.speed = undefined;
-            } else if (/^[-]?\d{1,2}$/.test(data.speed)){
-                disc.speed = data.speed;
-            }
-        }
-        
-        if (typeof data.glide !== 'undefined') {
-            if (data.glide == '') {
-                disc.glide = undefined;
-            } else if (/^[-]?\d{1,2}$/.test(data.glide)){
-                disc.glide = data.glide;
-            }
-        }
-        
-        if (typeof data.turn !== 'undefined') {
-            if (data.turn == '') {
-                disc.turn = undefined;
-            } else if (/^[-]?\d{1,2}$/.test(data.turn)){
-                disc.turn = data.turn;
-            }
-        }
-        
-        if (typeof data.fade !== 'undefined') {
-            if (data.fade == '') {
-                disc.fade = undefined;
-            } else if (/^[-]?\d{1,2}$/.test(data.fade)){
-                disc.fade = data.fade;
-            }
-        }
-        
-        if (typeof data.condition !== 'undefined') {
-            if (data.condition == '') {
-                disc.condition = undefined;
-            } else if (/^\d{1,2}$/.test(data.condition)){
-                disc.condition = data.condition;
-            }
-        }
+        if (data.hasOwnProperty('weight')) {
+			if (data.weight === null) {
+				disc.weight = undefined;
+			} else {
+				var weight = parseInt(data.weight);
+				if (weight < 1000 && weight > 0) disc.weight = weight;
+			}
+		}
+
+		if (data.hasOwnProperty('speed')) {
+			if (data.speed === null) {
+				disc.speed = undefined;
+			} else {
+				var speed = parseInt(data.speed);
+				if (!isNaN(speed) && speed < 100 && speed > 0) disc.speed = speed;
+			}
+		}
+
+		if (data.hasOwnProperty('glide')) {
+			if (data.glide === null) {
+				disc.glide = undefined;
+			} else {
+				var glide = parseInt(data.glide);
+				if (!isNaN(glide) && glide < 100 && glide > 0) disc.glide = glide;
+			}
+		}
+
+		if (data.hasOwnProperty('turn')) {
+			if (data.turn === null) {
+				disc.turn = undefined;
+			} else {
+				var turn = parseInt(data.turn);
+				if (!isNaN(turn) && turn < 100 && turn > -100) disc.turn = turn;
+			}
+		}
+
+		if (data.hasOwnProperty('fade')) {
+			if (data.fade === null) {
+				disc.fade = undefined;
+			} else {
+				var fade = parseInt(data.fade);
+				if (!isNaN(fade) && fade < 100 && fade > -100) disc.fade = fade;
+			}
+		}
+
+		if (data.hasOwnProperty('condition')) {
+			if (data.condition === null) {
+				disc.condition = undefined;
+			} else {
+				var condition = parseInt(data.condition);
+				if (!isNaN(condition) && condition <= 10 && condition >= 0) disc.condition = condition;
+			}
+		}
         
         if (typeof data.tagList !== 'undefined' && _.isArray(data.tagList)) {
             disc.tagList = [];
@@ -373,6 +388,8 @@ function updateDisc(userId, discId, data, gfs, callback) {
         }
         
         if (typeof data.marketplace !== 'undefined') {
+			var priorActive = disc.marketplace.forSale || disc.marketplace.forTrade;
+			
             if (typeof data.marketplace.forSale !== 'undefined') {
                 disc.marketplace.forSale = data.marketplace.forSale;
             }
@@ -381,17 +398,25 @@ function updateDisc(userId, discId, data, gfs, callback) {
                 disc.marketplace.forTrade = data.marketplace.forTrade;
             }
             
-            if (typeof data.marketplace.forTrade !== 'undefined') {
-                disc.marketplace.forTrade = data.marketplace.forTrade;
-            }
-            
-            if (typeof data.marketplace.value !== 'undefined') {
-                if (data.marketplace.value == '') {
-                    disc.marketplace.value = undefined;
-                } else if (/^[0-9]{1,3}(?:,?[0-9]{3})*(?:\.[0-9]{1,2})?$/.test(data.marketplace.value)){
-                    disc.marketplace.value = data.marketplace.value;
-                }
-            }
+            if (data.marketplace.hasOwnProperty('value')) {
+				if (data.marketplace.value === null) {
+						disc.marketplace.value = undefined;
+				} else {
+						var value = parseFloat(data.marketplace.value);
+						if (!isNaN(value) && value >= 0) disc.marketplace.value = value.toFixed(2);
+				}
+			}
+			
+			var postActive = disc.marketplace.forSale || disc.marketplace.forTrade;
+			
+			if (postActive && !priorActive) {
+				console.log('Found marketplace to be active.');
+				var lastMod = new XDate(disc.marketplace.modifiedDate);
+				if (lastMod.diffDays(new XDate()) >= DiscConfig.marketplaceModThresholdDays) {
+					console.log('Last day was within threashold. Resetting');
+					disc.marketplace.modifiedDate = Date.now();
+				}
+			}
         }
         
         
@@ -457,10 +482,11 @@ function updateDisc(userId, discId, data, gfs, callback) {
                 disc.primaryImage = disc.imageList[0]._id;
             }
             
+			disc.modifiedDate = Date.now();
             disc.save(function(err, disc){
                 if (err)
                     return callback(Error.createError(err, Error.internalError));
-                
+				
                return callback(null, disc);
             });
         });

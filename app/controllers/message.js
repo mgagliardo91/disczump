@@ -56,6 +56,10 @@ function putThreadState(userId, threadId, threadState, callback) {
             if (typeof(threadState.threadTag) !== 'undefined') {
                 localThread.threadTag = threadState.threadTag;
             }
+          
+            if (typeof(threadState.active) !== 'undefined' && threadState.active) {
+                localThread.active = true;
+            }
         
             if (typeof(messageCount) !== 'undefined' && messageCount > localThreadObj.messageCount && messageCount <= localThreadObj.currentMessageCount) {
                 localThread.messageCount = messageCount;
@@ -214,9 +218,9 @@ function notifyUsers(message, userId) {
     });  
 }
 
-function getPrivateThreads(userId, callback) {
+function getPrivateThreads(userId, archived, callback) {
     var retThreads = [];
-    ThreadLocal.find({userId: userId, active: true}, function(err, localThreads) {
+    ThreadLocal.find({userId: userId, active: !archived}, function(err, localThreads) {
         if (err) return Error.createError(err, Error.internalError);
         
         async.each(localThreads, function(localThread, cb) {

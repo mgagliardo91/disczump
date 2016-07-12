@@ -6,23 +6,100 @@ angular.module('underscore', [])
 
 angular.module('disczump.services', ['underscore'])
 
+.factory('SocketUtils', ['APIService', '$rootScope', '$timeout', '_', function (APIService, $rootScope, $timeout, _) {
+	var connectTries = 0;
+	var socket;
+	var sessionId;
+	var registry = {};
+	
+	var parseNotification = function(notification) {
+		console.log(notification);
+		if (registry[notification.type]) {
+			registry[notification.type].forEach(function(callback) {
+				callback(notification.data);
+			})
+		}
+	}
+	
+	var initSocket = function() {
+		socket = io.connect('/', {
+			'forceNew': true,
+			reconnection: false
+		});
+		
+		socket.on('connect', function() {
+			socket.emit('initialize', sessionId);
+		}).on('notification', function (notification) {
+				parseNotification(notification);
+		}).on('disconnect', function() {
+			$rootScope.$emit('ErrorEvent', {data: 'Disconnected from disc|zump. Reconnecting...', title: 'Connection Error'});
+			$timeout(init, 1000);
+		}).on('connect_error', function() {
+			connectTries++;
+			if (connectTries < 10) {
+				$timeout(init, 1000);
+			}
+		});
+	}
+	
+	var init = function() {
+		APIService.GetExt('/connect', '/initialize', function(success, newSession) {
+			if (success) {
+				sessionId = newSession;
+				initSocket();
+			} else {
+				// HANDLE ERROR
+			}
+		});
+	}
+	
+	var registerForNotification = function(type, callback) {
+		if (registry[type]) {
+			registry[type].push(callback);
+		} else {
+			registry[type] = [callback];
+		}
+	}
+	
+	var unregisterForNotification = function(type, callback) {
+		if (registry[type]) {
+			registry[type] = _.without(registry[type], callback);
+		}
+	}
+	
+  return { 
+		init: init,
+		registerForNotification: registerForNotification,
+		unregisterForNotification: unregisterForNotification
+	}
+}])
+
 .factory('PageUtils', [function() {
     function getScrollPos(){
-        if(window.pageYOffset) {
-			return window.pageYOffset;
-		} else {
-			return document.documentElement.scrollTop;
-		}
+			if(window.pageYOffset) {
+				return window.pageYOffset;
+			} else {
+				return document.documentElement.scrollTop;
+			}
     }
+	
+	function getWindowHeight() {
+		return window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+	}
+	
+	function getTop(elem) {
+			var rectObject = elem.getBoundingClientRect();
+			return rectObject.top + window.pageYOffset - document.documentElement.clientTop;
+	}
     
     function getFullHeight(elem) {
-        var rectObject = elem.getBoundingClientRect();
-        var rectTop = rectObject.top + window.pageYOffset - document.documentElement.clientTop;
-        return rectTop + elem.offsetHeight;
+        return getTop(elem) + elem.offsetHeight;
     }
     
     return {
+				getWindowHeight: getWindowHeight,
         getScrollPos: getScrollPos,
+				getTop: getTop,
         getFullHeight: getFullHeight
     }
 }])
@@ -76,6 +153,7 @@ angular.module('disczump.services', ['underscore'])
     function($http, $window) {
         return {
             Get: Get,
+						GetExt: GetExt,
             Put: Put,
             Post: Post,
             Delete: Delete,
@@ -100,6 +178,14 @@ angular.module('disczump.services', ['underscore'])
                 method: 'GET'
             }, callback);
         }
+			
+				function GetExt(root, path, callback) {
+						return request({
+								path: path,
+								method: 'GET',
+								root: root
+						}, callback);
+				}
 
         function Put(path, data, callback) {
             return request({
@@ -127,7 +213,7 @@ angular.module('disczump.services', ['underscore'])
         function request(params, callback) {
             return $http({
                 method: params.method,
-                url: '/api' + params.path,
+                url: (params.root || '/api') + params.path,
                 data: params.data,
                 timeout: 5000
             }).then(function(response) {
@@ -228,11 +314,9 @@ angular.module('disczump.services', ['underscore'])
         
         return qString;
     }
-    
-    function queryAll(opts, callback) {
-        var urlString = '/explore';
-        
-        if (!opts.query || opts.query == '') opts.query = '*';
+	
+	function buildQuery(opts) {
+		if (!opts.query || opts.query == '') opts.query = '*';
         
         var reqParam = {
             query: opts.query,
@@ -258,6 +342,13 @@ angular.module('disczump.services', ['underscore'])
         if (opts.valueRange) {
             reqParam.valueRange = valueRangeConfig;
         }
+			
+			return reqParam;
+		}
+    
+    function queryAll(opts, callback) {
+        var urlString = '/explore';
+        var reqParam = buildQuery(opts);
         
         if (opts.userId) {
             urlString = '/trunk' + (opts.userId ? '/' + opts.userId : '');
@@ -319,24 +410,25 @@ angular.module('disczump.services', ['underscore'])
         });
     }
     
-    function queryFacet(search, sort, filters, facetOpts, callback) {
-        if (!search || search == '') search = '*';
-        
-        var reqParam = {
-            query: search,
-            sort: sort,
-            facet: facetOpts
-        };
-        
-        if (filters && filters.length) {
-            reqParam.filter = filters;
-        }
-        
-        APIService.Post('/facet', reqParam, function(success, data) {
+    function queryFacet(opts, callback) {
+		var reqParam = buildQuery(opts);
+		var urlString = '/facet';
+
+		if (opts.facet) {
+			reqParam.facet = {
+				name: opts.facet.name,
+				limit: opts.facet.limit,
+				offset: opts.facet.offset,
+				query: opts.facet.query
+			}
+		}
+		
+		reqParam.userId = opts.userId;
+		
+        APIService.Post(urlString, reqParam, function(success, data) {
             if (success) {
-                console.log(data);
                 var response = parseResponse(data);
-                
+                console.log(data);
                 if (response.error) {
                     return callback(false, response.error);
                 }
@@ -397,7 +489,7 @@ angular.module('disczump.services', ['underscore'])
     }
     
     function validateFilters(filters) {
-        var validTypes = ['brand', 'name', 'type', 'tag', 'material', 'color', 'weight', 'condition', 'speed', 'glide', 'turn', 'fade', 'forSale', 'forTrade', 'value_i'];
+        var validTypes = ['brand', 'name', 'type', 'tag', 'material', 'color', 'weight', 'condition', 'speed', 'glide', 'turn', 'fade', 'forSale', 'forTrade', 'value'];
         var propText = {
             brand: 'Brand',
             name: 'Name',
@@ -413,7 +505,7 @@ angular.module('disczump.services', ['underscore'])
             fade: 'Fade',
             forSale: 'For Sale',
             forTrade: 'For Trade',
-            value_i: 'Value'
+            value: 'Value'
         }
         
         var validFilters = [];
@@ -426,7 +518,7 @@ angular.module('disczump.services', ['underscore'])
             filter.text = propText[filter.name];
         })
         
-        var valueFilter = _.findWhere(validFilters, {name: 'value_i'});
+        var valueFilter = _.findWhere(validFilters, {name: 'value'});
         if (valueFilter) {
             if (!_.some(validFilters, function(filter) {
                     return filter.name == 'forSale' || filter.name == 'forTrade';
@@ -469,7 +561,7 @@ angular.module('disczump.services', ['underscore'])
         }
         
         var rangeFilters = {
-            value_i: {text: 'Value', prop: 'value_i', filters: []}
+            value: {text: 'Value', prop: 'value', filters: []}
         }
         
         for (var facet in facets) {
@@ -496,7 +588,7 @@ angular.module('disczump.services', ['underscore'])
         if (disc.primaryImage) {
             for (var key in disc) {
                 if (/^imageList\.\d+\._id$/.test(key) && disc[key] == disc.primaryImage) {
-                    return 'http://ec2-54-218-32-190.us-west-2.compute.amazonaws.com/files/' + disc[key.replace('_id', 'thumbnailId')];
+                    return '/files/' + disc[key.replace('_id', 'thumbnailId')];
                     // return '/files/' + disc[key.replace('_id', 'thumbnailId')];
                 }
             }
@@ -551,8 +643,7 @@ angular.module('disczump.services', ['underscore'])
 }])
 
 .factory('AccountService', ['$rootScope', '_', 'APIService', function($rootScope, _, APIService) {
-    var account = undefined;
-    var accountId = undefined;
+    var account, accountId;
     
     var init = function(userId) {
         if (userId) {

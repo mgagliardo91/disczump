@@ -29,6 +29,9 @@ module.exports = {
     'message': {
        'alertThresholdMin': 20 
     },
+    'disc': {
+       'marketplaceModThresholdDays': 7 
+    },
     'user': {
         'preferences': {
             'colorize': {

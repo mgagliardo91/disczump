@@ -1,5 +1,6 @@
 <dz-header user="account.user"></dz-header>
-<dz-profile user-id="{{trunk.userId}}" class="header-color-1" ng-if="$def(trunk.userId)"></dz-profile>
+
+<dz-profile user-id="{{trunk.userId}}" class="header-color-1" ng-if="$def(trunk.userId)" current-user="account.user._id"></dz-profile>
 <dz-status-bar class="header-color-2" hide-on="loading" show-count="resultList.length" total-count="pagination.total" active-filters="activeFilters" on-filter="navFilter(filter, field)"></dz-status-bar>
 <div class="scrollable main-body has-profile" id="explore">
     <div class="page-content">
@@ -93,8 +94,9 @@
                 <div id="result-sort">
                     <select class="form-control" ng-model="sortParam" ng-change="updateSort()" ng-init="sortParam = sortParam || 'dAsc'">
                       <option value="rel">Sort by Relevance</option>
-                      <option value="dAsc">Sort by Date Ascending</option>
-                      <option value="dDesc">Sort by Date Descending</option>
+                      <option value="new">Sort by Newly Available</option>
+                      <option value="alpha">Sort Alphabetically</option>
+                      <option value="createDate">Sort by Date Added</option>
                     </select>
                 </div>
                 <div class="search-container pad">

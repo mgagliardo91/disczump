@@ -11,6 +11,7 @@ module.exports = {
             socket.on('initialize', function (data) {
                 logger.info('Socket connected: [' + socket.id + ']');
                 cache.pushSocket(data.sessionId, socket);
+                socket.emit('notification', {type: 'InfoNotification', data: 'Socket connected.'});
             });
             socket.on('disconnect', function() {
                 logger.info('Socket disconnected: [' + socket.id + ']');

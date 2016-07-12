@@ -2,15 +2,17 @@
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" media="screen">
     <link rel="stylesheet" href="/static/desktop/css-dist/angular-ui-switch.min.css">
     <link rel="stylesheet" href="/static/desktop/css-dist/ng-sortable.min.css">
+    <link rel="stylesheet" href="/static/desktop/css/animate.css">
     <link rel="stylesheet" href="/static/desktop/css/main.css">
     
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-route.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-animate.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3&key=AIzaSyDgtLJm5I5DaIQzMm6uErb0t7PTiG1gpE0"></script>
+    <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
     <script src="https://cdn.rawgit.com/jashkenas/underscore/master/underscore.js"></script>
     <script src="https://cdn.rawgit.com/ocombe/ocLazyLoad/master/dist/ocLazyLoad.js"></script>
     <script src="https://cdn.rawgit.com/d-oliveros/ngSmoothScroll/master/lib/angular-smooth-scroll.js"></script>
-    
     
     <script src="/static/desktop/js-dist/angular-ui-switch.min.js"></script>
     <script src="/static/desktop/js-dist/ng-sortable.min.js"></script>
@@ -20,7 +22,7 @@
     <base href="/portal/">
     
 {{/section}}
-<body ng-app="disczump" class="ng-cloak" ng-controller="MainController" {{#if user}}ng-init="init('{{user._id}}')"{{/if}}>
+<body ng-app="disczump" class="ng-cloak" ng-class="{'scroll-lock': pgSettings.scrollLock}" ng-controller="MainController" {{#if user}}ng-init="init('{{user._id}}')"{{/if}}>
     <div class="app main-app min-window-width">
         <ng-view autoscroll="true"></ng-view>
     </div>

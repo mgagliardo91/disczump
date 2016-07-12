@@ -1,3 +1,56 @@
-<div class="scrollable" id="account">
-    Account Page
+<dz-header user="account.user"></dz-header>
+<dz-profile user-id="{{account.user._id}}" class="header-color-1" current-user="account.user._id"></dz-profile>
+<dz-status-bar class="header-color-2"></dz-status-bar>
+<div class="scrollable main-body" id="disc-templates">
+    <div class="page-content full-width">
+        <div class="title-row">
+            <div class="page-title handle-overflow">Account | <span class="dz-blue">Settings</span></div>
+            <hr>
+        </div>
+        <dz-alert alert-data="editAlert"></dz-alert>
+        <div class="dz-label">
+            Personal Information
+        </div>
+        <div class="form-horizontal form-small" id="account-form">
+            <div class="form-group">
+                <label for="account-first-name" class="col-sm-3 control-label">First Name
+                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim"></i>
+                </label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" id="account-first-name" placeholder="First Name" ng-model="tempAccount.firstName">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="account-last-name" class="col-sm-3 control-label">Last Name
+                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim"></i>
+                </label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" id="account-last-name" placeholder="Last Name" ng-model="tempAccount.lastName">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="account-zip-code" class="col-sm-3 control-label">
+                    <span class="required-field">* </span>Zip Code
+                    <i class="fa-hover-black fa fa-question-circle fa-pad-left fa-dim"></i>
+                </label>
+                <div class="col-sm-5">
+                    <input type="text" class="form-control" id="account-zip-code" placeholder="Zip Code" ng-model="tempAccount.zipcode">
+                </div>
+                <div class="col-sm-4 lh-input" id="account-city-state">
+                    
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="account-pdga" class="col-sm-3 control-label">PDGA Number</label>
+                <div class="col-sm-3">
+                    <input type="text" class="form-control" id="account-pdga" placeholder="PDGA Number" ng-model="tempAccount.pdgaNumber">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-12">
+                    <button id="account-save" class="btn btn-primary pull-right">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

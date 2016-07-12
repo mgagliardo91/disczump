@@ -32,7 +32,7 @@ function requestSession(userId) {
 
 function pushSocket(sessionId, socket) {
     var socketEntry = _.findWhere(socketTable, {sessionId: sessionId});
-    
+  
     if (typeof(socketEntry) !== 'undefined') {
         socketEntry.sockets.push({
             socketId: socket.id,

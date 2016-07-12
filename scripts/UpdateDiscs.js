@@ -10,11 +10,8 @@ Disc.find(function(err, discs) {
     
     async.each(discs, function(disc, callback) {
         
-        //Update here
-        disc.marketplace = {
-            forSale: false,
-            forTrade: false
-        };
+        disc.modifiedDate = new Date();
+        disc.marketplace.modifiedDate = new Date();
         
         disc.save(function(err) {
             if (err)

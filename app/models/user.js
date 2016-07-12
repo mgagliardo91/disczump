@@ -132,6 +132,9 @@ userSchema.methods.accountToString = function() {
     	    this.local.location.stateAcr;
 	}
 	
+	account.locLat = this.local.location.lat;
+	account.locLng = this.local.location.lng;
+	
 	if (typeof(this.local.pdgaNumber) !== 'undefined') {
 		account.pdgaNumber = this.local.pdgaNumber;
 	}

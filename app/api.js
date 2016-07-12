@@ -57,7 +57,7 @@ module.exports = function(app, passport, gridFs) {
     
     app.route('/threads')
         .get(hasAccess, function(req, res) {
-           MessageController.getPrivateThreads(req.user._id, function(err, localThreads) {
+           MessageController.getPrivateThreads(req.user._id, req.query.archived, function(err, localThreads) {
                if (err)
                     return res.json(err);
                     
@@ -555,7 +555,7 @@ module.exports = function(app, passport, gridFs) {
     
     app.route('/facet')
         .post(function(req, res) {
-            var requestString = Solr.createFacetReq(req.body);
+            var requestString = Solr.createFacetReq(req.body, req.body.userId);
             var options = {
                 url: localConfig.solrURL + ':8983/solr/discs/query',
                 json: true,

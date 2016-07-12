@@ -24,8 +24,11 @@
             <div id="dv-content">
                 <div class="dv-image-container float-left">
                     <div class="dv-image-block">
-                        <img directive-on="discInit" directive-set="{'ng-src':'/files/{{imageBlock.fileId}\}'}" ng-show="imageBlock" class="fit-parent" img-load>
+                        <img directive-on="discInit" directive-set="{'ng-src':'/files/{{imageBlock.fileId}\}'}" ng-show="imageBlock" class="fit-parent hover-pointer" ng-click="showLightbox = true;" img-load>
                         <img ng-src="/static/logo/logo_small_faded.svg" ng-show="!imageBlock" class="fit-parent" img-load>
+                        <div class="dv-zoom hover-pointer" ng-show="imageBlock" ng-click="showLightbox = true;">
+                            <i class="fa fa-search-plus"></i>
+                        </div>    
                     </div>
                     <div class="image-list">
                         <div class="image-list-container simple">
@@ -198,4 +201,4 @@
     </div>
     <dz-footer></dz-footer>
 </div>
-<lightbox image-list="disc.imageListStrArray" trigger="showLightbox"></lightbox>
+<lightbox image-block-id="imageBlock._id" image-list="disc.imageList" trigger="showLightbox" scroll-lock="pgSettings.scrollLock"></lightbox>
