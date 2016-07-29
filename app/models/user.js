@@ -4,6 +4,7 @@ var crypto = require('crypto');
 var UserConfig = require('../../config/config.js').user.preferences;
 var CryptoConfig = require('../../config/auth.js').crypto;
 var shortId = require('shortid');
+var GeoFormat = require('../utils/geoFormat.js');
 
 var userSchema = mongoose.Schema({
     _id: {
@@ -24,14 +25,15 @@ var userSchema = mongoose.Schema({
         image: String,
         pdgaNumber: String,
         location: {
-            zipcode: String,
-            lat: String,
-            lng: String,
-            city: String,
-            state: String,
-            stateAcr: String,
-            country: String,
-            countryCode: String,
+			geo: String,
+            geoLat: String,
+            geoLng: String,
+            postalCode: String,
+			city: String,
+			administrationArea: String,
+			administrationAreaShort: String,
+			country: String,
+			countryCode: String
         },
         accessCount: {
             desktop: {type: Number, default: 0},
@@ -123,17 +125,12 @@ userSchema.methods.accountToString = function() {
 	    account.image = this.facebook.image;
 	}
 	
-	if (typeof(this.local.location.zipcode) !== 'undefined') {
-		account.zipcode = this.local.location.zipcode;
-		account.location = (this.local.location.city ? this.local.location.city + ', ' : '') + 
-    		this.local.location.stateAcr + ' ' + this.local.location.zipcode + ', ' + 
-    		this.local.location.countryCode;
-    	account.shortLocation = (this.local.location.city ? this.local.location.city + ', ' : '') +
-    	    this.local.location.stateAcr;
+	if (typeof(this.local.location.postalCode) !== 'undefined') {
+		account.postalCode = this.local.location.postalCode;
+		var location = GeoFormat.getFormattedLoc(this.local.location);
+		account.shortLocation = location.shortLocation;
+		account.longLocation = location.longLocation;
 	}
-	
-	account.locLat = this.local.location.lat;
-	account.locLng = this.local.location.lng;
 	
 	if (typeof(this.local.pdgaNumber) !== 'undefined') {
 		account.pdgaNumber = this.local.pdgaNumber;

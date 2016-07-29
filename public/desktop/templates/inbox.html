@@ -1,6 +1,6 @@
 <dz-header user="account.user"></dz-header>
 <dz-profile user-id="{{account.user._id}}" class="header-color-1" current-user="account.user._id"></dz-profile>
-<dz-status-bar class="header-color-2"></dz-status-bar>
+<dz-status-bar class="header-color-1" breadcrumbs="breadcrumbs"></dz-status-bar>
 <div class="scrollable main-body" id="disc-templates">
     <div class="page-content full-width">
         <div class="title-row">
@@ -74,7 +74,7 @@
             <div class="load-messages" ng-show="activeThread.currentMessageCount > messages.length" ng-click="getMessages()">Load More...</div>
             <div class="message-item" ng-repeat="message in messages | orderBy:'+createDate'" ng-repeat-finish="scrollBottom()" ng-class="{'message-incoming': message.userId != account.user._id, 'message-outgoing':message.userId == account.user._id}">
               <div class="message-area">
-                <a class="message-user" ng-href="/portal/trunk/{{message.userId}}" title="View User Trunk">
+                <a class="message-user" ng-href="/portal/trunks/{{message.userId}}" title="View User Trunk">
                   <img img-load directive-on="activeThread.imgInit" directive-set="{'ng-src':'{{activeThread.image}\}'}" ng-if="message.userId != account.user._id"/>
                   <img img-load ng-src="{{account.user.image}}" ng-if="message.userId == account.user._id"/>
                 </a>

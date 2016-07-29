@@ -250,14 +250,15 @@ function createUser(info, callback) {
 				
 				var loc = res[0];
 				info.location = {
-					lat : loc.latitude,
-				    lng : loc.longitude,
+					geo: loc.latitude + ',' + loc.longitude,
+					geoLat : loc.latitude,
+				    geoLng : loc.longitude,
 				    city : loc.city,
-				    state : loc.administrativeLevels.level1long,
-				    stateAcr : loc.administrativeLevels.level1short,
+				    administrationArea : loc.administrativeLevels.level1long,
+				    administrationAreaShort : loc.administrativeLevels.level1short,
 				    country : loc.country,
 				    countryCode : loc.countryCode,
-				    zipcode: loc.zipcode
+				    postalCode: loc.zipcode
 				};
 			    
 				return cb();
@@ -465,14 +466,15 @@ function updateAccount(userId, account, callback) {
 						
 						var loc = res[0];
 						user.local.location = {
-							zipcode: loc.zipcode,
-							lat : loc.latitude,
-						    lng : loc.longitude,
-						    city : loc.city,
-						    state : loc.administrativeLevels.level1long,
-						    stateAcr : loc.administrativeLevels.level1short,
-						    country : loc.country,
-						    countryCode : loc.countryCode
+							geo: loc.latitude + ',' + loc.longitude,
+							geoLat : loc.latitude,
+							geoLng : loc.longitude,
+							city : loc.city,
+							administrationArea : loc.administrativeLevels.level1long,
+				    		administrationAreaShort : loc.administrativeLevels.level1short,
+							country : loc.country,
+							countryCode : loc.countryCode,
+							postalCode: loc.zipcode
 						};
 					    
 						return cb();
@@ -745,12 +747,12 @@ function getUsersByArea(zipcode, radius, callback) {
 				async.each(users, function(user, userCb) {
 					var loc = user.local.location;
 					
-					if (!loc.lat || !loc.lng) {
+					if (!loc.geoLat || !loc.geoLng) {
 						return userCb();
 					}
 					
 					var result = geolib.isPointInCircle(
-					    {latitude: loc.lat, longitude: loc.lng},
+					    {latitude: loc.geoLat, longitude: loc.geoLng},
 					    center,
 					    radiusMeters
 					);

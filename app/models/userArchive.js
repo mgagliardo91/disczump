@@ -17,14 +17,14 @@ var userArchiveSchema = mongoose.Schema({
         lastAccess: {type: Date, default: Date.now},
         pdgaNumber: String,
         location: {
-            zipcode: String,
-            lat: String,
-            lng: String,
-            city: String,
-            state: String,
-            stateAcr: String,
-            country: String,
-            countryCode: String,
+			geo: String,
+            geoLat: String,
+            geoLng: String,
+            postalCode: String,
+			city: String,
+			administrationArea: String,
+			country: String,
+			countryCode: String
         },
         accessCount: {
             desktop: {type: Number, default: 0},

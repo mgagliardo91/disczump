@@ -21,7 +21,8 @@ var handleConfig = require('./app/utils/handleConfig.js');
 var Grid = require('gridfs-stream');
 
 // configuration ===============================================================
-var httpsPort = (localServer.release ? 443 : process.env.PORT || 80);
+var release = true; // replace release with release
+var httpsPort = (release ? 443 : process.env.PORT || 80);
 var httpPort = process.env.PORT || 80;
 
 var privateKey = fs.readFileSync('./private/disczump-key.pem', 'utf8');
@@ -35,7 +36,7 @@ mongoose.connect('mongodb://' + config.database.host + ':' +
 require('./config/passport')(passport);
 
 // set up our express application
-if (!localServer.release) {
+if (!release) {
   app.use(morgan('dev'));
 }
 app.use(cookieParser());
@@ -100,7 +101,7 @@ app.get('*', function(req, res){
 // launch ======================================================================
 var server;
 
-if (localServer.release) {
+if (release) {
   server = require('https').createServer({key: privateKey, cert: certificate}, app);
   require('http').createServer(function (req, res) {
       res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });

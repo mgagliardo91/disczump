@@ -258,18 +258,18 @@ module.exports = function(app, passport, gridFs) {
         });
     
     app.route('/users')
-        .get(hasAccess, function(req, res) {
-            if (typeof(req.query.q) === 'undefined') {
-                return res.json([]);
-            }
+//         .get(hasAccess, function(req, res) {
+//             if (typeof(req.query.q) === 'undefined') {
+//                 return res.json([]);
+//             }
             
-            UserController.queryUsers(req.query.q, function(err, users) {
-                if (err)
-                    return res.json(err);
+//             UserController.queryUsers(req.query.q, function(err, users) {
+//                 if (err)
+//                     return res.json(err);
                 
-                return res.json(users);
-            });
-        })
+//                 return res.json(users);
+//             });
+//         })
         .post(clientAccess, function(req, res) {
             if (!req.permissions.createUsers) {
                 return res.json(401, Error.createError('Access to this API call requires a client permission [createUsers].', Error.unauthorizedError))
@@ -514,9 +514,8 @@ module.exports = function(app, passport, gridFs) {
             });
         });
         
-    app.route('/explore')
+    app.route('/query/discs')
         .post(function(req, res) {
-            console.log(req.get('origin'));
             var requestString = Solr.createDiscReq(req.body, req.params.userId);
             var options = {
                 url: localConfig.solrURL + ':8983/solr/discs/query',
@@ -534,9 +533,10 @@ module.exports = function(app, passport, gridFs) {
             })
         });
     
-    app.route('/trunk/:userId')
+    app.route('/query/trunk/:userId')
         .post(function(req, res) {
-            var requestString = Solr.createDiscReq(req.body, req.params.userId);
+            var reqId = req.user ? req.user._id : undefined;
+            var requestString = Solr.createDiscReq(req.body, req.params.userId, reqId);
             var options = {
                 url: localConfig.solrURL + ':8983/solr/discs/query',
                 json: true,
@@ -552,6 +552,25 @@ module.exports = function(app, passport, gridFs) {
                 return res.json(body);
             })
         });
+    
+    app.route('/query/users')
+        .post(function(req, res) {
+            var requestString = Solr.createUserReq(req.body);
+            var options = {
+                url: localConfig.solrURL + ':8983/solr/users/query',
+                json: true,
+                body: requestString,
+                method: 'POST'
+            }
+            
+            request(options, function (err, response, body) {
+                if (err || response.statusCode != 200 || body.error) {
+                    return res.json(Error.createError('Error processing query request.', Error.internalError));
+                }
+                
+                return res.json(body);
+            })
+        })
     
     app.route('/facet')
         .post(function(req, res) {

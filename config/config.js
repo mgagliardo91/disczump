@@ -54,5 +54,8 @@ module.exports = {
         	    'newMessage': true
         	}
         }
+    },
+    'geo': {
+        'userFacetRanges': [10, 25, 50, 100, 500]
     }
 };

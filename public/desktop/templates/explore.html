@@ -1,7 +1,6 @@
 <dz-header user="account.user"></dz-header>
-
 <dz-profile user-id="{{trunk.userId}}" class="header-color-1" ng-if="$def(trunk.userId)" current-user="account.user._id"></dz-profile>
-<dz-status-bar class="header-color-2" hide-on="loading" show-count="resultList.length" total-count="pagination.total" active-filters="activeFilters" on-filter="navFilter(filter, field)"></dz-status-bar>
+<dz-status-bar class="header-color-2" hide-on="loading" show-count="resultList.length" total-count="pagination.total" breadcrumbs="breadcrumbs" home-url="statusHome"></dz-status-bar>
 <div class="scrollable main-body has-profile" id="explore">
     <div class="page-content">
         <div class="left-container" ng-show="!fullscreen">
@@ -17,10 +16,10 @@
                     </div>
                     <div class="sidebar-item-container" ng-show="mFacet.open">
                         <div ng-repeat="facet in resultFilters.statFilters">
-                            <div class="sidebar-item hover-underline no-select" ng-repeat="filter in statFilterOpts = (facet.filters | filter:{'val': true})" ng-click="toggleFilter(facet, filter);">
+                            <div class="sidebar-item hover-underline no-select" ng-repeat="filter in statFilterOpts = (facet.filters | filter:{'val': true})" ng-click="toggleMarketplaceMode(facet.prop);">
                                 <span class="sidebar-item-icon">
-                                    <i class="fa fa-square-o" ng-show="!isFilterActive(facet, filter)"></i>
-                                    <i class="fa fa-check-square-o" ng-show="isFilterActive(facet, filter)"></i>
+                                    <i class="fa fa-square-o" ng-show="!isMarketplaceModeActive(facet.prop);"></i>
+                                    <i class="fa fa-check-square-o" ng-show="isMarketplaceModeActive(facet.prop);"></i>
                                 </span>
                                 <div class="filter-item-val handle-overflow">{{facet.text}}</div>
                                 <div class="filter-item-count handle-overflow">({{filter.count}})</div>
@@ -31,6 +30,16 @@
                                     <i class="fa fa-square-o"></i>
                                 </span>
                                 <div class="filter-item-val handle-overflow">{{facet.text}}</div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="sidebar-item hover-underline no-select" ng-click="toggleMarketplaceMode('all');" ng-class="{'read-only':isMarketplaceModeActive('all')}">
+                                <span class="sidebar-item-icon">
+                                    <i class="fa fa-square-o" ng-show="!isMarketplaceModeActive('all');"></i>
+                                    <i class="fa fa-check-square-o" ng-show="isMarketplaceModeActive('all');"></i>
+                                </span>
+                                <div class="filter-item-val handle-overflow">All</div>
                                 <div class="clearfix"></div>
                             </div>
                         </div>
@@ -91,6 +100,9 @@
                 <div class="menu-btn" ng-attr-title="{{fullscreen ? 'Minimize' : 'Maximize'}}">
                     <span><i class="fa fa-arrows-alt" ng-click="fullscreen = !fullscreen;" ng-class="{'active':fullscreen}"></i></span>
                 </div>
+                <div class="menu-btn">
+                    <span><i class="fa fa-check-square" ng-click="msOpts.toggleMS()" ng-class="{'active': msOpts.active}" title="Multi-select Mode"></i></span>
+                </div>
                 <div id="result-sort">
                     <select class="form-control" ng-model="sortParam" ng-change="updateSort()" ng-init="sortParam = sortParam || 'dAsc'">
                       <option value="rel">Sort by Relevance</option>
@@ -103,15 +115,15 @@
                     <div class="search-btn round-left no-right float-left active">
                         <i class="fa fa-database"></i>
                     </div>
-                    <div class="search-btn round-right no-left float-right" ng-click="updateUrl()"  ng-show="!loading">
+                    <div class="search-btn round-right no-left float-right" ng-click="startSearch();"  ng-show="!loading">
                         <i class="fa fa-search"></i>
                     </div>
                     <div class="search-btn round-right no-left float-right" ng-show="loading">
                         <i class="fa fa-spinner fa-spin fa-lg"></i>
                     </div>
                     <div class="search-bar-wrapper">
-                        <input id="search-explore" ng-enter="updateUrl()" ng-model="searchParam" class="search-bar" type="text" placeholder="Search discs..."></input>
-                        <div class="close-icon" ng-show="searchParam.length" ng-click="searchParam = ''"></div>
+                        <input id="search-explore" ng-enter="startSearch();" ng-model="searchParam" class="search-bar" type="text" placeholder="Search discs..."></input>
+                        <div class="close-icon" ng-show="searchParam.length" ng-click="searchParam = ''; updateUrl();"></div>
                     </div>
                 </div>
             </div>
@@ -120,7 +132,7 @@
                     <div class="no-results-title"><i class="fa fa-exclamation-triangle dz-blue"></i> No Results</div>
                     <div class="no-results-msg">Please revise your search terms and try again.</div>
                 </div>
-                <disc-item  ng-repeat="disc in resultList" ng-repeat-finish="resizeRes()" disc="disc" current-user="curUser"></disc-item>
+                <disc-item  ng-repeat="disc in resultList" ng-repeat-finish="resizeRes()" disc="disc" current-user="curUser" ms-opts="msOpts"></disc-item>
                 <div class="grid-item load-item" ng-show="loading || loadingMore">
                     <div><i class="fa fa-spinner fa-spin"></i></div>
                 </div>
@@ -128,4 +140,22 @@
             </div>
         </div>
     </div>
+    <div class="ms-toolbox" ng-show="msOpts.active">
+        <div class="ms-tb-close" ng-click="msOpts.toggleMS()"><i class="fa fa-times"></i></div>
+        <div class="ms-tb-title">Multi-select Toolbox</div>
+        <div class="ms-count dz-blue">{{msOpts.count}}</div>
+        <div class="ms-btn-container">
+            <div class="ms-tb-btn" title="Select All" ng-click="msOpts.selectAll()"><i class="fa fa-lg fa-object-group"></i></div>
+            <div class="ms-tb-btn" title="Deselect All" ng-click="msOpts.deselectAll()"><i class="fa fa-lg fa-object-ungroup"></i></div>
+            <div class="ms-tb-btn edit" title="Edit"><i class="fa fa-lg fa-pencil"></i></div>
+            <div class="ms-tb-btn delete" title="Delete" ng-click="msOpts.deleteDiscs()"><i class="fa fa-lg fa-trash"></i></div>
+            <div class="clearfix"></div>
+        </div>
+        <div class="ms-btn-container">
+            <div class="ms-tb-btn"><i class="fa fa-lg fa-external-link"></i></div>
+            <div class="ms-tb-btn edit"><i class="fa fa-lg fa-pencil"></i></div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+    <dz-modal modal-opts="modalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>
 </div>

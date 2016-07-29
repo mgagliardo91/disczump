@@ -209,13 +209,18 @@ angular.module('disczump.services', ['underscore'])
                 method: 'DELETE'
             }, callback);
         }
-
+		
         function request(params, callback) {
             return $http({
                 method: params.method,
                 url: (params.root || '/api') + params.path,
                 data: params.data,
-                timeout: 5000
+                timeout: 5000,
+				headers: {
+					'If-Modified-Since': 'Mon, 26 Jul 1997 05:00:00 GMT',
+					'Cache-Control': 'no-cache',
+					'Pragma': 'no-cache'
+				}
             }).then(function(response) {
                 var retObj = parseResponse(response);
                 return callback(retObj.success, retObj.data);
@@ -245,25 +250,160 @@ angular.module('disczump.services', ['underscore'])
     }
 ])
 
-.factory('QueryService', ['_', 'APIService', function(_, APIService) {
-    
-    var valueRangeConfig = {
-        start: 0,
-        end: 40,
-        gap: 10
-    };
-    
-    var validValueRange = [];
-    
-    for (var i = valueRangeConfig.start; i <= valueRangeConfig.end - valueRangeConfig.gap; i += valueRangeConfig.gap) {
-        if (i >= valueRangeConfig.end - valueRangeConfig.gap) {
-            validValueRange.push('[' + i + ' TO *]');
-        } else {
-            validValueRange.push('[' + i + ' TO ' + (i + valueRangeConfig.gap) + ']');
-        }
+.factory('LocationService', ['$http', function($http) {
+	var geocodeUrl = 'https://maps.googleapis.com/maps/api/geocode/json';
+	var geoAvailable = 'geolocation' in navigator;
+	var curLocation;
+	var geoCache = {};
+	
+	function formatLocResult(result) {
+		return {
+			address: result.formatted_address,
+			latitude: result.geometry.location.lat,
+			longitude: result.geometry.location.lng
+		}
+	}
+	
+	function parseResponse(response, typeRestrict) {
+		var ret = {
+			success: false
+		}
+		if (response.data.status == 'OK') {
+			ret.data = [];
+			ret.success = true;
+			response.data.results.forEach(function(result) {
+				if (typeRestrict) {
+					for (var i = 0; i < typeRestrict.length; i++) {
+						if (result.types.indexOf(typeRestrict[i]) > -1) {
+							ret.data.push(formatLocResult(result));
+							break;
+						}
+					}
+				} else {
+					ret.data.push(formatLocResult(result));
+				}
+			});
+		} else {
+			ret.data = {'type': 'Invalid Data Error', 'message': 'The supplied address supplied no results.'}
+		}
+		
+		return ret;
+	}
+	
+	function getReverseGeo(lat, lng, callback) {
+		if (geoCache[String(lat + ',' + lng)]) {
+			return callback(true, geoCache[String(lat + ',' + lng)]);
+		}
+		
+		$http({
+			method: 'GET',
+			 headers: {
+			    'Content-type': 'application/json'
+			 },
+			url: geocodeUrl + '?latlng=' + encodeURI(lat + ',' + lng),
+			timeout: 5000
+		}).then(function(response) {
+			console.log(response);
+			var ret = parseResponse(response, ['postal_code']);
+			
+			if (ret.success) {
+				geoCache[String(lat + ',' + lng)] = ret.data;
+			}
+			
+			return callback(ret.success, ret.data);
+		}, function(response) {
+			return callback(false, {
+				message: 'Failed to hit Google server with request.',
+				type: 'Internal Error'
+			});
+		});
+	}
+	
+	function getGeoLocation(address, callback) {
+		$http({
+			method: 'GET',
+			 headers: {
+			    'Content-type': 'application/json'
+			 },
+			url: geocodeUrl + '?key=AIzaSyB7kWqjg0Yei5bPUhwmKmvLVk6Zugh_-Fw&result_type=locality&address=' + encodeURI(address),
+			timeout: 5000
+		}).then(function(response) {
+			var ret = parseResponse(response);
+			
+			if (ret.success) {
+				ret.data.forEach(function(loc) {
+					geoCache[String(loc.latitude + ',' + loc.longitude)] = [loc];
+				});
+			}
+			
+			return callback(ret.success, ret.data);
+		}, function(response) {
+			return callback(false, {
+				message: 'Failed to hit Google server with request.',
+				type: 'Internal Error'
+			});
+		});
+	}
+	
+	function isLocationAvailable() {
+		return typeof(curLocation) !== 'undefined';
+	}
+	
+	function isGeoAvailable() {
+		return geoAvailable;
+	}
+	
+	function getLocation(callback) {
+		if (typeof(curLocation) !== 'undefined') {
+			callback(true, curLocation);
+		}
+		
+		if (!isGeoAvailable()) {
+			callback(false, {message: 'Geolocation is not available.', type: 'Geolocation Unavailable'})
+		}
+		
+		navigator.geolocation.getCurrentPosition(function(position) {
+			console.log(position);
+			curLocation = position.coords;
+		  	callback(true, curLocation);
+		},function(error) {
+			callback(false, error);
+		});
+	}
+	
+	return {
+		isGeoAvailable: isGeoAvailable,
+		isLocationAvailable: isLocationAvailable,
+		getLocation: getLocation,
+		getGeoLocation: getGeoLocation,
+		getReverseGeo: getReverseGeo
+	}
+}])
+
+.factory('QueryUserService', ['_', 'APIService', function(_, APIService) {
+	var validSort = ['rel', 'proximity'];
+	var validProx = [10, 25, 50, 100, 500];	
+	var geoFacets = {
+		d_10: {val: 10, count: 0},
+		d_25: {val: 25, count: 0},
+		d_50: {val: 50, count: 0},
+		d_100: {val: 100, count: 0},
+		d_500: {val: 500, count: 0}
+	}
+	var locationCache = {};
+	
+	function validateFilters(filters) {
+        var validTypes = ['distance'];
+        var validFilters = [];
+        
+        validFilters = _.filter(filters, function(filter) {
+            return _.contains(validTypes, filter.name);
+        });
+        
+        return validFilters;
     }
-    
-    function parseUrlQuery(query) {
+	
+	function parseUrlQuery(query) {
         var ret = {
             search: '',
             filters: []
@@ -274,8 +414,26 @@ angular.module('disczump.services', ['underscore'])
         }
         
         if (query.s) {
-            ret.sort = query.s;
+            ret.sort = validSort.indexOf(query.s) > -1 ? query.s : undefined;
         }
+		
+		if (query.d) {
+			var distance = parseInt(query.d);
+			if (validProx.indexOf(distance) > -1) {
+				ret.geo = {
+					distance: distance
+				}
+			}
+		}
+		
+		if (query.loc) {
+			if (/^(\-?\d+(\.\d+)?),(\-?\d+(\.\d+)?)$/.test(query.loc)) {
+				var coords = query.loc.split(',');
+				if (!ret.geo) ret.geo = {};
+				ret.geo.latitude = coords[0];
+				ret.geo.longitude = coords[1];
+			}
+		}
         
         var i = 0;
         while (query['f_' + i]) {
@@ -295,13 +453,23 @@ angular.module('disczump.services', ['underscore'])
     function getQueryString(opts) {
         var qString = '?';
         
-        if (opts.query && opts.query != '') {
+        if (opts.query && opts.query !== '') {
             qString += 'q=' + opts.query;
         }
         
         if (opts.sort) {
             qString += (qString.length > 1 ? '&' : '') + 's=' + opts.sort;
         }
+		
+		if (opts.geo) {
+			if (opts.geo.distance) {
+				qString += (qString.length > 1 ? '&' : '') + 'd=' + opts.geo.distance;
+			}
+			
+			if (opts.locSet) {
+				qString += (qString.length > 1 ? '&' : '') + 'loc=' + opts.geo.latitude + ',' + opts.geo.longitude;
+			}
+		}
         
         if (opts.filter) {
             for (var i = 0; i < opts.filter.length; i++) {
@@ -316,7 +484,230 @@ angular.module('disczump.services', ['underscore'])
     }
 	
 	function buildQuery(opts) {
-		if (!opts.query || opts.query == '') opts.query = '*';
+		if (!opts.query || opts.query === '') opts.query = '*';
+        
+        var reqParam = {
+            query: opts.query,
+            sort: opts.sort
+        };
+		
+        if (opts.start) {
+            reqParam.start = opts.start;
+        }
+        
+        if (opts.limit) {
+            reqParam.limit = opts.limit;
+        }
+        
+        if (opts.geo) {
+            reqParam.geo = opts.geo;
+			reqParam.geo.filter = typeof(opts.geo.distance) !== 'undefined';
+        }
+		
+		console.log(JSON.stringify(reqParam.geo));
+			
+		return reqParam;
+	}
+    
+    function queryAll(opts, callback) {
+        var urlString = '/query/users';
+        var reqParam = buildQuery(opts);
+        
+        APIService.Post(urlString, reqParam, function(success, data) {
+            if (success) {
+                console.log(data);
+                var response = parseResponse(data);
+                
+                if (response.error) {
+                    return callback(false, response.error);
+                }
+                
+                return callback(true, response);
+            } else {
+                return callback(false, data);
+            }
+        });
+    }
+	
+	function parseResponse(data) {
+        var response = {};
+        
+        if (data.responseHeader.status !== 0) {
+            return {
+                error: 'Error performing search: ' + data.responseHeader.status
+            }
+        }
+        
+        response = {
+			results: data.response.docs,
+			start: data.response.start,
+			total: data.response.numFound,
+			facets: parseFacets(data.facets)
+		};
+        
+        return response;
+    }
+    
+    function parseFacets(facets) {		
+        for (var facet in facets) {
+			if (geoFacets[facet]) {
+				geoFacets[facet].count = facets[facet].count;
+			}
+        }
+        
+        return {
+            geoFacets: geoFacets
+        };
+    }
+	
+	return {
+		queryAll: queryAll,
+		getQueryString: getQueryString,
+		parseUrlQuery: parseUrlQuery
+	}
+}])
+
+.factory('QueryService', ['_', 'APIService', function(_, APIService) {
+    
+    var valueRangeConfig = {
+        start: 0,
+        end: 40,
+        gap: 10
+    };
+    
+    var validValueRange = [];
+	var validSort = ['rel', 'new', 'alpha', 'createDate'];
+	var validMode = ['all-market','sale','trade','all'];
+	var validTypes = ['brand', 'name', 'type', 'tag', 'material', 'color', 'weight', 'condition', 'speed', 'glide', 'turn', 'fade', 'value'];
+	var propText = {
+		brand: 'Brand',
+		name: 'Name',
+		type: 'Type',
+		tag: 'Tags',
+		material: 'Material',
+		color: 'Color',
+		weight: 'Weight',
+		condition: 'Condition',
+		speed: 'Speed',
+		glide: 'Glide',
+		turn: 'Turn',
+		fade: 'Fade',
+		value: 'Value'
+	}
+    
+    for (var i = valueRangeConfig.start; i <= valueRangeConfig.end - valueRangeConfig.gap; i += valueRangeConfig.gap) {
+        if (i >= valueRangeConfig.end - valueRangeConfig.gap) {
+            validValueRange.push('[' + i + ' TO *]');
+        } else {
+            validValueRange.push('[' + i + ' TO ' + (i + valueRangeConfig.gap) + ']');
+        }
+    }
+	
+	function tradeActive(mode) {
+		return mode && mode == 'trade' || mode == 'all-market';
+	}
+	
+	function saleActive(mode) {
+		return mode && mode == 'sale' || mode == 'all-market';
+	}
+	
+	function marketActive(mode) {
+		return mode && mode != 'all';
+	}
+	
+	function validateFilters(filters, mode) {
+        
+        var validFilters = [];
+        
+        validFilters = _.filter(filters, function(filter) {
+            return _.contains(validTypes, filter.name);
+        });
+        
+        _.each(validFilters, function(filter) {
+            filter.text = propText[filter.name];
+        });
+        
+        var valueFilter = _.findWhere(validFilters, {name: 'value'});
+        if (valueFilter) {
+            if (!marketActive(mode)) {
+                validFilters = _.without(validFilters, valueFilter);
+            } else {
+                var i = valueFilter.fields.length;
+                while ((i--) >= 0) {
+                    if (isCustomRange(valueFilter.fields[i]) && valueFilter.fields.length > 1) {
+                        valueFilter.fields.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+        }
+        
+        return validFilters;
+    }
+	
+    function parseUrlQuery(query) {
+        var ret = {
+            search: '',
+            filters: []
+        };
+        
+        if (query.q) {
+            ret.search = query.q;
+        }
+        
+        if (query.s) {
+            ret.sort = validSort.indexOf(query.s) > -1 ? query.s : undefined;
+        }
+        
+        var i = 0;
+        while (query['f_' + i]) {
+            var fString = query['f_' + i].split(/[\:\|]+/);
+            if (fString.length > 1) {
+                var name = fString.shift();
+                ret.filters.push({name: name, fields: fString});
+            }
+            i++;
+        }
+		
+		if (query.mode && query.mode.length) {
+			ret.mode = validMode.indexOf(query.mode) > -1 ? query.mode : 'all';
+		}
+        
+        ret.filters = validateFilters(ret.filters, ret.mode);
+        
+        return ret;
+    }
+    
+    function getQueryString(opts) {
+        var qString = '?';
+        
+        if (opts.query && opts.query !== '') {
+            qString += 'q=' + opts.query;
+        }
+        
+        if (opts.sort) {
+            qString += (qString.length > 1 ? '&' : '') + 's=' + opts.sort;
+        }
+		
+		if (opts.marketplace) {
+			var mode = opts.marketplace.forSale ? (opts.marketplace.forTrade ? 'all-market' : 'sale') : (opts.marketplace.forTrade ? 'trade' : 'all');
+            qString += (qString.length > 1 ? '&' : '') + 'mode=' + mode;
+		}
+        
+        if (opts.filter) {
+            for (var i = 0; i < opts.filter.length; i++) {
+                qString += (qString.length > 1 ? '&' : '') + 'f_' + i + '=' + opts.filter[i].name + ':'
+                for (var j = 0; j < opts.filter[i].fields.length; j++) {
+                    qString += (j > 0 ? '|' : '') + opts.filter[i].fields[j];
+                }
+            }
+        }
+        
+        return qString;
+    }
+	
+	function buildQuery(opts) {
+		if (!opts.query || opts.query === '') opts.query = '*';
         
         var reqParam = {
             query: opts.query,
@@ -342,16 +733,20 @@ angular.module('disczump.services', ['underscore'])
         if (opts.valueRange) {
             reqParam.valueRange = valueRangeConfig;
         }
-			
-			return reqParam;
+		
+		if (opts.marketplace) {
+			reqParam.marketplace = opts.marketplace;
 		}
+			
+		return reqParam;
+	}
     
     function queryAll(opts, callback) {
-        var urlString = '/explore';
+        var urlString = '/query/discs';
         var reqParam = buildQuery(opts);
         
         if (opts.userId) {
-            urlString = '/trunk' + (opts.userId ? '/' + opts.userId : '');
+            urlString = '/query/trunk' + (opts.userId ? '/' + opts.userId : '');
         }
         
         
@@ -373,7 +768,7 @@ angular.module('disczump.services', ['underscore'])
     
     function queryTrunk(opts, callback) {
         
-        if (!opts.query || opts.query == '') opts.query = '*';
+        if (!opts.query || opts.query === '') opts.query = '*';
         
         var reqParam = {
             query: opts.query,
@@ -443,7 +838,7 @@ angular.module('disczump.services', ['underscore'])
     function parseResponse(data) {
         var response = {};
         
-        if (data.responseHeader.status != 0) {
+        if (data.responseHeader.status !== 0) {
             return {
                 error: 'Error performing search: ' + data.responseHeader.status
             }
@@ -486,57 +881,6 @@ angular.module('disczump.services', ['underscore'])
     
     function isCustomRange(value) {
         return !_.contains(validValueRange, value);
-    }
-    
-    function validateFilters(filters) {
-        var validTypes = ['brand', 'name', 'type', 'tag', 'material', 'color', 'weight', 'condition', 'speed', 'glide', 'turn', 'fade', 'forSale', 'forTrade', 'value'];
-        var propText = {
-            brand: 'Brand',
-            name: 'Name',
-            type: 'Type',
-            tag: 'Tags',
-            material: 'Material',
-            color: 'Color',
-            weight: 'Weight',
-            condition: 'Condition',
-            speed: 'Speed',
-            glide: 'Glide',
-            turn: 'Turn',
-            fade: 'Fade',
-            forSale: 'For Sale',
-            forTrade: 'For Trade',
-            value: 'Value'
-        }
-        
-        var validFilters = [];
-        
-        validFilters = _.filter(filters, function(filter) {
-            return _.contains(validTypes, filter.name);
-        });
-        
-        _.each(validFilters, function(filter) {
-            filter.text = propText[filter.name];
-        })
-        
-        var valueFilter = _.findWhere(validFilters, {name: 'value'});
-        if (valueFilter) {
-            if (!_.some(validFilters, function(filter) {
-                    return filter.name == 'forSale' || filter.name == 'forTrade';
-                })) {
-                validFilters = _.without(validFilters, valueFilter);
-            } else {
-                
-                var i = valueFilter.fields.length;
-                while ((i--) >= 0) {
-                    if (isCustomRange(valueFilter.fields[i]) && valueFilter.fields.length > 1) {
-                        valueFilter.fields.splice(i, 1);
-                        i--;
-                    }
-                }
-            }
-        }
-        
-        return validFilters;
     }
     
     function parseFacets(facets) {
@@ -608,8 +952,12 @@ angular.module('disczump.services', ['underscore'])
 }])
 
 .factory('RedirectService', ['$location', 'AccountService', function($location, AccountService) {
-    var redirect = undefined;
+    var redirect;
     
+    var setRedirect = function(path) {
+        redirect = path;
+    }
+	
     var resolvePath = function(path) {
         if (/^\/trunk(\/)?$/.test(path)) {
             if (AccountService.hasAccountId()) {
@@ -630,10 +978,6 @@ angular.module('disczump.services', ['underscore'])
             setRedirect(undefined);
             return redPath;
         }
-    }
-    
-    var setRedirect = function(path) {
-        redirect = path;
     }
     
     return {
@@ -726,6 +1070,51 @@ angular.module('disczump.services', ['underscore'])
     }
     
 }])
+
+.factory('DiscService', ['_', '$q', 'APIService', function(_, $q, APIService){
+	
+	function editDisc(disc, callback) {
+		return APIService.Put('/discs/' + disc._id, disc, callback);
+	}
+	
+	function createDisc(disc, callback) {
+		return APIService.Post('/discs', disc, callback);
+	}
+	
+	function deleteDisc(disc, callback) {
+		return APIService.Delete('/discs/' + disc._id, callback);
+	}
+	
+	function deleteDiscs(discs, callback) {
+		var prom = [];
+        discs.forEach(function (disc, i) {
+			var defer = $q.defer();
+			deleteDisc(disc, function(success, data) {
+				if (success) {
+					defer.resolve(data);
+				} else {
+					defer.reject(data);
+				}
+			});
+			prom.push(defer.promise);
+        });
+		
+        $q.all(prom).then(function (results) {
+            callback(true, results);
+        }, function(error) {
+			callback(false, error);
+		});
+	}
+	
+	return {
+		editDisc: editDisc,
+		createDisc: createDisc,
+		deleteDisc: deleteDisc,
+		deleteDiscs: deleteDiscs
+	}
+}])
+
+// DELETE BELOW THIS POTENTIALLY
 
 .factory('DataService', ['$q', '$rootScope', '_', 'APIService', function($q, $rootScope, _, APIService) {
     var account = {};

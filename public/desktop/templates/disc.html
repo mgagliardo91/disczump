@@ -1,36 +1,36 @@
 <div dz-wrapper>
     <dz-header user="account.user"></dz-header>
-    <dz-status-bar class="header-color-1" active-filters="breadcrumbList"></dz-status-bar>
+    <dz-status-bar class="header-color-1" breadcrumbs="breadcrumbs"></dz-status-bar>
     <div class="private-warning dz-blue-background" ng-show="!loading && !disc.visible">
         <span><i class="fa fa-eye-slash fa-lg"></i>This disc is private!<i class="fa fa-eye-slash fa-lg"></i></span>
     </div>
     <div class="scrollable main-body">
         <div class="page-content full-width">
-            <div class="loader" ng-show="loading">
-                <div>
-                    <img src="/static/logo/logo_small_loading_dark.svg">
-                </div>
-            </div>
             <div class="title-row">
                 <div class="title-btn-container float-right">
                     <span class="title-btn"><i class="fa fa-facebook-square hover-fb-color hover-pointer" title="Share Disc"></i></span>
                     <span class="title-btn"><i class="fa fa-link hover-link-color hover-pointer" title="Copy Link"></i></span>
                     <span class="title-btn"><a ng-href="/portal/d/{{disc._id}}/edit"><i class="fa fa-pencil hover-edit-color hover-pointer" title="Edit Disc"></i></a></span>
+                    <span class="title-btn" ng-click="modalFns.createDeleteModal(disc)"><i class="fa fa-trash hover-delete-color hover-pointer" title="Delete Disc"></i></a></span>
                     <div class="clearfix"></div>
                 </div>
-                <div class="page-title handle-overflow">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></div>
+                <div class="page-title handle-overflow" ng-show="!disc">Loading...</div>
+                <div class="page-title handle-overflow" ng-show="disc">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></div>
                 <hr>
             </div>
             <div id="dv-content">
                 <div class="dv-image-container float-left">
-                    <div class="dv-image-block">
+                    <div class="dv-image-block" style="font-size: 4em;" ng-show="loading">
+                        <i class="fa fa-spinner fa-spin fa-lg"></i>
+                    </div>
+                    <div class="dv-image-block dv-image-border" ng-show="!loading">
                         <img directive-on="discInit" directive-set="{'ng-src':'/files/{{imageBlock.fileId}\}'}" ng-show="imageBlock" class="fit-parent hover-pointer" ng-click="showLightbox = true;" img-load>
                         <img ng-src="/static/logo/logo_small_faded.svg" ng-show="!imageBlock" class="fit-parent" img-load>
                         <div class="dv-zoom hover-pointer" ng-show="imageBlock" ng-click="showLightbox = true;">
                             <i class="fa fa-search-plus"></i>
                         </div>    
                     </div>
-                    <div class="image-list">
+                    <div class="image-list" ng-show="!loading">
                         <div class="image-list-container simple">
                             <div class="image-list-table">
                                 <div class="image-item-container" ng-repeat="img in disc.imageList">
@@ -63,10 +63,10 @@
                                     </div>
                                     <div class="dv-profile-preview-info">
                                         <div class="dv-profile-preview-text-lg handle-overflow">
-                                            <a ng-href="/portal/trunk/{{disc.userId}}" class="hover-underline">{{user.username}}</a>
+                                            <a ng-href="/portal/trunks/{{disc.userId}}" class="hover-underline">{{user.username}}</a>
                                         </div>
                                         <div class="dv-profile-preview-text-sm handle-overflow" ng-if="user.shortLocation">{{user.shortLocation}}</div>
-                                        <div class="dv-profile-preview-text-sm handle-overflow" ng-if="user.pdgaNumber">PDGA #{{user.pdgaNumber}}</div>
+                                        <a class="dv-profile-preview-text-sm handle-overflow hover-underline" ng-if="user.pdgaNumber" target="_blank" ng-href="http://www.pdga.com/player/{{user.pdgaNumber}}">PDGA #{{user.pdgaNumber}}</a>
                                         <div class="dv-profile-preview-text-sm handle-overflow" ng-if="user.discCount">{{user.discCount}} Public Discs</div>
                                     </div>
                                 </div>
@@ -77,7 +77,7 @@
                             <td colspan="2" class="dv-table-cell width-33">
                                 <p class="dv-table-cell-title">Price</p>
                                 <p class="dv-table-cell-value handle-overflow" ng-if="disc.marketplace.value">
-                                    ${{disc.marketplace.value}}
+                                    {{disc.marketplace.value | currency:"$":2}}
                                 </p>
                                 <p class="dv-table-cell-value" ng-if="!disc.marketplace.value">-</p>
                             </td>
@@ -179,7 +179,7 @@
                                 <div ng-if="disc.tagList.length">
                                     <div class="tag-item hover-underline no-select" ng-repeat="tag in disc.tagList">
                                         <span class="tag-item-text">
-                                            <a ng-href="/portal/trunk/{{user._id}}?s=rel&f_0=tag:{{tag}}" class="hover-underline">{{tag}}</a>
+                                            <a ng-href="/portal/trunks/{{user._id}}?s=rel&f_0=tag:{{tag}}" class="hover-underline">{{tag}}</a>
                                         </span>
                                     </div>
                                 </div>
@@ -202,3 +202,4 @@
     <dz-footer></dz-footer>
 </div>
 <lightbox image-block-id="imageBlock._id" image-list="disc.imageList" trigger="showLightbox" scroll-lock="pgSettings.scrollLock"></lightbox>
+<dz-modal modal-opts="modalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>

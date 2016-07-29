@@ -1,8 +1,73 @@
 var _ = require('underscore');
+var geoConfig = require('../../config/config.js').geo;
 
 module.exports = {
+    createUserReq: createUserReq,
     createDiscReq: createDiscReq,
     createFacetReq: createFacetReq
+}
+
+function checkGeo(geo) {
+    if (typeof(geo.latitude) === 'undefined' || typeof(geo.longitude) === 'undefined') return false;
+    
+    return /^(\-?\d+(\.\d+)?)$/.test(geo.latitude) && /^(\-?\d+(\.\d+)?)$/.test(geo.longitude);
+}
+
+function createUserReq(opts) {
+    var geoSet = false;
+    var req = {
+        filter: [],
+        query: '',
+        params: {
+            wt: 'json',
+            qf:"q_username^2 local.pdgaNumber^2 q_firstName q_lastName",
+            lowercaseOperators:"true",
+            stopwords:"true",
+            defType:"edismax"
+        },
+        sort: 'score asc,local.username asc',
+        limit: typeof opts.limit !== 'undefined' ? opts.limit : 20,
+        offset: opts.start || 0
+    };
+    
+    if (opts.query) {
+        req.query = opts.query !== '' ? '*' + opts.query.replace('*', '').replace(' ', '* *') + '*' : '*';
+    }
+    
+    if (opts.geo && checkGeo(opts.geo)) {
+        var distance = 5;
+        if (opts.geo.distance && _.isNumber(opts.geo.distance) && opts.geo.distance > 0) {
+            distance = opts.geo.distance;
+        }
+        
+        req.params.sfield = (opts.geo.kilo === true ? 'geo_kilo' : 'geo_miles');
+        req.params.pt = opts.geo.latitude + ',' + opts.geo.longitude;
+        
+        if (opts.geo.filter) {
+            req.params.d = distance;
+            req.params.fq = '{!tag=t_geo}{!geofilt}';
+        }
+        
+        req.facet = {};
+        geoConfig.userFacetRanges.forEach(function(x) {
+            req.facet['d_' + x] = {type:'query', q: '{!frange l=0 u=' + x + '}geodist()', mincount:'0'};
+            if (opts.geo.filter) {
+                req.facet['d_' + x].domain = {excludeTags: 't_geo'};
+            }
+        });
+        geoSet = true;
+    }
+    
+    if (opts.sort) {
+        if (opts.sort == 'rel') {
+            req.sort = 'score asc,local.username asc';
+        } else if (opts.sort == 'proximity' && geoSet) {
+            req.sort = 'score asc,geodist() asc';
+        }
+    }
+    
+    req.filter.unshift('local.active:true');
+    return req;
 }
 
 function getSolrField(field) {
@@ -50,7 +115,7 @@ function createFacetReq(opts, userId) {
     return req;
 }
 
-function createDiscReq(opts, userId) {
+function createDiscReq(opts, userId, reqId) {
     var req = {
         filter: [],
         query: '',
@@ -81,7 +146,7 @@ function createDiscReq(opts, userId) {
     };
     
     if (opts.query) {
-        req.query = opts.query !== '' ? '*' + opts.query.replace('*', '').replace(' ', '*') + '*' : '*';
+        req.query = opts.query !== '' ? '*' + opts.query.replace('*', '').replace(' ', '* *') + '*' : '*';
     }
     
     if (opts.sort) {
@@ -113,47 +178,59 @@ function createDiscReq(opts, userId) {
         }
     }
     
+    var marketActive = false;
+    if (opts.marketplace) {
+        var forSale = typeof(opts.marketplace.forSale) !== 'undefined' ? opts.marketplace.forSale ===  true : undefined;
+        var forTrade = typeof(opts.marketplace.forTrade) !== 'undefined' ? opts.marketplace.forTrade === true : undefined;
+        
+        if (forSale && forTrade) {
+            req.params.fq = '{!tag=t_marketplace}(marketplace.forSale:true OR marketplace.forTrade:true)';
+            marketActive = true;
+        } else if (forSale) {
+            req.params.fq = '{!tag=t_marketplace}(marketplace.forSale:true)';
+            marketActive = true;
+        } else if (forTrade) {
+            req.params.fq = '{!tag=t_marketplace}(marketplace.forTrade:true)';
+            marketActive = true;
+        }
+        
+        if (marketActive) {
+            req.facet.forSale.domain = {excludeTags: 't_marketplace'};
+            req.facet.forTrade.domain = {excludeTags: 't_marketplace'};
+        }
+    }
+    
+    if (userId) {
+        req.facet.tag = {type:"terms", field: 'tag', mincount: 1, limit: 50, numBuckets: true};
+    }
+    
     if (opts.filter) {
-        var excludeActive = false, marketActive = false;
+        var excludeActive = false;
         for (var i = opts.filter.length - 1; i >= 0; i--) {
             var field = opts.filter[i].name;
              
             if (req.facet[field] && opts.filter[i].fields.length) {
                 var fieldName = req.facet[field].field;
-                
-                if (fieldName == 'marketplace.forSale' || fieldName == 'marketplace.forTrade') {
-                    var val = opts.filter[i].fields.length ? (opts.filter[i].fields[0] === 'false' ? 'false' : 'true') : 'false';
-                    
-                    if (req.params.fq) {
-                        req.params.fq = req.params.fq.substr(0, req.params.fq.length - 1) + ' OR ' + fieldName + ':' + val + ')';
-                    } else {
-                        req.params.fq = '{!tag=t_marketplace}(' + fieldName + ':' + val + ')';
-                    }
-                    req.facet['forSale'].domain = {excludeTags: 't_marketplace'};
-                    req.facet['forTrade'].domain = {excludeTags: 't_marketplace'};
-                    marketActive = true;
-                } else {
-                    var filterString = '{!tag=t_' + fieldName  + '}';
-                    for (var j = 0; j < opts.filter[i].fields.length; j++) {
-                        var value = opts.filter[i].fields[j];
-                        value = /^\[.*\]$/.test(value) ? value : '"' + value + '"';
-                        
-                        filterString = filterString + (j > 0 ? ' OR ': '') + fieldName + ':' + value;
-                    }
-                    req.filter.unshift(filterString);
-                    
-                    if (!excludeActive) {
-                        req.facet[field].domain = {excludeTags: 't_' + fieldName};
-                    }
-                    
-                    if (marketActive) {
-                        req.facet[field].mincount = 0;
-                    }
-                    
-                    if (!excludeActive) {
-                        excludeActive = true;
-                        continue;
-                    }
+                var filterString = '{!tag=t_' + fieldName  + '}';
+                for (var j = 0; j < opts.filter[i].fields.length; j++) {
+                    var value = opts.filter[i].fields[j];
+                    value = /^\[.*\]$/.test(value) ? value : '"' + value + '"';
+
+                    filterString = filterString + (j > 0 ? ' OR ': '') + fieldName + ':' + value;
+                }
+                req.filter.unshift(filterString);
+
+                if (!excludeActive) {
+                    req.facet[field].domain = {excludeTags: 't_' + fieldName};
+                }
+
+                if (marketActive) {
+                    req.facet[field].mincount = 0;
+                }
+
+                if (!excludeActive) {
+                    excludeActive = true;
+                    continue;
                 }
                 
                 if (excludeActive) {
@@ -163,10 +240,11 @@ function createDiscReq(opts, userId) {
         }
     }
     
-    req.filter.unshift('visible:true');
+    if (!reqId || reqId !== userId) {
+        req.filter.unshift('visible:true');
+    }
     
     if (userId) {
-        req.facet.tag = {type:"terms", field: 'tag', mincount: 1, limit: 50, numBuckets: true};
         req.filter.unshift('userId:' + userId);
     }
     

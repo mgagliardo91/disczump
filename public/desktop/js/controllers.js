@@ -10,6 +10,24 @@ angular.module('disczump.controllers', ['disczump.services'])
     }
 })
 
+.directive('focusOn', ['$timeout', function($timeout) {
+    return {
+        restrict: 'A',
+        scope: {
+            trigger: '=focusOn'
+        },
+        link: function(scope, element) {
+            scope.$watch('trigger', function(value) {
+                if (value === true) {
+                    $timeout(function() {
+                        element[0].focus();
+                    }, 300);
+                }
+            });
+        }
+    };
+}])
+
 .directive('parseInput', ['$compile', function($compile) {
 	return {
 		restrict: 'A',
@@ -258,7 +276,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         template: '<div class="dz-navbar min-window-width" ng-class="{\'fixed\':fixed}" ng-style="{\'background-color\':\'rgba(74,74,74,\' + (alphaValue/ 100) +\')\'}">' +
                         '<div class="dz-navbar-btn-container float-left">' +
                             '<div class="dz-navbar-btn-list">' +
-                                '<a href="/" ng-style="{\'opacity\': alphaValue}"><img src="/static/logo/logo_text.svg" class="dz-navbar-logo"></a>' +
+                                '<a href="/portal" ng-style="{\'opacity\': alphaValue}"><img src="/static/logo/logo_text.svg" class="dz-navbar-logo"></a>' +
                             '</div>' +
                         '</div>' +
                         '<div class="dz-navbar-btn-container float-right">' +
@@ -279,7 +297,8 @@ angular.module('disczump.controllers', ['disczump.services'])
                                 '</ul>' +
                                 '<div class="dz-navbar-links">' +
                                     '<a class="dz-navbar-item dz-navbar-btn" href="/portal/explore" ng-class="{\'active\':isItemActive(\'explore\')}">Explore</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/portal/trunk/{{user._id}}" ng-class="{\'active\':isItemActive(\'trunk/{{user._id}}\')}">My Trunk</a>' +
+                                    '<a class="dz-navbar-item dz-navbar-btn" href="/portal/trunks" ng-class="{\'active\':isItemActive(\'trunks\')}">Trunks</a>' +
+                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/portal/trunks/{{user._id}}" ng-class="{\'active\':isItemActive(\'trunk/{{user._id}}\')}">My Trunk</a>' +
                                     '<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/portal/inbox" ng-class="{\'active\':isItemActive(\'inbox\')}">Inbox</a>' +
                                     '<a class="dz-navbar-item dz-navbar-btn" href="/login" ng-if="!user">Sign In</a>' +
                                     '<a class="dz-navbar-item dz-navbar-btn" href="/signup" ng-if="!user">Sign Up</a>' +
@@ -329,7 +348,8 @@ angular.module('disczump.controllers', ['disczump.services'])
             }
             
             scope.isItemActive = function(item) {
-                return $location.url().indexOf(item) >= 0;
+				var urlTest = new RegExp(item + '(\\?.*)?$');
+                return urlTest.test($location.url());
             }
             
             scope.$on('$destroy', function() {
@@ -619,47 +639,34 @@ angular.module('disczump.controllers', ['disczump.services'])
         scope: {
             showCount: '=',
             totalCount: '=',
-            activeFilters: '=',
-            onFilter: '&',
-            hideOn: '='
+            breadcrumbs: '=',
+            hideOn: '=',
+			homeUrl: '='
         },
         template: '<div class="breadcrumb-container">' +
                     '<div class="pagination-container" title="Showing {{showCount}} of {{totalCount}} results" ng-show="$def(showCount)">' +
                         '{{showCount}} | <span class="dz-blue">{{totalCount}}</span>' +
                     '</div>' +
                     '<div class="breadcrumb-trail" ng-show="!hideOn">' +
-                        '<span class="hover-underline" title="Explore Home" ng-show="activeFilters.length"><a href="/portal/explore"><i class="fa fa-home" style="font-size: 1.1em; color: #008edd"></i></a></span>' +
-                        '<span class="breadcrumb-item-container" ng-repeat="filter in activeFilters">' +
-                            '<span ng-if="!$def(filter.fields)">' + 
-                                '<i class="fa fa-chevron-right" style="margin-right: 5px"></i>' +
-                                '<span class="dz-blue hover-underline" ng-if="filter.href"><a href="{{filter.href}}">{{filter.text}}</a></span>'  +  
-                                '<span ng-if="!filter.href">{{filter.text}}</span>' + 
-                            '</span>' +
-                            '<span ng-if="$def(filter.fields)"><i class="fa fa-chevron-right" style="margin-right: 5px"></i>{{filter.text}}:</span>' +
-                            '<span ng-if="$def(filter.fields)" class="breadcrumb-item" ng-repeat="field in filter.fields">' +
+                        '<span class="hover-underline" title="Explore Home" ng-show="breadcrumbs.length"><a ng-href="/portal/{{homeUrl}}"><i class="fa fa-home" style="font-size: 1.1em; color: #008edd"></i></a></span>' +
+                        '<span class="breadcrumb-item-container" ng-repeat="item in breadcrumbs">' +
+							'<span><i class="fa fa-chevron-right"></i><span ng-if="item.title" style="margin-left: 5px">{{item.title}}:</span></span>' +
+							'<span class="breadcrumb-item" ng-repeat="link in item.links track by $index">' +
                                 '<span ng-if="$index > 0">|</span>' +
-                                '<span class="dz-blue hover-underline" ng-click="callOnFilter(filter, field)">{{getFormattedField(field)}}</span>' +
+                                '<a class="dz-blue hover-underline" ng-if="link.href" ng-href="{{link.href}}">{{link.text}}</a>' +
+                                '<span class="dz-italic" ng-if="!link.href" ng-href="link.href">{{link.text}}</span>' +
                             '</span>' +
                         '</span>' +
                     '</div>' +
                     '<div class="clearfix"></div>' +
                 '</div>',
         link: function(scope, element, attrs) {
-            
+			if (typeof(scope.homeUrl) === 'undefined') {
+				scope.homeUrl = 'explore';
+			}
+			
             scope.$def = function(elem) {
                 return (typeof(elem) !== 'undefined');
-            }
-            
-            scope.callOnFilter = function(filter, field) {
-                scope.onFilter({filter: filter, field: field});
-            }
-            
-            scope.getFormattedField = function(field) {
-                if (field === 'true') {
-                    return 'Active';
-                }
-                
-                return field;
             }
         }
     }
@@ -699,11 +706,13 @@ angular.module('disczump.controllers', ['disczump.services'])
         replace: true,
         scope: {
             disc: '=',
-            currentUser: '='
+            currentUser: '=',
+			msOpts: '='
         },
         template: '<div class="grid-item">' +
                     '<div class="grid-item-icon top-left for-sale" ng-show="disc[\'marketplace.forSale\']">' +
                         '<i class="fa fa-usd"></i>' +
+						'<span ng-if="disc[\'marketplace.value\']">{{disc[\'marketplace.value\']}}</span>' +
                     '</div>' +
                     '<div class="grid-item-icon top-right for-trade" ng-show="disc[\'marketplace.forTrade\']">' +
                         '<i class="fa fa-refresh"></i>' +
@@ -754,18 +763,68 @@ angular.module('disczump.controllers', ['disczump.services'])
                             '{{disc.userId}}' +
                         '</div>' +
                         '<div class="grid-item-text float-left hover-underline" ng-show="disc.user">' +
-                            '<a ng-href="/portal/trunk/{{disc.user._id}}">{{disc.user.username}}</a>' +
+                            '<a ng-href="/portal/trunks/{{disc.user._id}}">{{disc.user.username}}</a>' +
                         '</div>' +
                         '<div class="grid-item-text float-right" ng-if="disc.weight">' +
                             '{{disc.weight}}g' +
                         '</div>' +
                         '<div class="clearfix"></div>' +
                     '</div>' +
+					'<div class="overlay-container" ng-show="msOpts.active">' +
+                        '<div class="overlay" ng-class="{\'selected\': disc.selected}" ng-click="msOpts.toggleSelected(disc)" ng-init="disc.selected = false">' +
+                            '<i class="fa fa-check-circle-o no-animate" ng-show="!disc.selected"></i>' +
+                            '<i class="fa fa-check-circle no-animate selected" ng-show="disc.selected"></i>' +
+                        '</div>' +
+                    '</div>' +
                 '</div>',
         link: function(scope, element, attrs) {
             scope.getSolrPrimaryImage = function(disc) {
                 return QueryService.getSolrPrimaryImage(disc);
             }
+        }
+    }
+}])
+
+.directive('userItem', ['CacheService', function(CacheService) {
+    return {
+        restrict: 'E',
+        replace: true,
+        scope: {
+            user: '='
+        },
+        template: '<div class="grid-item">' +
+                    '<div class="grid-item-icon top-left location handle-overflow" ng-show="location">' +
+						'<span><i class="fa fa-street-view"></i>{{location}}</span>' +
+                    '</div>' +
+                    '<div class="grid-img-container">' +
+                        '<div class="grid-img-inner">' +
+                            '<div class="grid-img-content">' + 
+                                '<div>' + 
+                                    '<a class="grid-item-nav" ng-href="/portal/trunks/{{user._id}}"></a>' +
+                                    '<img ng-src="/files/{{user[\'local.image\']}}">' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' + 
+                    '</div>' +
+                    '<div class="grid-item-info">' +
+                        '<div class="grid-item-label handle-overflow">' +
+                            '<a class="hover-underline" ng-href="/portal/trunks/{{user._id}}">{{user[\'local.username\']}}</a>' +
+                        '</div>' +
+                        '<div class="grid-item-text float-left hover-underline">' +
+                            '{{user[\'local.firstName\']}}<span ng-if="user[\'local.firstName\']"> </span>{{user[\'local.lastName\']}}' +
+                        '</div>' +
+                        '<div class="grid-item-text float-right" ng-if="user[\'local.pdgaNumber\']">' +
+                            '#{{user[\'local.pdgaNumber\']}}' +
+                        '</div>' +
+                        '<div class="clearfix"></div>' +
+                    '</div>' +
+                '</div>',
+        link: function(scope, element, attrs) {
+			CacheService.getUser(scope.user._id, function(success, user) {
+				if (success) {
+					scope.location = user.shortLocation;
+				}
+			});
         }
     }
 }])
@@ -780,28 +839,39 @@ angular.module('disczump.controllers', ['disczump.services'])
 				trigger: '=',
 				scrollLock: '='
 			},
-			template:   '<div class="lb-backdrop no-select" ng-show="showLightbox">' +
-											'<div class="lb-container">' +
-												'<div id="lb-content" class="lb-image-block no-focus" tabindex="0">' +
-													'<div id="lb-image-list" class="lb-image-list float-left fancy-scroll lite">' +
-														'<img class="image-preview" ng-src="/files/{{img.thumbnailId}}" ng-repeat="img in imageList track by $index" ng-class="{active: index == $index}" ng-click="setImage($index)">' +
-													'</div>' +
-													'<img class="fit-parent" img-load ng-src="/files/{{imageList[index].fileId}}">' +
-												'</div>' +
-											'</div>' +
-											'<div class="lb-x absolute-top-right">' +
-												'<p class="lb-close" ng-click="trigger=false">×</p>' +
-											'</div>' +
-									'</div>',
+			template:   '<div class="full-screen-backdrop no-select" ng-show="showLightbox" ng-click="backdropExit($event);">' +
+							'<div class="lb-container">' +
+								'<div id="lb-content" class="lb-image-block no-focus" tabindex="0">' +
+									'<div id="lb-image-list" class="lb-image-list float-left fancy-scroll lite">' +
+										'<img class="image-preview" ng-src="/files/{{img.thumbnailId}}" ng-repeat="img in imageList track by $index" ng-class="{active: index == $index}" ng-click="setImage($index)">' +
+									'</div>' +
+									'<div id="lb-image" class="lb-image">' +
+										'<div style="display:table-cell; vertical-align:middle;">' +
+											'<img class="fit-parent" img-load ng-src="/files/{{imageList[index].fileId}}">' +
+										'</div>' +
+									'</div>' +
+								'</div>' +
+							'</div>' +
+							'<div class="lb-x absolute-top-right">' +
+								'<p class="lb-close" ng-click="trigger=false">×</p>' +
+							'</div>' +
+						'</div>',
 			link: function(scope, element, attrs) {
 				var lbContent = angular.element(document.getElementById('lb-content'));
 				var lbImageList = angular.element(document.getElementById('lb-image-list'));
+				var lbImage = angular.element(document.getElementById('lb-image'));
 				var pad = 100;
 				var padList = 85;
 				var width = 0;
 				var height = 0;
 				scope.index = 0;
 				scope.showLightbox = false;
+				
+				scope.backdropExit = function(evt) {
+					if (evt.target == element[0]) {
+						scope.trigger = false;
+					}
+				}
 				
 				var preloadImages = function() {
 					angular.forEach(scope.imageList, function(img) {
@@ -817,12 +887,16 @@ angular.module('disczump.controllers', ['disczump.services'])
 							lbContent.css('height', height + 'px');
 							lbContent.css('width', ($window.innerHeight - pad + padList) + 'px');
 							lbImageList.css('max-height', height + 'px');
+							lbImage.css('height', height + 'px');
+							lbImage.css('width', height + 'px');
 						} else { //portrait
 							width = $window.innerWidth - pad;
 							height = width - padList;
 							lbContent.css('height', height + 'px');
 							lbContent.css('width', width + 'px');
 							lbImageList.css('max-height', height + 'px');
+							lbImage.css('height', height + 'px');
+							lbImage.css('width', height + 'px');
 						}
 						lbContent[0].focus();
 					});
@@ -1363,7 +1437,9 @@ angular.module('disczump.controllers', ['disczump.services'])
                             'Explore | <span class="dz-blue">{{fvalue}} Discs</span><span class="dz-blue hover-underline" style="float: right; cursor: pointer"><a ng-href="{{getLink()}}">See More...</a></span>' + 
                         '</div>' + 
                         '<div class="explore-cat-list">' + 
-                            '<div class="explore-item" ng-repeat="disc in exploreList | startFrom:start | limitTo:dispCount" ng-click="navDisc(disc._id)">' + 
+                            '<div class="explore-item" ng-repeat="disc in exploreList | startFrom:start | limitTo:dispCount" ng-click="navDisc(disc._id)">' +
+								'<div class="explore-item-icon top-left for-sale"><i class="fa fa-usd"></i>{{disc[\'marketplace.value\']}}</div>' +
+								'<div class="explore-item-icon top-right for-trade"><i class="fa fa-refresh"></i></div>' +
                                 '<img ng-src="{{getSolrPrimaryImage(disc)}}" img-load />' + 
                                 '<div class="explore-item-title handle-overflow">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></div>' + 
                             '</div>' + 
@@ -1448,6 +1524,10 @@ angular.module('disczump.controllers', ['disczump.services'])
                     sort: 'dAsc',
                     filter:filter,
                     limit: 20,
+					marketplace: {
+						forSale: true,
+						forTrade: true
+					},
                     group: {
                         limit: 20,
                         field: 'userId'
@@ -1465,6 +1545,50 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
     }])
 
+.directive('dzModal', [function() {
+	return {
+		restrict: 'E',
+		scope: {
+			scrollLock: '=',
+			modalOpts: '='
+		},
+		replace: true,
+		template: '<div class="full-screen-backdrop no-select" ng-show="showModal">' +
+					'<div class="dz-modal-container">' +
+						'<i class="dz-modal-close fa fa-times" aria-hidden="true" ng-click="closeModal()"></i>' +
+						'<div style="padding: 20px;">' +
+							'<i class="fa fa-5x fa-{{modalOpts.icon}}" style="color: {{modalOpts.iconColor}}"></i>' +
+							'<div class="dz-modal-title">{{modalOpts.title}}</div>' +
+							'<div class="dz-modal-message">{{modalOpts.message}}</div>' +
+						'</div>' +
+						'<div class="dz-modal-btn-container" style="background-color: {{modalOpts.btnContainerColor}}">' +
+							'<div class="dz-modal-triangle"></div>' +
+							'<div class="dz-modal-btn cancel" ng-click="closeModal()">Cancel</div>' +
+							'<div class="dz-modal-btn" ng-click="doAction()" style="background-color: {{modalOpts.btnColor}}">{{modalOpts.btnText}}</div>' +
+						'</div>' +
+					'</div>' +
+				  '</div>',
+		link: function(scope, elem, attrs) {
+			scope.closeModal = function() {
+				scope.scrollLock = false;
+				scope.showModal = false;
+				scope.modalOpts = undefined;
+			}
+			
+			scope.doAction = function() {
+				scope.modalOpts.action();
+			}
+			
+			scope.$watch('modalOpts', function(val) {
+				if (typeof(val) !== 'undefined') {
+					scope.scrollLock = true;
+					scope.showModal = true;
+				}
+			}, true)
+		}
+	}
+}])
+
 /******************************************************************************
 * 
 * CONTROLLERS
@@ -1479,13 +1603,32 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('MainController', ['$rootScope', '$scope', '$location', 'AccountService', '_', 'APIService', 'QueryService', 'SocketUtils', 
     function($rootScope, $scope, $location, AccountService, _, APIService, QueryService, SocketUtils) {
         $scope.pgSettings = {
-					hasFooter: false,
-					scrollLock: false
+			hasFooter: false,
+			scrollLock: false
         };
         
         $scope.account = {
             user: undefined
         };
+		
+		$scope.modalFns = {
+			createDeleteModal: function(discs) {
+				$scope.modalOpts = {
+					title: 'Warning!',
+					icon: 'exclamation-triangle',
+					iconColor: '#e85947',
+					message: 'Are you sure you want to permanently delete ' + (discs.length > 1 ?  'the selected discs?' : 'this disc?'),
+					btnContainerColor: '#BEBEBE',
+					btnText: 'Delete',
+					btnColor: '#e85947',
+					action: function(discs) {
+						_.each(discs, function(disc) {
+							//delete disc
+						});
+					}
+				}
+			}
+		}
         
         $scope.nav = function(url, replace) {
             console.log($location.path());
@@ -1563,8 +1706,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 							SocketUtils.init();
 						}
         }
-        
-        
     }
 ])
 
@@ -1617,6 +1758,313 @@ angular.module('disczump.controllers', ['disczump.services'])
     }
 ])
 
+.controller('TrunksController', ['$scope', '$location', '$routeParams', '$window', '_', '$timeout', 'QueryUserService', 'CacheService', 'AccountService', 'LocationService', 
+	function($scope, $location, $routeParams, $window, _, $timeout, QueryUserService, CacheService, AccountService, LocationService) {
+		var init = true;
+        var reqSize = 20;
+		var sortSet = false;
+		var curLocation;
+		
+        $scope.curUser = AccountService.getAccount();
+        $scope.activeFilters = [];
+		$scope.breadcrumbs = [];
+        $scope.resultList = [];
+        $scope.resultFilters = [];
+		$scope.locationResults = [];
+        $scope.pagination = { start: 0, total: 0 };
+		$scope.units = 'miles';
+		$scope.statusHome = 'trunks';
+		
+        $scope.searchParam = '';
+        $scope.sortParam = 'rel';
+        
+        $scope.loading = true;
+        $scope.loadingMore = false;
+		$scope.locSet = false;
+		
+		
+		var updateBreadcrumbs = function() {
+			$scope.breadcrumbs = [];
+			
+			if ($scope.searchParam.length) {
+				$scope.breadcrumbs.push({
+					title: 'Searching',
+					links: [
+						{text: '"' + $scope.searchParam + '"'}
+					]
+				});
+			}
+			
+			if ($scope.geo && $scope.geo.distance) {
+				$scope.breadcrumbs.push({
+					title: 'In',
+					links: [
+						{text: $scope.curLocation}
+					]
+				});
+				
+				$scope.breadcrumbs.push({
+					title: 'Radius',
+					links: [
+						{text: $scope.geo.distance + ' ' + $scope.units}
+					]
+				});
+			}
+			
+			var filters = [];
+			_.each($scope.activeFilters, function(filter) {
+				var item = { title: filter.text, links: []};
+				var tempFilter = {name: filter.name, fields: []};
+				filters.push(tempFilter);
+				
+				_.each(filter.fields, function(field) {
+					tempFilter.fields.push(field);
+					item.links.push({
+						text: field,
+						href: '/portal' + $location.path() + QueryService.getQueryString({
+							query: $scope.searchParam,
+							sort: sortSet ? $scope.sortParam : undefined,
+							filter: filters,
+							marketplace: $scope.marketplace
+						})
+					});
+				});
+				
+				$scope.breadcrumbs.push(item);
+			});
+		}
+        
+        $scope.loadMore = function() {
+            if ($scope.loading || init) return;
+            
+            if ($scope.resultList.length < $scope.pagination.total) {
+                var nextStart = $scope.pagination.start + Math.min($scope.pagination.total - $scope.resultList.length, reqSize);
+                $scope.pagination.start = nextStart;
+                $scope.performSearch(true);
+            }
+        }
+		
+		$scope.locationAllowed = function() {
+			return LocationService.isLocationAvailable();
+		}
+		
+		$scope.hideLocResults = function() {
+			$timeout(function() {
+				$scope.locationEditable = false;
+				$scope.locationLoading = false;
+				$scope.locationSearch = '';
+			}, 300);
+		}
+		
+		$scope.setLocation = function(result) {
+			$scope.locationEditable = false;
+			$scope.curLocation = result.address;
+			if (!$scope.geo) {
+				$scope.geo = {};
+			}
+			
+			$scope.geo.latitude = result.latitude;
+			$scope.geo.longitude = result.longitude;
+			$scope.locSet = true;
+			
+			$scope.updateUrl();
+		}
+		
+		$scope.$watch('locationSearch', function(newLoc) {
+			if (newLoc && newLoc.length > 3) {
+				$scope.locationLoading = true;
+				LocationService.getGeoLocation(newLoc, function(success, results) {
+					if (success) {
+						console.log(results);
+						$scope.locationResults = results;
+					} else {
+						$scope.locationResults = [];
+					}
+					$scope.locationLoading = false;
+				});
+			} else {
+				$scope.locationResults = [];
+			}
+		});
+		
+		$scope.startSearch = function() {
+			$scope.activeFilters = [];
+			$scope.updateUrl();
+		}
+        
+        $scope.updateUrl = function() {
+            $scope.pagination.start = 0;
+            $location.url($location.path() + QueryUserService.getQueryString({
+				query: $scope.searchParam,
+				sort: sortSet ? $scope.sortParam : undefined,
+				filter: $scope.activeFilters,
+				geo: $scope.geo,
+				locSet: $scope.locSet
+			}));
+        }
+		
+		$scope.updateLocation = function() {
+			if ($scope.geo && $scope.geo.latitude && $scope.geo.longitude) {
+				$scope.locationLoading = true;
+				LocationService.getReverseGeo($scope.geo.latitude, $scope.geo.longitude, 
+					function(success, data) {
+						if (success && data.length) {
+							$scope.curLocation = data[0].address;
+						} else {
+							$scope.curLocation = 'Unknown';
+						}
+						$scope.locationLoading = false;
+						updateBreadcrumbs();
+					});
+			} else {
+				$scope.curLocation = undefined;
+				updateBreadcrumbs();
+			}
+		}
+		
+		$scope.performSearch = function(appendOnly) {
+            if (appendOnly) {
+                $scope.loadingMore = true;
+            } else {
+                $scope.loading = true;
+            }
+            
+            QueryUserService.queryAll({
+                query: $scope.searchParam,
+                sort: $scope.sortParam,
+                start: $scope.pagination.start,
+                limit: reqSize,
+				geo: $scope.geo
+            }, function(success, response) {
+                    if (success) {
+                        $scope.pagination.start = response.start;
+                        $scope.pagination.total = response.total;
+                        console.log(response);
+                        
+                        if (appendOnly) {
+                            Array.prototype.push.apply($scope.resultList, response.results);
+                        } else {
+                            $scope.resultList = response.results;
+                            $scope.resultFilters = response.facets;
+                            console.log($scope.resultFilters);
+                        }
+                    }
+					$scope.updateLocation();
+                    $scope.loading = false;
+                    $scope.loadingMore = false;
+                });
+        }
+        
+        $scope.resizeRes = function(){
+            var resCont = document.getElementById('results-container');
+            var resList = document.getElementById('results-list');
+            $timeout(function() {
+             angular.element(resList).css('width',  Math.floor(resCont.clientWidth / 206) * 206 + 'px');
+            });
+        }
+		
+		$scope.updateSort = function() {
+            sortSet = true;
+            $scope.updateUrl();
+        }
+		
+		$scope.setProximity = function(geoFacet) {
+			if (!geoFacet) {
+				$scope.geo.distance = undefined;
+			} else if ($scope.geo) {
+				$scope.geo.distance = geoFacet.val;
+			}
+			
+			$scope.updateUrl();
+		}
+		
+		$scope.isProximityActive = function(geoFacet) {
+			if (geoFacet) {
+				return $scope.geo && $scope.geo.distance == geoFacet.val;
+			} else {
+				return $scope.geo && $scope.geo.distance;
+			}
+		}
+        
+        $scope.$watch('fullscreen', function(newVal) {
+            $timeout(function() {
+                $scope.resizeRes();
+            });
+        });
+		
+		$scope.getLocation = function(distance) {
+			var d = distance;
+			if (typeof(distance) === 'undefined') {
+				if ($scope.geo && $scope.geo.distance) {
+					d = $scope.geo.distance;
+				}
+			}
+			
+			LocationService.getLocation(function(success, coords) {
+				if (success) {
+					$scope.geo = {
+						latitude: coords.latitude,
+						longitude: coords.longitude,
+						distance: distance
+					}
+					$scope.locSet = false;
+				} else {
+					$scope.geo = {};
+					$scope.locSet = false;
+					$scope.sortParam = 'rel';
+				}
+				
+				$scope.performSearch();
+			});
+		}
+		
+        $scope.$watch(function () { return $location.url(); }, function (url) {
+            if (url && /^\/(trunks)/.test(url)) {
+                var ret = QueryUserService.parseUrlQuery($location.search());
+				var distanceSet = ret.geo && typeof(ret.geo.distance) !== 'undefined';
+				var latSet = ret.geo && ret.geo.latitude && ret.geo.longitude;
+                
+                $scope.activeFilters = ret.filters;
+                $scope.searchParam = ret.search;
+                
+                if (ret.sort) {
+                    $scope.sortParam = ret.sort;
+                } else if (ret.search.length) {
+                    $scope.sortParam = 'rel';
+                } else if (distanceSet || latSet) {
+					$scope.sortParam = 'proximity';
+				} else {
+					$scope.sortParam = 'rel';
+				}
+				
+				if (ret.geo) {
+					if (ret.geo.latitude && ret.geo.longitude) {
+						$scope.geo = {
+							latitude: ret.geo.latitude,
+							longitude: ret.geo.longitude,
+							distance: ret.geo.distance
+						}
+						$scope.locSet = true;
+						$scope.performSearch();
+					} else if (distanceSet) {
+						$scope.getLocation(ret.geo.distance);
+					}
+				} else {
+					$scope.getLocation(undefined);
+				}
+            }
+        });
+        
+        $scope.$on('$destroy', function() {
+            angular.element($window).unbind('resize', $scope.resizeRes);
+        });
+		
+		angular.element($window).bind('resize', $scope.resizeRes);
+		
+		init = true;
+		
+	}])
+
 /******************************************************************************
 * Name:         ExploreController
 * Description:  Controller for explore functionality. 
@@ -1628,11 +2076,17 @@ angular.module('disczump.controllers', ['disczump.services'])
         var reqSize = 20;
         $scope.curUser = AccountService.getAccount();
         $scope.activeFilters = [];
+		$scope.breadcrumbs = [];
         $scope.resultList = [];
         $scope.resultFilters = [];
         $scope.trunk = {
             userId: $routeParams.userId
         };
+		$scope.marketplace = {
+			forSale: typeof($routeParams.userId) === 'undefined',
+			forTrade: typeof($routeParams.userId) === 'undefined',
+			all: typeof($routeParams.userId) !== 'undefined'
+		}
         $scope.pagination = { start: 0, total: 0 };
         
         $scope.searchParam = '';
@@ -1640,6 +2094,92 @@ angular.module('disczump.controllers', ['disczump.services'])
         
         $scope.loading = true;
         $scope.loadingMore = false;
+		
+		$scope.msOpts = {
+			active: false,
+			count: 0
+		};
+		
+		$scope.msOpts.selectAll = function() {
+			$scope.msOpts.count = 0;
+			_.each($scope.resultList, function(result) {
+				result.selected = true;
+				$scope.msOpts.count += 1;
+			});
+		}
+		
+		$scope.msOpts.deselectAll = function() {
+			$scope.msOpts.count = 0;
+			var results = _.where($scope.resultList, {selected: true});
+			_.each(results, function(result) {
+				result.selected = false;
+			});
+		}
+		
+		$scope.msOpts.deleteDiscs = function() {
+			var results = _.where($scope.resultList, {selected: true});
+			
+			$scope.modalFns.createDeleteModal(results);
+		}
+        
+        $scope.msOpts.toggleMS = function() {
+            $scope.msOpts.active = !$scope.msOpts.active;
+            
+            if (!$scope.msOpts.active) {
+                $scope.msOpts.deselectAll();
+            }
+        }
+        
+        $scope.msOpts.toggleSelected = function(disc) {
+            disc.selected = !disc.selected;
+            
+            if (disc.selected) {
+                $scope.msOpts.count += 1;
+            } else {
+                $scope.msOpts.count -= 1;
+            }
+        }
+		
+		var updateBreadcrumbs = function() {
+			$scope.breadcrumbs = [];
+			if ($scope.searchParam.length) {
+				$scope.breadcrumbs.push({
+					title: 'Searching',
+					links: [
+						{text: '"' + $scope.searchParam + '"'}
+					]
+				});
+			}
+			
+			$scope.breadcrumbs.push({
+				title: 'Showing',
+				links: [
+					{text: $scope.marketplace.forSale ? ($scope.marketplace.forTrade ? 'For Sale and Trade' : 'For Sale') : ($scope.marketplace.forTrade ? 'For Trade' : 'All Public')}
+				]
+			});
+			
+			var filters = [];
+			_.each($scope.activeFilters, function(filter) {
+				var item = { title: filter.text, links: []};
+				var tempFilter = {name: filter.name, fields: []};
+				filters.push(tempFilter);
+				
+				_.each(filter.fields, function(field) {
+					tempFilter.fields.push(field);
+					item.links.push({
+						text: field,
+						href: '/portal' + $location.path() + QueryService.getQueryString({
+							query: $scope.searchParam,
+							sort: sortSet ? $scope.sortParam : undefined,
+							filter: filters,
+							marketplace: $scope.marketplace
+						})
+					});
+				});
+				
+				$scope.breadcrumbs.push(item);
+			});
+		}
         
         $scope.loadMore = function() {
             if ($scope.loading || init) return;
@@ -1650,20 +2190,24 @@ angular.module('disczump.controllers', ['disczump.services'])
                 $scope.performSearch(true);
             }
         }
+		
+		$scope.startSearch = function() {
+			$scope.activeFilters = [];
+			$scope.updateUrl();
+		}
         
         $scope.updateUrl = function() {
             $scope.pagination.start = 0;
             $location.url($location.path() + QueryService.getQueryString({
                     query: $scope.searchParam,
                     sort: sortSet ? $scope.sortParam : undefined,
-                    filter: $scope.activeFilters
+                    filter: $scope.activeFilters,
+					marketplace: $scope.marketplace
                 }));
         }
         
         $scope.marketMode = function() {
-            return _.some($scope.activeFilters, function(filter) {
-                return filter.name == 'forSale' || filter.name == 'forTrade';
-            });
+			return $scope.marketplace.forSale || $scope.marketplace.forTrade;
         }
         
         var processRngFilters = function(rangeFilters) {
@@ -1713,6 +2257,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                 start: $scope.pagination.start,
                 valueRange: true,
                 limit: reqSize,
+				marketplace: $scope.marketplace,
                 userId: $scope.trunk.userId || undefined
             }, function(success, response) {
                     if (success) {
@@ -1787,11 +2332,14 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
         
         $scope.isFilterActive = function(facet, filter) {
-            
             var prop = _.find($scope.activeFilters, {name: facet.prop});
             filter.active = prop && $scope.containsStr(prop.fields, filter.val);
             return filter.active;
         }
+		
+		$scope.isMarketplaceModeActive = function(prop) {
+			return $scope.marketplace[prop];
+		}
         
         $scope.hasActiveFilters = function(facet) {
             var prop = _.find($scope.activeFilters, {name: facet.prop});
@@ -1804,33 +2352,13 @@ angular.module('disczump.controllers', ['disczump.services'])
             if (!silent) $scope.updateUrl();
         }
         
-        $scope.navFilter = function(filter, field) {
-            if (!filter) { // handle home
-                $scope.activeFilters = [];
-                $scope.updateUrl();
-            } else {
-                var filterIndex = $scope.activeFilters.indexOf(filter);
-                
-                if (filterIndex > -1) {
-                    var fieldIndex = filter.fields.indexOf(field);
-                    
-                    if (fieldIndex > -1) {
-                        filter.fields.splice(fieldIndex + 1, filter.fields.length - (fieldIndex + 1));
-                    }
-                    
-                    $scope.activeFilters.splice(filterIndex + 1, $scope.activeFilters.length - (filterIndex + 1));
-                    
-                    $scope.updateUrl();
-                }
-            }
-        }
-        
         $scope.getFacets = function() {
             QueryService.queryFacet({
                 query: $scope.searchParam,
                 sort: $scope.sortParam,
                 filter: $scope.activeFilters,
                 userId: $scope.trunk.userId || undefined,
+				marketplace: $scope.marketplace,
 				facet: {
 					name: 'tag',
                     limit: 2,
@@ -1854,18 +2382,29 @@ angular.module('disczump.controllers', ['disczump.services'])
         });
         
         $scope.$watch(function () { return $location.url(); }, function (url) {
-            if (url && /^\/(trunk|explore)/.test(url)) {
+            if (url && /^\/(trunks\/|explore)/.test(url)) {
                 var ret = QueryService.parseUrlQuery($location.search());
                 
                 $scope.activeFilters = ret.filters;
                 $scope.searchParam = ret.search;
+				if (ret.mode) {
+					$scope.marketplace = {
+						forSale: ret.mode == 'all-market' || ret.mode == 'sale',
+						forTrade: ret.mode == 'all-market' || ret.mode == 'trade',
+						all: ret.mode == 'all',
+					}
+				}
                 
                 if (ret.sort) {
                     $scope.sortParam = ret.sort;
                 } else if (ret.search.length) {
                     $scope.sortParam = 'rel';
                 }
-                
+				
+				updateBreadcrumbs();
+				
+                if ($scope.msOpts && $scope.msOpts.active) $scope.msOpts.toggleMS();
+				
                 if (!init) $scope.performSearch();
             }
         });
@@ -1894,6 +2433,34 @@ angular.module('disczump.controllers', ['disczump.services'])
             $scope.activeFilters = _.filter($scope.activeFilters, function(item) { return item.fields.length > 0});
             $scope.updateUrl();
         }
+		
+		$scope.toggleMarketplaceMode = function(prop) {
+			switch (prop) {
+				case 'forSale':
+					if ($scope.marketplace.forSale && !$scope.marketplace.forTrade) {
+						$scope.marketplace.all = true;
+					} else {
+						$scope.marketplace.all = false;
+					}
+					break;
+				case 'forTrade':
+					if ($scope.marketplace.forTrade && !$scope.marketplace.forSale) {
+						$scope.marketplace.all = true;
+					} else {
+						$scope.marketplace.all = false;
+					}
+					break;
+				case 'all':
+					if (!$scope.marketplace.all) {
+						$scope.marketplace.forTrade = false;
+						$scope.marketplace.forSale = false;
+					} else return;
+					break;
+			}
+			
+			$scope.marketplace[prop] = !$scope.marketplace[prop];
+			$scope.updateUrl();
+		}
 			
         angular.element($window).bind('resize', $scope.resizeRes);
         
@@ -1904,12 +2471,14 @@ angular.module('disczump.controllers', ['disczump.services'])
                 }
                 
                 $scope.trunk.user = user;
+				$scope.statusHome = 'trunks/' + user._id;
 								
                 init = false;
                 $scope.performSearch();
             });
         } else {
             init = false;
+			$scope.statusHome = 'explore';
         }
     }
 ])
@@ -1990,7 +2559,8 @@ angular.module('disczump.controllers', ['disczump.services'])
             $location.url($location.path() + QueryService.getQueryString({
                     query: $scope.searchParam,
                     sort: sortSet ? $scope.sortParam : undefined,
-                    filter: $scope.activeFilters
+                    filter: $scope.activeFilters,
+					marketplace: $scope.marketplace
                 }));
         }
         
@@ -2176,7 +2746,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('DiscController', ['$scope', '$location', '$routeParams', '$window', '_', 'APIService', 'CacheService',
     function($scope, $location, $routeParams, $window, _, APIService, CacheService) {
         var discId = $routeParams.discId;
-        $scope.breadcrumbList = [];
+        $scope.breadcrumbs = [];
         
         $scope.loading = true;
         
@@ -2193,9 +2763,9 @@ angular.module('disczump.controllers', ['disczump.services'])
                     }
                     $scope.user = user;
                     $scope.userInit = true;
-                    $scope.breadcrumbList = [
-                        {text: user.username + '\'s Trunk', href: '/portal/trunk/' + user._id},
-                        {text: 'Disc View'}
+                    $scope.breadcrumbs = [
+						{title: 'Trunk', links: [{text: user.username, href:'/portal/trunks/' + user._id}]},
+						{title: 'Disc', links: [{text: disc.brand + ' ' + disc.name}]},
                     ];
                 });
             }
@@ -2267,8 +2837,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         ModifyDiscController
 * Description:  Controller for disc page functionality. 
 *******************************************************************************/
-.controller('ModifyDiscController', ['$compile', '$scope', '$routeParams', '$location', '$timeout', '_', 'smoothScroll', '$ocLazyLoad', 'APIService', 'ImageService', 'AccountService', 
-    function($compile, $scope, $routeParams, $location, $timeout, _, smoothScroll, $ocLazyLoad, APIService, ImageService, AccountService) {
+.controller('ModifyDiscController', ['$compile', '$scope', '$routeParams', '$location', '$timeout', '_', 'smoothScroll', '$ocLazyLoad', 'APIService', 'ImageService', 'AccountService', 'DiscService', 
+    function($compile, $scope, $routeParams, $location, $timeout, _, smoothScroll, $ocLazyLoad, APIService, ImageService, AccountService, DiscService) {
         if (!AccountService.hasAccountId()) {
             return $location.path('/login');
         }
@@ -2430,7 +3000,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
             if ($scope.disc._id) {
-                APIService.Put('/discs/' + $scope.disc._id, $scope.disc, function(success, disc) {
+				DiscService.editDisc($scope.disc, function(success, disc) {
                     if (success) {
                         console.log(disc);
                         $scope.disc = disc;
@@ -2451,7 +3021,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                     }
                 });
             } else {
-                APIService.Post('/discs/', $scope.disc, function(success, disc) {
+				DiscService.createDisc($scope.disc, function(success, disc) {
                     if (success) {
                         console.log(disc);
                         $scope.disc = disc;
@@ -2491,8 +3061,13 @@ angular.module('disczump.controllers', ['disczump.services'])
         } else {
             $scope.settings.dropzoneReady = true;
         }
+		
+		$scope.breadcrumbs = [
+			{title: 'Trunk', links: [{text: $scope.account.user.username, href:'/portal/trunks/' + $scope.account.user._id}]}
+		];
         
         if (typeof(discId) !== 'undefined') { // Edit Mode
+			$scope.breadcrumbs.push({links: [{text:'Edit Disc'}]});
             APIService.Get('/discs/' + discId, function(success, disc) {
                 if (!success) {
                     return $scope.nav();
@@ -2507,6 +3082,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                 }
             });
         } else { // Create Mode
+			$scope.breadcrumbs.push({links: [{text:'Create Disc'}]});
             if (typeof(templateId) !== 'undefined') {
                 APIService.Get('/templates/' + templateId, function(success, template) {
                     if (success) {
@@ -2582,7 +3158,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 			$scope.messages = [];
 			$scope.activeThread = undefined;
 			$scope.sendOnEnter = true;
-			$scope.messageAlert = {}
+			$scope.messageAlert = {};		
+			$scope.breadcrumbs = [
+				{title: 'Trunk', links: [{text: $scope.account.user.username, href:'/portal/trunks/' + $scope.account.user._id}]},
+				{links: [{text: 'Inbox'}]},
+			];
 			
 			$scope.scrollBottom = function() {
 				var lastMessage = angular.element(messageList)[0].querySelector('.message-item:last-child');

@@ -1,5 +1,5 @@
 <dz-header user="account.user"></dz-header>
-<dz-status-bar class="header-color-2"></dz-status-bar>
+<dz-status-bar class="header-color-1" breadcrumbs="breadcrumbs"></dz-status-bar>
 <div class="scrollable main-body" id="disc-edit">
     <div class="page-content full-width">
         <div class="title-row">
@@ -111,12 +111,32 @@
 	                <div class="col-sm-4">
 	                    <switch type="checkbox" param="visible" ng-model="disc.visible"></switch>
 	                </div>
-	                <label class="col-sm-2 col-sm-offset-1 control-label allow-icon">Condition</label>
+	                <label class="col-sm-2 col-sm-offset-1 control-label">Condition</label>
 	                <div class="col-sm-3">
 	                    <input type="number" class="form-control validation" placeholder="ex. 9" ng-model="disc.condition" ng-pattern="/^\d{1,2}$/" ng-min="0" ng-max="10">
 	                </div>
                 </div>
             </div>
+			<div class="dz-label">Marketplace</div>
+			<div class="modify-form-section">
+				<div class="form-group">
+	                <label class="col-sm-2 control-label">For Sale</label>
+	                <div class="col-sm-4">
+	                    <switch type="checkbox" ng-model="disc.marketplace.forSale"></switch>
+	                </div>
+	                <label class="col-sm-2 col-sm-offset-1 control-label">Value ($)</label>
+	                <div class="col-sm-3">
+<!-- 	                    <input type="number" class="form-control validation" placeholder="ex. 12" ng-model="disc.marketplace.value" ng-pattern="/^\d+(\.\d{2})?$/" ng-min="1"> -->
+						<input type="number" class="form-control validation" placeholder="ex. 12" ng-model="disc.marketplace.value" ng-min="0.01" step="0.01">
+	                </div>
+                </div>
+				<div class="form-group">
+	                <label class="col-sm-2 control-label">For Trade</label>
+	                <div class="col-sm-4">
+	                    <switch type="checkbox" ng-model="disc.marketplace.forTrade"></switch>
+	                </div>
+                </div>
+			</div>
             <div ng-show="disc.imageList.length">
                 <div class="dz-label">Current Images</div>
                 <div class="page-info">

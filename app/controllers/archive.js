@@ -35,14 +35,15 @@ function archiveUser(user) {
             lastAccess: user.local.lastAccess,
             pdgaNumber: user.local.pdgaNumber,
             location: {
-                zipcode: user.local.location.zipcode,
-                lat: user.local.location.lat,
-                lng: user.local.location.lng,
-                city: user.local.location.city,
-                state: user.local.location.state,
-                stateAcr: user.local.location.stateAcr,
-                country: user.local.location.country,
-                countryCode: user.local.location.countryCode,
+                geo: user.local.location.geo,
+                geoLat : user.local.location.geoLat,
+                geoLng : user.local.location.geoLng,
+                city : user.local.location.city,
+                administrationArea : user.local.location.administrationArea,
+                administrationAreaShort : user.local.location.administrationAreaShort,
+                country : user.local.location.country,
+                countryCode : user.local.location.countryCode,
+                postalCode: user.local.location.postalCode
             },
             accessCount: {
                 desktop: user.local.accessCount.desktop,
