@@ -4,16 +4,177 @@ angular.module('underscore', [])
     return $window._;
 }]);
 
-angular.module('disczump.services', ['underscore'])
+angular.module('CryptoJS', [])
 
-.factory('SocketUtils', ['APIService', '$rootScope', '$timeout', '_', function (APIService, $rootScope, $timeout, _) {
+.factory('$crypt', ['$window', function($window) {
+    return $window.CryptoJS;
+}]);
+
+angular.module('disczump.services', ['underscore', 'CryptoJS'])
+
+.factory('Random', [function() {
+	
+	var random = function(length) {
+		var text = '';
+		var charArr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+		for(var i = 0; i < length; i++)
+			text += charArr.charAt(Math.floor(Math.random() * charArr.length));
+
+		return text;
+	}
+	
+	return {
+		random: random
+	}
+}])
+
+.factory('TempStore', ['Random', function(Random) {
+	var store = {};
+	
+	var setTemp = function(value) {
+		var key = Random.random(10);
+		store[key] = value;
+		return key;
+	}
+	
+	var getTemp = function(key) {
+		return store[key];
+	}
+	
+	return {
+		setTemp: setTemp,
+		getTemp: getTemp
+	}
+}])
+
+.factory('StartUp', ['$q', 'AccountService', 'SocketUtils', function($q, AccountService, SocketUtils) {
+	
+	var init = function() {
+		var deffered = $q.defer();
+		
+		AccountService.initAccount().then(function(account) {
+			if (account) {
+				SocketUtils.init();
+			}
+			
+			deffered.resolve(account);
+		});
+		
+		return deffered.promise;
+	}
+	
+	return {
+		init: init
+	}
+}])
+
+.factory('FacebookUtils', ['$window', '$q', '$ocLazyLoad', 'AccountService', function($window,$q, $ocLazyLoad, AccountService) {
+	var fbStatus;
+	
+	var initFacebook = function() {
+		var deffered = $q.defer();
+		
+		if (typeof FB === 'undefined') {
+            $ocLazyLoad.load(['https://connect.facebook.net/en_US/sdk.js']).then(function() {
+				FB.init({
+				  appId: '1456432391315141',
+				  xfbml: false,
+				  version: 'v2.7'
+				});
+				console.log('Facebook initialized');
+				
+				FB.getLoginStatus(function(response) {
+					console.log(response);
+					fbStatus = response;
+					deffered.resolve();
+				});
+			});
+        } else {
+			deffered.resolve();
+        }
+		
+		return deffered.promise;
+	}
+	
+	var facebookLogin = function(callback) {
+		if (fbStatus.status === 'connected') {
+			callback(true, fbStatus);
+		} else {
+			FB.login(function(response) {
+				if (response.authResponse) {
+					console.log(response.authResponse);
+					fbStatus = response;
+					callback(true, response);
+				} else {
+					return callback();
+				}
+			}, {scope: 'email,user_photos', 
+				return_scopes: true});
+		}
+	}
+	
+	var getFBAccountData = function(callback) {
+		FB.api('/me?fields=first_name,last_name,email', function(account) {
+			console.log(account);
+			callback(true, {
+				token: response.authResponse,
+				account: account
+			});
+		});
+	}
+	
+	var unlink = function(callback) {
+		return AccountService.doFacebookUnlink(callback);
+	}
+	
+	var link = function(callback) {
+		facebookLogin(function(success, response) {
+			if (response.authResponse) {
+				return AccountService.doFacebookLink(response.authResponse, callback);
+			} else {
+				return callback();
+			}
+		});
+	}
+	
+	var getFBAccount = function(callback) {
+		facebookLogin(function(success, response) {
+			if (success) {
+				getFBAccountData(callback);
+			} else {
+				callback();
+			}
+		});
+	}
+	
+	var login = function(callback) {
+		facebookLogin(function(success, response) {
+			if (response.authResponse) {
+				return AccountService.doFacebookLogin(response.authResponse, callback);
+			} else {
+				return callback();
+			}
+		});
+	}
+	
+	return {
+		login: login,
+		link: link,
+		unlink: unlink,
+		getFBAccount: getFBAccount,
+		initFacebook: initFacebook
+	}
+}])
+
+.factory('SocketUtils', ['APIService', '$rootScope', '$timeout', '_', 'AccountService', 
+		 function (APIService, $rootScope, $timeout, _, AccountService) {
 	var connectTries = 0;
 	var socket;
 	var sessionId;
 	var registry = {};
 	
 	var parseNotification = function(notification) {
-		console.log(notification);
 		if (registry[notification.type]) {
 			registry[notification.type].forEach(function(callback) {
 				callback(notification.data);
@@ -43,28 +204,34 @@ angular.module('disczump.services', ['underscore'])
 	}
 	
 	var init = function() {
-		APIService.GetExt('/connect', '/initialize', function(success, newSession) {
+		if (typeof(socket) !== 'undefined') return;
+		
+		APIService.GetExt('/oauth', '/socket', function(success, newSession) {
 			if (success) {
 				sessionId = newSession;
 				initSocket();
 			} else {
 				// HANDLE ERROR
 			}
-		});
+		}, AccountService.getToken());
 	}
 	
 	var registerForNotification = function(type, callback) {
-		if (registry[type]) {
+		if (registry[type] && registry[type].indexOf(callback) == -1) {
 			registry[type].push(callback);
 		} else {
 			registry[type] = [callback];
 		}
+		
+		console.log('Added listener for type [' + type + ']. Count: [' + registry[type].length + ']');
 	}
 	
 	var unregisterForNotification = function(type, callback) {
 		if (registry[type]) {
 			registry[type] = _.without(registry[type], callback);
 		}
+		
+		console.log('Removed listener for type [' + type + ']. Count: [' + registry[type].length + ']');
 	}
 	
   return { 
@@ -75,6 +242,22 @@ angular.module('disczump.services', ['underscore'])
 }])
 
 .factory('PageUtils', [function() {
+	function getDocHeight() {
+		var body = document.body,
+			html = document.documentElement;
+
+		return Math.max( body.scrollHeight, body.offsetHeight, 
+							   html.clientHeight, html.scrollHeight, html.offsetHeight );
+	}
+	
+	function getDocWidth() {
+		var body = document.body,
+			html = document.documentElement;
+
+		return Math.max( body.scrollWidth, body.offsetWidth, 
+							   html.clientWidth, html.scrollWidth, html.offsetWidth );
+	}
+	
     function getScrollPos(){
 			if(window.pageYOffset) {
 				return window.pageYOffset;
@@ -91,75 +274,75 @@ angular.module('disczump.services', ['underscore'])
 			var rectObject = elem.getBoundingClientRect();
 			return rectObject.top + window.pageYOffset - document.documentElement.clientTop;
 	}
+	
+	function getLeft(elem) {
+			var rectObject = elem.getBoundingClientRect();
+			return rectObject.left + window.pageXOffset - document.documentElement.clientLeft;
+	}
     
     function getFullHeight(elem) {
         return getTop(elem) + elem.offsetHeight;
     }
     
     return {
-				getWindowHeight: getWindowHeight,
+		getDocHeight: getDocHeight,
+		getDocWidth: getDocWidth,
+		getWindowHeight: getWindowHeight,
         getScrollPos: getScrollPos,
-				getTop: getTop,
+		getTop: getTop,
+		getLeft: getLeft,
         getFullHeight: getFullHeight
     }
 }])
 
-.factory('ConfigService', ['$location', '_', function($location, _) {
-
-    function parseParams(url) {
-        var url = url.replace('/', '');
-        console.log(url);
-        var params = transformToAssocArray(url);
-        console.log(params);
-
-        if (params.view == 'disc' && params.disc_id) {
-            return $location.path('/disc/' + params.disc_id);
-        }
-
-        if (params.view == 'dashboard' && params.user_id) {
-            return $location.path('/d/' + params.user_id);
-        }
-        
-        if (params.view == 'profile' && params.user_id) {
-            return $location.path('/profile/' + params.user_id);
-        }
-    }
-
-    function transformToAssocArray(prmstr) {
-        var params = {};
-        var prmarr = prmstr.split("&");
-        for (var i = 0; i < prmarr.length; i++) {
-            var tmparr = prmarr[i].split("=");
-            params[tmparr[0]] = tmparr[1];
-        }
-        return params;
-    }
-
-    function initUrl(url) {
-        var hashIndex = url.indexOf('#');
-        var eqIndex = url.indexOf('=');
-        if (hashIndex >= 0 && eqIndex >= 0) {
-            parseParams(url.substr(hashIndex + 1, url.length - hashIndex - 1));
-        }
-    }
-
-    return {
-        initUrl: initUrl
-    }
+.factory('VerificationService', ['APIService', function(APIService) {
+	
+	function resetPDGA(callback) {
+		APIService.Post('/verify/pdga/reset', undefined, function(success, data) {
+			if (success) {
+				return callback(true, data);
+			} else {
+				return callback(false, data);
+			}
+		});
+	}
+	
+	function verifyPDGA(username, password, callback) {
+		APIService.Post('/verify/pdga', {username: username, password: password}, function(success, data) {
+			if (success) {
+				return callback(true, data);
+			} else {
+				return callback(false, data);
+			}
+		});
+	}
+	
+	return {
+		verifyPDGA: verifyPDGA,
+		resetPDGA: resetPDGA
+	}
 }])
 
 .factory('APIService', ['$http', '$window',
 
     function($http, $window) {
+		var token;
+		
         return {
             Get: Get,
-						GetExt: GetExt,
+			GetExt: GetExt,
             Put: Put,
             Post: Post,
+            PostExt: PostExt,
             Delete: Delete,
-            Query: Query
+            Query: Query,
+			setToken: setToken
         }
-
+		
+		function setToken(aToken) {
+			token = aToken;
+		}
+		
         function Query(path, query, callback) {
             var qPath = path + '?';
             for (var key in query) {
@@ -172,69 +355,129 @@ angular.module('disczump.services', ['underscore'])
             }, callback);
         }
 
-        function Get(path, callback) {
+        function Get(path, callback, token) {
             return request({
                 path: path,
-                method: 'GET'
+                method: 'GET',
+				token: token
             }, callback);
         }
 			
-				function GetExt(root, path, callback) {
-						return request({
-								path: path,
-								method: 'GET',
-								root: root
-						}, callback);
-				}
+		function GetExt(root, path, callback, token) {
+			return request({
+				path: path,
+				method: 'GET',
+				root: root,
+				token: token
+			}, callback);
+		}
 
-        function Put(path, data, callback) {
+        function Put(path, data, callback, token) {
             return request({
                 path: path,
                 method: 'PUT',
-                data: data
+                data: data,
+				token: token
             }, callback);
         }
 
-        function Post(path, data, callback) {
+        function Post(path, data, callback, token) {
             return request({
+                path: path,
+                method: 'POST',
+                data: data,
+				token: token
+            }, callback);
+        }
+		
+		function PostExt(root, path, data, callback, token) {
+            return request({
+                path: path,
+                method: 'POST',
+                data: data,
+				root: root,
+				token: token
+            }, callback);
+        }
+
+        function Delete(path, callback, token) {
+            return request({
+                path: path,
+                method: 'DELETE',
+				token: token
+            }, callback);
+        }
+		
+		function Login(path, callback) {
+			return request({
                 path: path,
                 method: 'POST',
                 data: data
             }, callback);
-        }
-
-        function Delete(path, callback) {
-            return request({
-                path: path,
-                method: 'DELETE'
-            }, callback);
-        }
+		}
 		
         function request(params, callback) {
+			var headers = {
+				'Authorization': 'Basic ZHpXZWI6JDJhJDA4JHNRRnVkSERCenYvNzNEbmVCbUVUYnVlR3E5dWxwRzNsUElLLjY4bVJJVVFUL3hqZFVIa1dX',
+				'If-Modified-Since': 'Mon, 26 Jul 1997 05:00:00 GMT',
+				'Cache-Control': 'no-cache',
+				'Pragma': 'no-cache'
+			};
+			
+			if (params.headers) { 
+				for(var i in params.headers) {
+					headers[i] = params.headers[i];
+				}
+			}
+			
+			if (token) {
+				headers.Authorization = 'Bearer ' + token;
+			}
+			
+			if (params.token) {
+				headers.Authorization = 'Bearer ' + params.token;
+			}
+			
             return $http({
                 method: params.method,
                 url: (params.root || '/api') + params.path,
                 data: params.data,
                 timeout: 5000,
-				headers: {
-					'If-Modified-Since': 'Mon, 26 Jul 1997 05:00:00 GMT',
-					'Cache-Control': 'no-cache',
-					'Pragma': 'no-cache'
-				}
+				headers: headers
             }).then(function(response) {
                 var retObj = parseResponse(response);
-                return callback(retObj.success, retObj.data);
+				if (callback) {
+                	return callback(retObj.success, retObj.data);
+				}
 
             }, function(response) {
-                return callback(false, {
-                    message: 'Failed to hit server with request.',
-                    type: 'Internal Error'
-                });
+				if (callback) {
+					if (response.status == 403) {
+						return callback(false, {
+							message: 'Invalid username or password.',
+							type: 'Login Failed'
+						});
+					}
+					
+					return callback(false, parseError(response));
+				}
             });
         }
+		
+		function parseError(response) {
+			if (response.data && response.data.error) {
+				return response.data.error;
+			} else {
+				console.log('unknown error: ' + response);
+				return {
+					message: 'Failed to hit server with request.',
+					type: 'Internal Error'
+				};
+			}
+		}
 
         function parseResponse(response) {
-            if (response.data.error) {
+            if (response.data && response.data.error) {
                 return {
                     sucess: false,
                     data: response.data.error
@@ -290,8 +533,8 @@ angular.module('disczump.services', ['underscore'])
 		return ret;
 	}
 	
-	function getReverseGeo(lat, lng, callback) {
-		if (geoCache[String(lat + ',' + lng)]) {
+	function getReverseGeo(lat, lng, callback, skipCache) {
+		if (!skipCache && geoCache[String(lat + ',' + lng)]) {
 			return callback(true, geoCache[String(lat + ',' + lng)]);
 		}
 		
@@ -319,7 +562,7 @@ angular.module('disczump.services', ['underscore'])
 		});
 	}
 	
-	function getGeoLocation(address, callback) {
+	function getGeoLocation(address, callback, restrict) {
 		$http({
 			method: 'GET',
 			 headers: {
@@ -328,7 +571,7 @@ angular.module('disczump.services', ['underscore'])
 			url: geocodeUrl + '?key=AIzaSyB7kWqjg0Yei5bPUhwmKmvLVk6Zugh_-Fw&result_type=locality&address=' + encodeURI(address),
 			timeout: 5000
 		}).then(function(response) {
-			var ret = parseResponse(response);
+			var ret = parseResponse(response, restrict);
 			
 			if (ret.success) {
 				ret.data.forEach(function(loc) {
@@ -807,7 +1050,7 @@ angular.module('disczump.services', ['underscore'])
     
     function queryFacet(opts, callback) {
 		var reqParam = buildQuery(opts);
-		var urlString = '/facet';
+		var urlString = '/query/discs/facet';
 
 		if (opts.facet) {
 			reqParam.facet = {
@@ -937,7 +1180,7 @@ angular.module('disczump.services', ['underscore'])
                 }
             }
         }
-        return '/static/logo/logo_small_faded.svg';
+        return '/static/img/dz_disc.png';
     }
     
     return {
@@ -956,11 +1199,12 @@ angular.module('disczump.services', ['underscore'])
     
     var setRedirect = function(path) {
         redirect = path;
+		$location.path('redirect');
     }
 	
     var resolvePath = function(path) {
         if (/^\/trunk(\/)?$/.test(path)) {
-            if (AccountService.hasAccountId()) {
+            if (AccountService.isLoggedIn()) {
                 return 'trunk/' + AccountService.getAccountId();
             }
             
@@ -975,7 +1219,7 @@ angular.module('disczump.services', ['underscore'])
             return resolvePath($location.path());
         } else {
             var redPath = redirect;
-            setRedirect(undefined);
+            setRedirect();
             return redPath;
         }
     }
@@ -986,55 +1230,273 @@ angular.module('disczump.services', ['underscore'])
     }
 }])
 
-.factory('AccountService', ['$rootScope', '_', 'APIService', function($rootScope, _, APIService) {
-    var account, accountId;
-    
-    var init = function(userId) {
-        if (userId) {
-            
-            if (typeof(account) !== 'undefined' && account._id == userId) {
-                return;
-            }
-            
-            accountId = userId;
-            
-            APIService.Get('/account', function(success, data) {
-                if (success) {
-                    account = data;
-                    $rootScope.$emit('AccountInit', {success: true});
-                } else {
-                    account = undefined;
-                    $rootScope.$emit('AccountInit', {success: false});
-                }
-            });
-        } else {
-            account = undefined;
-            $rootScope.$emit('AccountInit', {success: false});
-        }
-    };
+.factory('MembershipService', ['APIService', function(APIService) {
+	
+	var getChangeType = function(fromType, toType) {
+		switch (fromType.toLowerCase()) {
+			case 'basic': {
+				switch(toType.toLowerCase()) {
+					case 'entry':
+					case 'pro': {
+						return 'no-profile';
+					}
+				}
+				break;
+			}
+			case 'entry': {
+				switch(toType.toLowerCase()) {
+					case 'basic': {
+						return 'clear-profile';
+					}
+					case 'pro': {
+						return 'upgrade-profile';
+					}
+				}
+				break;
+			}
+			case 'pro': {
+				switch(toType.toLowerCase()) {
+					case 'basic': {
+						return 'clear-profile';
+					}
+					case 'entry': {
+						return 'downgrade-profile';
+					}
+				}
+				break;
+			}
+		}
+		
+		return undefined;
+	}
+	
+	var getAccountName = function(type) {
+		switch(type.toLowerCase()) {
+			case 'basic': return 'Freeloader';
+			case 'entry': return 'Entrepreneur';
+			case 'pro': return 'Chief Executive';
+		}
+
+		return '';
+	}
+		
+	var getAccountCost = function(type) {
+		switch(type.toLowerCase()) {
+			case 'basic': return '0.00';
+			case 'entry': return '0.99';
+			case 'pro': return '5.99';
+		}
+
+		return '';
+	}
+	
+	return {
+		getChangeType: getChangeType,
+		getAccountName: getAccountName,
+		getAccountCost: getAccountCost
+	}
+}])
+
+.factory('AccountService', ['$rootScope', '$q', '_', '$crypt', 'APIService', function($rootScope, $q, _, $crypt, APIService) {
+    var account, accountId, accountMarket;
+	var authToken;
+	
+	var getUA = function() {
+		return (navigator.userAgent.split(' ')[0]);
+	}
+	
+	var getToken = function() {
+		return typeof(authToken !== 'undefined') ? authToken.access_token : undefined;
+	}
+	
+	var doLogout = function(callback) {
+		APIService.PostExt('/oauth', '/logout', {}, function(success, result) {
+			if (!success) {
+				console.log(result);
+			}
+			
+			authToken = undefined;
+			account = undefined;
+			window.localStorage.removeItem('dz-token');
+			APIService.setToken(undefined);
+			if (callback) callback();
+		});
+	}
+	
+	var doAccountDelete = function(callback) {
+		APIService.Delete('/account', callback);
+	}
+	
+	var doAccountDeleteConfirm = function(authorizationId, callback) {
+		APIService.Post('/account/delete', {
+			authorizationId: authorizationId
+		}, function(success, data) {
+			console.log(data);
+			doLogout();
+			callback(success, data);
+		});
+	}
+	
+	var doAccountConfirm = function(authorizationId, callback) {
+		APIService.PostExt('/oauth', '/confirm', {
+			authorizationId: authorizationId
+		}, function(success, data) {
+			console.log(data);
+			
+			if (success) {
+				authToken = data;
+				var toStore = $crypt.AES.encrypt(JSON.stringify(data), getUA());
+				window.localStorage.setItem('dz-token', toStore.toString());
+				APIService.setToken(getToken());
+			}
+			
+			callback(success, data);
+		});
+	}
+	
+	var doFacebookUnlink = function(callback) {
+		APIService.PostExt('/oauth', '/facebook/unlink', {}, callback);
+	}
+	
+	var doFacebookLink = function(auth, callback) {
+		APIService.PostExt('/oauth', '/facebook/link', auth, callback);
+	}
+	
+	var doFacebookLogin = function(auth, callback) {
+		APIService.PostExt('/oauth', '/facebook/login', auth, function(success, data) {
+			console.log(data);
+			
+			if (success) {
+				authToken = data;
+				var toStore = $crypt.AES.encrypt(JSON.stringify(data), getUA());
+				window.localStorage.setItem('dz-token', toStore.toString());
+				APIService.setToken(getToken());
+			}
+			
+			callback(success, data);
+		});
+	}
+	
+	var initAccount = function() {
+		var deffered = $q.defer();
+		
+		if (typeof(account) !== 'undefined') {
+			deffered.resolve(account);
+			return deffered.promise;
+		}
+		
+		var token = window.localStorage.getItem('dz-token');
+		
+		if (token != null) {
+			try {
+				token = $crypt.AES.decrypt(token.toString(), getUA()).toString($crypt.enc.Utf8);
+				token = JSON.parse(token);
+			} catch (e) { 
+				doLogout();
+				return undefined;
+			}
+		
+			APIService.Get('/account', function(success, data) {
+				if (success) {
+					account = data;
+					authToken = token;
+					APIService.setToken(getToken());
+				} else {
+					doLogout();
+				}
+
+				deffered.resolve(account);
+			}, token.access_token);
+
+			return deffered.promise;
+		} else {
+			deffered.resolve(account);
+			return deffered.promise;
+		}
+	}
+	
+	var doLogin = function(username, password, callback) {
+		APIService.PostExt('/oauth', '/token', {
+			username: username,
+			password: password,
+			grant_type: 'password'
+		}, function(success, data) {
+			console.log(data);
+			
+			if (success) {
+				authToken = data;
+				var toStore = $crypt.AES.encrypt(JSON.stringify(data), getUA());
+				window.localStorage.setItem('dz-token', toStore.toString());
+			}
+			
+			callback(success, data);
+		});
+	}
+	
+	var updateAccount = function(updated) {
+		if (typeof(authToken) !== 'undefined') {
+			account = updated;
+		}
+	}
     
     var isLoggedIn = function() {
         return typeof(account) !== 'undefined';
     }
     
-    var getAccount = function() {
-        return account;
+    var getAccount = function(reloadCallback) {
+		if (reloadCallback && isLoggedIn()) {
+			APIService.Get('/account', function(success, data) {
+				if (success) {
+					account = data;
+					reloadCallback(true, account);
+				} else {
+					doLogout();
+					reloadCallback();
+				}
+			});
+		} else {
+			return account;
+		}
     }
     
     var getAccountId = function() {
-        return accountId;
+		return account ? account._id : undefined;
     }
+	
+	var getAccountMarket = function(callback) {
+		if (!isLoggedIn()) {
+			return callback(false, {type: 'Unauthorized', message: 'User not logged in.'});
+		}
+		
+		return APIService.Get('/account/market', callback);
+	}
     
     var hasAccountId = function() {
-        return typeof accountId !== 'undefined';
+        return account && account._id;
     }
+	
+	var compareTo = function(id) {
+		return account && account._id == id;
+	}
     
     return {
-        init: init,
         isLoggedIn: isLoggedIn,
         hasAccountId: hasAccountId,
         getAccount: getAccount,
-        getAccountId: getAccountId
+        getAccountId: getAccountId,
+		getAccountMarket: getAccountMarket,
+		initAccount: initAccount,
+		updateAccount: updateAccount,
+		doLogin: doLogin,
+		doAccountConfirm: doAccountConfirm,
+		doAccountDeleteConfirm: doAccountDeleteConfirm,
+		doAccountDelete: doAccountDelete,
+		doFacebookLogin: doFacebookLogin,
+		doFacebookLink: doFacebookLink,
+		doFacebookUnlink: doFacebookUnlink,
+		doLogout: doLogout,
+		compareTo: compareTo,
+		getToken: getToken
     }
     
 }])
@@ -1042,6 +1504,28 @@ angular.module('disczump.services', ['underscore'])
 .factory('CacheService', ['_', 'APIService', function(_, APIService){
     var userCache = [];
     
+	function getUserByUsername(username, callback) {
+		return getUserObjByUsername(username, false, callback);
+	}
+	
+	function getUserObjByUsername(username, forceReload, callback) {
+        var user = _.findWhere(userCache, {username: username});
+        
+        if (user && !forceReload) {
+            return callback(true, user);
+        } 
+        
+        APIService.Get('/users/username/' + username, function(success, data) {
+            if (success) {
+                if (forceReload) userCache = _.filter(userCache, function(user) { return user._id != userId});
+                userCache.push(data);
+                return callback(true, data);
+            } else {
+                return callback(false, data);
+            }
+        });
+    }
+	
     function getUser(userId, callback) {
         return getUserObj(userId, false, callback);
     }
@@ -1062,16 +1546,16 @@ angular.module('disczump.services', ['underscore'])
                 return callback(false, data);
             }
         });
-        
     }
     
     return {
-        getUser: getUser
+        getUser: getUser,
+		getUserByUsername: getUserByUsername
     }
     
 }])
 
-.factory('DiscService', ['_', '$q', 'APIService', function(_, $q, APIService){
+.factory('DiscService', ['_', '$q', 'APIService', 'AccountService', function(_, $q, APIService, AccountService){
 	
 	function editDisc(disc, callback) {
 		return APIService.Put('/discs/' + disc._id, disc, callback);
@@ -1111,6 +1595,35 @@ angular.module('disczump.services', ['underscore'])
 		createDisc: createDisc,
 		deleteDisc: deleteDisc,
 		deleteDiscs: deleteDiscs
+	}
+}])
+
+.factory('MessageService', [function() {
+	var attachments = [];
+	
+	function setAttachment(type, id) {
+		attachments.push({
+			type: type,
+			id: id
+		});
+	}
+	
+	function setAttachments(list) {
+		list.forEach(function(item) {
+			setAttachment(item.type, item.id);
+		})
+	}
+	
+	function getAttachments() {
+		return attachments.splice(0, attachments.length);
+	}
+	
+	return {
+		TypeDisc: 'd',
+		TypeUser: 't',
+		setAttachment: setAttachment,
+		setAttachments: setAttachments,
+		getAttachments: getAttachments
 	}
 }])
 

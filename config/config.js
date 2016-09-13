@@ -30,32 +30,27 @@ module.exports = {
        'alertThresholdMin': 20 
     },
     'disc': {
-       'marketplaceModThresholdDays': 7 
-    },
-    'user': {
-        'preferences': {
-            'colorize': {
-                'putter': 'rgb(255, 161, 66)',
-                'mid': 'rgb(109, 109, 255)',
-                'fairway': 'rgb(255, 109, 109)',
-                'distance': 'rgb(66, 255, 66)',
-                'mini': 'rgb(255, 66, 255)',
-            },
-            'colorizeVisibility': true,
-            'displayCount': '20',
-            'defaultSort': [
-    	    	{property: 'brand',sortAsc: true},
-    	    	{property: 'name',sortAsc: true}
-        	],
-        	'defaultView': 'inventory',
-        	'galleryCount': '6',
-        	'showTemplatePicker': true,
-        	'notifications': {
-        	    'newMessage': true
-        	}
-        }
+       'marketplaceModThresholdMins': 5 
     },
     'geo': {
         'userFacetRanges': [10, 25, 50, 100, 500]
+    },
+    'payment': {
+        'sessionTTL': '30m',
+        'term': 0,
+        'payPeriod': 'MONT',
+    },
+    'membership': {
+        'TypeBasic': 'Basic',
+        'TypeEntry': 'Entry',
+        'TypePro': 'Pro',
+        
+        'CostBasic': 0,
+        'CostEntry': 0.99,
+        'CostPro': 5.99,
+
+        'CapBasic': 2,
+        'CapEntry': 6,
+        'CapPro': -1,
     }
 };

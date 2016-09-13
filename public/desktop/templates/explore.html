@@ -1,8 +1,10 @@
-<dz-header user="account.user"></dz-header>
-<dz-profile user-id="{{trunk.userId}}" class="header-color-1" ng-if="$def(trunk.userId)" current-user="account.user._id"></dz-profile>
+<dz-header></dz-header>
+<dz-profile user-id="{{trunk.userId}}" class="header-color-1" ng-if="$def(trunk.userId)" current-user="curUser._id"></dz-profile>
 <dz-status-bar class="header-color-2" hide-on="loading" show-count="resultList.length" total-count="pagination.total" breadcrumbs="breadcrumbs" home-url="statusHome"></dz-status-bar>
+<img class="explore-icon-fixed" src="/static/img/dz_disc_fade.png" />
 <div class="scrollable main-body has-profile" id="explore">
     <div class="page-content">
+        <dz-alert alert-data="alertOpts"></dz-alert>
         <div class="left-container" ng-show="!fullscreen">
             <div style="text-align: center;font-size: 2em;padding-top: 20px;" ng-show="loading">
                 <i class="fa fa-spinner fa-spin fa-lg"></i>
@@ -100,7 +102,7 @@
                 <div class="menu-btn" ng-attr-title="{{fullscreen ? 'Minimize' : 'Maximize'}}">
                     <span><i class="fa fa-arrows-alt" ng-click="fullscreen = !fullscreen;" ng-class="{'active':fullscreen}"></i></span>
                 </div>
-                <div class="menu-btn">
+                <div class="menu-btn" ng-if="$def(trunk.userId) && trunk.userId == curUser._id">
                     <span><i class="fa fa-check-square" ng-click="msOpts.toggleMS()" ng-class="{'active': msOpts.active}" title="Multi-select Mode"></i></span>
                 </div>
                 <div id="result-sort">
@@ -140,22 +142,19 @@
             </div>
         </div>
     </div>
-    <div class="ms-toolbox" ng-show="msOpts.active">
+    <div class="ms-toolbox no-select" ng-show="msOpts.active">
+        <div class="ms-tool-container">
+            <div class="ms-tb-tool" title="Select All" ng-click="msOpts.selectAll()"><i class="fa fa-lg fa-object-group"></i></div>
+            <div class="ms-tb-tool" title="Deselect All" ng-click="msOpts.deselectAll()"><i class="fa fa-lg fa-object-ungroup"></i></div>
+        </div>
         <div class="ms-tb-close" ng-click="msOpts.toggleMS()"><i class="fa fa-times"></i></div>
         <div class="ms-tb-title">Multi-select Toolbox</div>
         <div class="ms-count dz-blue">{{msOpts.count}}</div>
         <div class="ms-btn-container">
-            <div class="ms-tb-btn" title="Select All" ng-click="msOpts.selectAll()"><i class="fa fa-lg fa-object-group"></i></div>
-            <div class="ms-tb-btn" title="Deselect All" ng-click="msOpts.deselectAll()"><i class="fa fa-lg fa-object-ungroup"></i></div>
-            <div class="ms-tb-btn edit" title="Edit"><i class="fa fa-lg fa-pencil"></i></div>
+            <div class="ms-tb-btn" title="Bump Discs" ng-click="msOpts.bumpDiscs()"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></div>
+            <div class="ms-tb-btn edit" title="Manage Tags" ng-click="msOpts.manageTags()"><i class="fa fa-lg fa-tags"></i></div>
             <div class="ms-tb-btn delete" title="Delete" ng-click="msOpts.deleteDiscs()"><i class="fa fa-lg fa-trash"></i></div>
-            <div class="clearfix"></div>
-        </div>
-        <div class="ms-btn-container">
-            <div class="ms-tb-btn"><i class="fa fa-lg fa-external-link"></i></div>
-            <div class="ms-tb-btn edit"><i class="fa fa-lg fa-pencil"></i></div>
-            <div class="clearfix"></div>
         </div>
     </div>
-    <dz-modal modal-opts="modalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>
+    <dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>
 </div>

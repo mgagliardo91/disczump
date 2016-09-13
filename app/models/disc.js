@@ -31,7 +31,7 @@ var discSchema = mongoose.Schema({
         forSale: {type: Boolean, default: false},
         forTrade: {type: Boolean, default: false},
         value: Number,
-		modifiedDate: {type: Date, default: Date.now}
+		postedDate: {type: Date }
     }
 });
 
@@ -41,6 +41,10 @@ discSchema.methods.getImage = function() {
     } else {
         return undefined;
     }
+}
+
+discSchema.methods.marketplaceActive = function() {
+	return this.marketplace.forSale || this.marketplace.forTrade;
 }
 
 discSchema.methods.toDescString = function() {

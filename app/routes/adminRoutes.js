@@ -1,10 +1,12 @@
 var Passport;
-var Error = require('./utils/error');
-var AdminController = require('./controllers/admin');
-var StatController = require('./controllers/statistics');
-var UserController = require('./controllers/user');
-var DiscController = require('./controllers/disc');
-var FeedbackController = require('./controllers/feedback');
+
+var Error = require('../utils/error');
+
+var AdminController = require('../controllers/admin');
+var StatController = require('../controllers/statistics');
+var UserController = require('../controllers/user');
+var DiscController = require('../controllers/disc');
+var FeedbackController = require('../controllers/feedback');
 
 // app/oauthRoutes.js
 module.exports = function(app, passport) {

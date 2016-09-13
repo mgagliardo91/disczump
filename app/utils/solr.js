@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var logger = require('./logger.js');
 var geoConfig = require('../../config/config.js').geo;
 
 module.exports = {
@@ -157,7 +158,7 @@ function createDiscReq(opts, userId, reqId) {
         } else if (opts.sort == 'alpha') {
             req.sort = 'brand asc,name asc'
         } else if (opts.sort == 'new') {
-            req.sort = 'marketplace.modifiedDate desc'
+            req.sort = 'marketplace.postedDate desc'
         }
     }
     

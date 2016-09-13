@@ -6,7 +6,7 @@ var Error = require('../utils/error');
 var UserController = require('./user');
 var Message = require('../models/message');
 var Thread = require('../models/thread');
-var Socket = require('../../config/socket.js');
+var Socket = require('../utils/socket.js');
 var ThreadLocal = require('../models/threadLocal');
 var socketManager = require('../objects/socketCache.js');
 var MessageConfig = require('../../config/config.js').message;
@@ -197,7 +197,7 @@ function notifyUsers(message, userId) {
                         Socket.sendNotification(localThread.userId, Socket.TypeMsg, message);
                     } else {
                         UserController.getUser(localThread.userId, function(err, user) {
-                            if (!err && user && user.preferences.notifications.newMessage) {
+                            if (!err && user && user.account.notifications.newMessage) {
                                 if (localThread.lastAlert) {
                                     var lastAlert = new XDate(localThread.lastAlert);
                                     if (lastAlert.diffMinutes(new XDate()) < MessageConfig.alertThresholdMin) {

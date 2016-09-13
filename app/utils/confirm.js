@@ -88,12 +88,15 @@ function initializeConfirmDelete(userId, callback) {
 }
 
 function confirmDelete(authorizationId, gfs, callback) {
+		console.log('Finding authorization ID');
         TemporaryLink.findOne({_id: authorizationId, route: 'delete' }, function (err, confirm) {
+			console.log(err);
+			
             if (err)
 	            return callback(Error.createError(err, Error.internalError));
             
             if (!confirm)
-                return callback(Error.createError('The confirmation request does not exist.', Error.objectNotFoundError));
+                return callback(Error.createError('The delete request does not exist.', Error.objectNotFoundError));
             
             UserController.getActiveUser(confirm.userId, function(err, user) {
                 if (err)

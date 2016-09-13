@@ -15,7 +15,6 @@ function getTemplates(callback) {
             return callback(Error.createError(err, Error.internalError));
         
         return callback(null, templates);
-            
     });
 }
 

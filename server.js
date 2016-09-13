@@ -1,23 +1,23 @@
 // set up ======================================================================
 var express  = require('express');
 var subdomain = require('express-subdomain');
-var app      = express();
-var fs       = require('fs');
+var app = express();
+var fs = require('fs');
 var mongoose = require('mongoose');
 var passport = require('passport');
-var flash    = require('connect-flash');
-
+var flash = require('connect-flash');
 var morgan       = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser   = require('body-parser');
 var device       = require('express-device');
 var session      = require('express-session');
 var config = require('./config/config.js');
-var oauth2 = require('./config/oauth2.js');
+var oauth2 = require('./app/auth/oauth2.js');
 var socketCache = require('./app/objects/socketCache.js');
-var logger = require('./config/logger.js').logger;
+var logger = require('./app/utils/logger.js');
 var localServer = require('./config/localConfig.js');
 var handleConfig = require('./app/utils/handleConfig.js');
+var Error = require('./app/utils/error.js');
 var Grid = require('gridfs-stream');
 
 // configuration ===============================================================
@@ -33,12 +33,12 @@ require('./app/utils/mailer.js');
 mongoose.connect('mongodb://' + config.database.host + ':' + 
     config.database.port + '/' + config.database.db);
 
-require('./config/passport')(passport);
+require('./app/auth/passport')(passport);
 
 // set up our express application
-if (!release) {
+// if (!release) {
   app.use(morgan('dev'));
-}
+// }
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
@@ -66,36 +66,67 @@ var gridFs = new Grid(mongoose.connection.db, mongoose.mongo);
 
 // routes ======================================================================
 var adminRouter = express.Router();
-require('./app/adminRoutes.js')(adminRouter, passport);
+require('./app/routes/adminRoutes.js')(adminRouter, passport);
 app.use('/admin', adminRouter);
 
 var adminApiRouter = express.Router();
-require('./app/adminApi.js')(adminApiRouter, passport);
+require('./app/routes/adminApi.js')(adminApiRouter, passport);
 app.use('/admin/api', adminApiRouter);
 
+
 var mainRouter = express.Router();
-require('./app/routes.js')(mainRouter, passport, gridFs);
+require('./app/routes/routes.js')(mainRouter, passport, gridFs);
 app.use('/', mainRouter);
 
+var membershipRouter = express.Router();
+require('./app/routes/membership.js')(membershipRouter);
+app.use('/membership', membershipRouter);
+
 var apiRouter = express.Router();
-require('./app/api.js')(apiRouter, passport, gridFs);
+require('./app/routes/api.js')(apiRouter, gridFs);
 app.use('/api', apiRouter);
 
 var oauthRouter = express.Router();
-require('./app/oauthRoutes.js')(oauthRouter, oauth2);
+require('./app/routes/oauthRoutes.js')(oauthRouter, oauth2, passport, socketCache);
 app.use('/oauth', oauthRouter);
 
 var testRouter = express.Router();
-require('./app/files.js')(testRouter, gridFs);
+require('./app/routes/files.js')(testRouter, gridFs);
 app.use('/files', testRouter);
-
-var connectRouter = express.Router();
-require('./app/connect.js')(connectRouter, passport, socketCache);
-app.use('/connect', connectRouter);
-
 
 app.get('*', function(req, res){
   res.redirect('/'); 
+});
+
+app.use(function(err, req, res, next) {
+    if (err) {
+        logger.error('Error handling request', err);
+        try {
+            switch(err.error.type) {
+                case Error.internalError:
+                    return res.status(500).json(err);
+                case Error.objectNotFoundError:
+                    return res.status(404).json(err);
+                case Error.unauthorizedError:
+                    return res.status(401).json(err);
+                case Error.invalidDataError:
+                    return res.status(400).json(err);
+                case Error.inactiveError:
+                    return res.status(401).json(err);
+                case Error.limitError:
+                    return res.status(400).json(err);
+                case Error.notImplemented:
+                    return res.status(501).json(err);
+                default: 
+                    return res.status(500).json(err);
+            }
+        } catch (e) {
+            logger.error(err);
+            return res.status(500).json(Error.createError('Unknown error occurred.', Error.internalError));
+        }
+    } else {
+        return next();
+    }
 });
 
 // launch ======================================================================
@@ -114,7 +145,7 @@ if (release) {
 
 var io = require('socket.io')(server);
 
-require('./config/socket.js').init(io, socketCache, logger);
+require('./app/utils/socket.js').init(io, socketCache, logger);
 
 server.listen(httpsPort);
 

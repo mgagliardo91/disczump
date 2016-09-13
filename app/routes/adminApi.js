@@ -1,12 +1,15 @@
-var Error = require('./utils/error');
+var Error = require('../utils/error');
 var _ = require('underscore');
 var async = require('async');
-var AdminController = require('./controllers/admin');
-var DiscController = require('./controllers/disc');
-var UserController = require('./controllers/user');
-var EventController = require('./controllers/event');
-var FeedbackController = require('./controllers/feedback');
-var socketManager = require('./objects/socketCache.js');
+
+var AdminController = require('../controllers/admin');
+var DiscController = require('../controllers/disc');
+var UserController = require('../controllers/user');
+var EventController = require('../controllers/event');
+var FeedbackController = require('../controllers/feedback');
+
+var socketManager = require('../objects/socketCache.js');
+
 var Passport;
 
 // app/oauthRoutes.js

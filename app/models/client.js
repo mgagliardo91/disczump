@@ -22,6 +22,10 @@ var clientSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    createDate: {
+		type: Date, 
+		default: Date.now
+	},
     permissions: {
         createUsers: {type: Boolean, default: false},
         deleteUsers: {type: Boolean, default: false}

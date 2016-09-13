@@ -11,7 +11,9 @@ module.exports = {
         AccountPasswordReset : 'AccountPasswordReset',
         AccountDeleteInit : 'AccountDeleteInit',
         AccountDeleteConfirm : 'AccountDeleteConfirm',
-        AccountPasswordInit: 'AccountPasswordInit'
+        AccountPasswordInit: 'AccountPasswordInit',
+        AccountPDGAClaim: 'AccountPDGAClaim',
+        AccountPDGAReset: 'AccountPDGAReset'
     },
     
     addEvent: addEvent,

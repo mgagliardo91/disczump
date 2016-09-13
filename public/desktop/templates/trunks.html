@@ -1,5 +1,6 @@
-<dz-header user="account.user"></dz-header>
+<dz-header></dz-header>
 <dz-status-bar class="header-color-2" home-url="statusHome" hide-on="loading" show-count="resultList.length" total-count="pagination.total" breadcrumbs="breadcrumbs"></dz-status-bar>
+<img class="explore-icon-fixed" src="/static/img/dz_profile_fade.png" />
 <div class="scrollable main-body has-profile" id="explore">
     <div class="page-content">
         <div class="left-container" ng-show="!fullscreen">
@@ -8,24 +9,24 @@
             </div>
             <div class="filter-container"  ng-show="!loading">
                 <div class="sidebar-section">
-                    <div class="location-container" ng-class="{'inactive':!locationEditable}" >
+                    <div class="location-container" ng-class="{'inactive':!location.editable}" >
                         <div>
-                            <div class="location-icon" ng-attr-title="{{locationAllowed() ? (locSet ? 'Use Current Location' : '') : 'Location Not Allowed'}}" ng-class="{'active':locationAllowed() && locSet}" ng-click="locationAllowed() && !ocSet && getLocation()">
+                            <div class="location-icon" ng-attr-title="{{locationAllowed() ? (locSet ? 'Use Current Location' : '') : 'Location Not Allowed'}}" ng-class="{'active':locationAllowed() && location.locSet}" ng-click="locationAllowed() && !location.locSet && getLocation()">
                                 <i class="fa fa-crosshairs"></i>
                             </div>
-                            <div class="location-loading" ng-show="locationLoading">
+                            <div class="location-loading" ng-show="location.loading">
                                 <i class="fa fa-spinner fa-spin"></i>
                             </div>
-                            <div class="location-input" ng-show="locationEditable" ng-class="{'loading': locationLoading}">
-                                <input class="no-focus" type="text" placeholder="Enter location..." ng-model="locationSearch"  ng-model-options="{updateOn: 'default blur',debounce:{'default': 500,'blur': 0 }}" focus-on="locationEditable" ng-blur="hideLocResults()"/>
+                            <div class="location-input" ng-show="location.editable" ng-class="{'loading': location.loading}">
+                                <input id="location-search" class="no-focus" type="text" placeholder="Enter location..." ng-model="location.search"  ng-model-options="{updateOn: 'default blur',debounce:{'default': 500,'blur': 0 }}" ng-blur="hideLocResults();" key-scroll-list="location.results" selection="location.selResult" on-select="itemSelected" trigger-focus="location.editable"/>
                             </div>
-                            <div class="location-label handle-overflow" ng-show="!locationEditable"  ng-click="locationEditable = true;">
-                                <span ng-show="curLocation">{{curLocation}}</span>
-                                <span ng-show="!curLocation && !loading && !locationLoading">Browser Location Blocked</span>
+                            <div class="location-label handle-overflow" ng-show="!location.editable"  ng-click="location.editable = true;">
+                                <span ng-show="location.curLocation">{{location.curLocation}}</span>
+                                <span ng-show="!location.curLocation && !loading && !location.loading">Browser Location Blocked</span>
                             </div>
                         </div>
-                        <ul class="location-result-container" ng-show="locationResults.length && locationEditable">
-                            <li class="location-result handle-overflow" ng-repeat="result in locationResults" ng-click="$event.stopPropagation(); setLocation(result); ">{{result.address}}</li>
+                        <ul class="location-result-container" id="location-results" ng-show="location.results.length && location.editable">
+                            <li class="location-result handle-overflow" ng-repeat="result in location.results track by $index" ng-click="$event.stopPropagation(); setLocation(result);" ng-class="{'active':location.selResult == $index}" scroll-me="location.selResult == $index">{{result.address}}</li>
                         </ul>
                     </div>
                 </div>

@@ -1,10 +1,10 @@
 var mongoose = require('mongoose');
 var bcrypt   = require('bcrypt-nodejs');
 var crypto = require('crypto');
-var UserConfig = require('../../config/config.js').user.preferences;
 var CryptoConfig = require('../../config/auth.js').crypto;
 var shortId = require('shortid');
-var GeoFormat = require('../utils/geoFormat.js');
+var Geo = require('../utils/geo.js');
+var membershipConfig = require('../../config/config').membership;
 
 var userSchema = mongoose.Schema({
     _id: {
@@ -24,6 +24,7 @@ var userSchema = mongoose.Schema({
         passcode: String,
         image: String,
         pdgaNumber: String,
+		bio: String,
         location: {
 			geo: String,
             geoLat: String,
@@ -47,26 +48,31 @@ var userSchema = mongoose.Schema({
         name: String,
         image: String,
     },
-    preferences: {
-        colorize: {
-            putter: {type: String, default: UserConfig.colorize.putter},
-            mid: {type: String, default: UserConfig.colorize.mid},
-            fairway: {type: String, default: UserConfig.colorize.fairway},
-            distance: {type: String, default: UserConfig.colorize.distance},
-            mini: {type: String, default: UserConfig.colorize.mini}
-        },
-        colorizeVisibility: {type: Boolean, default: UserConfig.colorizeVisibility},
-        displayCount: {type: String, default: UserConfig.displayCount},
-        defaultSort: {type: mongoose.Schema.Types.Mixed, 
-            default: UserConfig.defaultSort
-        },
-        defaultView: {type: String, default: UserConfig.defaultView},
-        galleryCount: {type: String, default: UserConfig.galleryCount},
-        showTemplatePicker: {type: Boolean, default: UserConfig.showTemplatePicker},
+	account: {
+		type: {type: String, default: membershipConfig.TypeBasic},
+		marketCap: {type: Number, default: membershipConfig.CapBasic},
+		profile: {
+			type: {type: String},
+			startDate: {type: Date},
+			nextBillDate: {type: Date},
+			payPeriod: {type: String, default: 'MONT'},
+			tender: {type: String},
+			origPNRef: {type: String},
+			origBAId: {type: String},
+			draftAmount: {type: Number},
+			profileId: {type: String},
+			acct: {type: String},
+			expDate: {type: String},
+			freeze: {type: Boolean, default: false},
+			active: {type: Boolean, default: false}
+		},
         notifications: {
-            newMessage: {type: Boolean, default: UserConfig.notifications.newMessage}
-        }
-    },
+            newMessage: {type: Boolean, default: true }
+        },
+		permissions: {
+			showFacebookId: {type: Boolean, default: false}
+		}
+	},
     internal: {
         eventLog: [mongoose.Schema.Types.Mixed]
     }
@@ -111,12 +117,16 @@ userSchema.methods.accountToString = function() {
         account.facebookImage = this.facebook.image;
     }
 	
+	if (typeof(this.local.bio) !== 'undefined') {
+    	account.bio = this.local.bio;
+	}
+	
 	if (typeof(this.local.firstName) !== 'undefined') {
-    account.firstName = this.local.firstName;
+    	account.firstName = this.local.firstName;
 	}
 	
 	if (typeof(this.local.lastName) !== 'undefined') {
-    account.lastName = this.local.lastName;
+    	account.lastName = this.local.lastName;
 	}
 	
 	if (typeof(this.local.image) !== 'undefined') {
@@ -127,9 +137,11 @@ userSchema.methods.accountToString = function() {
 	
 	if (typeof(this.local.location.postalCode) !== 'undefined') {
 		account.postalCode = this.local.location.postalCode;
-		var location = GeoFormat.getFormattedLoc(this.local.location);
+		var location = Geo.getFormattedLoc(this.local.location);
 		account.shortLocation = location.shortLocation;
 		account.longLocation = location.longLocation;
+		account.geoLat = this.local.location.geoLat;
+		account.geoLng = this.local.location.geoLng;
 	}
 	
 	if (typeof(this.local.pdgaNumber) !== 'undefined') {
@@ -138,6 +150,32 @@ userSchema.methods.accountToString = function() {
 	
 	if (typeof(this.local.accessCount) !== 'undefined') {
 		account.firstUse = this.local.accessCount.desktop <= 1;
+	}
+	
+	if (typeof(this.facebook.id) !== 'undefined' && this.account.permissions.showFacebookId) {
+		account.fbId = this.facebook.id;
+	}
+	
+	return account;
+}
+
+userSchema.methods.fullAccountToString = function() {
+	var account = this.accountToString();
+	
+	account.email = this.local.email;
+	account.accountType = this.account.type;
+	account.marketCap = this.account.marketCap;
+	account.profile = {
+		startDate: this.account.profile.startDate,
+		payPeriod: this.account.profile.payPeriod,
+		tender: this.account.profile.tender,
+		draftAmount: this.account.profile.draftAmount,
+		type: this.account.profile.type
+	}
+	
+	if (this.account.profile.tender === 'C') {
+		account.profile.acct = this.account.profile.acct;
+		account.profile.expDate = this.account.profile.expDate;
 	}
 	
 	return account;

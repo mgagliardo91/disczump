@@ -1,11 +1,10 @@
-var DiscController = require('./controllers/disc');
-var passport = require('passport');
-var logger = require('../config/logger.js').logger;
+var async = require('async');
 var mongoose = require('mongoose');
-var Error = require('./utils/error');
 var gfs;
 var gm = require('gm').subClass({ imageMagick: true });
-var async = require('async');
+
+var logger = require('../utils/logger.js');
+var Error = require('../utils/error');
 
 module.exports = function(app, gridFs) {
     
@@ -64,15 +63,14 @@ module.exports = function(app, gridFs) {
     //     });
         
     app.route('/:fileId')
-        .get(function(req, res) {
-            
+        .get(function(req, res, next) {
             try {
                 gfs.files.find({_id:mongoose.Types.ObjectId(req.params.fileId)}).toArray(function(err, files) {
                 if(err)
-                    return res.status(404).send(Error.createError(err, Error.internalError));
+                    return next(Error.createError(err, Error.internalError));
                 
                 if(files.length === 0){
-                    return res.status(404).send(Error.createError('Unknown file identifier.', Error.objectNotFoundError));
+                    return next(Error.createError('Unknown file identifier.', Error.objectNotFoundError));
                 }
                 
                 var file = files[0];
@@ -89,14 +87,13 @@ module.exports = function(app, gridFs) {
                 rs.pipe(res);
             });
             } catch (err) {
-                console.log('Error obtaining file: ' + err);
-                return res.status(404).send(Error.createError(err, Error.internalError));
+                return next(Error.createError(err, Error.internalError));
             }
             
         });
         
     app.route('/:fileId/:resize')
-        .get(function(req, res) {
+        .get(function(req, res, next) {
             var width, height;
             
             if(!/^\d{1,3}([x]\d{1,3}){0,1}$/.test(req.params.resize)) {
@@ -109,10 +106,10 @@ module.exports = function(app, gridFs) {
             
             gfs.files.find({_id:mongoose.Types.ObjectId(req.params.fileId)}).toArray(function(err, files) {
                 if(err)
-                    return res.send(Error.createError(err, Error.internalError));
+                    return next(Error.createError(err, Error.internalError));
                 
                 if(files.length === 0){
-                  return res.send(new Error('File metadata does not exist'));
+                  return next(Error.createError('Unable to locate file.', Error.objectNotFoundError));
                 }
                 
                 var file = files[0];
@@ -134,7 +131,7 @@ function getFile(id, callback) {
             return callback(Error.createError(err, Error.internalError));
         
         if(files.length === 0){
-          return callback(Error.createError('File metadata does not exist', Error.invalidDataError));
+          return callback(Error.createError('Unable to locate file.', Error.objectNotFoundError));
         }
         
         callback(null, files[0]);

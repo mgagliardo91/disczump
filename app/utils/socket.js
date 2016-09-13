@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var logger = require('./logger.js');
 var cache;
 
 module.exports = {
@@ -43,7 +44,11 @@ function sendNotification(userId, type, data) {
     
     if (sockets && sockets.length) {
         _.each(sockets, function(socketObj) {
-            socketObj.socket.emit('notification', { type: type, data: data});
+            try{
+                socketObj.socket.emit('notification', { type: type, data: data});
+            } catch (e) {
+                logger.error('Error when attempting to emit to socket.', e);
+            }
         });
     }
 }

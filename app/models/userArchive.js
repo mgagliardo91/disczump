@@ -23,6 +23,7 @@ var userArchiveSchema = mongoose.Schema({
             postalCode: String,
 			city: String,
 			administrationArea: String,
+			administrationAreaShort: String,
 			country: String,
 			countryCode: String
         },

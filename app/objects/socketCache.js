@@ -24,7 +24,7 @@ function requestSession(userId) {
         }
         socketTable.push(socketEntry);
     } else {
-        socketEntry.sessionId = sessionId;
+        return socketEntry.sessionId;
     }
     
     return sessionId;
