@@ -1,114 +1,26 @@
 <link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
 <div dz-wrapper>
     <dz-header></dz-header>
+    <dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
     <div class="scrollable main-body">
         <div class="portal-title cont-sm" style="margin: 20px auto">
             <img src="/static/logo/logo_portal.png" />
         </div>
         <dz-alert class="small" alertData="upgradeAlert"></dz-alert>
-        <div ng-show="form.showConfirm">
-            <div class="upgrade-container">
-                <div class="upgrade-container-title">
-                    Summary of Changes
-                </div>
-                <div class="split-container upgrade-preview">
-                    <div style="border-right: 2px dashed #bebebe">
-                        <div class="membership-tile-simple">
-                            <div class="membership-tile-area">
-                                <div class="membership-tile-title">
-                                    The<br /><span class="dz-blue">{{getAccountType(account.accountType)}}</span>
-                                </div>
-                                <div class="membership-tile-amt" style="margin: 20px 0px 10px 0px;">
-                                    <div class="price">
-                                        ${{getAccountCost(account.accountType)}}
-                                    </div>
-                                    <div class="unit">
-                                        /month
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="upgrade-preview-title">Current</div>
-                    </div>
-                    <div>
-                        <div class="membership-tile-simple">
-                            <div class="membership-tile-area">
-                                <div class="membership-tile-title">
-                                    The<br /><span class="dz-blue">{{getAccountType(type)}}</span>
-                                </div>
-                                <div class="membership-tile-amt" style="margin: 20px 0px 10px 0px;">
-                                    <div class="price">
-                                        ${{getAccountCost(type)}}
-                                    </div>
-                                    <div class="unit">
-                                        /month
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="upgrade-preview-title">Promoted To</div>
-                    </div>
-                </div>
-                <div class="page-info attention light" ng-if="accountMethod == 'no-profile'">
-                    <div class="page-info-title">
-                        Upgrading a membership?
-                    </div>
-                    <div class="page-info-sep"></div>
-                    <div class="page-info-body">
-                        We see that you are attempting to upgrade your disc|zump membership. After you complete the payment form, your account change will automatically take effect and you will be 
-                        able to enjoy all your new features. 
-                    </div>
-                </div>
-                <div class="page-info attention light" ng-if="accountMethod == 'clear-profile'">
-                    <div class="page-info-title">
-                        Cancelling a paid membership?
-                    </div>
-                    <div class="page-info-sep"></div>
-                    <div class="page-info-body">
-                        We see that you are attempting to cancel a paid membership and return to a free account. Clicking confirm will automatically cancel your billing profile and your account change will 
-                        take effect at the end of your current billing cycle.
-                    </div>
-                </div>
-                <div class="page-info attention light" ng-if="accountMethod == 'upgrade-profile'">
-                    <div class="page-info-title">
-                        Upgrading a paid membership?
-                    </div>
-                    <div class="page-info-sep"></div>
-                    <div class="page-info-body">
-                        We see that you are attempting to upgrade your paid membership. You don't have to worry about the payment details, we will go ahead and update your billing profile 
-                        to account for the new membership fee. Your account will be charged a prorated amount for the remainder of your billing cycle this month and your account change will take 
-                        effect immediately.
-                    </div>
-                </div>
-                <div class="page-info attention light" ng-if="accountMethod == 'downgrade-profile'">
-                    <div class="page-info-title">
-                        Downgrading a paid membership?
-                    </div>
-                    <div class="page-info-sep"></div>
-                    <div class="page-info-body">
-                        We see that you are attempting to downgrade your paid membership. You don't have to worry about the payment details, we will go ahead and update your billing profile 
-                        to account for the new membership fee. Your account change will take effect at the end of your current billing cycle.
-                    </div>
-                </div>
-                <div class="confirm-action" ng-if="accountMethod != 'no-profile'" style="text-align: right;">
-                    <label style="font-weight: normal;"><input type="checkbox" ng-model="form.confirm"/> I have read and accept the above information</label>
-                </div>
-            </div>
-            <div class="upgrade-btn-container">
-                <div class="notify-button pull-right" ng-if="accountMethod != 'no-profile'"><a class="btn btn-default" style="background-color: #ffba00;" ng-class="{'disabled':!form.confirm}">Confirm Change</a></div>
-                <div class="notify-button pull-right" ng-if="accountMethod == 'no-profile'"><a class="btn btn-default" style="background-color: #ffba00;" ng-click="showBilling()">Continue to Billing</a></div>
-                <div class="notify-button pull-left"><a class="btn btn-default" href="/portal/account">Cancel</a></div>
-                <div class="clearfix">
-
-                </div>
-            </div>
-        </div>
-        <div ng-show="form.showBilling" ng-if="accountMethod == 'no-profile'" id="billing-container">
+        <div ng-show="form.showBilling" id="billing-container">
             <div class="upgrade-container">
                 <div class="upgrade-container-title">
                     Billing Information
                 </div>
-                <div class="billing-form form-horizontal " ng-form name="billingForm">
+                <div class="page-info attention light">
+                    <div class="page-info-title">
+                        Payment Method Adjustment
+                    </div>
+                    <div class="page-info-body">
+                        In order to change your payment method, you will need to enter in new billing information. Please complete the form and click confirm to continue.
+                    </div>
+                </div>
+                <div class="billing-form form-horizontal" ng-form name="billingForm">
                     <div class="form-group">
                         <label for="billing-first-name" class="col-sm-4 control-label">
                             First Name
@@ -421,31 +333,30 @@
                     <div class="clearfix"> </div>
                 </div>
                 <div class="page-info attention light" ng-if="accountMethod == 'no-profile'">
-                    <div class="page-info-body">
-                        disc|zump will charge your card for the immediate amount of ${{getAccountCost(type)}}. Thereafter, your account will be charged the same amount on a monthly basis.
+                    <div class="page-info-body legal-statement">
+                        Click confirm to continue. You will not be charged, instead we will run an authorization on your new payment method to verify that it is valid prior to making the change.
                         <br /><br />
-                        You hereby authorize disc|zump to charge you automatically every month until you cancel your subscription. For information, check out our <a class="dz-blue hover-underline" href="/terms">Terms and Conditions.</a>
+                        <span class="red">
+                            You hereby authorize disc|zump to charge you automatically every month until you cancel your subscription. For information, check out our <a class="dz-blue hover-underline" href="/terms" target="_blank">Terms and Conditions.</a>
+                        </span>
                     </div>
                 </div>
             </div>
             <div class="upgrade-btn-container">
-                <div class="notify-button pull-right" ng-if="accountMethod == 'no-profile'"><a class="btn btn-default" style="background-color: #ffba00;" ng-disabled="billingForm.$invalid" ng-click="!billingForm.$invalid && showPayment()">Continue to Payment</a></div>
-                <div class="notify-button pull-left"><a class="btn btn-default" href="/portal/account">Cancel</a></div>
+                <div class="notify-button pull-right"><a class="btn btn-default" style="background-color: #ffba00;" ng-disabled="billingForm.$invalid" ng-click="!billingForm.$invalid && showPayment()">Continue to Payment</a></div>
+                <div class="notify-button pull-left"><a class="btn btn-default" href="/account">Cancel</a></div>
                 <div class="clearfix">
                 </div>
             </div>
         </div>
-        <div ng-show="form.showPayment" ng-if="accountMethod == 'no-profile'" id="payment-container">
+        <div ng-show="form.showPayment" id="payment-container">
             <div class="upgrade-container">
                 <div class="upgrade-container-title">
                     Payment Information
                 </div>
-                <div class="page-info attention light" ng-if="accountMethod == 'no-profile'">
+                <div class="page-info attention light">
                     <div class="page-info-title">
                         Patience is a virtue!
-                    </div>
-                    <div class="page-info-sep">
-                        
                     </div>
                     <div class="page-info-body">
                         Please be patient after your submit your information. Do NOT refresh or leave this page - you will be automatically redirected once the payment has been processed.

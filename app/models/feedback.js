@@ -9,7 +9,7 @@ var feedback = mongoose.Schema({
 	},
     feedback: {type: String},
     userId: {type: String},
-    createDate: {type: Date, default: Date.now}
+    createDate: {type: Date, default: new Date()}
     
 });
 

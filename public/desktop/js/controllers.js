@@ -10,6 +10,142 @@ angular.module('disczump.controllers', ['disczump.services'])
     }
 }])
 
+.filter('cc', function () {
+  return function (card) {
+	  var ret = '';
+	  
+	  for (var i = 0; i < card.length; i++) {
+		  if (i > 0 && i%4 == 0) {
+			  ret += ' ';
+		  }
+		  ret += card[i];
+	  }
+    return ret;
+  };
+})
+
+.filter('exp', function () {
+  return function (exp) {
+	  if (exp.length == 4) {
+		  return exp.substr(0,2) + '/' + exp.substr(2,2);
+	  }
+	  
+	  return exp;
+  };
+})
+
+.filter('memType', ['MembershipService', function(MembershipService) {
+	return function(type) {
+		return MembershipService.getAccountName(type);
+	}
+}])
+
+.filter('memCost', ['MembershipService', function(MembershipService) {
+	return function(type) {
+		return MembershipService.getAccountCost(type);
+	}
+}])
+
+.directive('dzMaxLength', function() {
+  return {
+    require: 'ngModel',
+    link: function (scope, element, attrs, ngModelCtrl) {
+      var maxlength = parseInt(attrs.dzMaxLength);
+      function parseMax(text) {
+          if (text.length > maxlength) {
+            var transformedInput = text.substring(0, maxlength);
+            ngModelCtrl.$setViewValue(transformedInput);
+            ngModelCtrl.$render();
+            return transformedInput;
+          } 
+          return text;
+      }
+      ngModelCtrl.$parsers.push(parseMax);
+    }
+  }; 
+})
+
+.directive('fadeTime', ['$window', '$timeout', '$parse', 'PageUtils', function($window, $timeout, $parse, PageUtils) {
+	return {
+		restrict: 'A',
+		scope: false,
+		link: function(scope, elem, attrs) {
+			var delay = Math.max(0, parseInt(attrs.fadeTime));
+			var expired = false;
+			var transitionEnd = PageUtils.getTransitionEndEventName();
+			elem.addClass('fade-time');
+			
+			if (attrs.fadeReverse) {
+				elem.addClass('fade-reverse');
+			}
+			
+			var transitionComplete = function() {
+				if (attrs.fadeReverse) {
+					elem.css('display', 'none');
+				}
+				
+				if (attrs.fadeComplete) {
+					$timeout(function() {
+						scope.fadeComplete = true;
+					});
+				}
+			}
+			
+			var expire = function() {
+				if (!expired) {
+					expired = true;
+					elem.addClass('expired');
+					
+					if (!transitionEnd) {
+						$timeout(transitionComplete, 750);
+					}
+				}
+			}
+			
+			var startTimer = function() {
+				$timeout(expire, delay);
+			}
+			
+			var startScroll = function() {
+				if ((PageUtils.getScrollPos() + PageUtils.getWindowHeight()) >= PageUtils.getTop(elem[0])) {
+					angular.element($window).unbind('scroll', startScroll);
+					startTimer();
+				}
+			}
+			
+			if (attrs.fadeOverride) {
+				scope.$watch(attrs.fadeOverride, function(newVal) {
+					if (typeof(newVal) !== 'undefined' && newVal) {
+						expire();
+					}
+				});
+			}
+			
+			if (transitionEnd) {
+				elem[0].addEventListener(transitionEnd, transitionComplete, false);
+			}
+			
+			scope.$on('$destroy', function() {
+				if (attrs.fadeScroll) {
+					angular.element($window).unbind('scroll', startScroll);
+				}
+			});
+			
+			if (attrs.fadeStart) {
+				scope.$watch(attrs.fadeStart, function(newVal) {
+					if (typeof(newVal) !== 'undefined' && newVal) {
+						startTimer();
+					}
+				});
+			} else if (attrs.fadeScroll) {
+				 angular.element($window).bind('scroll', startScroll);
+			} else {
+				startTimer();
+			}
+		}
+	}
+}])
+
 .directive('parallax', ['$window', 'PageUtils', function($window, PageUtils) {
 	return {
 		restrict: 'A',
@@ -430,6 +566,128 @@ angular.module('disczump.controllers', ['disczump.services'])
 	}
 }])
 
+.directive('locationSearch', ['$window', '$compile', '$timeout', 'LocationService', function($window, $compile, $timeout, LocationService) {
+	return {
+		restrict: 'A',
+		require: 'ngModel',
+		scope: {
+			ngModel: '=',
+			locationSearch: '='
+		},
+		link: function(scope, elem, attrs, ngModel) {
+			scope.results = [];
+			scope.active = false;
+			scope.init = false;
+			scope.activeIndex = -1;
+			var loc;
+			
+			var resizeLoc = function() {
+				loc.css('width', elem[0].clientWidth + 'px');
+			}
+			
+			var getCoords = function(lat, lng) {
+				LocationService.getReverseGeo(lat, lng, function(success, results) {
+					if (success && results.length) {
+						scope.locationSearch(results[0]);
+					}
+				}, true);
+			}
+			
+			scope.setLocation = function(result) {
+				getCoords(result.latitude, result.longitude);
+			}
+			
+			var initLoc = function() {
+				loc = document.createElement('ul');
+				loc.classList.add('location-result-container');
+				loc.innerHTML = '<li class="location-result handle-overflow" ng-repeat="result in results track by $index" ng-class="{\'active\':activeIndex == $index}" ng-click="$event.stopPropagation(); setLocation(result)" scroll-me="activeIndex == $index">{{result.address}}</li>';
+				elem[0].parentNode.insertBefore(loc, elem[0].nextSibling);
+				loc = angular.element(loc);
+				loc.css('marginTop', '7px');
+				loc.attr('ng-show', 'results.length && active');
+				$compile(loc)(scope);
+				resizeLoc();
+			}
+			
+			var queryLoc = function() {
+				LocationService.getGeoLocation(ngModel.$modelValue, function(success, results) {
+					if (success) {
+                        scope.results = results;
+						scope.activeIndex = -1;
+					} else {
+						scope.results = [];
+					}
+				}, ['postal_code']);
+			}
+			
+			var inputFocus = function() {
+				$timeout(function() {
+					scope.active = true;
+				});
+				
+			}
+			
+			var inputBlur = function() {
+				$timeout(function() {
+					scope.active = false;
+				}, 100);
+			}
+			
+			var handleEnter = function(evt) {
+				if ((evt.keyCode == 13 || evt.keyCode == 0) && scope.activeIndex > -1) {
+					evt.stopImmediatePropagation();
+					scope.setLocation(scope.results[scope.activeIndex]);
+					scope.active = false;
+				}
+			}
+			
+			var handleKey = function(evt) {
+				switch(evt.keyCode) {
+					case 38: {
+						$timeout(function() {
+							scope.activeIndex = Math.max(-1, scope.activeIndex - 1);
+						});
+						break;
+					}
+					case 40: {
+						$timeout(function() {
+							scope.activeIndex = Math.min(scope.results.length - 1, scope.activeIndex + 1);
+						});
+						break;
+					}
+				}
+			}
+			
+			angular.element(window).bind('resize', resizeLoc);
+			elem.bind('focus', inputFocus);
+			elem.bind('blur', inputBlur);
+			elem.bind('keyup', handleKey);
+			elem.bind('keydown', handleEnter);
+			
+			scope.$watch(function () {
+				return ngModel.$modelValue;
+			}, function(newValue) {
+				if (typeof(newValue) === 'undefined' || newValue == '') {
+					scope.results = [];
+				} else {
+					queryLoc();
+				}
+			});
+			
+			scope.$on('$destroy', function() {
+				angular.element(window).unbind('resize', resizeLoc);
+				elem.unbind('focus', inputFocus);
+				elem.unbind('blur', inputBlur);
+				elem.unbind('keyup', handleKey);
+				elem.unbind('keydown', handleEnter);
+			})
+			
+			initLoc();
+		}
+		
+	}
+}])
+
 .directive('dzAutoComplete', ['$compile', '_', 'QueryService', '$timeout', function($compile, _, QueryService, $timeout) {
 	return {
 		restrict: 'A',
@@ -579,7 +837,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 		},
 		link: function(scope, elem, attrs) {
 			var toReplace = [];
-			var inner = scope.parseText;
+			var inner = typeof(scope.parseText) !== 'undefined' ? scope.parseText : '';
+			elem[0].innerHTML = '';
 			
 			 var escapeHtml = function(unsafe) {
 				return unsafe
@@ -602,7 +861,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			 }
 			 
 			if (typeof(attrs.parseDisc) !== 'undefined') {
-				var discRegex = /(?:https?:\/\/)?(?:www\.)?(?:ec2-54-218-32-190\.us-west-2\.compute\.amazonaws\.com\/portal)?\/d\/[a-zA-Z0-9-_]+/g;
+				var discRegex = /(?:https?:\/\/)?(?:www\.)?(?:ec2-54-218-32-190\.us-west-2\.compute\.amazonaws\.com)\/d\/[a-zA-Z0-9-_]+/g;
 				var matches = getMatches(discRegex, inner);
 				for (var i = 0; i < matches.length; i++) {
 					var dElem = '<inline-disc disc-url="' +  matches[i] + '"></inline-disc>';
@@ -625,28 +884,47 @@ angular.module('disczump.controllers', ['disczump.services'])
 			for (var i = 0; i < toReplace.length; i++) {
 				inner = inner.split('+_rep' + i + '+').join(toReplace[i]);
 			}
-			elem[0].innerHTML = '<span>' + inner + '</span>';
+			
+			var innerHTML = ''
+			
+			var spans = inner.split('\n');
+			for (var i = 0; i < spans.length; i++) {
+				if (!spans[i].length)
+					continue;
+				
+				if (!/^(\<a|\<inline-disc)/g.test(spans[i])) {
+					if (i > 0) {
+						innerHTML += '<br />';
+					}
+					
+					innerHTML += '<span>' + spans[i] + '</span>';
+				} else {
+					innerHTML += spans[i];
+				}
+			}
+			
+			elem[0].innerHTML = '<div class="block-text">' + innerHTML + '</div>';
 			$compile(angular.element(elem[0].firstChild))(scope.$parent);
 		}
 	}
 }])
 
-.directive('inlineDisc', ['_', '$timeout', 'APIService', function(_, $timeout, APIService) {
+.directive('inlineDisc', ['_', '$timeout', 'CacheService', function(_, $timeout, CacheService) {
 	return {
 		restrict: 'E',
 		replace: true,
 		scope: {
 			discUrl: '@'
 		},
-		template: '<a class="inline-disc hover-underline" ng-href="/portal/d/{{discId}}">' +
+		template: '<a class="inline-disc hover-underline" ng-href="/d/{{discId}}">' +
 					'<img img-load directive-on="init" directive-set="{\'img-src\':\'{{image}\}\'}"/>{{title}}' +
 				'</a>',
 		link: function(scope, elem, attrs) {
-			var discRegex = /(?:https?:\/\/)?(?:www\.)?(?:ec2-54-218-32-190\.us-west-2\.compute\.amazonaws\.com\/portal)?\/d\/([a-zA-Z0-9-_]+)/g;
+			var discRegex = /(?:https?:\/\/)?(?:www\.)?(?:ec2-54-218-32-190\.us-west-2\.compute\.amazonaws\.com)\/d\/([a-zA-Z0-9-_]+)/g;
 			var match = discRegex.exec(scope.discUrl);
 			if (match) {
 				scope.discId = match[match.length - 1];
-				APIService.Get('/discs/' + scope.discId, function(success, disc) {
+				CacheService.getDisc(scope.discId, function(success, disc) {
 					if(success) {
 						$timeout(function() {
 							scope.image = disc.primaryImage ? '/files/' + _.findWhere(disc.imageList, {_id: disc.primaryImage}).fileId : undefined;
@@ -677,7 +955,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         template: '<div class="dz-navbar min-window-width" ng-class="{\'fixed\':fixed}" ng-style="{\'background-color\':\'rgba(74,74,74,\' + (alphaValue/ 100) +\')\'}">' +
                         '<div class="dz-navbar-btn-container float-left">' +
                             '<div class="dz-navbar-btn-list">' +
-                                '<a href="/portal" ng-style="{\'opacity\': alphaValue}"><img src="/static/logo/logo_text.png" class="dz-navbar-logo"></a>' +
+                                '<a href="/" ng-style="{\'opacity\': alphaValue}"><img src="/static/logo/logo_text.png" class="dz-navbar-logo"></a>' +
                             '</div>' +
                         '</div>' +
                         '<div class="dz-navbar-btn-container float-right">' +
@@ -690,22 +968,22 @@ angular.module('disczump.controllers', ['disczump.services'])
                                 '</div>' +
                                 '<div class="backdrop" ng-show="showOptions" ng-click="toggleDropdown(false)" ng-if="user"></div>' +
                                 '<ul class="dz-dropdown-menu" ng-show="showOptions" ng-if="user">' +
-                                    '<li><a href="/portal/account"><span><i class="fa fa-tools fa-cogs"></i></span>Settings</a></li>' +
+                                    '<li><a href="/account"><span><i class="fa fa-tools fa-cogs"></i></span>Settings</a></li>' +
 									'<li class="menu-sep"></li>' +
                                     '<li><a href="#" id="menu-feedback"><span><i class="fa fa-comment fa-tools"></i></span>Feedback</a></li>' +
-                                    '<li><a href="/portal/faq"><span><i class="fa fa-tools fa-question-circle"></i></span>FAQ</a></li>' +
-                                    '<li><a href="/portal/about"><span><i class="fa fa-tools fa-info-circle"></i></span>About</a></li>' +
+                                    '<li><a href="/faq"><span><i class="fa fa-tools fa-question-circle"></i></span>FAQ</a></li>' +
+                                    '<li><a href="/about"><span><i class="fa fa-tools fa-info-circle"></i></span>About</a></li>' +
 									'<li class="menu-sep"></li>' +
-                                    '<li><a href="/portal/logout" data-ajax="false"><span><i class="fa fa-sign-out fa-tools"></i></span>Logout</a></li>' +
+                                    '<li><a href="/logout" data-ajax="false"><span><i class="fa fa-sign-out fa-tools"></i></span>Logout</a></li>' +
                                 '</ul>' +
                                 '<div class="dz-navbar-links">' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" href="/portal/explore" ng-class="{\'active\':isItemActive(\'explore\')}">Explore</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" href="/portal/trunks" ng-class="{\'active\':isItemActive(\'trunks\')}">Trunks</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="!user" href="/portal/about" ng-class="{\'active\':isItemActive(\'about\')}">About</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/portal/t/{{user.username}}" ng-class="{\'active\':isItemActive(\'t/{{user.username}}\')}">My Trunk</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/portal/inbox" ng-class="{\'active\':isItemActive(\'inbox\')}">Inbox</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" href="/portal/login" ng-if="!user" ng-class="{\'active\':isItemActive(\'login\')}">Sign In</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" href="/portal/signup" ng-if="!user" ng-class="{\'active\':isItemActive(\'signup\')}">Sign Up</a>' +
+                                    '<a class="dz-navbar-item dz-navbar-btn" href="/explore" ng-class="{\'active\':isItemActive(\'explore\')}">Explore</a>' +
+                                    '<a class="dz-navbar-item dz-navbar-btn" href="/trunks" ng-class="{\'active\':isItemActive(\'trunks\')}">Trunks</a>' +
+                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="!user" href="/about" ng-class="{\'active\':isItemActive(\'about\')}">About</a>' +
+                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/t/{{user.username}}" ng-class="{\'active\':isItemActive(\'t/{{user.username}}\')}">My Trunk</a>' +
+                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/inbox" ng-class="{\'active\':isItemActive(\'inbox\')}">Inbox</a>' +
+                                    '<a class="dz-navbar-item dz-navbar-btn" href="/login" ng-if="!user" ng-class="{\'active\':isItemActive(\'login\')}">Sign In</a>' +
+                                    '<a class="dz-navbar-item dz-navbar-btn" href="/signup" ng-if="!user" ng-class="{\'active\':isItemActive(\'signup\')}">Sign Up</a>' +
                                 '</div>' +
                             '</div>' +
                         '</div>' +
@@ -780,7 +1058,7 @@ angular.module('disczump.controllers', ['disczump.services'])
     return {
         restrict: 'E',
         replace: true,
-        template: '<div class="footer-bar" ng-init="pgSettings.hasFooter=true;">' + 
+        template: '<div class="footer-bar" id="footer-bar" ng-init="pgSettings.hasFooter=true;">' + 
                     '<div>' + 
                         '<span class="footer-copyright">' + 
                             '<span class="cr-main">' + 
@@ -788,9 +1066,9 @@ angular.module('disczump.controllers', ['disczump.services'])
                             '</span>' + 
                             '<span class="cr-links">' + 
                             '<a href="mailto:support@disczump.com">Contact Us</a>' + 
-                            '<a href="/portal/faq">FAQ</a>' + 
-                            '<a href="/portal/privacy">Privacy Policy</a>' + 
-                            '<a href="/portal/terms">Terms and Conditions</a>' + 
+                            '<a href="/faq">FAQ</a>' + 
+                            '<a href="/privacy">Privacy Policy</a>' + 
+                            '<a href="/terms">Terms and Conditions</a>' + 
                             '</span>' + 
                         '</span>' + 
                         '<span class="footer-links">' + 
@@ -828,28 +1106,37 @@ angular.module('disczump.controllers', ['disczump.services'])
         replace: true,
         scope: {
             userId: '@',
-			currentUser: '='
+			currentUser: '=',
+			modalOpts: '='
         },
         template: '<div class="profile-container">' +
-					'<div class="card-container">' +
+					'<div class="card-container" ng-show="loaded">' +
 						'<div id="card-remain" style="display: inline-block">' +
 							'<div class="profile-card p-info">' +
 								'<div class="p-info-img">' +
-									'<img ng-src="{{getAccountImage()}}"/>' +
+									'<img img-load="/static/img/dz_profile.png" directive-on="loaded" directive-set="{\'img-src\':\'{{getAccountImage()}\}\'}" ng-class="{\'has-img\':ready}"/>' +
 								'</div>' +
 								'<div class="p-info-content p-container">' +
+									'<div class="p-info-icon">' +
+										'<span style="cursor:pointer;" class="fa-stack dz-blue-hover" modal-trigger="dz-profile-modal" data="{\'userId\':\'userId\'}" modal-opts="modalOpts">' +
+											'<i class="fa fa-circle fa-stack-2x"></i>' +
+											'<i class="fa fa-info fa-stack-1x fa-inverse"></i>' +
+										'</span>' +
+									'</div>' +
 									'<div class="p-info-text">' +
-										'<div class="p-username">{{user.username}}</div>' +
-										'<div class="p-name">{{user.firstName}} {{user.lastName}}</div>' +
+										'<div class="p-username handle-overflow">{{user.username}}</div>' +
+										'<div class="p-name handle-overflow">{{user.firstName}} {{user.lastName}}</div>' +
 									'</div>' +
 									'<div class="p-info-bio fancy-scroll" ng-class="{\'has-ph\':!user.bio}">' +
-										'<span class="placeholder" ng-if="!user.bio">Hello, welcome to my trunk...<span>' + 
+										'<span class="placeholder" ng-if="!user.bio">Hello, welcome to my trunk...</span>' + 
+										'<div parse-text="user.bio" parse-url parse-disc id="user-bio">' +
+                  						'</div>' + 
 									'</div>' +
 								'</div>' +
 							'</div>' +
 							 '<div class="profile-card p-icon-button" ng-if="currentUser != userId">' +
 								'<div class="p-container">' +
-									'<a class="p-icon-text align-vmid" ng-href="/portal/inbox?userId={{user._id}}">' +
+									'<a class="p-icon-text align-vmid" ng-href="/inbox?userId={{user._id}}">' +
 										'<div class="p-icon-style"><i class="fa fa-envelope"></i></div>' +
 										'<div class="p-icon-label">Message</div>' +
 									'</a>' +
@@ -857,22 +1144,29 @@ angular.module('disczump.controllers', ['disczump.services'])
 							'</div>' +
 							'<div class="profile-card p-icon-button" ng-if="currentUser == userId">' +
 								'<div class="p-container">' +
-									'<a class="p-icon-text align-vmid" href="/portal/d/create/templates">' +
+									'<a class="p-icon-text align-vmid" href="/d/create/templates">' +
 										'<div class="p-icon-style"><i class="fa fa-plus-circle"></i></div>' +
 										'<div class="p-icon-label">Add Disc</div>' +
 									'</a>' +
 								'</div>' +
 							'</div>' +
 						'</div>' +
-						'<div ng-style="contStyle" class="card-list" id="card-list">' + 
+						'<div class="profile-card p-icon-button" ng-show="!cardLoaded">' +
+							'<div class="p-container">' +
+								'<div class="p-icon-text align-vmid">' +
+									'<div class="p-icon-style"><i class="fa fa-spin fa-spinner"></i></div>' +
+								'</div>' +
+							'</div>' +
+						'</div>' +
+						'<div ng-style="contStyle" class="card-list" id="card-list" ng-show="cardLoaded">' + 
 						'</div>' +
 					'</div>' +
 					'<div class="explore-nav" ng-show="navArr.length > 1" ng-init="start = 0">' + 
-							'<span>' + 
-									'<i class="fa fa-angle-double-left nav-list-arrow" ng-click="pageBack()" ng-class="{inactive: start == 0}"></i>' + 
-									'<i class="fa" ng-repeat="i in navArr track by $index" ng-click="navIndex($index)" ng-class="{active: start == $index, \'fa-circle\': start == $index, \'fa-circle-thin\': start != $index}"></i>' + 
-									'<i class="fa fa-angle-double-right nav-list-arrow" ng-click="pageNext()" ng-class="{inactive: start == navArr.length - 1}"></i>' + 
-							'</span>' + 
+						'<span>' + 
+							'<i class="fa fa-angle-double-left nav-list-arrow" ng-click="pageBack()" ng-class="{inactive: start == 0}"></i>' + 
+							'<i class="fa" ng-repeat="i in navArr track by $index" ng-click="navIndex($index)" ng-class="{active: start == $index, \'fa-circle\': start == $index, \'fa-circle-thin\': start != $index}"></i>' + 
+							'<i class="fa fa-angle-double-right nav-list-arrow" ng-click="pageNext()" ng-class="{inactive: start == navArr.length - 1}"></i>' + 
+						'</span>' + 
 					'</div>' +
 				'</div>',
         link: function(scope, element, attrs) {
@@ -906,16 +1200,22 @@ angular.module('disczump.controllers', ['disczump.services'])
 							var remainContainer = angular.element(document.getElementById('card-remain'));
 							scope.showCount = Math.floor((element[0].clientWidth - remainContainer[0].clientWidth) / 220);
 							scope.navArr = new Array(Math.ceil(scope.cards.length / scope.showCount));
+							
+							if (scope.navArr.length > 1) {
+           						element.addClass('with-nav');
+							} else {
+           						element.removeClass('with-nav');
+							}
 							scope.contStyle = { 'maxWidth': (scope.showCount * 220) + 'px' };
-							console.log('resized profile');
+							scope.cardLoaded = true;
 							scope.$apply();
 						});
 					}
 					
 					function setCards() {
 						scope.cards.push({type: 'dz-map-card'});
-						if (scope.user.pdgaNumber) scope.cards.push({type: 'dz-pdga-card'});
-						if (scope.user.fbId) scope.cards.push({type: 'dz-facebook-card'});
+						if (scope.user.verifications.pdga) scope.cards.push({type: 'dz-pdga-card'});
+						if (scope.user.verifications.facebook) scope.cards.push({type: 'dz-facebook-card'});
 						scope.cards.push({type: 'dz-disc-card'});
 						scope.cards.push({type: 'dz-date-card'});
 						
@@ -934,16 +1234,27 @@ angular.module('disczump.controllers', ['disczump.services'])
 							if (success) {
 								$timeout(function() {
 									scope.user = user;
-									setCards();
 									
-									
-								var remainContainer = angular.element(document.getElementById('card-remain'));
-									scope.$watch(function() { return remainContainer[0].clientWidth;}, function(val) {
-										if (typeof(val) !== 'undefined') {
-											resizeProfile();
-											scope.init = true;
-										}
+									var bio = document.getElementById('user-bio');
+									if (bio) {
+										$compile(bio)(scope);
+									}
+											
+									scope.loaded = true;
+									$timeout(function() {
+										scope.ready = true;
 									});
+									
+									$timeout(function() {
+										setCards();
+										var remainContainer = angular.element(document.getElementById('card-remain'));
+										scope.$watch(function() { return remainContainer[0].clientWidth;}, function(val) {
+											if (typeof(val) !== 'undefined' && val > 0) {
+												resizeProfile();
+												scope.init = true;
+											}
+										});
+									}, 1000);
 								});
 							}
 						});
@@ -1162,7 +1473,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                         '{{showCount}} | <span class="dz-blue">{{totalCount}}</span>' +
                     '</div>' +
                     '<div class="breadcrumb-trail" ng-show="!hideOn">' +
-                        '<span class="hover-underline" title="Explore Home" ng-show="breadcrumbs.length"><a ng-href="/portal/{{homeUrl}}"><i class="fa fa-home" style="font-size: 1.1em; color: #008edd"></i></a></span>' +
+                        '<span class="hover-underline" title="Explore Home"><a ng-href="/{{homeUrl}}"><i class="fa fa-home" style="font-size: 1.1em; color: #008edd"></i></a></span>' +
                         '<span class="breadcrumb-item-container" ng-repeat="item in breadcrumbs">' +
 							'<span><i class="fa fa-chevron-right"></i><span ng-if="item.title" style="margin-left: 5px">{{item.title}}:</span></span>' +
 							'<span class="breadcrumb-item" ng-repeat="link in item.links track by $index">' +
@@ -1206,7 +1517,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                     '</div>' +
                     '<div class="grid-item-info">' +
                         '<div class="grid-item-label handle-overflow">' +
-                            '<a class="hover-underline" ng-href="/portal/d/{{disc._id}}">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></a>' +
+                            '<a class="hover-underline" ng-href="/d/{{disc._id}}">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></a>' +
                         '</div>' +
                         '<div class="clearfix"></div>' +
                     '</div>' +
@@ -1214,32 +1525,39 @@ angular.module('disczump.controllers', ['disczump.services'])
     }
 })
 
-.directive('discItem', ['QueryService', function(QueryService) {
+.directive('discItem', ['$timeout', 'QueryService', function($timeout, QueryService) {
     return {
         restrict: 'E',
         replace: true,
         scope: {
             disc: '=',
             currentUser: '=',
-			msOpts: '='
+			msOpts: '=',
+			lbOpts: '='
         },
-        template: '<div class="grid-item">' +
-                    '<div class="grid-item-icon top-left for-sale" ng-show="disc[\'marketplace.forSale\']">' +
+        template: '<div class="grid-item" ng-class="{private:!disc.visible}">' +
+                    '<div class="grid-item-icon top-left for-sale" ng-show="disc[\'marketplace.forSale\'] && !flip">' +
                         '<i class="fa fa-usd"></i>' +
 						'<span ng-if="disc[\'marketplace.value\']">{{disc[\'marketplace.value\'] | currency:"":2}}</span>' +
                     '</div>' +
-                    '<div class="grid-item-icon top-right for-trade" ng-show="disc[\'marketplace.forTrade\']">' +
+                    '<div class="grid-item-icon top-right for-trade" ng-show="disc[\'marketplace.forTrade\'] && !flip">' +
                         '<i class="fa fa-refresh"></i>' +
                     '</div>' +
                     '<div class="grid-img-container flip" ng-mouseenter="displayHoverIcon=true;" ng-mouseleave="displayHoverIcon=false;">' +
                         '<div class="grid-img-inner">' + 
+							'<div class="grid-hover-icon grid-lb-icon" ng-show="displayHoverIcon" ng-click="setLbOpts()" ng-class="{\'show\': displayHoverIcon && !flip}" title="Zoom">' + 
+                                '<span class="fa-stack">' +
+                                  '<i class="fa fa-circle fa-stack-2x"></i>' +
+                                  '<i class="fa fa-search-plus fa-stack-1x fa-inverse"></i>' +
+                                '</span>' +
+                            '</div>' + 
                             '<div class="grid-hover-icon grid-info-icon" ng-show="displayHoverIcon" ng-click="flip=!flip;" ng-class="{\'show\': displayHoverIcon, \'remain\': flip}" title="More Info">' + 
                                 '<span class="fa-stack">' +
                                   '<i class="fa fa-circle fa-stack-2x"></i>' +
                                   '<i class="fa fa-info fa-stack-1x fa-inverse"></i>' +
                                 '</span>' +
                             '</div>' + 
-                            '<a ng-href="/portal/d/{{disc._id}}/edit" class="grid-hover-icon grid-edit-icon" ng-show="displayHoverIcon" ng-class="{\'show\': displayHoverIcon && !flip}" ng-if="currentUser && currentUser._id == disc.userId" title="Edit Disc">' + 
+                            '<a ng-href="/d/{{disc._id}}/edit" class="grid-hover-icon grid-edit-icon" ng-show="displayHoverIcon" ng-class="{\'show\': displayHoverIcon && !flip}" ng-if="currentUser && currentUser._id == disc.userId" title="Edit Disc">' + 
                                 '<span class="fa-stack">' +
                                   '<i class="fa fa-circle fa-stack-2x"></i>' +
                                   '<i class="fa fa-pencil fa-stack-1x fa-inverse"></i>' +
@@ -1247,7 +1565,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                             '</a>' +
                             '<div class="grid-img-content flip-card" ng-class="{\'flipped\':flip}">' + 
                                 '<div class="flip-face flip-front">' + 
-                                    '<a class="grid-item-nav" ng-href="/portal/d/{{disc._id}}"></a>' +
+                                    '<a class="grid-item-nav" ng-href="/d/{{disc._id}}"></a>' +
                                     '<img ng-src="{{getSolrPrimaryImage(disc)}}">' +
                                 '</div>' +
                                 '<div class="grid-quick-info flip-face flip-back">' +
@@ -1271,13 +1589,13 @@ angular.module('disczump.controllers', ['disczump.services'])
                     '</div>' +
                     '<div class="grid-item-info">' +
                         '<div class="grid-item-label handle-overflow">' +
-                            '<a class="hover-underline" ng-href="/portal/d/{{disc._id}}">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></a>' +
+                            '<a class="hover-underline" ng-href="/d/{{disc._id}}">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></a>' +
                         '</div>' +
                         '<div class="grid-item-text float-left hover-underline" ng-show="!disc.user">' +
                             '{{disc.userId}}' +
                         '</div>' +
                         '<div class="grid-item-text float-left hover-underline" ng-show="disc.user">' +
-                            '<a ng-href="/portal/t/{{disc.user.username}}">{{disc.user.username}}</a>' +
+                            '<a ng-href="/t/{{disc.user.username}}">{{disc.user.username}}</a>' +
                         '</div>' +
                         '<div class="grid-item-text float-right" ng-if="disc.weight">' +
                             '{{disc.weight}}g' +
@@ -1299,6 +1617,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 			scope.isDef = function(x) {
 				return typeof(x) !== 'undefined';
 			}
+			
+			scope.setLbOpts = function() {
+				scope.lbOpts.discId = scope.disc._id;
+				scope.lbOpts.show = true;
+			}
         }
     }
 }])
@@ -1308,25 +1631,32 @@ angular.module('disczump.controllers', ['disczump.services'])
         restrict: 'E',
         replace: true,
         scope: {
-            user: '='
+            user: '=',
+			profileModal: '='
         },
         template: '<div class="grid-item">' +
                     '<div class="grid-item-icon top-left location handle-overflow" ng-show="location">' +
 						'<span><i class="fa fa-street-view"></i>{{location}}</span>' +
                     '</div>' +
-                    '<div class="grid-img-container">' +
-                        '<div class="grid-img-inner">' +
-                            '<div class="grid-img-content">' + 
-                                '<div>' + 
-                                    '<a class="grid-item-nav" ng-href="/portal/t/{{user[\'local.username\']}}"></a>' +
-                                    '<img img-load="/static/img/dz_profile.png" directive-on="init" directive-set="{\'img-src\':\'{{user.image}\}\'}">' +
-                                '</div>' +
-                            '</div>' +
-                        '</div>' + 
-                    '</div>' +
+                    '<div class="grid-img-container" ng-mouseenter="displayHoverIcon=true;" ng-mouseleave="displayHoverIcon=false;">' +
+						'<div class="grid-img-inner">' +
+							'<div modal-trigger="dz-profile-modal" data="{\'userId\':\'user._id\'}" modal-opts="profileModal" class="grid-hover-icon grid-info-icon" ng-show="displayHoverIcon" ng-class="{\'show\': displayHoverIcon}" title="More Info">' + 
+								'<span class="fa-stack">' +
+								  '<i class="fa fa-circle fa-stack-2x"></i>' +
+								  '<i class="fa fa-info fa-stack-1x fa-inverse"></i>' +
+								'</span>' +
+							'</div>' + 
+							'<div class="grid-img-content">' + 
+								'<div>' + 
+									'<a class="grid-item-nav" ng-href="/t/{{user[\'local.username\']}}"></a>' +
+									'<img img-load="/static/img/dz_profile.png" directive-on="init" directive-set="{\'img-src\':\'{{user.image}\}\'}">' +
+								'</div>' +
+							'</div>' +
+						'</div>' + 
+					'</div>' +
                     '<div class="grid-item-info">' +
                         '<div class="grid-item-label handle-overflow">' +
-                            '<a class="hover-underline" ng-href="/portal/t/{{user[\'local.username\']}}">{{user[\'local.username\']}}</a>' +
+                            '<a class="hover-underline" ng-href="/t/{{user[\'local.username\']}}">{{user[\'local.username\']}}</a>' +
                         '</div>' +
                         '<div class="grid-item-text float-left">' +
                             '{{user[\'local.firstName\']}}<span ng-if="user[\'local.firstName\']"> </span>{{user[\'local.lastName\']}}' +
@@ -1349,25 +1679,29 @@ angular.module('disczump.controllers', ['disczump.services'])
     }
 }])
 
-.directive('lightbox', ['_', '$window', '$timeout', function(_, $window, $timeout) {
+.directive('lightbox', ['_', '$window', '$timeout', 'CacheService', function(_, $window, $timeout, CacheService) {
     return {
 			restrict: 'E',
 			replace: true,
 			scope: {
-				imageBlockId: '=',
-				imageList: '=',
+				discId: '=',
+				curImg: '=',
 				trigger: '=',
 				scrollLock: '='
 			},
 			template:   '<div class="full-screen-backdrop no-select" ng-show="showLightbox" ng-click="backdropExit($event);">' +
 							'<div class="lb-container">' +
-								'<div id="lb-content" class="lb-image-block no-focus" tabindex="0">' +
-									'<div id="lb-image-list" class="lb-image-list float-left fancy-scroll lite">' +
-										'<img class="image-preview" ng-src="/files/{{img.thumbnailId}}" ng-repeat="img in imageList track by $index" ng-class="{active: index == $index}" ng-click="setImage($index)">' +
-									'</div>' +
-									'<div id="lb-image" class="lb-image">' +
-										'<div style="display:table-cell; vertical-align:middle;">' +
-											'<img class="fit-parent" img-load img-src="/files/{{imageList[index].fileId}}">' +
+								'<div id="lb-content" class="lb-image-block no-focus" tabindex="0" ng-show="isReady">' +
+									'<dz-alert class="full-width" alert-data="lbAlert"></dz-alert>' +
+									'<div ng-show="loading"><i class="fa fa-spinner fa-spin fa-6x"></i></div>' +
+									'<div ng-show="!loading">' +
+										'<div id="lb-image-list" class="lb-image-list float-left fancy-scroll lite">' +
+											'<img class="image-preview" ng-src="/files/{{img.thumbnailId}}" ng-repeat="img in disc.imageList track by $index" ng-class="{active: index == $index}" ng-click="setImage($index)">' +
+										'</div>' +
+										'<div id="lb-image" class="lb-image">' +
+											'<div style="display:table-cell; vertical-align:middle;">' +
+												'<img class="fit-parent" img-load img-src="/files/{{disc.imageList[index].fileId}}">' +
+											'</div>' +
 										'</div>' +
 									'</div>' +
 								'</div>' +
@@ -1377,15 +1711,16 @@ angular.module('disczump.controllers', ['disczump.services'])
 							'</div>' +
 						'</div>',
 			link: function(scope, element, attrs) {
-				var lbContent = angular.element(document.getElementById('lb-content'));
-				var lbImageList = angular.element(document.getElementById('lb-image-list'));
-				var lbImage = angular.element(document.getElementById('lb-image'));
+				var lbContent, lbImageList, lbImage;
 				var pad = 100;
 				var padList = 85;
 				var width = 0;
 				var height = 0;
+				scope.isReady;
 				scope.index = 0;
 				scope.showLightbox = false;
+				scope.lbAlert = {};
+				scope.disc = {};
 				
 				scope.backdropExit = function(evt) {
 					if (evt.target == element[0]) {
@@ -1394,38 +1729,16 @@ angular.module('disczump.controllers', ['disczump.services'])
 				}
 				
 				var preloadImages = function() {
-					angular.forEach(scope.imageList, function(img) {
+					angular.forEach(scope.disc.imageList, function(img) {
 						var imgObj = new Image();
 						imgObj.src = '/files/' + img.fileId;
-					});
-				}
-				
-				var resize = function() {
-					$timeout(function() {
-						if ($window.innerHeight < $window.innerWidth) { //landscape
-							height = $window.innerHeight - pad;
-							lbContent.css('height', height + 'px');
-							lbContent.css('width', ($window.innerHeight - pad + padList) + 'px');
-							lbImageList.css('max-height', height + 'px');
-							lbImage.css('height', height + 'px');
-							lbImage.css('width', height + 'px');
-						} else { //portrait
-							width = $window.innerWidth - pad;
-							height = width - padList;
-							lbContent.css('height', height + 'px');
-							lbContent.css('width', width + 'px');
-							lbImageList.css('max-height', height + 'px');
-							lbImage.css('height', height + 'px');
-							lbImage.css('width', height + 'px');
-						}
-						lbContent[0].focus();
 					});
 				}
 				
 				var handleKeyup = function(e) {
 					if (e.keyCode == 39 || e.keyCode == 40) { //right or down
 						$timeout(function() {
-							scope.index = Math.min(scope.imageList.length - 1, scope.index + 1);
+							scope.index = Math.min(scope.disc.imageList.length - 1, scope.index + 1);
 						});
 					} else if (e.keyCode == 37 || e.keyCode == 38) { //left or up
 						$timeout(function() {
@@ -1438,20 +1751,38 @@ angular.module('disczump.controllers', ['disczump.services'])
 					}
 				}
 				
-				scope.$watch('trigger', function(val) {
-					if (val === true) {
-						preloadImages();
-						scope.index = _.findIndex(scope.imageList, function(img) {
-							return img._id == scope.imageBlockId;
-						});
-						scope.scrollLock = true;
-						scope.showLightbox = true;
-						resize();
-					} else if (val === false) {
-						scope.showLightbox = false;
-						scope.scrollLock = false;
+				var resize = function() {
+					if (!scope.isReady) {
+						lbContent = angular.element(document.getElementById('lb-content'));
+						lbImageList = angular.element(document.getElementById('lb-image-list'));
+						lbImage = angular.element(document.getElementById('lb-image'));
+						lbContent.bind('keyup', handleKeyup);
 					}
-				})
+
+					if ($window.innerHeight < $window.innerWidth) { //landscape
+						height = $window.innerHeight - pad;
+						lbContent.css('height', height + 'px');
+						lbContent.css('width', ($window.innerHeight - pad + padList) + 'px');
+						lbImageList.css('max-height', height + 'px');
+						lbImage.css('height', height + 'px');
+						lbImage.css('width', height + 'px');
+					} else { //portrait
+						width = $window.innerWidth - pad;
+						height = width - padList;
+						lbContent.css('height', height + 'px');
+						lbContent.css('width', width + 'px');
+						lbImageList.css('max-height', height + 'px');
+						lbImage.css('height', height + 'px');
+						lbImage.css('width', height + 'px');
+					}
+					lbContent[0].focus();
+					
+					if (!scope.isReady) {
+						$timeout(function() {
+							scope.isReady = true;
+						});
+					}
+				}
 				
 				scope.setImage = function(imgIndex) {
 					$timeout(function() {
@@ -1459,13 +1790,46 @@ angular.module('disczump.controllers', ['disczump.services'])
 					});
 				}
 				
+				scope.$watch('trigger', function(val) {
+					if (val === true) {
+						scope.loading = true;
+						scope.scrollLock = true;
+						scope.showLightbox = true;
+						
+						CacheService.getDisc(scope.discId, function(success, data) {
+							if (!success) {
+								scope.lbAlert.error = {
+									title: 'Error',
+									message: 'Error loading disc images.',
+									show: true
+								};
+							} else {
+								scope.disc.primaryImage = data.primaryImage;
+								scope.disc.imageList = data.imageList;
+								preloadImages();
+								scope.startImg = scope.curImg ? scope.curImg : scope.disc.primaryImage;
+								scope.index = _.findIndex(scope.disc.imageList, function(img) {
+									return img._id == scope.startImg;
+								});
+								$timeout(resize);
+							}
+							scope.loading = false;
+						});
+						
+					} else if (val === false) {
+						scope.showLightbox = false;
+						scope.scrollLock = false;
+					}
+				})
+				
 				angular.element($window).bind('resize', resize);
-				lbContent.bind('keyup', handleKeyup);
 				
 				scope.$on('$destroy', function() {
 					angular.element($window).unbind('resize', resize);
-					lbContent.unbind('keyup', handleKeyup);
-				})
+					if (typeof(lbContent) !== 'undefined') {
+						lbContent.unbind('keyup', handleKeyup);
+					}
+				});
 			}
 		}
 }])
@@ -1632,21 +1996,21 @@ angular.module('disczump.controllers', ['disczump.services'])
         replace: true,
         template: '<div class="message-alert" ng-class="{\'dock\':dock, \'dock-top\': dock == \'top\', \'dock-bottom\': dock == \'bottom\'}">' +
                     '<div class="alert alert-success" ng-show="alertData.success.show" ng-class="{\'slide-down\': dock == \'top\', \'slide-top\': dock == \'bottom\'}">' +
-                        '<button type="button" class="close" aria-label="Close" ng-click="alertData.success.show=false;"><span aria-hidden="true">×</span></button>' +
+                        '<button type="button" class="close" aria-label="Close" ng-click="alertData.success.show=false;" ng-if="!alertData.success.hideClose"><span aria-hidden="true">×</span></button>' +
                         '<div class="alert-body">' +
                             '<strong ng-if="alertData.success.title">{{alertData.success.title}}! </strong>' +
                             '{{alertData.success.message}}' +
                         '</div>' +
                     '</div>' +
                     '<div class="alert alert-info" ng-show="alertData.info.show" ng-class="{\'slide-down\': dock == \'top\', \'slide-top\': dock == \'bottom\'}">' +
-                        '<button type="button" class="close" aria-label="Close" ng-click="alertData.info.show=false;"><span aria-hidden="true">×</span></button>' +
+                        '<button type="button" class="close" aria-label="Close" ng-click="alertData.info.show=false;" ng-if="!alertData.info.hideClose"><span aria-hidden="true">×</span></button>' +
                         '<div class="alert-body">' +
                             '<strong ng-if="alertData.info.title">{{alertData.info.title}}! </strong>' +
                             '{{alertData.info.message}}' +
                         '</div>' +
                     '</div>' +
                     '<div class="alert alert-danger" ng-show="alertData.error.show" ng-class="{\'slide-down\': dock == \'top\', \'slide-top\': dock == \'bottom\'}">' +
-                        '<button type="button" class="close" aria-label="Close" ng-click="alertData.error.show=false;"><span aria-hidden="true">×</span></button>' +
+                        '<button type="button" class="close" aria-label="Close" ng-click="alertData.error.show=false;" ng-if="!alertData.error.hideClose"><span aria-hidden="true">×</span></button>' +
                         '<div class="alert-body">' +
                             '<strong ng-if="alertData.error.title">{{alertData.error.title}}! </strong>' +
                             '{{alertData.error.message}}' +
@@ -1751,24 +2115,35 @@ angular.module('disczump.controllers', ['disczump.services'])
 	}
 }])
 
-.directive('fitPage', ['$window', function($window) {
+.directive('fitPage', ['$window', '$timeout', function($window, $timeout) {
     return {
         restrict: 'A',
         link: function(scope, element, attrs) {
             var offset = attrs.offset ? parseInt(attrs.offset) | 0 : 0;
             
             var resize = function() {
-                angular.element(element).css('height', ($window.innerHeight + offset) + 'px');
+				var child = element[0].children[0];
+				if (child.clientHeight <= $window.innerHeight) {
+                	angular.element(element).css('height', ($window.innerHeight + offset) + 'px');
+				} else {
+					angular.element(element).css('height', 'auto');
+				}
             }
             
             
             angular.element($window).bind('resize', resize);
+			
+			scope.$watch(function() {
+				return element[0].children[0].clientHeight;
+			}, function(newVal) {
+				if (typeof(newVal) !== 'undefined') resize();
+			});
             
             scope.$on('$destroy', function() {
                 angular.element($window).unbind('resize', resize);
             })
             
-            resize();
+			$timeout(resize);
         }
     }
 }])
@@ -1936,9 +2311,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			function startObs() {
-				attrs.$set('src', attrs.imgLoad || '/static/img/dz_disc.png');
                 var stopObserving = attrs.$observe('imgSrc', function() {
-                    stopObserving();
                     handleUrl();
                 });
 			}
@@ -1946,27 +2319,77 @@ angular.module('disczump.controllers', ['disczump.services'])
 			if (attrs.imgSrc) {
 				handleUrl();
 			} else {
-				startObs();
+				attrs.$set('src', attrs.imgLoad || '/static/img/dz_disc.png');
 			}
+			startObs();
         }
     }    
 }])
 
-.directive('exploreCategory', ['$window', '$location', '_', 'QueryService', 
-    function($window, $location, _, QueryService) {
+.directive('tagList', ['$timeout', '_', 'QueryService', function($timeout, _, QueryService) {
+	return {
+		restrict: 'E',
+		scope: true,
+		template: '<div class="text-list">' + 
+					'<a class="text-item tag" ng-href="{{getLink(tag)}}" ng-repeat="tag in tagList track by $index" ng-class="{\'large\':$index < limitLarge, \'med\': ($index >= limitLarge && $index < limitMed)}">' + 
+					'{{tag.val}}' + 
+					'</a>' + 
+				'</div>',
+		replace: true,
+		link: function(scope, elem, attrs) {
+			scope.tagList = [];
+			
+			scope.getLink = function(tag) {
+				return '/explore?mode=all-market&q=' + encodeURI(tag.val);
+			}
+			
+			QueryService.queryFacet({
+				query: '*',
+				limit: 0,
+				marketplace: {
+					forSale: true,
+					forTrade: true
+				},
+				facet: {
+					name: 'tag',
+					limit: 50
+				}
+			}, function(success, response) {
+				if (success && response.facets.dynFilters.tag) {
+					$timeout(function() {
+						scope.tagList = response.facets.dynFilters.tag.filters || [];
+
+						scope.limitLarge = Math.floor(scope.tagList.length * 0.25);
+						scope.limitMed = Math.floor(scope.tagList.length * 0.5);
+					});
+				}
+			});
+		}
+	}
+}])
+
+.directive('exploreCategory', ['$window', '$location', '$timeout', '_', 'QueryService', 
+    function($window, $location, $timeout, _, QueryService) {
         return {
             restrict: 'E',
             scope: true,
             template: '<div class="explore-category">' + 
                         '<div class="explore-cat-label dz-label">' + 
-                            'Explore | <span class="dz-blue">{{fvalue}} Discs</span><span class="dz-blue hover-underline" style="float: right; cursor: pointer"><a ng-href="{{getLink()}}">See More...</a></span>' + 
+                            'Explore | <span class="dz-blue">{{fvalue}}</span><span class="dz-blue hover-underline" style="float: right; cursor: pointer"><a ng-href="{{getLink()}}">See More...</a></span>' + 
                         '</div>' + 
-                        '<div class="explore-cat-list">' + 
-                            '<div class="explore-item" ng-repeat="disc in exploreList | startFrom:start | limitTo:dispCount" ng-click="navDisc(disc._id)">' +
-								'<div class="explore-item-icon top-left for-sale"><i class="fa fa-usd"></i>{{disc[\'marketplace.value\'] | currency:"":2}}</div>' +
-								'<div class="explore-item-icon top-right for-trade"><i class="fa fa-refresh"></i></div>' +
-                                '<img img-src="{{getSolrPrimaryImage(disc)}}" img-load />' + 
-                                '<div class="explore-item-title handle-overflow">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></div>' + 
+                        '<div class="explore-cat-list" fade-time="100" fade-scroll="true">' + 
+							'<div class="explore-item no-results" ng-show="!exploreList.length">' +
+								'<div>' + 
+									'No Results' + 
+								'</div>' + 
+                            '</div>' + 
+                            '<div class="explore-item" ng-repeat="disc in exploreList | startFrom:start | limitTo:dispCount">' +
+								'<a ng-href="/d/{{disc._id}}">' + 
+									'<div class="explore-item-icon top-left for-sale"><i class="fa fa-usd"></i>{{disc[\'marketplace.value\'] | currency:"":2}}</div>' +
+									'<div class="explore-item-icon top-right for-trade"><i class="fa fa-refresh"></i></div>' +
+									'<img img-src="{{getSolrPrimaryImage(disc)}}" img-load />' + 
+									'<div class="explore-item-title handle-overflow">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></div>' + 
+								'</a>' + 
                             '</div>' + 
                             '<div class="clearfix"></div>' + 
                         '</div>' + 
@@ -1980,22 +2403,23 @@ angular.module('disczump.controllers', ['disczump.services'])
                     '</div>',
             replace: true,
             link: function(scope, element, attrs) {
-                scope.fvalue = attrs.fvalue;
+				var isRecent = attrs.recent === 'true';
+				
+                scope.fvalue = isRecent ? 'Recently Added' : attrs.fvalue;
                 scope.start = 0;
                 scope.dispCount = Math.floor(element[0].clientWidth / 156);
                 scope.exploreList = [];
                 var filter = [];
-                filter.push({
-                    name: attrs.field,
-                    fields: [attrs.fvalue]
-                });
-                
-                scope.navDisc = function(id) {
-                    $location.path('/d/' + id);
-                }
+				
+				if (!isRecent) {
+					filter.push({
+						name: attrs.field,
+						fields: [attrs.fvalue]
+					});
+				}
                 
                 scope.getLink = function() {
-                    return '/portal/explore?s=rel&f_0=' + attrs.field + ':' + attrs.fvalue;
+                    return '/explore?mode=all-market' + (isRecent ? '' : '&s=new&f_0=' + attrs.field + ':' + encodeURI(attrs.fvalue));
                 }
                 
                 scope.navIndex = function(index) {
@@ -2013,20 +2437,8 @@ angular.module('disczump.controllers', ['disczump.services'])
                     scope.start = scope.page * scope.dispCount;
                 }
                 
-                scope.safeApply = function(fn) {
-                    var phase = this.$root.$$phase;
-                    if (phase == '$apply' || phase == '$digest') {
-                        if (fn && (typeof(fn) === 'function')) {
-                            fn();
-                        }
-                    }
-                    else {
-                        this.$apply(fn);
-                    }
-                }
-                
                 scope.getDisplayCount = function(){
-                   scope.safeApply(function() {
+                   $timeout(function() {
                         scope.dispCount = Math.floor(element[0].clientWidth / 156);
                         scope.navArr = new Array(Math.ceil(scope.exploreList.length / scope.dispCount));
                         scope.page = Math.min(scope.page, scope.navArr.length - 1);
@@ -2043,25 +2455,34 @@ angular.module('disczump.controllers', ['disczump.services'])
                 scope.$on('$destroy', function() {
                     angular.element($window).unbind('resize', resizeCat);
                 })
-                
-                QueryService.queryAll({
+				
+				var query = {
                     query: '*',
-                    sort: 'dAsc',
-                    filter:filter,
+                    sort: 'new',
                     limit: 20,
 					marketplace: {
 						forSale: true,
 						forTrade: true
-					},
-                    group: {
-                        limit: 20,
+					}
+                };
+				
+				if (!isRecent) {
+					query.filter = filter;
+					query.group = {
+                        limit: 3,
                         field: 'userId'
-                    },
-                }, function(success, response) {
+                    };
+				}
+                
+                QueryService.queryAll(query, function(success, response) {
                     if (success) {
-                        for (var group in response.results) {
-                            Array.prototype.push.apply(scope.exploreList, response.results[group]);
-                        }
+						if (!isRecent) { 
+							for (var group in response.results) {
+								Array.prototype.push.apply(scope.exploreList, response.results[group]);
+							}
+						} else {
+							Array.prototype.push.apply(scope.exploreList, response.results);
+						}
                         
                         scope.navArr = new Array(Math.ceil(scope.exploreList.length / scope.dispCount));
                     }
@@ -2070,7 +2491,41 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
     }])
 
-.directive('dzModal', ['$compile', function($compile) {
+.directive('modalTrigger', ['$parse', '$timeout', function($parse, $timeout) {
+	return {
+		restrict: 'A',
+		scope: {
+			modalOpts: '='
+		},
+		link: function(scope, elem, attrs) {
+			var data = {};
+			
+			if (attrs.data) {
+            	var dataExp = eval('(' + attrs.data + ')');
+				for (var a in dataExp) {
+					data[a] = $parse(dataExp[a])(scope.$parent);
+				}
+			}
+			
+			var showModal = function() {
+				$timeout(function() {
+// 					scope.modalOpts.loading = true;
+					scope.modalOpts.data = data;
+					scope.modalOpts.type = attrs.modalTrigger;
+					scope.modalOpts.show = true;
+				});
+			}
+			
+			scope.$on('$destroy', function() {
+				elem.unbind('click', showModal);
+			});
+
+			elem.bind('click', showModal);
+		}
+	}
+}])
+
+.directive('dzModal', ['$compile', '$window', '$timeout', function($compile, $window, $timeout) {
 	return {
 		restrict: 'E',
 		scope: {
@@ -2079,7 +2534,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 		},
 		replace: true,
 		template: '<div class="full-screen-backdrop no-select" ng-show="showModal">' +
-					'<div class="dz-modal-container">' +
+					'<div class="dz-modal-container" id="dz-modal">' +
 						'<i class="dz-modal-close fa fa-times" aria-hidden="true" ng-click="!childOpts.lock && (modalOpts.show = false)"></i>' +
 						'<div id="dz-modal-inner"></div>' +
 					'</div>' +
@@ -2087,8 +2542,16 @@ angular.module('disczump.controllers', ['disczump.services'])
 		link: function(scope, elem, attrs) {
 			scope.childOpts = {
 				lock: false,
-				reload: false
+				doOnClose: false
 			};
+			
+			scope.resize = function(){
+				var modal = document.getElementById('dz-modal');
+				
+				$timeout(function() {
+					angular.element(modal).css('max-height', ($window.innerHeight * 0.8) + 'px');
+				});
+			}
 			
 			scope.$watch('modalOpts.show', function(newVal) {
 				if (typeof(newVal) === 'undefined')
@@ -2101,78 +2564,158 @@ angular.module('disczump.controllers', ['disczump.services'])
 					scope.scrollLock = false;
 					scope.showModal = false;
 					if (typeof(scope.modalOpts.data.onClose) !== 'undefined') {
-						scope.modalOpts.data.onClose(scope.childOpts.reload);
+						scope.modalOpts.data.onClose(scope.childOpts.doOnClose);
 					}
 					return;
 				}
 				
-				var newModal = angular.element('<' + scope.modalOpts.type + ' data="modalOpts.data" show="modalOpts.show" lock="childOpts.lock" reload="childOpts.reload"></' + scope.modalOpts.type + '>');
+				var newModal = angular.element('<' + scope.modalOpts.type + ' data="modalOpts.data" show="modalOpts.show" lock="childOpts.lock" do-on-close="childOpts.doOnClose"></' + scope.modalOpts.type + '>');
 				inner.appendChild(newModal[0]);
 				$compile(newModal)(scope);
 				scope.scrollLock = true;
-				scope.showModal = true;
+				$timeout(function() {
+					scope.showModal = true;
+// 					scope.modalOpts.loading = false;
+				});
 			});
+			
+			scope.$on('$destroy', function() {
+				angular.element($window).unbind('resize', scope.resize);
+			});
+
+			angular.element($window).bind('resize', scope.resize);
+			
+			scope.resize();
 		}
 	}
 }])
 
-.directive('dzBumpModal', [function() {
+.directive('dzInfoModal', ['$window', '$timeout', function($window, $timeout) {
+	return {
+		restrict: 'E',
+		scope: {
+			data: '=data',
+			show: '='
+		},
+		replace: true,
+		template: '<div>' +
+					'<div class="dz-modal-content">' +
+						'<div class="dz-modal-title-info" id="modal-title"><i class="fa fa-info-circle fa-tools"></i></div>' +
+						'<div id="modal-body" style="overflow:auto;"></div>' +
+					'</div>' +
+					'<div class="dz-modal-btn-container">' +
+						'<div class="dz-modal-triangle"></div>' +
+						'<div class="dz-modal-btn cancel" ng-click="show = false">Close</div>' +
+					'</div>' +
+				'</div>',
+		link: function(scope, elem, attrs) {
+			document.getElementById('modal-title').innerHTML += scope.data.title;
+			var body = document.getElementById('modal-body');
+			
+			body.innerHTML = scope.data.body;
+			
+			scope.resize = function(){
+				$timeout(function() {
+					angular.element(body).css('max-height', ($window.innerHeight * 0.8 - 200) + 'px');
+				});
+			}
+			
+			scope.$on('$destroy', function() {
+				angular.element($window).unbind('resize', scope.resize);
+			});
+
+			angular.element($window).bind('resize', scope.resize);
+			
+			scope.resize();
+		}
+	}
+}])
+
+.directive('dzBumpModal', ['_', 'DiscService', function(_, DiscService) {
 	return {
 		restrict: 'E',
 		scope: {
 			data: '=data',
 			show: '=',
 			lock: '=',
-			reload: '='
+			doOnClose: '='
 		},
 		replace: true,
 		template: '<div>' +
 					'<div class="dz-modal-content">' +
-						'<div class="dz-modal-title-sm">Bump Discs</div>' +
-						'<div style="text-align:left;margin-bottom:5px;">The table below shows each bump status of the selected discs. Clicking "Bump" will automatically bump all available discs in the table below.</div>' +
+						'<div class="dz-modal-title-sm left">Bump Discs</div>' +
+						'<div class="dz-modal-text">The table below shows each bump status of the selected discs. Clicking "Bump" will automatically bump all available discs in the table below.</div>' +
 						'<dz-alert class="full-width" alert-data="modalAlert"></dz-alert>' +
-						'<modal-disc-table discs="data.discs" success-text="\'Bumped\'" default-text="\'Bump Ready\'" table-opts="tableOpts"></modal-disc-table>' +
+						'<dz-modal-table table-opts="tableOpts"></dz-modal-table>' +
 					'</div>' +
-					'<div class="dz-modal-btn-container" style="background-color: #BEBEBE">' +
+					'<div class="dz-modal-btn-container">' +
 						'<div class="dz-modal-triangle"></div>' +
 						'<div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
 						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>' +
-						'<div class="dz-modal-btn btn-blue" ng-click="confirm()" ng-show="!opts.loading">Bump</div>' +
+						'<div class="dz-modal-btn btn-blue" ng-click="confirm()" ng-show="!opts.loading && !opts.hideBump">Bump</div>' +
 					'</div>' +
 				'</div>',
 		link: function(scope, elem, attrs) {
 			scope.tableOpts = {
-				isCounter: true
+				isCounter: true,
+				isDisc: true,
+				headerText: 'Disc',
+				successText: 'Bumped',
+				defaultText: 'Bump Ready',
+				items: scope.data.discs
 			};
 			scope.opts = {};
 			scope.modalAlert = {};
 			
 			scope.confirm = function() {
-				
+				_.each(scope.data.discs, function(disc) {
+					if (typeof(disc.countdown) !== 'undefined') {
+						if (disc.countdown.bumpReady) {
+							scope.opts.loading = true;
+							scope.doOnClose = true;
+							scope.lock = true;
+							
+							DiscService.bumpDisc(disc._id, function(success, data) {
+								if (success) {
+									disc.success = true;
+								} else {
+									scope.modalAlert.error = {
+										title: data.type,
+										message: data.message,
+										show: true
+									}
+								}
+								scope.opts.loading = false;
+								scope.opts.hideBump = true;
+								scope.lock = false;
+							});
+						}
+					}
+				});
 			}
 		}
 	}
 }])
 
-.directive('dzTagModal', ['_', '$timeout', 'APIService', function(_, $timeout, APIService) {
+.directive('dzTagModal', ['_', '$timeout', 'DiscService', function(_, $timeout, DiscService) {
 	return {
 		restrict: 'E',
 		scope: {
 			data: '=data',
 			show: '=',
 			lock: '=',
-			reload: '='
+			doOnClose: '='
 		},
 		replace: true,
 		template: '<div>' +
 					'<div class="dz-modal-content">' +
-						'<div class="dz-modal-title-sm">Multi-select Tag Manager</div>' +
-						'<div style="text-align:left;margin-bottom:5px;">Tags shown below are common to all selected discs. Use this window to add and remove tags to/from multiple discs at once. When saved, all tags in this list will be added to the discs below.</div>' +
+						'<div class="dz-modal-title-sm left">Multi-select Tag Manager</div>' +
+						'<div class="dz-modal-text">Tags shown below are common to all selected discs. Use this window to add and remove tags to/from multiple discs at once. When saved, all tags in this list will be added to the discs below.</div>' +
 						'<dz-alert class="full-width" alert-data="tagAlert"></dz-alert>' +
 						'<div ng-show="opts.loading" style="line-height:105px;"><i class="fa fa-spinner fa-spin fa-3x"></i></div>' +
 						'<div ng-show="!opts.loading">' +
 							'<div style="position:relative;">' +
-								'<input type="text" class="dz-modal-tag-input" placeholder="Enter tag and press enter..." ng-model="tempTag" ng-model-options="{\'updateOn\':\'default blur\',\'debounce\':{\'default\':0,\'blur\':0}}" ng-enter="pushTempTag();" directive-on="opts.isShowing" directive-set="{\'dz-auto-complete\':\'tag\'}" user-id="data.user" dz-multi="true" >' +
+								'<input type="text" class="dz-modal-tag-input" placeholder="Enter tag and press enter..." ng-model="tempTag" ng-model-options="{\'updateOn\':\'default blur\',\'debounce\':{\'default\':500,\'blur\':0}}" ng-enter="pushTempTag();" directive-on="opts.isShowing" directive-set="{\'dz-auto-complete\':\'tag\'}" user-id="data.user" dz-multi="true" >' +
 							'</div>' +
 							'<div class="dz-modal-tag-container">' +
 								'<li class="tag-item" ng-repeat="tag in newTags">' +
@@ -2189,9 +2732,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 							'</div>' +
 						'</div>' +
 						'<dz-alert class="full-width" alert-data="overwriteAlert" style="text-align:left;"></dz-alert>' +
-						'<modal-disc-table discs="data.discs" success-text="\'Saved\'" default-text="\'Unchanged\'"></modal-disc-table>' +
+						'<dz-modal-table table-opts="tableOpts"></dz-modal-table>' +
 					'</div>' +
-					'<div class="dz-modal-btn-container" style="background-color: #BEBEBE">' +
+					'<div class="dz-modal-btn-container">' +
 						'<div class="dz-modal-triangle"></div>' +
 						'<div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
 						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>' +
@@ -2207,6 +2750,13 @@ angular.module('disczump.controllers', ['disczump.services'])
 			scope.modalAlert = {};
 			scope.tagAlert = {};
 			scope.overwriteAlert = {};
+			scope.tableOpts = {
+				isDisc: true,
+				headerText: 'Disc',
+				successText: 'Saved',
+				defaultText: 'Unchanged',
+				items: scope.data.discs
+			};
 			
 			scope.removeNewTag = function(index) {
 				scope.newTags.splice(index,1)[0];
@@ -2252,7 +2802,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 						disc.error = false;
 					}
 					
-					APIService.Put('/discs/' + disc._id, {tagList: curList}, function(success, data) {
+					DiscService.editDisc({tagList: curList, _id: disc._id}, function(success, data) {
 						if (success) {
 							disc.success = true;
 						} else {
@@ -2268,7 +2818,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				}
 				
 				scope.opts.loading = true;
-				scope.reload = true;
+				scope.doOnClose = true;
 				scope.lock = true;
 				
 				updateDiscs(scope.data.discs, 0, function() {
@@ -2314,6 +2864,185 @@ angular.module('disczump.controllers', ['disczump.services'])
 	}
 }])
 
+.directive('dzProfileModal', ['_', '$compile', '$window', '$timeout', '$location', 'CacheService', 'MembershipService', 'AccountService', 
+							  function(_, $compile, $window, $timeout, $location, CacheService, MembershipService, AccountService) {
+	return {
+		restrict: 'E',
+		scope: {
+			data: '=data',
+			show: '=',
+			lock: '='
+		},
+		replace: true,
+		template: '<div>' +
+					'<div class="dz-modal-content">' +
+						'<dz-alert class="full-width" alert-data="modalAlert"></dz-alert>' +
+						'<div ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
+						'<div ng-show="userInit && !opts.loading">' +
+							'<div class="dz-modal-profile-table" id="profile-table">' +
+								'<div class="dz-modal-profile-cell right">' +
+									'<div class="handle-overflow" style="font-weight:bold;font-size:20px;">{{user.username}}</div>' +
+									'<div class="handle-overflow">{{user.firstName}} {{user.lastName}}</div>' +
+									'<div class="handle-overflow">{{user.shortLocation}}</div>' +
+								'</div>' +
+								'<div class="dz-modal-profile-cell">' +
+									'<div class="dz-modal-profile-img"><img ng-src="{{getUserImage()}}" /></div>' +
+								'</div>' +
+								'<div class="dz-modal-profile-cell left">' +
+									'<div class="handle-overflow">{{getAccountName()}}</div>' +
+									'<div class="handle-overflow">{{user.discCount}} Public Discs</div>' +
+									'<div class="handle-overflow">Member since {{user.dateJoined | date:\'MM/dd/yyyy\'}}</div>' +
+									'<div class="handle-overflow" ng-show="user.pdgaNumber"><i style="color:#4FC74F;" class="fa fa-check fa-tools" aria-hidden="true"></i>PDGA Verified</div>' +
+									'<div class="handle-overflow" ng-show="!user.pdgaNumber"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>PDGA Verified</div>' +
+									'<div class="handle-overflow" ng-show="user.fbId"><i style="color:#4FC74F;" class="fa fa-check fa-tools" aria-hidden="true"></i>Facebook Verified</div>' +
+									'<div class="handle-overflow" ng-show="!user.fbId"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>Facebook Verified</div>' +
+								'</div>' +
+							'</div>' +
+							'<div class="dz-modal-bio" id="modal-bio" parse-text="user.bio" parse-url parse-disc ng-if="user.bio">{{user.bio}}</div>' +
+						'</div>' +
+					'</div>' +
+					'<div class="dz-modal-btn-container">' +
+						'<div class="dz-modal-triangle"></div>' +
+						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>' +
+						'<div class="dz-modal-btn btn-blue" ng-if="!isOwner" ng-show="!opts.loading" ng-click="initMessage()">Message</div>' +
+						'<div class="dz-modal-btn trunk" ng-if="!isTrunk" ng-show="!opts.loading" ng-click="viewTrunk()">View Trunk</div>' +
+					'</div>' +
+				'</div>',
+		link: function(scope, elem, attrs) {
+			var bio = document.getElementById('modal-bio');
+			var profileTable = document.getElementById('profile-table');
+			var tableCells = document.getElementsByClassName('dz-modal-profile-cell');
+			var cellWidth;
+			scope.opts = {};
+			scope.modalAlert = {};
+			
+			scope.getUserImage = function() {
+				return typeof(scope.user.image) ? scope.user.image : '/static/img/dz_profile.png';
+			}
+			
+			scope.getAccountName = function() {
+				return MembershipService.getAccountName(scope.user.accountType);
+			}
+			
+			scope.initMessage = function() {
+				$location.path('/inbox').search('userId', scope.user._id);
+			}
+			
+			scope.viewTrunk = function() {
+				$location.path('/t/' + scope.user.username);
+			}
+			
+			scope.resize = function(){
+				$timeout(function() {
+					angular.element(bio).css('max-height', ($window.innerHeight * 0.8 - 300) + 'px');
+					cellWidth = profileTable.offsetWidth / 3;
+					
+					_.each(tableCells, function(cell) {
+						angular.element(cell).css('width', cellWidth + 'px');
+						angular.element(cell).css('max-width', cellWidth + 'px');
+					});
+				});
+			}
+			
+			scope.$on('$destroy', function() {
+				angular.element($window).unbind('resize', scope.resize);
+			});
+
+			angular.element($window).bind('resize', scope.resize);
+			
+			scope.opts.loading = true;
+			scope.lock = true;
+			var loc = $location.path();
+			scope.isTrunk = loc.search('/t/') != -1;
+			
+			CacheService.getUser(scope.data.userId, function(success, user) {
+				if (success) {
+					scope.user = user;
+					scope.isOwner = AccountService.compareTo(user._id);
+					
+					if (bio) {
+						$compile(bio)(scope);
+					}
+					scope.userInit = true;
+				} else {
+					scope.modalAlert.error = {
+						title: 'Error',
+						message: 'Error retrieving profile.',
+						show: true
+					}
+				}
+				scope.opts.loading = false;
+				scope.lock = false;
+			});
+			
+			$timeout(function() {
+				scope.resize();
+			});
+		}
+	}
+}])
+
+.directive('dzDeleteAccountModal', ['AccountService', function(AccountService) {
+	return {
+		restrict: 'E',
+		scope: {
+			data: '=data',
+			show: '=',
+			lock: '='
+		},
+		replace: true,
+		template: '<div>' +
+					'<div class="dz-modal-content">' +
+						'<div class="dz-modal-title-sm left"><img class="dz-modal-title-img" ng-src="{{getAccountImage()}}" />Delete Account - {{data.account.username}}</div>' +
+						'<dz-alert class="full-width" alert-data="modalAlert"></dz-alert>' +
+						'<i class="fa fa-5x fa-exclamation-triangle" style="color:#e85947"></i>' +
+						'<div class="dz-modal-title-lg">Warning!</div>' +
+						'<div class="dz-modal-text">Are you sure you want to permanently delete your disc|zump account?</div>' +
+						'<br>' +
+						'<div class="dz-modal-text">Upon clicking delete, a confirmation email will be sent to your disc|zump account email address. Click the link in this email to complete the deletion process.</div>' +
+					'</div>' +
+					'<div class="dz-modal-btn-container">' +
+						'<div class="dz-modal-triangle"></div>' +
+						'<div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
+						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>' +
+						'<div class="dz-modal-btn" ng-show="!opts.loading" ng-click="!opts.loading && confirm()" style="background-color: #e85947">Delete</div>' +
+					'</div>' +
+				'</div>',
+		link: function(scope, elem, attrs) {
+			scope.opts = {};
+			scope.modalAlert = {};
+			
+			scope.getAccountImage = function() {
+				return AccountService.getAccountImage();
+			}
+			
+			scope.confirm = function() {
+				scope.opts.loading = true;
+				scope.lock = true;
+				
+				AccountService.doAccountDelete(function(success, response) {
+					if (success && response.status == 'OK') {
+						scope.modalAlert.success = {
+							title: 'Success',
+							message: 'An email confirmation has been sent to your email address.',
+							show: true
+						}
+					} else {
+						scope.modalAlert.error = {
+							title: 'Error',
+							message: 'An error occurred while attempting to delete your account.',
+							show: true
+						}
+					}
+						
+					scope.opts.loading = false;
+					scope.lock = false;
+				});
+			}
+		}
+	}
+}])
+
 .directive('dzDeleteDiscModal', ['DiscService', function(DiscService) {
 	return {
 		restrict: 'E',
@@ -2321,7 +3050,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			data: '=data',
 			show: '=',
 			lock: '=',
-			reload: '='
+			doOnClose: '='
 		},
 		replace: true,
 		template: '<div>' +
@@ -2330,21 +3059,28 @@ angular.module('disczump.controllers', ['disczump.services'])
 						'<div class="dz-modal-title-lg">Warning!</div>' +
 						'<div class="dz-modal-message">Are you sure you want to permanently delete the selected discs?</div>' +
 						'<dz-alert class="full-width" alert-data="modalAlert"></dz-alert>' +
-						'<modal-disc-table discs="data.discs" success-text="\'Deleted\'" default-text="\'Unchanged\'"></modal-disc-table>' +
+						'<dz-modal-table table-opts="tableOpts"></dz-modal-table>' +
 					'</div>' +
-					'<div class="dz-modal-btn-container" style="background-color:#BEBEBE">' +
+					'<div class="dz-modal-btn-container">' +
 						'<div class="dz-modal-triangle"></div>' +
 						'<div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
 						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">' +
-							'<span ng-show="!reload">Cancel</span>' +
-							'<span ng-show="reload">Close</span>' +
+							'<span ng-show="!doOnClose">Cancel</span>' +
+							'<span ng-show="doOnClose">Close</span>' +
 						'</div>' +
-						'<div class="dz-modal-btn" ng-show="!opts.loading && !reload" ng-click="!opts.loading && confirm()" style="background-color: #e85947">Delete</div>' +
+						'<div class="dz-modal-btn" ng-show="!opts.loading && !doOnClose" ng-click="!opts.loading && confirm()" style="background-color: #e85947">Delete</div>' +
 					'</div>' +
 				'</div>',
 		link: function(scope, elem, attrs) {
 			scope.opts = {};
 			scope.modalAlert = {};
+			scope.tableOpts = {
+				isDisc: true,
+				headerText: 'Disc',
+				successText: 'Deleted',
+				defaultText: 'Unchanged',
+				items: scope.data.discs
+			};
 			
 			scope.confirm = function() {
 				var deleteDiscs = function(discs, i, finish) {
@@ -2366,7 +3102,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				}
 				
 				scope.opts.loading = true;
-				scope.reload = true;
+				scope.doOnClose = true;
 				scope.lock = true;
 				
 				deleteDiscs(scope.data.discs, 0, function() {
@@ -2379,18 +3115,210 @@ angular.module('disczump.controllers', ['disczump.services'])
 					scope.opts.loading = false;
 					scope.lock = false;
 				});
-				
-				
 			}
 		}
 	}
 }])
 
-.directive('modalDiscTable', ['_', 'QueryService', 'APIService', function(_, QueryService, APIService) {
+.directive('dzShareModal', ['_', '$location', '$timeout', 'QueryService', 'AccountService', 'FacebookUtils', function(_, $location, $timeout, QueryService, AccountService, FacebookUtils) {
 	return {
 		restrict: 'E',
 		scope: {
-			discs: '=',
+			data: '=data',
+			show: '=',
+			lock: '='
+		},
+		replace: true,
+		template: '<div>' +
+					'<div class="dz-modal-content">' +
+						'<div class="dz-modal-title-sm left" ng-if="isDisc"><img class="dz-modal-title-img" ng-src="{{getDiscImage(data.disc)}}" />Share {{data.disc.brand}} {{data.disc.name}}</div>' +
+						'<div class="dz-modal-title-sm left" ng-if="isTrunk"><img class="dz-modal-title-img" ng-src="{{getAccountImage()}}" />Share Trunk - {{data.user.username}}</div>' +
+						'<div class="dz-modal-text" ng-show="!linkOpts.linkSelected">Share this {{typeText}} directly to Facebook, or send the public link to any internet enabled device. Click an icon below to continue.</div>' +
+						'<div class="dz-modal-text" ng-show="linkOpts.linkSelected">Copy the public link below and share it with the world!</div>' +
+						'<dz-alert class="full-width" alert-data="modalAlert"></dz-alert>' +
+						'<div ng-show="!linkOpts.linkSelected">' +
+							'<dz-alert class="full-width" alert-data="fbModalAlert"></dz-alert>' +
+							'<div class="dz-modal-share-action hover-pointer" ng-click="!loading.fb && facebookInit && shareFB()" ng-class="{disabled: !facebookInit}">' +
+								'<div ng-show="loading.fb"><i class="fa fa-spin fa-spinner" aria-hidden="true" style="font-size:7em;"></i></div>' +
+								'<div ng-show="!loading.fb"><i class="fa fa-facebook-square fb-color" aria-hidden="true" style="font-size:7em;"></i></div>' +
+								'<div class="dz-modal-share-action-text" ng-class="{disabled: !facebookInit}">Facebook</div>' +
+							'</div>' +
+							'<div class="dz-modal-share-action hover-pointer" ng-click="showLink()">' +
+								'<div><i class="fa fa-link link-color" aria-hidden="true" style="font-size:7em;"></i></div>' +
+								'<div style="font-weight:bold;font-size:20px;">Public Link</div>' +
+							'</div>' +
+						'</div>' +
+						'<div ng-show="linkOpts.linkSelected">' +
+							'<form name="linkForm" class="dz-modal-link-form" ng-if="isTrunk">' +
+								'<div class="dz-modal-link-form-row"><label class="dz-blue-hover"><input type="radio" ng-model="formData.linkType" value="full"><span>Share current view (maintaining filter, search, and sort settings).</span></label></div>' +
+								'<div class="dz-modal-link-form-row"><label class="dz-blue-hover"><input type="radio" ng-model="formData.linkType" value="base"><span>Share <span ng-if="isOwner">your</span><span ng-if="!isOwner">this</span> entire trunk.</span></label></div>' +
+							'</form>' +
+							'<input id="input-link" class="no-focus no-border" style="width:100%;padding:5px;" type="text" ng-model="linkOpts.link"></input>' +
+						'</div>' +
+					'</div>' +
+					'<div class="dz-modal-btn-container">' +
+						'<div class="dz-modal-triangle"></div>' +
+						'<div class="dz-modal-btn cancel" ng-click="linkOpts.linkSelected = !linkOpts.linkSelected" ng-show="linkOpts.linkSelected"><span>Back</span></div>' +
+						'<div class="dz-modal-btn cancel" ng-click="show = false"><span>Close</span></div>' +
+					'</div>' +
+				'</div>',
+		link: function(scope, elem, attrs) {
+			scope.linkOpts = {};
+			scope.modalAlert = {};
+			scope.fbModalAlert = {};
+			scope.loading = {
+				fb: true
+			};
+			scope.formData = {
+				linkType: 'full'
+			};
+			
+			var urlBase = $location.absUrl().replace($location.url(), '');
+			
+			var getSolrPrimaryImage = function(disc) {
+                return QueryService.getSolrPrimaryImage(disc);
+            }
+			
+			var getPrimaryImage = function(disc) {
+				var imgObj = _.findWhere(disc.imageList, {_id: disc.primaryImage});
+				return '/files/' + imgObj.thumbnailId;
+			}
+			
+			var initFb = function(path) {
+				FacebookUtils.initFacebook().then(function() {
+					FacebookUtils.scrapePath(path, function(error) {
+						$timeout(function() {
+							if (error) {
+								scope.fbModalAlert.error = {
+									title: 'Facebook Unavailable',
+									message: 'Facebook is unavailable at this time. Please try again.',
+									show: true
+								}
+							} else {
+								scope.facebookInit = true;
+							}
+							scope.loading.fb = false;
+						});
+					});
+				});
+			}
+			
+			var getLink = function() {
+				if (scope.isDisc) {
+					scope.linkOpts.link = urlBase + '/d/' + scope.data.disc._id;
+				} else if (scope.isTrunk) {
+					if (scope.formData.linkType == 'base') {
+						scope.linkOpts.link = urlBase + '/t/' + scope.data.user.username;
+					} else if (scope.formData.linkType == 'full') {
+						scope.linkOpts.link = $location.absUrl();
+					}
+				}
+				
+				$timeout(function() {
+					document.getElementById('input-link').select();
+				});
+			}
+			
+			scope.getDiscImage = function(disc) {
+				if (_.isArray(disc.imageList)) {
+					return getPrimaryImage(disc);
+				} else {
+					return getSolrPrimaryImage(disc);
+				}
+			}
+			
+			scope.getAccountImage = function() {
+				return scope.data.user ? scope.data.user.image : '/static/img/dz_profile.png';
+			}
+			
+			scope.shareFB = function() {
+				if (scope.isDisc) {
+					FacebookUtils.shareFacebook('/d/' + scope.data.disc._id);
+				} else if (scope.isTrunk) {
+					FacebookUtils.shareFacebook('/t/' + scope.data.user._id);
+				}
+			}
+			
+			scope.showLink = function() {
+				scope.linkOpts.linkSelected = true;
+				getLink();
+			}
+			
+			scope.$watch('formData.linkType', function(newVal) {
+				if (typeof(newVal) !== 'undefined') getLink();
+			});
+			
+			if (typeof(scope.data.disc) !== 'undefined') {
+				scope.isDisc = true;
+				scope.typeText = 'disc';
+				
+				scope.modalAlert.info = {
+					title: 'Note',
+					message: 'A shared link will be broken if this disc is marked private.',
+					hideClose: true,
+					show: true
+				}
+				
+				initFb('/d/' + scope.data.disc._id);
+			} else if (typeof(scope.data.user) !== 'undefined') {
+				scope.isOwner = AccountService.compareTo(scope.data.user._id);
+				scope.isTrunk = true;
+				scope.typeText = 'trunk';
+				
+				if (scope.isOwner) {
+					scope.modalAlert.info = {
+						title: 'Note',
+						message: 'Only your public discs will be visible when sharing your trunk.',
+						hideClose: true,
+						show: true
+					}
+				}
+				
+				initFb('/t/' + scope.data.user.username);
+			}
+		}
+	}
+}])
+
+.directive('dzAcknowledgementModal', ['DiscService', function(DiscService) {
+	return {
+		restrict: 'E',
+		scope: {
+			data: '=data',
+			show: '=',
+			doOnClose: '='
+		},
+		replace: true,
+		template: '<div>' +
+					'<div class="dz-modal-content">' +
+						'<i class="fa fa-5x fa-exclamation-triangle" style="color:#008EDD"></i>' +
+						'<div class="dz-modal-title-lg">Warning!</div>' +
+						'<div class="dz-modal-message" id="modal-message-1"></div>' +
+						'<br>' +
+						'<div class="dz-modal-message" id="modal-message-2"></div>' +
+					'</div>' +
+					'<div class="dz-modal-btn-container">' +
+						'<div class="dz-modal-triangle"></div>' +
+						'<div class="dz-modal-btn cancel" ng-click="show = false">Cancel</div>' +
+						'<div class="dz-modal-btn" ng-click="confirm()" style="background-color: #008EDD">OK</div>' +
+					'</div>' +
+				'</div>',
+		link: function(scope, elem, attrs) {
+			document.getElementById('modal-message-1').innerHTML = scope.data.message1;
+			document.getElementById('modal-message-2').innerHTML = scope.data.message2;
+			
+			scope.confirm = function() {
+				scope.doOnClose = true;
+				scope.show = false;
+			}
+		}
+	}
+}])
+
+.directive('dzModalTable', ['_', 'QueryService', 'CacheService', function(_, QueryService, CacheService) {
+	return {
+		restrict: 'E',
+		scope: {
 			successText: '=',
 			defaultText: '=',
 			tableOpts: '='
@@ -2398,42 +3326,59 @@ angular.module('disczump.controllers', ['disczump.services'])
 		replace: true,
 		template: '<div class="dz-modal-table">' +
 					'<div class="dz-modal-row header">' +
-						'<div class="dz-modal-row-item header">Disc</div>' +
-						'<div class="dz-modal-row-item header">Status</div>' +
+						'<div class="dz-modal-row-item">{{tableOpts.headerText}}</div>' +
+						'<div class="dz-modal-row-item">Status</div>' +
 						'<div class="clearfix"></div>' +
 					'</div>' +
-					'<div class="dz-modal-row" ng-repeat="disc in discs">' +
-						'<div class="dz-modal-row-item handle-overflow disc">' +
-							'<img ng-src="{{getSolrPrimaryImage(disc)}}" />' +
-							'{{disc.brand}} {{disc.name}}' +
+					'<div class="dz-modal-row" ng-repeat="item in tableOpts.items">' +
+						'<div class="dz-modal-row-item left handle-overflow" ng-if="tableOpts.isDisc">' +
+							'<img ng-src="{{getImage(item)}}" />' +
+							'{{item.brand}} {{item.name}}' +
 						'</div>' +
 						'<div class="dz-modal-row-item handle-overflow">' +
-							'<span ng-if="tableOpts.isCounter" directive-on="disc.countdown.init" directive-set="{countdown:\'\'}" sec-left="disc.countdown.bumpRemaining" counts="disc.countdown.counts" done="disc.countdown.bumpReady" show="disc.countdown.show">' +
-								'<span ng-show="disc.countdown.show && !disc.countdown.bumpReady"><span ng-bind="disc.countdown.counts.hours"></span> : <span ng-bind="disc.countdown.counts.minutes"></span> : <span ng-bind="disc.countdown.counts.seconds"></span></span>' +
-								'<span ng-show="disc.countdown.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></span>' +
-								'<span ng-show="disc.countdown.bumpReady" style="font-weight:bold;">{{defaultText}}</span>' +
-								'<span ng-show="!disc[\'marketplace.forSale\'] && !disc[\'marketplace.forTrade\']" style="font-style:italic;">Not In Marketplace</span>' +
+							'<span ng-if="tableOpts.isCounter" directive-on="item.countdown.init" directive-set="{countdown:\'\'}" sec-left="item.countdown.bumpRemaining" counts="item.countdown.counts" done="item.countdown.bumpReady" show="item.countdown.show">' +
+								'<span ng-show="item.countdown.show && !item.countdown.bumpReady"><span ng-bind="item.countdown.counts.hours"></span> : <span ng-bind="item.countdown.counts.minutes"></span> : <span ng-bind="item.countdown.counts.seconds"></span></span>' +
+								'<span ng-show="item.countdown.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></span>' +
+								'<span ng-show="item.countdown.bumpReady && !item.success" style="font-weight:bold;">{{tableOpts.defaultText}}</span>' +
+								'<span ng-show="!item[\'marketplace.forSale\'] && !item[\'marketplace.forTrade\']" style="font-style:italic;">Not In Marketplace</span>' +
 							'</span>' +
-							'<span ng-if="!tableOpts.isCounter" ng-show="!disc.success && !disc.error">{{defaultText}}</span>' +
-							'<span ng-show="disc.success"><i style="color:#4FC74F;" class="fa fa-check fa-tools" aria-hidden="true"></i>{{successText}}</span>' +
-							'<span ng-show="disc.error"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>Error</span>' +
+							'<span ng-if="!tableOpts.isCounter" ng-show="!item.success && !item.error">{{tableOpts.defaultText}}</span>' +
+							'<span ng-show="item.success"><i style="color:#4FC74F;" class="fa fa-check fa-tools" aria-hidden="true"></i>{{tableOpts.successText}}</span>' +
+							'<span ng-show="item.error"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>Error</span>' +
 						'</div>' +
 						'<div class="clearfix"></div>' +
 					'</div>' +
 				'</div>',
 		link: function(scope, elem, attrs) {
 			
-			scope.getSolrPrimaryImage = function(disc) {
+			var getSolrPrimaryImage = function(disc) {
                 return QueryService.getSolrPrimaryImage(disc);
             }
 			
+			var getPrimaryImage = function(disc) {
+				var imgObj = _.findWhere(disc.imageList, {_id: disc.primaryImage});
+				return '/files/' + imgObj.thumbnailId;
+			}
+			
+			scope.getImage = function(item) {
+				if(scope.tableOpts.isDisc) {
+					if (_.isArray(item.imageList)) {
+						return getPrimaryImage(item);
+					} else {
+						return getSolrPrimaryImage(item);
+					}
+				} else {
+					// if table is not for discs (ex. profiles)
+				}
+			}
+			
 			scope.$watch('tableOpts.isCounter', function(newVal) {
 				if (typeof(newVal) !== 'undefined' && newVal === true) {
-					_.each(scope.discs, function(disc) {
+					_.each(scope.tableOpts.items, function(disc) {
 						if (disc['marketplace.forSale'] || disc['marketplace.forTrade']) {
 							disc.countdown = {};
 							disc.countdown.loading = true;
-							APIService.Get('/discs/' + disc._id, function(success, data) {
+							CacheService.getDisc(disc._id, function(success, data) {
 								if (!success) {
 									disc.error = true;
 								} else {
@@ -2446,39 +3391,28 @@ angular.module('disczump.controllers', ['disczump.services'])
 					});
 				}
 			});
-
-// 				$scope.bumpDisc = function() {
-// 					APIService.Put('/discs/' + $scope.disc._id + '/bump', {}, function(success, data) {
-// 						if (success) {
-// 							$scope.disc = data;
-// 							updateTempMarket(data);
-// 						} else {
-// 							$scope.discAlert.error = {
-// 								title: data.type,
-// 								message: data.message,
-// 								show: true
-// 							}
-// 						}
-// 					});
-// 				}
 		}
 	}
 }])
 
-.directive('ngEnter', function () {
-    return function (scope, element, attrs) {
-        element.bind("keyup", function (event) {
-            if(event.which === 13) {
-				console.log('in ngenter');
-                scope.$apply(function (){
-                    scope.$eval(attrs.ngEnter);
-                });
- 
-                event.preventDefault();
-            }
-        });
-    };
-})
+.directive('ngEnter', ['$timeout', function ($timeout) {
+	return {
+		restrict: 'A',
+		require: 'ngModel',
+		link: function (scope, element, attrs, ngModelCtrl) {
+        	element.bind("keyup", function (event) {
+            	if(event.which === 13) {
+					event.stopImmediatePropagation();
+					$timeout(function (){
+						ngModelCtrl.$commitViewValue()
+						scope.$eval(attrs.ngEnter);
+						event.preventDefault();
+					});
+				}
+			});
+		}
+	}
+}])
 
 /******************************************************************************
 * 
@@ -2597,6 +3531,11 @@ angular.module('disczump.controllers', ['disczump.services'])
     }
 ])
 
+/******************************************************************************
+* Name:         TrunksController
+* Description:  Controller for user trunks functionality. 
+*******************************************************************************/
+
 .controller('TrunksController', ['$scope', '$location', '$routeParams', '$window', '_', '$timeout', 'smoothScroll', 'QueryUserService', 'CacheService', 'AccountService', 'LocationService',
 	function($scope, $location, $routeParams, $window, _, $timeout, smoothScroll, QueryUserService, CacheService, AccountService, LocationService) {
 		var init = true;
@@ -2615,6 +3554,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			loading: false,
 			locSet: false
 		};
+		$scope.globalModalOpts = {};
         $scope.pagination = { start: 0, total: 0 };
 		$scope.units = 'miles';
 		$scope.statusHome = 'trunks';
@@ -2652,7 +3592,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				$scope.breadcrumbs.push({
 					title: 'Radius',
 					links: [
-						{text: $scope.geo.distance + ' ' + $scope.units}
+						{text: $scope.geo.distance + ' ' + $scope.units, href: '/trunks?d=' + $scope.geo.distance}
 					]
 				});
 			}
@@ -2666,12 +3606,13 @@ angular.module('disczump.controllers', ['disczump.services'])
 				_.each(filter.fields, function(field) {
 					tempFilter.fields.push(field);
 					item.links.push({
-						text: field,
-						href: '/portal' + $location.path() + QueryService.getQueryString({
+						text: field === 'true' ? 'Active' : field,
+						href: $location.path() + QueryUserService.getQueryString({
 							query: $scope.searchParam,
 							sort: sortSet ? $scope.sortParam : undefined,
+							locSet: $scope.location.locSet,
 							filter: filters,
-							marketplace: $scope.marketplace
+							geo: $scope.geo,
 						})
 					});
 				});
@@ -2740,6 +3681,68 @@ angular.module('disczump.controllers', ['disczump.services'])
 			$scope.activeFilters = [];
 			$scope.updateUrl();
 		}
+		
+		$scope.isFilterActive = function(facet, filter) {
+            var prop = _.find($scope.activeFilters, {name: facet.prop});
+            filter.active = prop && $scope.containsStr(prop.fields, filter.val);
+            return filter.active;
+        }
+        
+        $scope.hasActiveFilters = function(facet) {
+            var prop = _.find($scope.activeFilters, {name: facet.prop});
+            
+            return prop && prop.fields.length;
+        }
+        
+        $scope.clearActiveFilters = function(facet, silent) {
+            $scope.activeFilters = _.filter($scope.activeFilters, function(filter) { return filter.name != facet.prop });
+            if (!silent) $scope.updateUrl();
+        }
+		
+		$scope.toggleFilter = function(facet, filter) {
+            var prop = _.find($scope.activeFilters, {name: facet.prop});
+            
+            if (prop) {
+                if ($scope.containsStr(prop.fields, filter.val)) {
+                    prop.fields = _.without(prop.fields, String(filter.val));
+                } else {
+                    prop.fields.push(filter.val);
+                }
+            } else {
+                $scope.activeFilters.push({
+                    name: facet.prop,
+                    text: facet.text,
+                    fields: [filter.val]
+                });
+            }
+            
+            $scope.activeFilters = _.filter($scope.activeFilters, function(item) { return item.fields.length > 0});
+            $scope.updateUrl();
+		}
+		
+		$scope.toggleVerification = function(facet) {
+			$scope.toggleFilter(facet, {val: true});
+		}
+		
+		$scope.isVerificationActive = function(facet) {
+			return $scope.isFilterActive(facet, {val: true});
+		}
+		
+		$scope.hasVerificationsActive = function() {
+			var verifications = _.filter($scope.activeFilters, function(filter) {
+				return typeof($scope.resultFilters.statFilters[filter.name] !== 'undefined');
+			});
+			
+			return verifications.length;
+		}
+		
+		$scope.clearActiveVerifications = function() {
+			_.each($scope.resultFilters.statFilters, function(filter) {
+				$scope.clearActiveFilters(filter, true);
+			});
+			
+			$scope.updateUrl();
+		}
         
         $scope.updateUrl = function() {
             $scope.pagination.start = 0;
@@ -2781,6 +3784,7 @@ angular.module('disczump.controllers', ['disczump.services'])
             QueryUserService.queryAll({
                 query: $scope.searchParam,
                 sort: $scope.sortParam,
+                filter: $scope.activeFilters,
                 start: $scope.pagination.start,
                 limit: reqSize,
 				geo: $scope.geo
@@ -2807,8 +3811,12 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.resizeRes = function(){
             var resCont = document.getElementById('results-container');
             var resList = document.getElementById('results-list');
+			var resHeaderStatic = document.getElementById('result-header-static');
+			var resHeaderFluid = document.getElementById('result-header-fluid');
+			
             $timeout(function() {
-             angular.element(resList).css('width',  Math.floor(resCont.clientWidth / 206) * 206 + 'px');
+            	angular.element(resList).css('width', Math.floor(resCont.clientWidth / 206) * 206 + 'px');
+				angular.element(resHeaderFluid).css('padding-right', resHeaderStatic.clientWidth + 10 + 'px');
             });
         }
 		
@@ -2910,6 +3918,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 		
 		angular.element($window).bind('resize', $scope.resizeRes);
 		
+		$scope.resizeRes();
+		
 		init = true;
 		
 	}])
@@ -2919,8 +3929,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Description:  Controller for explore functionality. 
 *******************************************************************************/
 .controller('ExploreController', ['$scope', '$location', '$routeParams', '$window', '$q', '_', '$timeout', 'QueryService', 
-								  'CacheService', 'AccountService', 'DiscService', 'RedirectService',
-    function($scope, $location, $routeParams, $window, $q, _, $timeout, QueryService, CacheService, AccountService, DiscService, RedirectService) {
+								  'CacheService', 'AccountService', 'DiscService', 'RedirectService', 'APIService', 
+    function($scope, $location, $routeParams, $window, $q, _, $timeout, QueryService, CacheService, AccountService, DiscService, RedirectService, APIService) {
         var init = true;
         var sortSet = false;
         var reqSize = 20;
@@ -2930,10 +3940,16 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.resultList = [];
         $scope.resultFilters = [];
         $scope.trunk = {};
+		$scope.globalModalOpts = {};
+		$scope.lbOpts = {};
+		$scope.alertOpts = {};
+		
+		var isOwnedTrunk = $routeParams.username && $scope.curUser && $routeParams.username === $scope.curUser.username;
+		
 		$scope.marketplace = {
-			forSale: typeof($routeParams.username) === 'undefined',
-			forTrade: typeof($routeParams.username) === 'undefined',
-			all: typeof($routeParams.username) !== 'undefined'
+			forSale: !isOwnedTrunk,
+			forTrade: !isOwnedTrunk,
+			all: isOwnedTrunk
 		}
         $scope.pagination = { start: 0, total: 0 };
         
@@ -2948,7 +3964,15 @@ angular.module('disczump.controllers', ['disczump.services'])
 			count: 0
 		};
 		
-		$scope.alertOpts = {};
+		$scope.shareTrunk = function() {
+			$scope.globalModalOpts = {
+				type: 'dz-share-modal',
+				show: true,
+				data: {
+					user: $scope.trunk.user
+				}
+			}
+		}
 		
 		$scope.msOpts.selectAll = function() {
 			$scope.msOpts.count = 0;
@@ -2977,7 +4001,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 						discs: results,
 						onClose: function(reload) {
 							if (reload) $scope.handleUrl();
-							// delete all added properties from disc objects;
 						}
 					}
 				}
@@ -3037,6 +4060,15 @@ angular.module('disczump.controllers', ['disczump.services'])
             }
         }
 		
+		var rangeToString = function(str) {
+			var elems = str.match(/\[(\d+)\s?TO\s?(\d+|\*)\]/);
+			if (elems.length != 3) {
+				return str;
+			}
+			
+			return '$' + elems[1] + (elems[2] === '*' ? '+' : ' - $' + elems[2]);
+		}
+		
 		var updateBreadcrumbs = function() {
 			$scope.breadcrumbs = [];
 			if ($scope.searchParam.length) {
@@ -3062,10 +4094,16 @@ angular.module('disczump.controllers', ['disczump.services'])
 				filters.push(tempFilter);
 				
 				_.each(filter.fields, function(field) {
+					var text = field;
+					
+					if (/\[\d+\s?TO\s?(?:\d+|\*)\]/.test(field)) {
+						text = rangeToString(field);
+					}
+					
 					tempFilter.fields.push(field);
 					item.links.push({
-						text: field,
-						href: '/portal' + $location.path() + QueryService.getQueryString({
+						text: text,
+						href: $location.path() + QueryService.getQueryString({
 							query: $scope.searchParam,
 							sort: sortSet ? $scope.sortParam : undefined,
 							filter: filters,
@@ -3223,8 +4261,12 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.resizeRes = function(){
             var resCont = document.getElementById('results-container');
             var resList = document.getElementById('results-list');
+			var resHeaderStatic = document.getElementById('result-header-static');
+			var resHeaderFluid = document.getElementById('result-header-fluid');
+			
             $timeout(function() {
-             angular.element(resList).css('width',  Math.floor(resCont.clientWidth / 206) * 206 + 'px');
+            	angular.element(resList).css('width', Math.floor(resCont.clientWidth / 206) * 206 + 'px');
+				angular.element(resHeaderFluid).css('padding-right', resHeaderStatic.clientWidth + 10 + 'px');
             });
         }
         
@@ -3283,6 +4325,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			
 			if (url && /^\/(t\/|explore)/.test(url)) {
                 var ret = QueryService.parseUrlQuery($location.search());
+				var isMarket = false;
                 
                 $scope.activeFilters = ret.filters;
                 $scope.searchParam = ret.search;
@@ -3293,12 +4336,18 @@ angular.module('disczump.controllers', ['disczump.services'])
 						all: ret.mode == 'all',
 					}
 				}
+				
+				isMarket = $scope.marketplace.forSale || $scope.marketplace.forTrade;
                 
-                if (ret.sort) {
+                if (ret.sort && !(ret.sort == 'new' && !isMarket)) {
                     $scope.sortParam = ret.sort;
                 } else if (ret.search.length) {
                     $scope.sortParam = 'rel';
-                }
+                } else if (isMarket) {
+					$scope.sortParam = 'new';
+				} else {
+					$scope.sortParam = 'createDate';
+				}
 				
 				updateBreadcrumbs();
 				
@@ -3312,10 +4361,6 @@ angular.module('disczump.controllers', ['disczump.services'])
             $scope.handleUrl();
         });
         
-        $scope.$on('$destroy', function() {
-            angular.element($window).unbind('resize', $scope.resizeRes);
-        })
-    
         $scope.toggleFilter = function(facet, filter) {
             var prop = _.find($scope.activeFilters, {name: facet.prop});
             
@@ -3366,6 +4411,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 		}
 			
         angular.element($window).bind('resize', $scope.resizeRes);
+		
+		$scope.$on('$destroy', function() {
+            angular.element($window).unbind('resize', $scope.resizeRes);
+        });
         
         if ($routeParams.username) {
             CacheService.getUserByUsername($routeParams.username, function(success, user) {
@@ -3383,6 +4432,8 @@ angular.module('disczump.controllers', ['disczump.services'])
             init = false;
 			$scope.statusHome = 'explore';
         }
+		
+		$scope.resizeRes();
     }
 ])
 
@@ -3403,21 +4454,25 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Description:  Controller for disc page functionality. 
 *******************************************************************************/
 .controller('DiscController', ['$scope', '$location', '$routeParams', '$timeout', '$window', '_', 
-							   'APIService', 'CacheService', 'AccountService', 'DiscService', 'MessageService',
-    function($scope, $location, $routeParams, $timeout, $window, _, APIService, CacheService, AccountService, DiscService, MessageService) {
+							   'CacheService', 'AccountService', 'DiscService', 'MessageService',
+    function($scope, $location, $routeParams, $timeout, $window, _, CacheService, AccountService, DiscService, MessageService) {
         var discId = $routeParams.discId;
         $scope.breadcrumbs = [];
         
 		$scope.bumpReady = false;
 		$scope.isSaving = false;
-        $scope.loading = true;
-// 		$scope.editPrice = false;
+        $scope.loading = {
+			disc: true,
+			privacy: false
+		};
 		$scope.tempMarketplace = {};
 		$scope.discAlert = {};
+		$scope.marketAlert = {};
+		$scope.globalModalOpts = {};
 		
 		var initUser = function() {
 			$scope.breadcrumbs = [
-				{title: 'Trunk', links: [{text: $scope.user.username, href:'/portal/t/' + $scope.user.username}]},
+				{title: 'Trunk', links: [{text: $scope.user.username, href:'/t/' + $scope.user.username}]},
 				{title: 'Disc', links: [{text: $scope.disc.brand + ' ' + $scope.disc.name}]},
 			];
 			$scope.userInit = true;
@@ -3428,7 +4483,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				if (success) {
 					$scope.tempMarketplace.counts = data;
 				} else {
-					$scope.discAlert.error = {
+					$scope.marketAlert.error = {
 						title: data.type,
 						message: data.message,
 						show: true
@@ -3444,40 +4499,41 @@ angular.module('disczump.controllers', ['disczump.services'])
 			refreshMarket();
 		}
 		
-        APIService.Get('/discs/' + discId, function(success, disc) {
-            if (!success) {
-                return $scope.nav();
-            } else {
-               	$scope.disc = disc;
-				$scope.imageBlock = _.findWhere(disc.imageList, {_id: disc.primaryImage});
-				$scope.discInit = true;
-				
-				if ($scope.givePermission()) {
-					$scope.user = AccountService.getAccount();
-					updateTempMarket(disc);
-					initUser();
-				} else{
-					CacheService.getUser(disc.userId, function(success, user) {
-						if (!success) {
-							return $scope.nav();
-						}
-						$scope.user = user;
-						$scope.publicMode = true;
-						initUser();
-					});
+		$scope.shareDisc = function() {
+			$scope.globalModalOpts = {
+				type: 'dz-share-modal',
+				show: true,
+				data: {
+					disc: $scope.disc
 				}
-            }
-            $scope.loading = false;
-        });
+			}
+		}
+		
+		$scope.deleteDisc = function() {
+			var discArr = [
+				$scope.disc
+			];
+			
+			$scope.globalModalOpts = {
+				type: 'dz-delete-disc-modal',
+				show: true,
+				data: {
+					discs: discArr,
+					onClose: function(redirect) {
+						if (redirect) $location.url('/t/' + $scope.user.username);
+					}
+				}
+			}
+		}
 		
 		$scope.bumpDisc = function() {
-			APIService.Put('/discs/' + $scope.disc._id + '/bump', {}, function(success, data) {
+			DiscService.bumpDisc($scope.disc._id, function(success, data) {
 				if (success) {
 					$scope.disc = data;
 					updateTempMarket(data);
 					$scope.bumpReady = false;
 				} else {
-					$scope.discAlert.error = {
+					$scope.marketAlert.error = {
 						title: data.type,
 						message: data.message,
 						show: true
@@ -3501,23 +4557,60 @@ angular.module('disczump.controllers', ['disczump.services'])
 			DiscService.editDisc(tempDisc, function(success, disc) {
 				if (success) {
 					$scope.disc = disc;
-					$scope.bumpReady = false;
+					$scope.bumpReady = disc.marketplace.bumpRemaining === 0;
 					updateTempMarket(disc);
-					$scope.discAlert.success = {
+					$scope.marketAlert.success = {
 						title: 'Success',
 						message: 'Marketplace options have been updated successfully.',
 						show: true,
 						timeout: 3000
 					}
-					$scope.isSaving = false;
 				} else {
-					$scope.discAlert.error = {
+					$scope.marketAlert.error = {
 						title: 'Error',
 						message: 'Unable to update marketplace options.',
 						show: true
 					}
-					$scope.isSaving = false;
 				}
+				$scope.isSaving = false;
+			});
+		}
+		
+		$scope.warnPrivacy = function() {
+			$scope.globalModalOpts = {
+				type: 'dz-acknowledgement-modal',
+				show: true,
+				data: {
+					message: 'This disc is currently on the marketplace, and making it private will automatically remove it from the marketplace. Do you wish to proceed?',
+					onClose: function(confirmed) {
+						if (confirmed) $scope.togglePrivacy();
+					}
+				}
+			}
+		}
+		
+		$scope.togglePrivacy = function() {
+			$scope.loading.privacy = true;
+			
+			var tempDisc = {
+				_id: $scope.disc._id,
+				'visible': !$scope.disc.visible
+			};
+			
+			DiscService.editDisc(tempDisc, function(success, disc) {
+				$timeout(function() {
+					if (success) {
+						$scope.disc = disc;
+						updateTempMarket(disc);
+					} else {
+						$scope.discAlert.error = {
+							title: 'Error',
+							message: 'Unable to update disc visibility.',
+							show: true
+						}
+					}
+					$scope.loading.privacy = false;
+				});
 			});
 		}
 		
@@ -3530,6 +4623,12 @@ angular.module('disczump.controllers', ['disczump.services'])
             $scope.imageBlock = img;
 		}
 		
+		$scope.isMarket = function() {
+			if (typeof($scope.disc) !== 'undefined') {
+				return $scope.disc.marketplace.forSale || $scope.disc.marketplace.forTrade;
+			}
+		}
+		
 		$scope.isDirty = function() {
 			return $scope.tempMarketplace.value != $scope.disc.marketplace.value ||
 					$scope.tempMarketplace.forSale != $scope.disc.marketplace.forSale ||
@@ -3539,6 +4638,32 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.givePermission = function() {
             return AccountService.compareTo($scope.disc.userId);
         }
+		
+		CacheService.getDisc(discId, function(success, disc) {
+            if (!success) {
+                return $scope.nav();
+            } else {
+               	$scope.disc = disc;
+				$scope.imageBlock = _.findWhere(disc.imageList, {_id: disc.primaryImage});
+				$scope.discInit = true;
+				
+				if ($scope.givePermission()) {
+					$scope.user = AccountService.getAccount();
+					updateTempMarket(disc);
+					initUser();
+				} else{
+					CacheService.getUser(disc.userId, function(success, user) {
+						if (!success) {
+							return $scope.nav();
+						}
+						$scope.user = user;
+						$scope.publicMode = true;
+						initUser();
+					});
+				}
+            }
+            $scope.loading.disc = false;
+        });
     }
 ])
 
@@ -3601,15 +4726,15 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         ModifyDiscController
 * Description:  Controller for disc page functionality. 
 *******************************************************************************/
-.controller('ModifyDiscController', ['$compile', '$scope', '$routeParams', '$location', '$timeout', '_', 'smoothScroll', '$ocLazyLoad', 'APIService', 'ImageService', 'AccountService', 'DiscService', 
-    function($compile, $scope, $routeParams, $location, $timeout, _, smoothScroll, $ocLazyLoad, APIService, ImageService, AccountService, DiscService) {
+.controller('ModifyDiscController', ['$compile', '$scope', '$routeParams', '$location', '$timeout', '_', 'smoothScroll', '$ocLazyLoad', 'APIService', 'CacheService', 'ImageService', 'AccountService', 'DiscService', 
+    function($compile, $scope, $routeParams, $location, $timeout, _, smoothScroll, $ocLazyLoad, APIService, CacheService, ImageService, AccountService, DiscService) {
         if (!AccountService.isLoggedIn()) {
             return $location.path('/login');
         }
         
         var discId = $routeParams.discId;
         var templateId = $routeParams.templateId;
-        var topEdit = document.getElementById('disc-edit');
+        var pageTop = document.getElementById('page-top');
 		var dropzoneTemplate = '<div class="image-item-container image-template">' +
                     '<div class="image-item">' +
                         '<div class="image-entity">' +
@@ -3618,14 +4743,126 @@ angular.module('disczump.controllers', ['disczump.services'])
                         '<div class="image-progress" data-dz-uploadprogress></div>' +
                         '<div class="image-overlay">' +
                             '<span class="image-remove" data-dz-remove><i class="fa fa-times fa-lg"></i></span>' +
-                            '<div class="image-title"><span data-dz-name></span></div>' +
-                            '<div class="image-size" data-dz-size></div>' +
+                            '<div class="image-title handle-overflow"><span data-dz-name></span></div>' +
+                            '<div class="image-size handle-overflow" data-dz-size></div>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
-                
-        $scope.editAlert = {}
+		
+		$scope.editAlert = {};
 		$scope.account = AccountService.getAccount();
+		
+		$scope.showGeneralHelp = function() {
+			$scope.globalModalOpts = {
+				type: 'dz-info-modal',
+				show: true,
+				data: {
+					title: 'Modify Disc Help - General',
+					body: '<div class="dz-info-table">' +
+							'<table>' +
+								'<tbody>' +
+									'<tr class="header-row">' +
+										'<th>Field</th>' +
+										'<th>Description</th>' +
+										'<th>Example</th>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Brand</td>' +
+										'<td class="help-text">Enter the brand of the disc. (This field is required)</td>' +
+										'<td class="help-ex">Innova</td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Name</td>' +
+										'<td class="help-text">Enter the name/mold of the disc. (This field is required)</td>' +
+										'<td class="help-ex">Destroyer</td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Type</td>' +
+										'<td class="help-text">Select the type of the disc.</td>' +
+										'<td class="help-ex">Distance Driver</td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Material</td>' +
+										'<td class="help-text">Enter the material of the disc. Most brands have at least 3 distinct material types.</td>' +
+										'<td class="help-ex">Champion</td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Weight</td>' +
+										'<td class="help-text">Enter the weight of the disc in grams. The weight is frequently printed or written on the underside of the flight plate. <b>NOTE: </b>This field only accepts positive integers with up to 3 digits, and weights typically range from 150 to 180.</td>' +
+										'<td class="help-ex">172</td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Color</td>' +
+										'<td class="help-text">Enter the color of the disc.</td>' +
+										'<td class="help-ex">Orange</td>' +
+									'</tr>' +
+								'</tbody>' +
+							'</table>' +
+						'</div>'
+				}
+			}
+		}
+		
+		$scope.showAdvancedHelp = function() {
+			$scope.globalModalOpts = {
+				type: 'dz-info-modal',
+				show: true,
+				data: {
+					title: 'Modify Disc Help - Advanced',
+					body: '<div class="dz-info-table">' +
+							'<table>' +
+								'<tbody>' +
+									'<tr class="header-row">' +
+										'<th>Field</th>' +
+										'<th>Description</th>' +
+										'<th>Example</th>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Speed</td>' +
+										'<td class="help-text">Enter the speed of the disc. Speed is the first of four flight numbers, and it relates to the speed at which the disc must be thrown to achieve the designed flight path. <b>NOTE: </b>This field only accepts positive numbers with up to 2 digits and 1 decimal place. Speed values typically range from 1 to 15.</td>' +
+										'<td class="help-ex">12</td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Glide</td>' +
+										'<td class="help-text">Enter the glide of the disc. Glide is the second of four flight numbers, and it relates to the disc\'s ability to stay afloat during it\'s flight. <b>NOTE: </b>This field only accepts positive numbers with up to 2 digits and 1 decimal place. Glide values typically range from 1 to 7.</td>' +
+										'<td class="help-ex">5</td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Turn</td>' +
+										'<td class="help-text">Enter the turn of the disc. Turn is the third of four flight numbers, and it relates to the disc\'s resistance to turning during the high speed portion of it\'s flight. <b>NOTE: </b>This field only accepts positive and negative numbers with up to 2 digits and 1 decimal place. Turn values typically range from -5 to 1.</td>' +
+										'<td class="help-ex">-1</td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Fade</td>' +
+										'<td class="help-text">Enter the fade of the disc. Fade is the fourth of four flight numbers, and it relates to the disc\'s resistance to turning during the low speed portion of it\'s flight. <b>NOTE: </b>This field only accepts positive and negative numbers with up to 2 digits and 1 decimal place. Fade values typically range from 0 to 6.</td>' +
+										'<td class="help-ex">3</td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Tags</td>' +
+										'<td class="help-text">Enter tags that you associate with this disc. Use tags to group discs outside of inherent traits such as brand, material, color, etc. Tags are great ways to associate discs with specific collections, bags, or tournaments. They are completely customizable, and examples include "Thrower", "CFR", "Glow", "xxx Collection", "xxx Bag", etc. <b>NOTE: </b>A disc can have multiple tags, and a tag can be associated with multiple discs.</td>' +
+										'<td class="help-ex">Thrower<br>Glow Bag<br>Zone Collection</td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Notes</td>' +
+										'<td class="help-text">Use the notes area to store detailed comments related to this disc only. Notes are completely customizable and examples may include "Found on hole 7 at...", "Won at...", "2008 World Championship stamp", "Only 1000 made", "Price includes shipping", etc.</td>' +
+										'<td class="help-ex"></td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Public</td>' +
+										'<td class="help-text">Toggle the visibility setting to allow or prevent other users from viewing your disc. If public mode is turned on, then your disc is visible to the public and can be shared via Facebook or public URL. If public mode is turned off, then your disc is only privately viewable by the creator and shareable links will not work. <b>NOTE: </b>Visibility is saved for each disc independently and it can be toggled directly from the disc page by clicking on the eyeball icon. Each disc must be marked \'Public\' before adding it to the marketplace.</td>' +
+										'<td class="help-ex"></td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Condition</td>' +
+										'<td class="help-text">Enter the condition of the disc based on the sleepy scale. <b>NOTE: </b>This field only accepts integers from 0 to 10.</td>' +
+										'<td class="help-ex">9</td>' +
+									'</tr>' +
+								'</tbody>' +
+							'</table>' +
+						'</div>'
+				}
+			}
+		}
 		
 		$scope.clearForm = function() {
 			$scope.disc = {_id: $scope.disc._id, visible: true, tagList: [], imageList: []};
@@ -3667,7 +4904,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                     
                     if (file.cropped || file.width < 200) {
                         $timeout(function() {
-                             $scope.discImageCropper.cropperLoading = false;
+                            $scope.discImageCropper.cropperLoading = false;
                             $scope.settings.dropzoneProcessing = true;
                             file.previewElement.setAttribute('dropzone-preview', '');
                             $compile(angular.element(file.previewElement))($scope);
@@ -3736,7 +4973,9 @@ angular.module('disczump.controllers', ['disczump.services'])
             if ($scope.tempTag && $scope.tempTag.length && !_.contains($scope.disc.tagList, $scope.tempTag)) {
                 $scope.disc.tagList.push($scope.tempTag);
                 $scope.tempTag = '';
-            }
+            } else {
+				$scope.tempTag = '';
+			}
         }
         
         var scrollTop = function() {
@@ -3745,7 +4984,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                 easing: 'easeInQuad'
             }
             
-            smoothScroll(topEdit, options);
+            smoothScroll(pageTop, options);
         }
         
         $scope.submitDisc = function() {
@@ -3768,6 +5007,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				DiscService.editDisc($scope.disc, function(success, disc) {
                     if (success) {
                         $scope.disc = disc;
+						$scope.breadcrumbs.splice(1, 1, {title: 'Disc', links: [{text: disc.brand + ' ' +  disc.name + ' ' + '(#' + discId + ')', href: '/d/' + discId}]});
                         $scope.editAlert.success = {
                             title: 'Success',
                             message: disc.brand + ' ' + disc.name + ' has been updated successfully.',
@@ -3807,6 +5047,15 @@ angular.module('disczump.controllers', ['disczump.services'])
                 
             }
         }
+		
+		$scope.$watch('disc.visible', function(newVal) {
+			if (typeof(newVal) !== 'undefined') {
+				if (!newVal && $scope.disc.marketplace) {
+					$scope.disc.marketplace.forSale = false;
+					$scope.disc.marketplace.forTrade = false;
+				}
+			}
+		});
         
         if (typeof Dropzone === 'undefined' || typeof EXIF === 'undefined' || 
             typeof Cropper === 'undefined') {
@@ -3826,22 +5075,20 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
 		
 		$scope.breadcrumbs = [
-			{title: 'Trunk', links: [{text: $scope.account.username, href:'/portal/t/' + $scope.account.username}]}
+			{title: 'Trunk', links: [{text: $scope.account.username, href:'/t/' + $scope.account.username}]}
 		];
         
         if (typeof(discId) !== 'undefined') { // Edit Mode
-            APIService.Get('/discs/' + discId, function(success, disc) {
+            CacheService.getDisc(discId, function(success, disc) {
                 if (!success) {
                     return $scope.nav();
                 } else {
-					console.log(disc);
 					if (!AccountService.compareTo(disc.userId)) {
                         return $scope.nav();
                     }
-                    
                     $scope.disc = disc;
 					
-					$scope.breadcrumbs.push({title: 'Disc', links: [{text: disc.brand + ' ' +  disc.name + ' ' + '(#' + discId + ')', href: '/portal/d/' + discId}]});
+					$scope.breadcrumbs.push({title: 'Disc', links: [{text: disc.brand + ' ' +  disc.name + ' ' + '(#' + discId + ')', href: '/d/' + discId}]});
 					$scope.breadcrumbs.push({links: [{text:'Edit Disc'}]});
                     
                     $scope.settings.discReady = true;
@@ -3928,7 +5175,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			$scope.sendOnEnter = true;
 			$scope.messageAlert = {};
 			$scope.breadcrumbs = [
-				{title: 'Trunk', links: [{text: $scope.account.username, href:'/portal/t/' + $scope.account.username}]},
+				{links: [{text: 'My Account', href:'/account'}]},
 				{links: [{text: 'Inbox'}]},
 			];
 			
@@ -3950,9 +5197,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 			var resizeInbox = function() {
 				$timeout(function() {
 					var inboxArea = document.getElementById('inbox-area');
+					var footer = document.getElementById('footer-bar');
 					var height = PageUtils.getWindowHeight();
 					var rectTop = PageUtils.getTop(inboxArea);
-					angular.element(inboxArea).css('height', (height - rectTop - 10) + 'px');
+					angular.element(inboxArea).css('height', (height - rectTop - 20 - footer.clientHeight) + 'px');
 				});
 			}
 			
@@ -4337,7 +5585,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 							if (attachments.length) {
 								$scope.userMessage = '';
 								attachments.forEach(function(attachment) {
-									$scope.userMessage += $location.host() + '/portal/' + attachment.type + '/' + attachment.id + '\r\n';
+									$scope.userMessage += $location.host() + '/' + attachment.type + '/' + attachment.id + '\r\n';
 								});
 							}
 						}
@@ -4390,58 +5638,381 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         AccountController
 * Description:  Handles account preferences and settings. 
 *******************************************************************************/
-.controller('AccountController', ['$scope', '$location', '$window', 'AccountService', 'APIService', 'FacebookUtils',  
-    function($scope, $location, $window, AccountService, APIService, FacebookUtils) {
-			if (!AccountService.isLoggedIn()) {
-				return $location.path('/login');
-			}
+.controller('AccountController', ['$scope', '$location', '$window', '$timeout', '$compile', '$ocLazyLoad', 'AccountService', 'APIService', 'FacebookUtils', 'ImageService', 'TempStore', 
+    function($scope, $location, $window, $timeout, $compile, $ocLazyLoad, AccountService, APIService, FacebookUtils, ImageService, TempStore) {
+		if (!AccountService.isLoggedIn()) {
+			return $location.path('/login');
+		}
+
+		$scope.page = {
+			active: 'account'
+		}
+		$scope.accountAlert = {};
+		$scope.account = AccountService.getAccount();
+		$scope.tempAccount = {};
+		$scope.location = {};
+		$scope.notifications = {};
+		$scope.globalModalOpts = {};
+		$scope.breadcrumbs = [
+			{links: [{text: 'My Account'}]}
+		];
 		
-			$scope.account = AccountService.getAccount();
-			$scope.tempAccount = {};
-			$scope.location = {
-				curLocation: $scope.account.longLocation
-			}
+		if (TempStore.hasKey('seenAccount')) {
+			$scope.skip = true;
+		} else {
+			TempStore.setTempKey('seenAccount', true);
+		}
+
+		var dropzoneTemplate = '<div class="image-template">' +
+				'<div class="image-item no-border">' +
+					'<div class="image-entity">' +
+						'<img data-dz-thumbnail />' +
+					'</div>' +
+					'<div class="image-progress" data-dz-uploadprogress></div>' +
+					'<div class="image-overlay show-always">' +
+						'<div class="image-title handle-overflow"><span data-dz-name></span></div>' +
+						'<div class="image-size handle-overflow" data-dz-size></div>' +
+					'</div>' +
+				'</div>' +
+			'</div>';
+
+		var updateProfilePic = function(imageObj) {
+			AccountService.putAccountImage(imageObj, function(success, account) {
+				if (success) {
+					$scope.account = account;
+					$scope.accountAlert.success = {
+						title: 'Success',
+						message: 'Account profile image updated successfully.',
+						show: true,
+						timeout: 3000
+					}
+					$scope.cloneAccount();
+				} else {
+					$scope.accountAlert.error = {
+						title: 'Updated Failed',
+						message: account.type + ': ' + account.message,
+						show: true
+					}
+				}
+			});
+		}
 		
-			$scope.doFbLink = function() {
-				FacebookUtils.link(function(success, data) {
-					if (success) {
-						console.log('linked!!');
-						account = data;
-					}
-					
-					console.log(data);
-				});
-			}
-			
-			$scope.doFbUnlink = function() {
-				FacebookUtils.unlink(function(success, data) {
-					if (success) {
-						console.log('unlinked!!');
-						account = data;
-					}
-					
-					console.log(data);
-				});
-			}
-			
-			$scope.doDelete = function() {
-				AccountService.doAccountDelete(function(success, data) {
-					if (success) {
-						
-					}
-					
-					console.log(data);
-				});
-			}
-			
-			$scope.cloneAccount = function() {
-				$scope.tempAccount = {
-					firstName: $scope.account.firstName,
-					lastName: $scope.account.lastName
+		$scope.deleteAccount = function() {
+			$scope.globalModalOpts = {
+				type: 'dz-delete-account-modal',
+				show: true,
+				data: {
+					account: $scope.account
 				}
 			}
+		}
+		
+		$scope.manageFb = function() {
 			
-			$scope.cloneAccount();
+		}
+
+		$scope.dropzoneConfig = {
+			options: {
+				url: '/api/images',
+				method: "POST",
+				thumbnailWidth: 150,
+				thumbnailHeight: 150,
+				parallelUploads: 1,
+				maxFiles: 1,
+				paramName: 'accountImage',
+				previewTemplate: dropzoneTemplate,
+				acceptedFiles: "image/*",
+				autoProcessQueue: false,
+				previewsContainer: '#profile-img',
+				clickable: '#profile-trigger',
+				accept: function(file, done) {
+					if (this.files[1] != null) {
+						return this.removeFile(this.files[1]);
+					}
+
+					if (file.cropped || file.width < 200) {
+						$timeout(function() {
+							$scope.discImageCropper.cropperLoading = false;
+							$scope.page.dropzoneImage = true;
+						});
+						return done();
+					}
+
+					$timeout(function() {
+						$scope.discImageCropper.cropperLoading = true;
+					});
+					$scope.dropzoneConfig.getDropzone().removeFile(file);
+					ImageService.getDataUri(file, function(dataUri) {
+						$scope.discImageCropper.showCropper(file.name, dataUri);
+					});
+
+					return done('Processing');
+				},
+				success: function(file, response) {
+					if (typeof response._id !== 'undefined') {
+						updateProfilePic(response);
+					} else if (response.error) {
+						$scope.accountAlert.error = {
+							title: 'Upload Failed',
+							message: 'Unable to upload profile picture. Please try again. ' + response.error.title + ': ' + response.error.message,
+							show: true,
+							timeout: 3000
+						}
+					}
+					this.removeFile(file);
+					$scope.page.dropzoneImage = false;
+				},
+				queuecomplete: function() {
+					$timeout(function() {
+						$scope.page.dropzoneProcessing = false;
+					});
+				},
+				removedallfiles: function() {
+					$scope.page.dropzoneImage = false;
+				}
+			}
+		};
+
+		$scope.discImageCropper = {
+			onFinish: function(file) {
+				$scope.safeApply(function() {
+					$scope.discImageCropper.cropperLoading = false;
+				});
+				if (file) {
+					$scope.dropzoneConfig.getDropzone().addFile(file);
+				}
+			},
+			cropperLoading: false
+		}
+
+		$scope.triggerDropzone = function() {
+			 $scope.dropzoneConfig.getDropzone().processQueue();
+		}
+
+		$scope.clearDropzone = function() {
+			$scope.dropzoneConfig.getDropzone().removeAllFiles();
+		}
+
+		$scope.deleteAccountImage = function() {
+			AccountService.deleteAccountImage(function(success, account) {
+			if (success) {
+				$scope.account = account;
+				$scope.accountAlert.success = {
+					title: 'Success',
+					message: 'Account profile image updated successfully.',
+					show: true,
+					timeout: 3000
+				}
+				$scope.cloneAccount();
+			} else {
+				$scope.accountAlert.error = {
+					title: 'Updated Failed',
+					message: account.type + ': ' + account.message,
+					show: true
+				}
+			}
+		});
+		}
+
+
+		$scope.getJoinDays = function() {
+			var joinDate = new Date($scope.account.dateJoined);
+
+			return Math.round(Math.abs((joinDate.getTime() - (new Date()).getTime())/(24*60*60*1000)));
+		}
+
+		$scope.countVerifications = function() {
+			var count = 0;
+
+			if ($scope.account.fbId) {
+				count++;
+			}
+
+			if ($scope.account.pdgaNumber) {
+				count++;
+			}
+
+			return count;
+		}
+
+		$scope.updateAccount = function() {
+			AccountService.putAccount($scope.tempAccount, function(success, account) {
+				if (success) {
+					$scope.account = account;
+					$scope.accountAlert.success = {
+						title: 'Success',
+						message: 'Account updated successfully.',
+						show: true,
+						timeout: 3000
+					}
+					$scope.cloneAccount();
+				} else {
+					$scope.accountAlert.error = {
+						title: 'Updated Failed',
+						message: account.type + ': ' + account.message,
+						show: true
+					}
+				}
+			})
+		}
+
+		$scope.doFbLink = function() {
+			FacebookUtils.link(function(success, account) {
+				if (success) {
+					$scope.account = account;
+					$scope.accountAlert.success = {
+						title: 'Success',
+						message: 'Facebook linked successfully.',
+						show: true,
+						timeout: 3000
+					}
+				} else {
+					$scope.accountAlert.error = {
+						title: 'Link Failed',
+						message: 'Unable to link to Facebook account. ' + account.type + ': ' + account.message,
+						show: true
+					}
+				}
+			});
+		}
+
+		var doFbUnlink = function() {
+			FacebookUtils.unlink(function(success, account) {
+				if (success) {
+					$scope.account = account;
+					$scope.accountAlert.success = {
+						title: 'Success',
+						message: 'Facebook unlinked successfully.',
+						show: true,
+						timeout: 3000
+					}
+				} else {
+					$scope.accountAlert.error = {
+						title: 'Unlink Failed',
+						message: 'Unable to unlink to Facebook account. ' + account.type + ': ' + account.message,
+						show: true
+					}
+				}
+			});
+		}
+		
+		$scope.warnFbUnlink = function() {
+			$scope.globalModalOpts = {
+				type: 'dz-acknowledgement-modal',
+				show: true,
+				data: {
+					message1: 'Do you wish to unlink your Facebook account?',
+					message2: 'You will no longer be able to login to disc|zump via Facebook, and your Facebook verification will automatically be disabled if it exists.',
+					onClose: function(confirmed) {
+						if (confirmed) doFbUnlink();
+					}
+				}
+			}
+		}
+
+		$scope.doDelete = function() {
+			AccountService.doAccountDelete(function(success, data) {
+				if (success) {
+
+				}
+
+				console.log(data);
+			});
+		}
+
+		$scope.locSelected = function(result) {
+			$scope.location.curLocation = result.address;
+			$scope.tempAccount.geoLat = result.latitude;
+			$scope.tempAccount.geoLng = result.longitude;
+		}
+
+		$scope.cloneAccount = function() {
+			$scope.location.search = '';
+			$scope.location.curLocation = $scope.account.longLocation;
+			$scope.tempAccount = {
+				firstName: $scope.account.firstName,
+				lastName: $scope.account.lastName,
+				bio: $scope.account.bio,
+				geoLat: undefined,
+				geoLng: undefined
+			}
+		}
+
+		$scope.cloneAccount();
+
+		$scope.initDropzone = function() {
+			if (typeof Dropzone === 'undefined' || typeof EXIF === 'undefined' || 
+				typeof Cropper === 'undefined') {
+				$ocLazyLoad.load(
+					['https://cdn.rawgit.com/exif-js/exif-js/master/exif.js',
+					'/static/js/dropzone.js'
+					]).then(function() {
+						$ocLazyLoad.load([
+							'/static/js-dist/cropper.min.js',
+							{type: 'css', path: 'https://cdn.rawgit.com/fengyuanchen/cropperjs/master/dist/cropper.min.css'}
+						]).then(function() {
+								$scope.page.dropzoneReady = true;
+							});
+					});
+			} else {
+				$scope.page.dropzoneReady = true;
+			}
+		}
+
+		$scope.getNotifications = function(reload) {
+			if ($scope.page.notificationReady && !reload)
+				return;
+
+			$scope.page.notificationReady = false;
+			AccountService.getNotifications(function(success, notifications) {
+				if (success) {
+					$scope.notifications = notifications;
+				} else {
+					$scope.accountAlert.error = {
+						title: 'Notification Load Failed',
+						message: 'Unable to load notifications. ' + notifications.type + ': ' + notifications.message,
+						show: true
+					}
+				}
+				$scope.page.notificationReady = true;
+			})
+		}
+
+		$scope.setNotifications = function(reload) {
+			$scope.page.notificationReady = false;
+			AccountService.putNotifications($scope.notifications, function(success, notifications) {
+				if (success) {
+					$scope.notifications = notifications;
+					$scope.accountAlert.success = {
+						title: 'Update Successful',
+						message: 'Notification settings have been updated successfully.',
+						show: true,
+						timeout: 3000
+					}
+				} else {
+					$scope.accountAlert.error = {
+						title: 'Update Failed',
+						message: 'Unable to save notifications settings. ' + notifications.type + ': ' + notifications.message,
+						show: true
+					}
+				}
+				$scope.page.notificationReady = true;
+			})
+		}
+
+		$scope.$watch('page.active', function(newVal) {
+			switch(newVal) {
+				case 'profile-pic': return $scope.initDropzone();
+				case 'notification': return $scope.getNotifications();
+			}
+		});
+		
+		APIService.Get('/account/count', function(success, data) {
+			if (success) {
+				$scope.count = data.count;
+				$scope.page.ready = true;
+			}
+		});
     }
 ])
 
@@ -4449,7 +6020,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         AccountController
 * Description:  Handles account preferences and settings. 
 *******************************************************************************/
-.controller('AccountUpgradeSelController', ['$scope', '$location', '$window', 'AccountService', 'APIService', 'MembershipService', 'TempStore', 
+.controller('AccountChangeSelController', ['$scope', '$location', '$window', 'AccountService', 'APIService', 'MembershipService', 'TempStore', 
     function($scope, $location, $window, AccountService, APIService, MembershipService, TempStore) {
 		if (!AccountService.isLoggedIn()) {
 			return $location.path('/login');
@@ -4457,8 +6028,13 @@ angular.module('disczump.controllers', ['disczump.services'])
 
 		$scope.account = AccountService.getAccount();
 		
+		$scope.breadcrumbs = [
+			{links: [{text: 'My Account', href:'/account'}]},
+			{links: [{text: 'Membership', href: '/account/membership'}]}
+		]
+		
 		$scope.selUpgrade = function(type) {
-			$location.url('/account/upgrade/payment?key=' + TempStore.setTemp(type));
+			$location.url('/account/membership/process?key=' + TempStore.setTemp(type));
 		}
 		
 		$scope.getAccountType = function(type) {
@@ -4475,24 +6051,102 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         AccountController
 * Description:  Handles account preferences and settings. 
 *******************************************************************************/
-.controller('AccountUpgradeController', ['$scope', '$location', '$window', 'smoothScroll', 'AccountService', 'APIService', 'MembershipService', 'TempStore', 
+.controller('AccountAdjustController', ['$scope', '$location', '$window', 'smoothScroll', 'AccountService', 'APIService', 'MembershipService', 'TempStore', 
     function($scope, $location, $window, smoothScroll, AccountService, APIService, MembershipService, TempStore) {
 		if (!AccountService.isLoggedIn()) {
 			return $location.path('/login');
 		}
 
 		$scope.account = AccountService.getAccount();
+		
+		$scope.breadcrumbs = [
+			{links: [{text: 'My Account', href:'/account'}]},
+			{links: [{text: 'Membership', href: '/account/membership'}]}
+		]
+		
+		$scope.billing = {};
+		$scope.paypalConfig = {};
+		$scope.upgradeAlert = {};
+		$scope.form = {
+			showBilling: true
+		}
+		
+		$scope.showPayment = function() {
+			$scope.form = {
+				showPayment: true
+			};
+			
+			var payment = document.getElementById('payment-container');
+
+			var options = {
+				duration: 200,
+				easing: 'easeInQuad',
+				offset: 50
+			}
+
+			smoothScroll(payment, options);
+			
+			$scope.paypalLoading = true;
+			MembershipService.createHostedPageAdj($scope.billing, function(success, request) {
+				if (success) {
+					console.log(request);
+					$scope.request = request.request;
+					$scope.paypalConfig.params = {
+						src: 'https://payflowlink.paypal.com?MODE=TEST&SECURETOKENID=' + request.hostedPage.secureTokenId + '&SECURETOKEN=' + request.hostedPage.secureToken,
+						width: '490',
+						height: '250',
+						border: '0',
+						frameborder: '0',
+						scrolling: 'no',
+						allowtransparency: 'true'
+					}
+					$scope.paypalConfig.create = true;
+				} else {
+					$scope.upgradeAlert.error = {
+						title: request.type,
+						message: request.message,
+						show: true
+					};
+				}
+				$scope.paypalLoading = false;
+			});
+		}
+	}])
+
+/******************************************************************************
+* Name:         AccountController
+* Description:  Handles account preferences and settings. 
+*******************************************************************************/
+.controller('AccountChangeController', ['$scope', '$location', '$window', 'smoothScroll', 'AccountService', 'APIService', 'MembershipService', 'TempStore', 
+    function($scope, $location, $window, smoothScroll, AccountService, APIService, MembershipService, TempStore) {
+		if (!AccountService.isLoggedIn()) {
+			return $location.path('/login');
+		}
+
+		$scope.account = AccountService.getAccount();
+		
+		$scope.breadcrumbs = [
+			{links: [{text: 'My Account', href:'/account'}]},
+			{links: [{text: 'Membership', href: '/account/membership'}]}
+		]
+		
 		$scope.form = {
 			showConfirm: true
 		};
+		$scope.confirm = {
+			opAct: false,
+			paymentMethod: $scope.account.profile.exists ? 'useExisting' : 'createNew'
+		}
 		$scope.billing = {};
 		$scope.paypalConfig = {};
 		$scope.upgradeAlert = {};
 		
 		$scope.type = TempStore.getTemp($location.search().key);
 		if (typeof($scope.type) === 'undefined') {
-			return $location.path('/account/upgrade');
+			return $location.url('/account/change');
 		}
+		
+		$scope.accountMethod = MembershipService.getChangeType($scope.account.profile.type, $scope.type);
 		
 		$scope.showBilling = function() {
 			$scope.form = {
@@ -4526,16 +6180,14 @@ angular.module('disczump.controllers', ['disczump.services'])
 			smoothScroll(payment, options);
 			
 			$scope.paypalLoading = true;
-			APIService.PostExt('/membership', '/create', {
-				type: $scope.type,
-				billing: $scope.billing
-			}, function(success, request) {
+			MembershipService.createHostedPage($scope.type, $scope.billing, function(success, request) {
 				if (success) {
 					console.log(request);
+					$scope.request = request.request;
 					$scope.paypalConfig.params = {
-						src: 'https://payflowlink.paypal.com?MODE=TEST&SECURETOKENID=' + request.secureTokenId + '&SECURETOKEN=' + request.secureToken,
+						src: 'https://payflowlink.paypal.com?MODE=TEST&SECURETOKENID=' + request.hostedPage.secureTokenId + '&SECURETOKEN=' + request.hostedPage.secureToken,
 						width: '490',
-						height: '565',
+						height: '250',
 						border: '0',
 						frameborder: '0',
 						scrolling: 'no',
@@ -4553,10 +6205,42 @@ angular.module('disczump.controllers', ['disczump.services'])
 			});
 		}
 		
-// 		$scope.accountMethod = MembershipService.getChangeType($scope.account.accountType, $scope.type);
-		$scope.accountMethod = 'no-profile';
+		$scope.confirmChange = function() {
+			if ($scope.accountMethod == 'upgrade-profile' || $scope.accountMethod == 'downgrade-profile') {
+				$scope.confirmLoading = true;
+				MembershipService.modifyExisting($scope.type, function(success, request) {
+					if (success) {
+						$location.url('/account/membership/result?req=' + request.req);
+					} else {
+						$location.url('/account/membership/result?err_type=' + request.type + '&err_msg=' + request.message);
+					}
+					$scope.confirmLoading = false;
+				});
+			} else if ($scope.accountMethod == 'clear-profile') {
+				$scope.confirmLoading = true;
+				MembershipService.clearExisting(function(success, request) {
+					if (success) {
+						$location.url('/account/membership/result?req=' + request.req);
+					} else {
+						$location.url('/account/membership/result?err_type=' + request.type + '&err_msg=' + request.message);
+					}
+					$scope.confirmLoading = false;
+				});
+			} else if ($scope.accountMethod == 'no-profile' && $scope.account.profile.exists) {
+				$scope.confirmLoading = true;
+				MembershipService.reactivate($scope.type, function(success, request) {
+					if (success) {
+						$location.url('/account/membership/result?req=' + request.req);
+					} else {
+						$location.url('/account/membership/result?err_type=' + request.type + '&err_msg=' + request.message);
+					}
+					$scope.confirmLoading = false;
+				});
+			}
+		}
+		
 		if (typeof($scope.accountMethod) === 'undefined')
-			return $location.path('/account/upgrade');
+			return $location.path('/account/change');
 		
 		$scope.getAccountType = function(type) {
 			return MembershipService.getAccountName(type);
@@ -4572,11 +6256,16 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         AccountController
 * Description:  Handles account preferences and settings. 
 *******************************************************************************/
-.controller('AccountUpgradeResultController', ['$scope', '$location', '$window', '$timeout', 'AccountService', 'APIService', 'MembershipService', 'TempStore', 
+.controller('AccountChangeResultController', ['$scope', '$location', '$window', '$timeout', 'AccountService', 'APIService', 'MembershipService', 'TempStore', 
     function($scope, $location, $window, $timeout, AccountService, APIService, MembershipService, TempStore) {
 		if (!AccountService.isLoggedIn()) {
 			return $location.path('/login');
 		}
+		
+		$scope.breadcrumbs = [
+			{links: [{text: 'My Account', href:'/account'}]},
+			{links: [{text: 'Membership', href: '/account/membership'}]}
+		]
 		
 		console.log($location.search());
 		
@@ -4597,6 +6286,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 		AccountService.getAccount(function(success, account) {
 			if (success) {
 				$scope.account = account;
+				$scope.accountType = account.profile ? account.profile.type : account.accountType;
+				$scope.pending = $scope.accountType != account.accountType;
 				
 				if ($location.search().req) {
 					APIService.GetExt('/membership', '/request/' + $location.search().req, function(success, request) {
@@ -4616,7 +6307,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					$scope.loading = false;
 				}
 			} else {
-				return $location.path('/account/upgrade');
+				return $location.path('/account/change');
 			}
 		});
 		
@@ -4646,21 +6337,21 @@ angular.module('disczump.controllers', ['disczump.services'])
 			active: typeof($scope.account.fbId) !== 'undefined'
 		}
 		
-		var updateAccount = function(data) {
-			AccountService.updateAccount(data);
-			$scope.account = data;
-		}
+		$scope.breadcrumbs = [
+			{links: [{text: 'My Account', href:'/account'}]},
+			{links: [{text: 'Verifications'}]}
+		];
 		
 		$scope.$watch('fb.active', function(newVal) {
 			$scope.fb.pristine = newVal === (typeof($scope.account.fbId) !== 'undefined');
 		});
 		
 		$scope.setFBVerification = function() {
-			APIService.Put('/account/permissions', {
-				showFacebookId: $scope.fb.active
+			AccountService.putVerifications({
+				facebook: $scope.fb.active
 			}, function(success, data) {
 				if (success) {
-					updateAccount(data);
+					$scope.account = data;
 					
 					var msg = data.fbId ? 'made public.' : 'hidden from the public.';
 					
@@ -4682,9 +6373,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 		$scope.resetPDGA = function() {
 			$scope.pdga.alert = {};
 			$scope.pdga.loading = true;
-			VerificationService.resetPDGA(function(success, data) {
+			AccountService.resetPDGA(function(success, data) {
 				if (success) {
-					updateAccount(data);
+					$scope.account = data;
 					$scope.pdga.alert.success = {
 						title: 'Success',
 						message: 'Your PDGA Number has been reset.',
@@ -4704,9 +6395,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 		$scope.verifyPDGA = function() {
 			$scope.pdga.alert = {};
 			$scope.pdga.loading = true;
-			VerificationService.verifyPDGA($scope.pdga.username, $scope.pdga.password, function(success, data) {
+			AccountService.verifyPDGA($scope.pdga.username, $scope.pdga.password, function(success, data) {
 				if (success) {
-					AccountService.updateAccount(data);
 					$scope.account = data;
 					$scope.pdga.alert.success = {
 						title: 'Success',
@@ -4807,16 +6497,12 @@ angular.module('disczump.controllers', ['disczump.services'])
 			geo: {}
 		};
 		
-		var updatePostalCode = function(lat, lng) {
-			LocationService.getReverseGeo(lat, lng, function(success, results) {
-				if (success && results.length) {
-					$scope.location.curLocation = results[0].address;
-					$scope.location.geo = {
-						latitude: results[0].latitude,
-						longitude: results[0].longitude
-					}
-				}
-			}, true);
+		$scope.locSelected = function(result) {
+			$scope.location.curLocation = result.address;
+			$scope.location.geo = {
+				latitude: result.latitude,
+				longitude: result.longitude
+			}
 		}
 		
 		$scope.getFBAccount = function() {
@@ -4860,42 +6546,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 				}
 			});
 		}
-		
-		$scope.itemSelected = function() {
-			$scope.setLocation($scope.location.results[$scope.location.selResult]);
-		}
-		
-		$scope.hideLocResults = function() {
-			$timeout(function() {
-				$scope.location.editable = false;
-				$scope.location.loading = false;
-				$scope.location.selResult = -1;
-			}, 300);
-		}
-		
-		$scope.setLocation = function(result) {
-			$scope.location.editable = false;
-			updatePostalCode(result.latitude, result.longitude);
-		}
-		
-		$scope.$watch('location.search', function(newLoc) {
-			$scope.location.selResult = -1;
-			if (newLoc && newLoc.length > 3) {
-				$scope.location.loading = true;
-				LocationService.getGeoLocation(newLoc, function(success, results) {
-					if (success) {
-						console.log(results);
-						$scope.location.results = results;
-						$scope.location.selResult = -1;
-					} else {
-						$scope.location.results = [];
-					}
-					$scope.location.loading = false;
-				}, ['postal_code']);
-			} else {
-				$scope.location.results = [];
-			}
-		});
 		
 		$scope.matchFormat = function(param, format) {
 			if (!$scope.signup[param]) return false;
@@ -5104,8 +6754,19 @@ angular.module('disczump.controllers', ['disczump.services'])
 *******************************************************************************/
 .controller('ResetController', ['$scope', '$location', '$timeout', '$routeParams', 'AccountService', 'APIService', 
 	function($scope, $location, $timeout, $routeParams, AccountService, APIService) {
-		if (AccountService.isLoggedIn()) {
+		
+		$scope.isReset = typeof($routeParams.authorizationId) === 'undefined';
+		
+		if ((!$scope.isReset && AccountService.isLoggedIn()) ||
+			($scope.isReset && !AccountService.isLoggedIn())){
 			return $location.path('/redirect');
+		}
+		
+		if ($scope.isReset) {
+			$scope.breadcrumbs = [
+				{links: [{text: 'My Account', href: '/account'}]},
+				{links: [{text: 'Reset Password'}]}
+			];
 		}
 		
 		$scope.resetAlert = {};
@@ -5119,38 +6780,67 @@ angular.module('disczump.controllers', ['disczump.services'])
 		}
 		
 		$scope.doReset = function() {
-			APIService.Post('/account/recover/' + $routeParams.authorizationId, {
-				password: $scope.cred.password
-			}, function(success, result) {
-				if (success) {
-					$scope.resetAlert.success = {
-						title: 'Password Reset',
-						message: 'Your password has been reset successfully. Please login to continue.',
-						show: true
+			$scope.resetAlert = {};
+			if ($scope.isReset) {
+				APIService.Post('/account/reset', {
+					currentPw: $scope.cred.cpassword,
+					newPw: $scope.cred.password
+				}, function(success, result) {
+					if (success) {
+						$scope.cred = {};
+						$scope.resetAlert.success = {
+							title: 'Password Reset',
+							message: 'Your password has been reset successfully.',
+							show: true
+						}
+					} else {
+						$scope.resetAlert.error = {
+							title: result.type,
+							message: result.message,
+							show: true
+						}
 					}
-				} else {
-					$scope.resetAlert.error = {
+				});
+			} else {
+				APIService.Post('/account/recover/' + $routeParams.authorizationId, {
+					password: $scope.cred.password
+				}, function(success, result) {
+					if (success) {
+						$scope.cred = {};
+						$scope.resetAlert.success = {
+							title: 'Password Reset',
+							message: 'Your password has been reset successfully. Please login to continue.',
+							show: true
+						}
+					} else {
+						$scope.resetAlert.error = {
+							title: result.type,
+							message: result.message,
+							show: true
+						}
+					}
+				});
+			}
+		}
+		
+		if (!$scope.isReset) {
+			APIService.Get('/account/recover/' + $routeParams.authorizationId, function(success, result) {
+				$scope.validating = false;
+
+				if (!success) {
+					return $scope.resetAlert.error = {
 						title: result.type,
 						message: result.message,
 						show: true
 					}
 				}
+
+				$scope.isValid = true;
 			});
-		}
-		
-		APIService.Get('/account/recover/' + $routeParams.authorizationId, function(success, result) {
+		} else {
 			$scope.validating = false;
-			
-			if (!success) {
-				return $scope.resetAlert.error = {
-					title: result.type,
-					message: result.message,
-					show: true
-				}
-			}
-			
 			$scope.isValid = true;
-		});
+		}
 	}
 ])
 

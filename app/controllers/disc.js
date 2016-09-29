@@ -28,6 +28,7 @@ module.exports = {
     deleteDiscImages: deleteDiscImages,
     deleteUserDiscs: deleteUserDiscs,
 	bumpDisc: bumpDisc,
+	removeUsersDiscsFromMarketplace: removeUsersDiscsFromMarketplace,
     
     /* Admin Functions */
     getAllDiscs: getAllDiscs
@@ -53,19 +54,27 @@ function marketAvailable(userId, callback) {
 
 function updateMarket(disc) {
 	if (!disc.marketplace.postedDate) {
-		disc.marketplace.postedDate = Date.now();
+		disc.marketplace.postedDate = new Date();
 	} else {
 		var lastMod = new XDate(disc.marketplace.postedDate);
 		logger.debug('Attempting to update disc');
 		if (lastMod.diffMinutes(new XDate()) >= DiscConfig.marketplaceModThresholdMins) {
-			disc.marketplace.postedDate = Date.now();
+			disc.marketplace.postedDate = new Date();
 		}
 	}
 }
 
 /* Standard Functions */
-function getDiscCountByUser(userId, callback) {
-    Disc.count({userId: userId, visible: true}, function(err, count) {
+function getDiscCountByUser(userId, callback, all) {
+	var query = {
+		userId: userId
+	};
+	
+	if (!all) {
+		query.visible = true;
+	}
+	
+    Disc.count(query, function(err, count) {
         if (err)
             return callback(Error.createError(err, Error.internalError));
             
@@ -245,6 +254,9 @@ function createDisc(userId, data, callback) {
     async.series([
 		function(cb) {
 			if ((markSale && data.marketplace.forSale) || (markTrade && data.marketplace.forTrade)) {
+				if (!disc.visible)
+					return cb(Error.createError('Cannot mark disc for marketplace if it is set to private.', Error.invalidDataError));
+				
 				marketAvailable(userId, function(err, available) {
 					if (err)
 						return cb(err);
@@ -253,9 +265,9 @@ function createDisc(userId, data, callback) {
 						disc.marketplace.forSale = markSale ? markSale : undefined;
 						disc.marketplace.forTrade = markTrade ? markTrade : undefined;
 						updateMarket(disc);
-						callback();
+						cb();
 					} else {
-						callback(Error.createError('Cannot mark disc for marketplace (For Sale/For Trade). User market cap has been reached.', Error.limitError));
+						cb(Error.createError('Cannot mark disc for marketplace (For Sale/For Trade). User market cap has been reached.', Error.limitError));
 					}
 				});
 			} else {
@@ -465,8 +477,16 @@ function updateDisc(userId, discId, data, gfs, callback) {
 						disc.marketplace.forTrade = data.marketplace.forTrade;
 					}
 					
+					if (!disc.visible) {
+						disc.marketplace.forSale = false;
+						disc.marketplace.forTrade = false;
+					}
+					
 					return cb();
 				} else if ((markSale && data.marketplace.forSale) || (markTrade && data.marketplace.forTrade)) { // Moving to market
+					if (!disc.visible)
+						return cb(Error.createError('Cannot mark disc for marketplace if it is set to private.', Error.invalidDataError));
+					
 					marketAvailable(userId, function(err, available) {
 						if (err)
 							return cb(err);
@@ -554,7 +574,7 @@ function updateDisc(userId, discId, data, gfs, callback) {
 				updateMarket(disc);
 			}
             
-			disc.modifiedDate = Date.now();
+			disc.modifiedDate = new Date();
             disc.save(function(err, disc){
                 if (err)
                     return callback(Error.createError(err, Error.internalError));
@@ -675,6 +695,23 @@ function deleteUserDiscs(userId, gfs, callback) {
             });
         }, function(err) {
             callback();
+        });
+    });
+}
+
+function removeUsersDiscsFromMarketplace(userId, callback) {
+	getDiscsByUser(userId, userId, function(err, discs) {
+        if (err)
+            return callback(err);
+        
+        async.each(discs, function(disc, cb) {
+			disc.marketplace.forSale = false;
+			disc.marketplace.forTrade = false;
+			disc.save(function (err) {
+				return cb();
+            });
+        }, function(err) {
+            return callback();
         });
     });
 }

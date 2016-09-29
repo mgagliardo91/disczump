@@ -6,6 +6,7 @@ var Confirm = require('../utils/confirm.js');
 
 var UserController = require('../controllers/user');
 var EventController = require('../controllers/event');
+var StringUtils = require('../utils/stringUtils.js');
 
 // app/oauthRoutes.js
 
@@ -60,7 +61,12 @@ module.exports = function(app, oauth2, passport, socketCache) {
            if (err)
                return next(err);
             
-            return res.json(user.accountToString());
+            StringUtils.stringifyUser(user, function(err, account) {
+                if (err)
+                    return next(err);
+
+                return res.json(account);
+            }, true);
         });
     });
     
@@ -69,7 +75,12 @@ module.exports = function(app, oauth2, passport, socketCache) {
            if (err)
                return next(err);
             
-            return res.json(user.accountToString());
+            StringUtils.stringifyUser(user, function(err, account) {
+                if (err)
+                    return next(err);
+
+                return res.json(account);
+            }, true);
         });
     });
     

@@ -23,17 +23,17 @@ var accessTokenSchema = mongoose.Schema({
     },
     lastAccess: {
         type: Date,
-        default: Date.now
+        default: new Date()
     },
     createDate: {
         type: Date,
-        default: Date.now
+        default: new Date()
     }
     
 });
 
 accessTokenSchema.methods.updateAccess = function() {
-    this.lastAccess = Date.now();
+    this.lastAccess = new Date();
     this.save();
 };
 

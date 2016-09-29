@@ -4,7 +4,10 @@
     <link rel="stylesheet" href="/static/desktop/css-dist/ng-sortable.min.css">
     <link rel="stylesheet" href="/static/desktop/css/animate.css">
     <link rel="stylesheet" href="/static/desktop/css/main.css">
-    
+
+	<script>
+		window.serverURL = '{{serverURL}}';
+	</script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-route.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-animate.min.js"></script>
@@ -20,10 +23,10 @@
     <script src="/static/desktop/js/main.js"></script>
     <script src="/static/desktop/js/controllers.js"></script>
     <script src="/static/desktop/js/services.js"></script>
-    <base href="/portal/">
+    <base href="/">
     
 {{/section}}
-<body ng-app="disczump" class="ng-cloak" ng-class="{'scroll-lock': pgSettings.scrollLock}" ng-controller="MainController" {{#if user}}ng-init="init('{{user._id}}')"{{/if}}>
+<body ng-app="disczump" class="ng-cloak" ng-class="{'scroll-lock': pgSettings.scrollLock}" ng-controller="MainController">
     <div class="app main-app min-window-width">
         <ng-view autoscroll="true"></ng-view>
     </div>

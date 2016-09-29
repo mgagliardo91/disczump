@@ -1,16 +1,19 @@
 <div dz-wrapper>
     <dz-header></dz-header>
+    <dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
     <div class="scrollable main-body">
-        <div class="page-content" fit-page center-align offset="-110">
+        <div class="page-content" fit-page center-align offset="-135">
             <div center-align style="height: 100%">
                  <dz-alert alert-data="resetAlert" class="form-small"></dz-alert>
                 <div class="portal-title no-pad cont-sm">
                     <img src="/static/logo/logo_portal.png">
                 </div>
-                <div class="notify-container">
-                    <div class="notify-text">Reset Password</div>
-                </div>
+                <div class="page-info small"><div class="page-info-title">Reset Password</div><div class="page-info-body">Use the form below to reset your password.</div></div>
                 <div class="login-form-stacked form-xsmall" ng-form name="recoverForm" ng-enter="isValid && recoverForm.$valid && doReset()">
+                     <div class="input-group" ng-class="{'has-error': !recoverForm.curPassword.$pristine && recoverForm.curPassword.$invalid, 'has-success': !recoverForm.curPassword.$pristine && recoverForm.curPassword.$valid}" ng-if="isReset">
+                        <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                        <input class="form-control validation" type="password" placeholder="Current Password" ng-model="cred.cpassword" name="curPassword" required ng-pattern="/^.{6,}$/">
+                    </div>
                      <div class="input-group" ng-class="{'has-error': !recoverForm.password.$pristine && recoverForm.password.$invalid, 'has-success': !recoverForm.password.$pristine && recoverForm.password.$valid}">
                         <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
                         <input class="form-control validation" type="password" placeholder="Password" ng-model="cred.password" name="password" required ng-pattern="/^.{6,}$/" ng-focus="pwActive = true;" ng-blur="pwActive = false;">

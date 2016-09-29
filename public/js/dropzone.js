@@ -111,7 +111,7 @@
         dropzone.on("dragEnter", function() { });
      */
 
-    Dropzone.prototype.events = ["drop", "dragstart", "dragend", "dragenter", "dragover", "dragleave", "addedfile", "removedfile", "thumbnail", "error", "errormultiple", "processing", "processingmultiple", "uploadprogress", "totaluploadprogress", "sending", "sendingmultiple", "success", "successmultiple", "canceled", "canceledmultiple", "complete", "completemultiple", "reset", "maxfilesexceeded", "maxfilesreached", "queuecomplete"];
+    Dropzone.prototype.events = ["drop", "dragstart", "dragend", "dragenter", "dragover", "dragleave", "addedfile", "removedfile", "removedallfiles", "thumbnail", "error", "errormultiple", "processing", "processingmultiple", "uploadprogress", "totaluploadprogress", "sending", "sendingmultiple", "success", "successmultiple", "canceled", "canceledmultiple", "complete", "completemultiple", "reset", "maxfilesexceeded", "maxfilesreached", "queuecomplete"];
 
     Dropzone.prototype.defaultOptions = {
       url: null,
@@ -683,7 +683,7 @@
     };
     
     Dropzone.prototype.progTrigger = function() {
-      return this.trigInput.click();
+      return this.hiddenFileInput.click();
     };
 
     Dropzone.prototype.destroy = function() {
@@ -727,7 +727,7 @@
 
     Dropzone.prototype.getFallbackForm = function() {
       var existingFallback, fields, fieldsString, form;
-      if (existingFallback = this.getExistingFallback()) {
+      if (existingFallback == this.getExistingFallback()) {
         return existingFallback;
       }
       fieldsString = "<div class=\"dz-fallback\">";
@@ -1062,6 +1062,7 @@
           this.removeFile(file);
         }
       }
+      this.emit("removedallfiles");
       return null;
     };
 

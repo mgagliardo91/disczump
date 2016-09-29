@@ -16,7 +16,7 @@ var discArchiveSchema = mongoose.Schema({
     material: String,
     color: String,
     createDate: Date,
-    archiveDate: {type: Date, default: Date.now}
+    archiveDate: {type: Date, default: new Date()}
     
 });
 

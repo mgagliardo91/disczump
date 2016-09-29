@@ -205,7 +205,7 @@ function notifyUsers(message, userId) {
                                     }   
                                 }
                                 
-                                localThread['lastAlert'] = Date.now();
+                                localThread['lastAlert'] = new Date();
                                 localThread.save();
                                 var alert = generateEmailNotification(user, origUser, message);
                                 Mailer.sendMail(user.local.email, 'disc|zump Message Alert', alert);

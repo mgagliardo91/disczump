@@ -90,19 +90,29 @@ app.config(['$routeProvider', '$httpProvider', '$locationProvider', function($ro
         controller: 'MessageController',
         reloadOnSearch: false,
         resolve: resolve
-    }).when('/account/upgrade/result', {
-        templateUrl: '/static/desktop/templates/upgradeResult.html',
-        controller: 'AccountUpgradeResultController',
+    }).when('/account/membership/result', {
+        templateUrl: '/static/desktop/templates/accountChangeResult.html',
+        controller: 'AccountChangeResultController',
         reloadOnSearch: false,
         resolve: resolve
-    }).when('/account/upgrade/payment', {
-        templateUrl: '/static/desktop/templates/doAccountUpgrade.html',
-        controller: 'AccountUpgradeController',
+    }).when('/account/membership/process', {
+        templateUrl: '/static/desktop/templates/doAccountChange.html',
+        controller: 'AccountChangeController',
         reloadOnSearch: false,
         resolve: resolve
-    }).when('/account/upgrade/', {
-        templateUrl: '/static/desktop/templates/accountUpgrade.html',
-        controller: 'AccountUpgradeSelController',
+    }).when('/account/membership/', {
+        templateUrl: '/static/desktop/templates/accountChange.html',
+        controller: 'AccountChangeSelController',
+        reloadOnSearch: false,
+        resolve: resolve
+    }).when('/account/adjust', {
+        templateUrl: '/static/desktop/templates/changePayment.html',
+        controller: 'AccountAdjustController',
+        reloadOnSearch: false,
+        resolve: resolve
+    }).when('/account/reset', {
+        templateUrl: '/static/desktop/templates/reset.html',
+        controller: 'ResetController',
         reloadOnSearch: false,
         resolve: resolve
     }).when('/account/verifications/', {
@@ -133,23 +143,28 @@ app.config(['$routeProvider', '$httpProvider', '$locationProvider', function($ro
     }).when('/logout', {
         templateUrl: '/static/desktop/templates/logout.html',
         controller: 'LogoutController',
-        reloadOnSearch: false
+        reloadOnSearch: false,
+        resolve: resolve
     }).when('/confirm/:authorizationId', {
         templateUrl: '/static/desktop/templates/confirm.html',
         controller: 'ConfirmController',
-        reloadOnSearch: false
+        reloadOnSearch: false,
+        resolve: resolve
     }).when('/recover/:authorizationId', {
         templateUrl: '/static/desktop/templates/reset.html',
         controller: 'ResetController',
-        reloadOnSearch: false
+        reloadOnSearch: false,
+        resolve: resolve
     }).when('/recover', {
         templateUrl: '/static/desktop/templates/recover.html',
         controller: 'RecoverController',
-        reloadOnSearch: false
+        reloadOnSearch: false,
+        resolve: resolve
     }).when('/unsubscribe', {
         templateUrl: '/static/desktop/templates/unsubscribe.html',
         controller: 'UnsubscribeController',
-        reloadOnSearch: false
+        reloadOnSearch: false,
+        resolve: resolve
     }).otherwise({
         templateUrl: '/static/desktop/templates/redirect.html',
         controller: 'RedirectController',

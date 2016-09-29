@@ -13,6 +13,10 @@ var accountChangeRequestSchema = mongoose.Schema({
         type: String,
         required: true
     },
+	userEmail: {
+		type: String,
+		required: true
+	},
     sessionId: {
         type: String,
         required: true,
@@ -29,6 +33,9 @@ var accountChangeRequestSchema = mongoose.Schema({
 	error: {
 		type: mongoose.Schema.Types.Mixed
 	},
+	paymentChange: {
+		type: Boolean
+	},
 	completed: {
 		type: Boolean,
 		default: false
@@ -42,7 +49,7 @@ var accountChangeRequestSchema = mongoose.Schema({
 	},
     createDate: {
         type: Date,
-        default: Date.now
+        default: new Date()
     }
     
 });

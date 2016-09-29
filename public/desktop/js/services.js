@@ -38,13 +38,23 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		return key;
 	}
 	
+	var setTempKey = function(key, value) {
+		store[key] = value;
+	}
+	
 	var getTemp = function(key) {
 		return store[key];
 	}
 	
+	var hasKey = function(key) {
+		return typeof(store[key]) !== 'undefined';
+	}
+	
 	return {
 		setTemp: setTemp,
-		getTemp: getTemp
+		getTemp: getTemp,
+		setTempKey: setTempKey,
+		hasKey: hasKey
 	}
 }])
 
@@ -69,8 +79,9 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 }])
 
-.factory('FacebookUtils', ['$window', '$q', '$ocLazyLoad', 'AccountService', function($window,$q, $ocLazyLoad, AccountService) {
+.factory('FacebookUtils', ['$window', '$q', '$ocLazyLoad', 'AccountService', function($window, $q, $ocLazyLoad, AccountService) {
 	var fbStatus;
+	var appId = '1456432391315141';
 	
 	var initFacebook = function() {
 		var deffered = $q.defer();
@@ -78,17 +89,19 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		if (typeof FB === 'undefined') {
             $ocLazyLoad.load(['https://connect.facebook.net/en_US/sdk.js']).then(function() {
 				FB.init({
-				  appId: '1456432391315141',
+				  appId: appId,
 				  xfbml: false,
 				  version: 'v2.7'
 				});
-				console.log('Facebook initialized');
 				
-				FB.getLoginStatus(function(response) {
-					console.log(response);
-					fbStatus = response;
+				try {
+					FB.getLoginStatus(function(response) {
+						fbStatus = response;
+						deffered.resolve();
+					});
+				} catch (e) {
 					deffered.resolve();
-				});
+				}
 			});
         } else {
 			deffered.resolve();
@@ -103,7 +116,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		} else {
 			FB.login(function(response) {
 				if (response.authResponse) {
-					console.log(response.authResponse);
 					fbStatus = response;
 					callback(true, response);
 				} else {
@@ -114,9 +126,8 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		}
 	}
 	
-	var getFBAccountData = function(callback) {
+	var getFBAccountData = function(response, callback) {
 		FB.api('/me?fields=first_name,last_name,email', function(account) {
-			console.log(account);
 			callback(true, {
 				token: response.authResponse,
 				account: account
@@ -141,7 +152,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	var getFBAccount = function(callback) {
 		facebookLogin(function(success, response) {
 			if (success) {
-				getFBAccountData(callback);
+				getFBAccountData(response, callback);
 			} else {
 				callback();
 			}
@@ -158,12 +169,55 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		});
 	}
 	
+	var scrapePath = function(path, callback) {
+		FB.api('/?id=' + window.serverURL + path + '&scrape=true', 'post', {}, function(response) {
+			return callback(typeof(response.id) === 'undefined');
+		});
+	}
+	
+	var shareFacebook = function(path) {
+		FB.ui({
+		  method: 'share',
+		  href: window.serverURL + path,
+		}, function(response){
+			console.log(response);
+		});
+	}
+
+	/*
+	* Code credited to: http://www.xtf.dk/2011/08/center-new-popup-window-even-on.html
+	* Modified to fit our code
+	*/
+	function generatePopup(url, title, w, h) {
+		// Fixes dual-screen position                         Most browsers      Firefox
+		var dualScreenLeft = $window.screenLeft != undefined ? $window.screenLeft : screen.left;
+		var dualScreenTop = $window.screenTop != undefined ? $window.screenTop : screen.top;
+
+		var width = $window.innerWidth ? $window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
+		var height = $window.innerHeight ? $window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
+
+		var left = ((width / 2) - (w / 2)) + dualScreenLeft;
+		var top = ((height / 2) - (h / 2)) + dualScreenTop;
+		var popupWindow = $window.open(url, title, 'toolbar=0 ,status=0, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+		try {
+			popupWindow.focus();
+			return undefined;
+		} catch (e) {
+			return {
+					message: 'A popup blocker is enabled in this browser. Please allow popups and try again.',
+					type: 'Unable To Open'
+				}
+		}
+	}
+	
 	return {
 		login: login,
 		link: link,
 		unlink: unlink,
 		getFBAccount: getFBAccount,
-		initFacebook: initFacebook
+		initFacebook: initFacebook,
+		shareFacebook: shareFacebook,
+		scrapePath: scrapePath
 	}
 }])
 
@@ -242,6 +296,8 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 }])
 
 .factory('PageUtils', [function() {
+	var transitionEnd;
+	
 	function getDocHeight() {
 		var body = document.body,
 			html = document.documentElement;
@@ -283,6 +339,30 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
     function getFullHeight(elem) {
         return getTop(elem) + elem.offsetHeight;
     }
+	
+	function getTransitionEndEventName () {
+		if (transitionEnd) {
+			return transitionEnd;
+		}
+		
+		var i,
+			el = document.createElement('div'),
+			transitions = {
+				'transition':'transitionend',
+				'OTransition':'otransitionend',
+				'MozTransition':'transitionend',
+				'WebkitTransition':'webkitTransitionEnd'
+			};
+
+		for (i in transitions) {
+			if (transitions.hasOwnProperty(i) && el.style[i] !== 'undefined') {
+				transitionEnd = transitions[i];
+				break;
+			}
+		}
+		
+		return transitionEnd;
+	}
     
     return {
 		getDocHeight: getDocHeight,
@@ -291,7 +371,8 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
         getScrollPos: getScrollPos,
 		getTop: getTop,
 		getLeft: getLeft,
-        getFullHeight: getFullHeight
+        getFullHeight: getFullHeight,
+		getTransitionEndEventName: getTransitionEndEventName
     }
 }])
 
@@ -443,7 +524,8 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
                 url: (params.root || '/api') + params.path,
                 data: params.data,
                 timeout: 5000,
-				headers: headers
+				headers: headers,
+				timeout: 15000
             }).then(function(response) {
                 var retObj = parseResponse(response);
 				if (callback) {
@@ -468,7 +550,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 			if (response.data && response.data.error) {
 				return response.data.error;
 			} else {
-				console.log('unknown error: ' + response);
+				console.log('unknown error: ' + JSON.stringify(response));
 				return {
 					message: 'Failed to hit server with request.',
 					type: 'Internal Error'
@@ -625,6 +707,11 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 
 .factory('QueryUserService', ['_', 'APIService', function(_, APIService) {
 	var validSort = ['rel', 'proximity'];
+	var validTypes = ['distance','pdga', 'facebook'];
+	var propText = {
+		pdga: 'PDGA',
+		facebook: 'Facebook'
+	}
 	var validProx = [10, 25, 50, 100, 500];	
 	var geoFacets = {
 		d_10: {val: 10, count: 0},
@@ -636,12 +723,15 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	var locationCache = {};
 	
 	function validateFilters(filters) {
-        var validTypes = ['distance'];
         var validFilters = [];
         
         validFilters = _.filter(filters, function(filter) {
             return _.contains(validTypes, filter.name);
         });
+		
+		_.each(validFilters, function(filter) {
+			filter.text = propText[filter.name];
+		});
         
         return validFilters;
     }
@@ -742,6 +832,10 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
             reqParam.limit = opts.limit;
         }
         
+        if (opts.filter && opts.filter.length) {
+            reqParam.filter = opts.filter;
+        }
+        
         if (opts.geo) {
             reqParam.geo = opts.geo;
 			reqParam.geo.filter = typeof(opts.geo.distance) !== 'undefined';
@@ -791,14 +885,22 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
         return response;
     }
     
-    function parseFacets(facets) {		
+    function parseFacets(facets) {
+		var statFilters = {
+            facebook: {text: 'Facebook', prop: 'facebook', filters: []},
+            pdga: {text: 'PDGA', prop: 'pdga', filters: []}
+        }
+		
         for (var facet in facets) {
 			if (geoFacets[facet]) {
 				geoFacets[facet].count = facets[facet].count;
-			}
+			} else if (statFilters[facet]) {
+                statFilters[facet].filters = facets[facet].buckets;
+            }
         }
         
         return {
+			statFilters: statFilters,
             geoFacets: geoFacets
         };
     }
@@ -876,11 +978,11 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
                 validFilters = _.without(validFilters, valueFilter);
             } else {
                 var i = valueFilter.fields.length;
-                while ((i--) >= 0) {
+                while (i >= 0) {
                     if (isCustomRange(valueFilter.fields[i]) && valueFilter.fields.length > 1) {
                         valueFilter.fields.splice(i, 1);
-                        i--;
                     }
+					i--;
                 }
             }
         }
@@ -1034,7 +1136,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
         
         APIService.Post(urlString, reqParam, function(success, data) {
             if (success) {
-                console.log(data);
+//                 console.log(data);
                 var response = parseResponse(data);
                 
                 if (response.error) {
@@ -1176,7 +1278,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
             for (var key in disc) {
                 if (/^imageList\.\d+\._id$/.test(key) && disc[key] == disc.primaryImage) {
                     return '/files/' + disc[key.replace('_id', 'thumbnailId')];
-                    // return '/files/' + disc[key.replace('_id', 'thumbnailId')];
                 }
             }
         }
@@ -1271,16 +1372,21 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 	
 	var getAccountName = function(type) {
+		if (!type)
+			return 'Freelancer';
+		
 		switch(type.toLowerCase()) {
-			case 'basic': return 'Freeloader';
+			case 'basic': return 'Freelancer';
 			case 'entry': return 'Entrepreneur';
 			case 'pro': return 'Chief Executive';
+			default: return 'Freelancer';
 		}
-
-		return '';
 	}
 		
 	var getAccountCost = function(type) {
+		if (!type)
+			return '';
+		
 		switch(type.toLowerCase()) {
 			case 'basic': return '0.00';
 			case 'entry': return '0.99';
@@ -1290,35 +1396,88 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		return '';
 	}
 	
+	var createHostedPage = function(type, billing, callback) {
+		APIService.PostExt('/membership', '/create', {
+			type: type,
+			billing: billing
+		}, callback);
+	}
+	
+	var createHostedPageAdj = function(billing, callback) {
+		APIService.PostExt('/membership', '/changePayment', {
+			billing: billing
+		}, callback);
+	}
+	
+	var modifyExisting = function(type, callback) {
+		APIService.PostExt('/membership', '/modify', {
+			type: type
+		}, callback);
+	}
+	
+	var clearExisting = function(callback) {
+		APIService.PostExt('/membership', '/cancel', {}, callback);
+	}
+	
+	var reactivate = function(type, callback) {
+		APIService.PostExt('/membership', '/activate', {
+			type: type
+		}, callback);
+	}
+	
 	return {
 		getChangeType: getChangeType,
 		getAccountName: getAccountName,
-		getAccountCost: getAccountCost
+		getAccountCost: getAccountCost,
+		createHostedPage: createHostedPage,
+		createHostedPageAdj: createHostedPageAdj,
+		modifyExisting: modifyExisting,
+		clearExisting: clearExisting,
+		reactivate: reactivate
 	}
 }])
 
-.factory('AccountService', ['$rootScope', '$q', '_', '$crypt', 'APIService', function($rootScope, $q, _, $crypt, APIService) {
+.factory('AccountService', ['$rootScope', '$q', '_', '$crypt', 'APIService', 'CacheService', function($rootScope, $q, _, $crypt, APIService, CacheService) {
     var account, accountId, accountMarket;
 	var authToken;
 	
+	var saveMiddleWare = function(callback) {
+		return function(success, updated) {
+			if (success) {
+				account = updated;
+				CacheService.pushUser(account);
+				callback(success, account);
+			} else {
+				callback(success, updated);
+			}
+		}
+	}
+	
 	var getUA = function() {
 		return (navigator.userAgent.split(' ')[0]);
+	}
+	
+	var clearToken = function() {
+		authToken = undefined;
+		account = undefined;
+		window.localStorage.removeItem('dz-token');
+		APIService.setToken(undefined);
 	}
 	
 	var getToken = function() {
 		return typeof(authToken !== 'undefined') ? authToken.access_token : undefined;
 	}
 	
+	var setAuth = function(auth) {
+		authToken = auth;
+		var toStore = $crypt.AES.encrypt(JSON.stringify(auth), getUA());
+		window.localStorage.setItem('dz-token', toStore.toString());
+		APIService.setToken(getToken());
+	}
+	
 	var doLogout = function(callback) {
 		APIService.PostExt('/oauth', '/logout', {}, function(success, result) {
-			if (!success) {
-				console.log(result);
-			}
-			
-			authToken = undefined;
-			account = undefined;
-			window.localStorage.removeItem('dz-token');
-			APIService.setToken(undefined);
+			clearToken();
 			if (callback) callback();
 		});
 	}
@@ -1344,10 +1503,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 			console.log(data);
 			
 			if (success) {
-				authToken = data;
-				var toStore = $crypt.AES.encrypt(JSON.stringify(data), getUA());
-				window.localStorage.setItem('dz-token', toStore.toString());
-				APIService.setToken(getToken());
+				setAuth(data);
 			}
 			
 			callback(success, data);
@@ -1355,11 +1511,11 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 	
 	var doFacebookUnlink = function(callback) {
-		APIService.PostExt('/oauth', '/facebook/unlink', {}, callback);
+		APIService.PostExt('/oauth', '/facebook/unlink', {}, saveMiddleWare(callback));
 	}
 	
 	var doFacebookLink = function(auth, callback) {
-		APIService.PostExt('/oauth', '/facebook/link', auth, callback);
+		APIService.PostExt('/oauth', '/facebook/link', auth, saveMiddleWare(callback));
 	}
 	
 	var doFacebookLogin = function(auth, callback) {
@@ -1367,10 +1523,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 			console.log(data);
 			
 			if (success) {
-				authToken = data;
-				var toStore = $crypt.AES.encrypt(JSON.stringify(data), getUA());
-				window.localStorage.setItem('dz-token', toStore.toString());
-				APIService.setToken(getToken());
+				setAuth(data);
 			}
 			
 			callback(success, data);
@@ -1398,9 +1551,10 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		
 			APIService.Get('/account', function(success, data) {
 				if (success) {
+					setAuth(token);
+					console.log('Using Token: ' + authToken.access_token);
 					account = data;
-					authToken = token;
-					APIService.setToken(getToken());
+					CacheService.pushUser(account);
 				} else {
 					doLogout();
 				}
@@ -1424,18 +1578,49 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 			console.log(data);
 			
 			if (success) {
-				authToken = data;
-				var toStore = $crypt.AES.encrypt(JSON.stringify(data), getUA());
-				window.localStorage.setItem('dz-token', toStore.toString());
+				setAuth(data);
 			}
 			
 			callback(success, data);
 		});
 	}
 	
+	var putAccount = function(updates, callback) {
+		APIService.Put('/account', updates, saveMiddleWare(callback));
+	}
+	
+	var putAccountImage = function(imageObj, callback) {
+		APIService.Post('/account/image', imageObj, saveMiddleWare(callback));
+	}
+	
+	var deleteAccountImage = function(callback) {
+		APIService.Delete('/account/image', saveMiddleWare(callback));
+	}
+	
+	var getNotifications = function(callback) {
+		return APIService.Get('/account/notifications', callback);
+	}
+	
+	var putNotifications = function(notifications, callback) {
+		return APIService.Put('/account/notifications', notifications, callback);
+	}
+	
+	var putVerifications = function(verifications, callback) {
+		return APIService.Put('/account/verifications', verifications, saveMiddleWare(callback));
+	}
+	
+	function resetPDGA(callback) {
+		APIService.Post('/verify/pdga/reset', undefined, saveMiddleWare(callback));
+	}
+	
+	function verifyPDGA(username, password, callback) {
+		APIService.Post('/verify/pdga', {username: username, password: password}, saveMiddleWare(callback));
+	}
+	
 	var updateAccount = function(updated) {
 		if (typeof(authToken) !== 'undefined') {
 			account = updated;
+			CacheService.pushUser(account);
 		}
 	}
     
@@ -1445,21 +1630,13 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
     
     var getAccount = function(reloadCallback) {
 		if (reloadCallback && isLoggedIn()) {
-			APIService.Get('/account', function(success, data) {
-				if (success) {
-					account = data;
-					reloadCallback(true, account);
-				} else {
-					doLogout();
-					reloadCallback();
-				}
-			});
+			APIService.Get('/account', saveMiddleWare(reloadCallback));
 		} else {
 			return account;
 		}
     }
     
-    var getAccountId = function() {
+	var getAccountId = function() {
 		return account ? account._id : undefined;
     }
 	
@@ -1469,6 +1646,16 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		}
 		
 		return APIService.Get('/account/market', callback);
+	}
+	
+	var getAccountImage = function() {
+		if (isLoggedIn()) {
+			if (typeof(account.image) !== 'undefined') {
+				return account.image;
+			} else {
+				return '/static/img/dz_profile.png';
+			}
+		}
 	}
     
     var hasAccountId = function() {
@@ -1482,9 +1669,18 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
     return {
         isLoggedIn: isLoggedIn,
         hasAccountId: hasAccountId,
+		putAccount: putAccount,
+		putAccountImage:putAccountImage,
+		getNotifications: getNotifications,
+		putNotifications: putNotifications,
+		putVerifications: putVerifications,
+		resetPDGA: resetPDGA,
+		verifyPDGA: verifyPDGA,
+		deleteAccountImage: deleteAccountImage,
         getAccount: getAccount,
         getAccountId: getAccountId,
 		getAccountMarket: getAccountMarket,
+		getAccountImage: getAccountImage,
 		initAccount: initAccount,
 		updateAccount: updateAccount,
 		doLogin: doLogin,
@@ -1503,6 +1699,17 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 
 .factory('CacheService', ['_', 'APIService', function(_, APIService){
     var userCache = [];
+	var discCache = [];
+	
+	function pushDisc(disc) {
+		discCache = _.filter(userCache, function(userObj) { return userObj._id != disc._id});
+		discCache.push(disc);
+	}
+	
+	function pushUser(user) {
+		userCache = _.filter(userCache, function(userObj) { return userObj._id != user._id});
+		userCache.push(user);
+	}
     
 	function getUserByUsername(username, callback) {
 		return getUserObjByUsername(username, false, callback);
@@ -1547,22 +1754,62 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
             }
         });
     }
+	
+	function getDisc(discId, callback) {
+		return getDiscObj(discId, false, callback);
+	}
+	
+	function getDiscObj(discId, forceReload, callback) {
+		var disc = _.findWhere(discCache, {_id: discId});
+		
+		if (disc && !forceReload) {
+            return callback(true, disc);
+        }
+		
+		APIService.Get('/discs/' + discId, function(success, data) {
+            if (success) {
+                if (forceReload) discCache = _.filter(discCache, function(disc) { return disc._id != discId});
+                discCache.push(data);
+                return callback(true, data);
+            } else {
+                return callback(false, data);
+            }
+        });
+	}
     
     return {
         getUser: getUser,
-		getUserByUsername: getUserByUsername
+		getUserByUsername: getUserByUsername,
+		pushUser: pushUser,
+		pushDisc: pushDisc,
+		getDisc: getDisc
     }
     
 }])
 
-.factory('DiscService', ['_', '$q', 'APIService', 'AccountService', function(_, $q, APIService, AccountService){
+.factory('DiscService', ['$q', 'APIService', 'CacheService', function($q, APIService, CacheService){
+	
+	var discMiddleWare = function(callback) {
+		return function(success, updated) {
+			if (success) {
+				CacheService.pushDisc(updated);
+				callback(success, updated);
+			} else {
+				callback(success, updated);
+			}
+		}
+	}
 	
 	function editDisc(disc, callback) {
-		return APIService.Put('/discs/' + disc._id, disc, callback);
+		return APIService.Put('/discs/' + disc._id, disc, discMiddleWare(callback));
+	}
+	
+	function bumpDisc(discId, callback) {
+		return APIService.Put('/discs/' + discId, {}, discMiddleWare(callback));
 	}
 	
 	function createDisc(disc, callback) {
-		return APIService.Post('/discs', disc, callback);
+		return APIService.Post('/discs', disc, discMiddleWare(callback));
 	}
 	
 	function deleteDisc(disc, callback) {
@@ -1592,6 +1839,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	
 	return {
 		editDisc: editDisc,
+		bumpDisc: bumpDisc,
 		createDisc: createDisc,
 		deleteDisc: deleteDisc,
 		deleteDiscs: deleteDiscs

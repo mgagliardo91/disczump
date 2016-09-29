@@ -5,6 +5,7 @@ var UserController = require('./user');
 var Error = require('../utils/error');
 var LocalConfig = require('../../config/localConfig.js');
 var Config = require('../../config/config.js');
+
 var Mailer = require('../utils/mailer.js');
 var handleConfig = require('../utils/handleConfig.js');
 
@@ -26,7 +27,7 @@ function createFeedback(user, data, callback) {
             return callback(Error.createError(err, Error.internalError));
             
         var alert = generateEmailNotification(user, newItem);
-        Mailer.sendMail(Config.admins.toString(), 'disc|zump Feedback Alert', alert);
+        Mailer.sendMail(Config.admins.toString(), Mailer.TypeFeedbackAlert, alert);
         
         return callback(null, newItem);
     });
@@ -60,7 +61,7 @@ function sendResponse(feedbackId, response, callback) {
             var template = handleConfig.getMainHandle().compile(html);
             var email =  template({user: user, feedback : feedback, serverURL: LocalConfig.serverURL, response: response});
             
-            Mailer.sendMail(Config.admins.concat([user.local.email]).toString(), 'disc|zump Feedback Response', email, callback);
+            Mailer.sendMail(Config.admins.concat([user.local.email]).toString(), Mailer.TypeFeedbackResponse, email, callback);
         });
         
     });

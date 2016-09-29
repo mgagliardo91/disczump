@@ -22,7 +22,7 @@ var refreshTokenSchema = mongoose.Schema({
     },
     created: {
         type: Date,
-        default: Date.now
+        default: new Date()
     }
     
 });

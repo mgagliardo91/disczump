@@ -1,17 +1,26 @@
 var _ = require('underscore');
 var async = require('async');
+var fs = require('fs');
 var crypto = require('crypto');
 var geolib = require('geolib');
 var fbGraph = require('fbgraph');
 var Error = require('../utils/error');
 var User = require('../models/user');
+var ImageController = require('./imageCache.js');
 var ArchiveController = require('./archive.js');
 var EventController = require('./event.js');
 var CryptoConfig = require('../../config/auth.js').crypto;
 var MemberConfig = require('../../config/config.js').membership;
 var FileUtil = require('../utils/file.js');
 var Socket = require('../utils/socket.js');
+var logger = require('../utils/logger.js');
+var MembershipTypes = require('../utils/membershipTypes.js');
 var Geo = require('../utils/geo.js');
+
+var LocalConfig = require('../../config/localConfig.js');
+var Mailer = require('../utils/mailer.js');
+var handleConfig = require('../utils/handleConfig.js');
+
 
 module.exports = {
 	query: query,
@@ -29,7 +38,10 @@ module.exports = {
 	getMarketCap: getMarketCap,
     updateAccount: updateAccount,
 	setAccountProfile: setAccountProfile,
-	setAccountPermissions: setAccountPermissions,
+	setAccountProfileImmed: setAccountProfileImmed,
+	getAccountNotifications: getAccountNotifications,
+	setAccountNotifications: setAccountNotifications,
+	setAccountVerifications: setAccountVerifications,
 	setPDGA: setPDGA,
 	resetPDGA: resetPDGA,
     resetPassword: resetPassword,
@@ -275,7 +287,8 @@ function updateAccount(userId, account, callback) {
 		}
 		
 		if (isDef(account.bio)) {
-			user.local.bio = account.bio.trim();
+			var bio = account.bio.trim();
+			user.local.bio = bio.substring(0, Math.min(bio.length, 600));
 		}
 		
 		async.series([
@@ -340,13 +353,31 @@ function mergeProfile(profile, updates) {
 	for (var key in updates) {
 		profile[key] = updates[key];
 	}
+	
+	profile.lastModified = new Date();
+}
+
+function setAccountProfileImmed(userId, profile, callback) {
+	getUser(userId, function(err, user) {
+		
+		user.account.profile = profile;
+		user.account.type = profile.type;
+		user.save(function(err) {
+			if (err)
+				return callback(err);
+			
+			user.addEvent(EventController.Types.AccountReset, 'The user account profile was reset by the system.');
+			return callback(null, user);
+		});
+	});
 }
 
 function setAccountProfile(userId, changeRequest, profile, callback) {
 	getUser(userId, function(err, user) {
-		if (err)
+		if (err) {
+			logger.error('Error occurred in locating user with id [' + userId + ']', err);
 			return callback(err);
-		
+		}
 		var newType;
 		
 		try {
@@ -426,21 +457,58 @@ function setAccountProfile(userId, changeRequest, profile, callback) {
 		}
 		
 		user.save(function(err) {
-			if (err)
+			if (err) {
+				logger.error('Error occurred in saving user with id [' + userId + ']', err);
 				return callback(Error.createError(err, Error.internalError));
+			}
 			
+			var eventProf = user.account.profile.profileId ? 'with ID [' + user.account.profile.profileId + '] ' : ''; 
+			user.addEvent(EventController.Types.AccountTypeChange, 'The user account profile ' + eventProf + 'was altered by the user. From: [' + changeRequest.fromAccount.type + '] To: [' + changeRequest.toAccount.type + ']');
+			
+            var email = generateAccountChangedEmail(user, changeRequest.toObject());
+			logger.info('Sending email to notify account change to %s', user.local.email);
+			Mailer.sendMail(user.local.email, Mailer.TypeAccountChange, email);
 			return callback(null, user);
 		});
 	});
 }
 
-function setAccountPermissions(userId, permis, callback) {
-		getUser(userId, function(err, user) {
+function getAccountNotifications(userId, callback) {
+	getUser(userId, function(err, user) {
 		if (err)
 			return callback(err);
 		
-		if (typeof(permis.showFacebookId) !== 'undefined' && _.isBoolean(permis.showFacebookId)) {
-			user.account.permissions.showFacebookId = permis.showFacebookId;
+		return callback(null, user.account.notifications);
+	});
+}
+
+function setAccountNotifications(userId, notifications, callback) {
+	getUser(userId, function(err, user) {
+		if (err)
+			return callback(err);
+		
+		for (var notName in notifications) {
+			if (user.account.notifications.hasOwnProperty(notName) && _.isBoolean(notifications[notName])) {
+				user.account.notifications[notName] = notifications[notName];
+			}
+		}
+		
+		user.save(function(err) {
+			if (err)
+				return callback(Error.createError(err, Error.internalError));
+			
+			return callback(null, user.account.notifications);
+		});
+	});
+}
+
+function setAccountVerifications(userId, verifications, callback) {
+	getUser(userId, function(err, user) {
+		if (err)
+			return callback(err);
+		
+		if (verifications.hasOwnProperty('facebook') && _.isBoolean(verifications.facebook)) {
+			user.account.verifications.facebook = user.facebook.id !== 'undefined' && verifications.facebook;
 		}
 		
 		user.save(function(err) {
@@ -465,6 +533,7 @@ function setPDGA(userId, pdgaNumber, callback) {
 				return callback(Error.createError('The PDGA Number associated with the account (#' + pdgaNumber + ') is already in use.', Error.invalidDataError));
 
 			user.local.pdgaNumber = pdgaNumber;
+			user.account.verifications.pdga = true;
 			user.save(function(err) {
 				if (err)
 					return callback(err);
@@ -483,6 +552,7 @@ function resetPDGA(userId, callback) {
 			return callback(err);
 		
 		user.local.pdgaNumber = undefined;
+		user.account.verifications.pdga = false;
 		user.save(function(err) {
 			if (err)
                 return callback(err);
@@ -563,19 +633,37 @@ function deleteUserImage(userId, gfs, callback) {
     });
 }
 
-function postUserImage(userId, fileId, gfs, callback) {
+function postUserImage(userId, imageId, gfs, callback) {
 	getActiveUser(userId, function(err, user) {
        if (err) 
 			return callback(err);
 		
+		var newImage;
 	   	async.series([
+			function(cb) {
+				ImageController.getImageCache(imageId, function(err, imageObj) {
+					if (err) {
+						return cb(err);
+					}
+					
+					if (!imageObj) {
+						return cb(Error.createError('Invalid image file identifier.', Error.objectNotFoundError));
+					}
+
+					newImage = imageObj;
+					return cb();
+				});
+			},
 	   		function(cb) {
 	   			if (isDef(user.local.image)) {
 			   		FileUtil.deleteImage(user.local.image, gfs, cb);
 			   	} else cb();
 	   		}
 	   	], function(err, results) {
-	   		user.local.image = fileId;
+			if (err)
+				return callback(err);
+			
+	   		user.local.image = newImage.fileId;
 		   	user.save(function(err) {
 				if (err)
 					return callback(Error.createError(err, Error.internalError));
@@ -671,14 +759,36 @@ function unlinkFacebook(user, callback) {
 		return callback(Error.createError('Account not activated.', Error.inactiveError));
 
 	user.facebook.id = undefined;
+	user.account.verifications.facebook = false;
 	user.save(function(err) {
 		if (err)
 			return callback(Error.createError(err, Error.internalError));
 
 		user.addEvent(EventController.Types.AccountUnlink, 'The account has been successfully unlinked from Facebook.');
-		return callback(user);
+		return callback(null, user);
 	});
 }
+
+/* Private Functions */
+function generateAccountChangedEmail(user, changeRequest) {
+	changeRequest.fromAccount = {
+		type: MembershipTypes.getTypeName(changeRequest.fromAccount.type),
+		amount: changeRequest.fromAccount.amount.toFixed(2)
+	}
+	
+	changeRequest.toAccount = {
+		type: MembershipTypes.getTypeName(changeRequest.toAccount.type),
+		amount: changeRequest.toAccount.amount.toFixed(2)
+	}
+	
+	changeRequest.immediateCharge = changeRequest.immediateCharge.toFixed(2);
+	var activeAccount = MembershipTypes.getTypeName(user.account.type);
+	
+	var html = fs.readFileSync('./private/html/accountChanged.handlebars', 'utf8');
+	var template = handleConfig.getMainHandle().compile(html);
+	return template({user: user, request: changeRequest, activeAccount: activeAccount,serverURL: LocalConfig.serverURL});
+}
+
 
 /* Admin Functions */
 function getUsers(callback) {

@@ -20,14 +20,31 @@ module.exports = function(app) {
                 
                 logger.debug('Created upgrade request.', upgradeReq.toObject());
                 
-                PayPal.createTransaction(upgradeReq.sessionId, upgradeReq.immediateCharge, req.body.billing, function(err, transaction) {
+                PayPal.createHostedPage(upgradeReq.sessionId, req.body.billing, function(err, transaction) {
                     if (err)
                         return next(err);
                     
-                    return res.json(transaction);
+                    return res.json({hostedPage: transaction, request: upgradeReq});
                 });
             });
         });
+	
+	app.route('/changePayment')
+		.post(Access.hasAccess, function(req, res, next) {
+			Membership.reqAccountChangePayment(req.user._id, function(err, changeReq) {
+				if (err)
+					return next(err);
+                
+                logger.debug('Created payment change request.', changeReq.toObject());
+				
+				PayPal.createHostedPage(changeReq.sessionId, req.body.billing, function(err, transaction) {
+                    if (err)
+                        return next(err);
+                    
+                    return res.json({hostedPage: transaction, request: changeReq});
+                });
+			});
+		});
 	
 	app.route('/activate')
 		.post(Access.hasAccess, function(req, res, next) {
@@ -48,7 +65,7 @@ module.exports = function(app) {
 						return next(err);
 					
 					if (immedCharge && !immedCharge.success) {
-						logger.debug('Error occured in charging a prorate amount to profile.');
+						logger.error('Unable to charge user [' + upgradeReq.userId + '] for immediate amount [' + immedCharge.amount + '].');
 					}
 					
 					Membership.confirmAccountModify(upgradeReq, profile, immedCharge ? immedCharge.amount : 0, function(err, modifyReq) {
@@ -90,7 +107,7 @@ module.exports = function(app) {
 						return next(err);
 					
 					if (immedCharge && !immedCharge.success) {
-						logger.debug('Error occured in charging a prorate amount to profile.');
+						logger.error('Unable to charge user [' + modifyReq.userId + '] for immediate amount [' + immedCharge.amount + '].');
 					}
 					
 					Membership.confirmAccountModify(modifyReq, profile, immedCharge ? immedCharge.amount : 0, function(err, modifyReq) {
@@ -130,7 +147,7 @@ module.exports = function(app) {
                 if (err) {
                     logger.debug('Error creating upgrade request.', err);
                     return res.render('simple_redirect', {
-                        redirectUrl: '/portal/account/upgrade/result?err_type=' + err.error.type + '&err_msg=' + err.error.message,
+                        redirectUrl: '/account/membership/result?err_type=' + err.error.type + '&err_msg=' + err.error.message,
                         layout: false
                    });
                 }
@@ -138,28 +155,54 @@ module.exports = function(app) {
                 if (request.completed)  {
                     err = Error.createError('The account change request is invalid.', Error.invalidDataError);
                     return res.render('simple_redirect', {
-                        redirectUrl: '/portal/account/upgrade/result?req=' + request.sessionId + '&err_type=' + err.error.type + '&err_msg=' + err.error.message,
+                        redirectUrl: '/account/membership/result?err_type=' + err.error.type + '&err_msg=' + err.error.message,
                         layout: false
                      });
                 }
                 
                 logger.debug('Retrieved upgrade request.', request.toObject());
-                var trxProfile;
+                var trxProfile, immediateCharge;
                 async.series([
                     function(cb) {
-                        PayPal.createRecurringTrx(request.toAccount.amount, req.body, function(err, profile) {
+                        PayPal.createRecurringTrx(request.toAccount.amount, request.userEmail, req.body, request.immediateCharge, function(err, profile, immedCharge) {
                             if (err) {
                                 logger.debug('Error creating recurring trx.', err);
                                 return cb(err);
                             }
+		
+							if (immedCharge && !immedCharge.success) {
+								logger.error('Unable to charge user [' + request.userId + '] for immediate amount [' + immedCharge.amount + '].');
+							}
                             
                             logger.debug('Created recurring trx profile.');
                             trxProfile = profile;
+							immediateCharge = immedCharge;
                             return cb();
                         });
                     },
+					function(cb) {
+						if (request.paymentChange) {
+							UserController.getUser(request.userId, function(err, user) {
+								if (err) {
+									logger.error('Error deactivating previous recurring profile', err);
+									return cb();
+								}
+								
+								if (!user.account.profile.profileId)
+									return cb();
+								
+								PayPal.cancelRecurringTrx(user.account.profile.profileId, function(err, profile) {
+									if (err) {
+										logger.error('Error deactivating previous recurring profile', err);
+									}
+									
+									return cb();
+								});
+							});
+						}
+					},
                     function(cb) {
-                        Membership.confirmAccountCreate(request, trxProfile, function(err, request) {
+                        Membership.confirmAccountCreate(request, trxProfile, immediateCharge ? immediateCharge.amount : 0, function(err, request) {
                             if (err) {
                                 logger.debug('Error confirming account upgrade.', err);
                                 return cb(err);
@@ -172,15 +215,14 @@ module.exports = function(app) {
                 ], function(err, results) {
                     if (err) {
                         request.fail(err.error, function() {
-                            logger.debug('A failure occured. Updated request with failed result.', request);
                              return res.render('simple_redirect', {
-                                redirectUrl: '/portal/account/upgrade/result?req=' + request.sessionId + '&err_type=' + err.error.type + '&err_msg=' + err.error.message,
+                                redirectUrl: '/account/membership/result?req=' + request.sessionId + '&err_type=' + err.error.type + '&err_msg=' + err.error.message,
                                 layout: false
                              });
                         });
                     } else {
                         return res.render('simple_redirect', {
-                            redirectUrl: '/portal/account/upgrade/result?req=' + request.sessionId,
+                            redirectUrl: '/account/membership/result?req=' + request.sessionId,
                             layout: false
                        });
                     }

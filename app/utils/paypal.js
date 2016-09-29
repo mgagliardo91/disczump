@@ -8,12 +8,13 @@ var PayPalConfig = require('../../config/auth.js').paypal;
 var PaymentConfig = require('../../config/config.js').payment;
 
 module.exports = {
-    createTransaction: createTransaction,
+    createHostedPage: createHostedPage,
     parsePaypalPost: parsePaypalPost,
     createRecurringTrx: createRecurringTrx,
 	modifyRecurringTrx: modifyRecurringTrx,
 	cancelRecurringTrx: cancelRecurringTrx,
-	activateRecurringTrx: activateRecurringTrx
+	activateRecurringTrx: activateRecurringTrx,
+	doInquiry: doInquiry
 }
 
 function parsePayPalDate(date) {
@@ -64,13 +65,15 @@ function handleResponse(body) {
     if (!data)
         return {success: false};
 
-    if (data.RESULT !== '0')
-        return {success: false, err: data.RESPMSG};
+    if (data.RESULT !== '0') {
+		logger.debug('Error occurred in modifying trx', data);
+        return {success: false, err: '[' + data.RESULT + '] ' + data.RESPMSG};
+	}
     
     return {success: true, data: data};
 } 
 
-function createTransaction(secureId, amount, billing, callback) {
+function createHostedPage(secureId, billing, callback) {
     if (typeof(billing) === 'undefined') {
         return Error.createError('Invalid billing information supplied with request.', Error.invalidDataError);
     }
@@ -82,8 +85,8 @@ function createTransaction(secureId, amount, billing, callback) {
             'VENDOR': PayPalConfig.vendor,
             'USER': PayPalConfig.user,
             'PWD': PayPalConfig.pwd,
-            'TRXTYPE': 'S',
-            'AMT': amount,
+            'TRXTYPE': 'A',
+            'AMT': 0.0,
             'CREATESECURETOKEN': 'Y',
             'SECURETOKENID': secureId,
             'BILLTOFIRSTNAME': billing.firstName,
@@ -111,7 +114,7 @@ function createTransaction(secureId, amount, billing, callback) {
         var resp = handleResponse(body);
         
         if (!resp.success)
-            return callback(Error.createError('Unable to create payment request.' + (resp.err ? ' Response: ' + resp.err + '.' : ''), Error.internalError));
+            return callback(Error.createError('Unable to create payment request.' + (resp.err ? ' Response: ' + resp.err + '.' : ''), Error.paypalError));
         
         var data = resp.data;
         
@@ -120,7 +123,7 @@ function createTransaction(secureId, amount, billing, callback) {
 }
 
 function parsePaypalPost(body, callback) {
-    if (body.RESULT !== '0' || body.RESPMSG !== 'Approved')
+    if (body.RESULT !== '0')
         return callback(Error.createError('The transaction was not processed successfully.', Error.internalError));
     
     return callback(null, {secureTokenId: body.SECURETOKENID})
@@ -152,7 +155,7 @@ function doInquiry(profileId, callback) {
         var resp = handleResponse(body);
         
         if (!resp.success)
-            return callback(Error.createError('Unable to create recurring payment profile.' + (resp.err ? ' Response: ' + resp.err + '.' : ''), Error.internalError));
+            return callback(Error.createError('Unable to create recurring payment profile.' + (resp.err ? ' Response: ' + resp.err + '.' : ''), Error.paypalError));
         
         var data = resp.data;
 		
@@ -177,8 +180,8 @@ function doInquiry(profileId, callback) {
     
 }
 
-function createRecurringTrx(amount, body, callback) {
-    if (body.RESULT !== '0' || body.RESPMSG !== 'Approved')
+function createRecurringTrx(amount, email, body, immedCharge, callback) {
+    if (body.RESULT !== '0')
         return callback(Error.createError('The transaction was not processed successfully. Please try again later.', Error.internalError));
     
     logger.debug('Attempting to create recurring trx profile.');
@@ -196,6 +199,7 @@ function createRecurringTrx(amount, body, callback) {
         'AMT': amount,
         'TERM': PaymentConfig.term,
         'PAYPERIOD': PaymentConfig.payPeriod,
+		'RETRYNUMDAYS': PaymentConfig.retryDays,
         'BILLTOFIRSTNAME': body.BILLTOFIRSTNAME,
         'BILLTOLASTNAME': body.BILLTOLASTNAME,
         'BILLTOSTREET': body.BILLTOSTREET,
@@ -203,7 +207,8 @@ function createRecurringTrx(amount, body, callback) {
         'BILLTOCITY': body.BILLTOCITY,
         'BILLTOSTATE': body.BILLTOSTATE,
         'BILLTOZIP': body.BILLTOZIP,
-        'BILLTOCOUNTRY': body.BILLTOCOUNTRY
+        'BILLTOCOUNTRY': body.BILLTOCOUNTRY,
+		'EMAIL': email
     };
     
     if (body.TENDER == 'CC') {
@@ -213,6 +218,11 @@ function createRecurringTrx(amount, body, callback) {
         requestParams['BAID'] = BAID;
         requestParams['TENDER'] = 'P';
     }
+	
+	if (immedCharge && immedCharge > 0) {
+		requestParams['OPTIONALTRX'] = 'S';
+		requestParams['OPTIONALTRXAMT'] = immedCharge;
+	}
     
     var date = (new XDate()).addMonths(1);
     
@@ -227,33 +237,25 @@ function createRecurringTrx(amount, body, callback) {
     request(options, function(err, response, body) {
         
         if (err || response.statusCode != 200) {
-            return callback(null, {
-                startDate: date.toISOString(),
-                payPeriod: requestParams['PAYPERIOD'],
-                tender: requestParams['TENDER'],
-                origPNRef: body.PNREF,
-                origBAId: body.BAID,
-                draftAmount: amount,
-			    active: false
-            });
+            return callback(Error.createError('Unable to create membership proile.', Error.internalError));
         }
         
         var resp = handleResponse(body);
         
         if (!resp.success) {
             logger.debug('Error in response from recurring trx', resp.err);
-            return callback(null, {
-                startDate: date.toISOString(),
-                payPeriod: requestParams['PAYPERIOD'],
-                tender: requestParams['TENDER'],
-                origPNRef: PNREF,
-                origBAId: BAID,
-                draftAmount: amount,
-			    active: false
-            });
+            return callback(Error.createError('Unable to create membership proile.', Error.paypalError));
         }
-        
+		
         var data = resp.data;
+				
+		var immedCb;
+		if (immedCharge && immedCharge > 0) {
+			immedCb = {
+				amount: immedCharge,
+				success: typeof(data.TRXRESULT) !== 'undefined' && data.TRXRESULT === '0'
+			}
+		}
         
         logger.debug('Running an inquiry for profile id: ' + data.PROFILEID);
         doInquiry(data.PROFILEID, function(err, inquiry) {
@@ -267,8 +269,9 @@ function createRecurringTrx(amount, body, callback) {
                     origBAId: BAID,
                     draftAmount: amount,
                     profileId: data.PROFILEID,
+					pendingReset: false,
                     active: false
-                });
+                }, immedCb);
             }
 			
             return callback(null, {
@@ -282,8 +285,9 @@ function createRecurringTrx(amount, body, callback) {
                 profileId: inquiry.profileId,
                 acct: inquiry.acct,
                 expDate: inquiry.expDate,
+				pendingReset: false,
 			    active: inquiry.status === 'ACTIVE'
-            });
+            }, immedCb);
         });
     })
     
@@ -311,6 +315,8 @@ function modifyRecurringTrx(profileId, amount, immedCharge, callback) {
         body: encodeRequest(requestParams),
         method: 'POST'
     }
+	
+	logger.debug('Sending request', requestParams);
 
     request(options, function(err, response, body) {
         
@@ -320,8 +326,9 @@ function modifyRecurringTrx(profileId, amount, immedCharge, callback) {
         
         var resp = handleResponse(body);
         
-        if (!resp.success)
-            return callback(Error.createError('Unable to modify recurring payment profile.' + (resp.err ? ' Response: ' + resp.err + '.' : ''), Error.internalError));
+        if (!resp.success) {
+            return callback(Error.createError('Unable to modify recurring payment profile.' + (resp.err ? ' Response: ' + resp.err + '.' : ''), Error.paypalError));
+		}
         
         var data = resp.data;
 		var immedCb;
@@ -333,7 +340,6 @@ function modifyRecurringTrx(profileId, amount, immedCharge, callback) {
 			}
 		}
 		
-		
 		logger.debug('Running an inquiry for profile id: ' + data.PROFILEID);
         doInquiry(data.PROFILEID, function(err, inquiry) {
             if (err) {
@@ -341,6 +347,7 @@ function modifyRecurringTrx(profileId, amount, immedCharge, callback) {
                 return callback(null, {
                     draftAmount: amount,
                     profileId: data.PROFILEID,
+					pendingReset: false,
                     active: false
                 }, immedCb);
             }
@@ -349,6 +356,7 @@ function modifyRecurringTrx(profileId, amount, immedCharge, callback) {
 				nextBillDate: inquiry.nextBillDate,
                 draftAmount: inquiry.draftAmount,
                 profileId: inquiry.profileId,
+				pendingReset: false,
 			    active: inquiry.status === 'ACTIVE'
             }, immedCb);
         });
@@ -381,11 +389,13 @@ function cancelRecurringTrx(profileId, callback) {
         var resp = handleResponse(body);
         
         if (!resp.success)
-            return callback(Error.createError('Unable to modify recurring payment profile.' + (resp.err ? ' Response: ' + resp.err + '.' : ''), Error.internalError));
+            return callback(Error.createError('Unable to modify recurring payment profile.' + (resp.err ? ' Response: ' + resp.err + '.' : ''), Error.paypalError));
         
         var data = resp.data;
 		
 		return callback(null, {
+            draftAmount: 0.00,
+			pendingReset: false,
 			active: false
 		});
     });
@@ -440,7 +450,7 @@ function activateRecurringTrx(profile, amount, immedCharge, callback) {
         var resp = handleResponse(body);
         
         if (!resp.success)
-            return callback(Error.createError('Unable to modify recurring payment profile.' + (resp.err ? ' Response: ' + resp.err + '.' : ''), Error.internalError));
+            return callback(Error.createError('Unable to modify recurring payment profile.' + (resp.err ? ' Response: ' + resp.err + '.' : ''), Error.paypalError));
         
         var data = resp.data;
 		var immedCb;
@@ -459,7 +469,8 @@ function activateRecurringTrx(profile, amount, immedCharge, callback) {
                 return callback(null, {
                     startDate: date.toISOString(),
                     draftAmount: amount,
-                    active: false
+                    active: false,
+					pendingReset: false,
                 }, immedCb);
             }
             
@@ -468,6 +479,7 @@ function activateRecurringTrx(profile, amount, immedCharge, callback) {
 				nextBillDate: inquiry.nextBillDate,
                 payPeriod: inquiry.payPeriod,
                 draftAmount: inquiry.draftAmount,
+				pendingReset: false,
 			    active: inquiry.status === 'ACTIVE'
             }, immedCb);
         });

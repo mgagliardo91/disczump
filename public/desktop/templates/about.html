@@ -177,32 +177,32 @@
         <div class="split-section">
             <div class="hiw-preview">
                 <div class="hiw-preview-img">
-                    <div> <video autoplay src="{{hiwImage}}"></video></div>
+                    <div> <video autoplay src="{{hiwImage}}" loop></video></div>
                 </div>
             </div>
             <div class="hiw-container">
                 <div class="hiw-title">
                     How It Works
                 </div>
-                <div class="hiw-item" ng-click="hiwImage = '/static/img/anim/url.mp4'" ng-class="{'active':hiwImage == '/static/img/anim/url.mp4'}">
+                <div class="hiw-item" ng-click="hiwImage = '/static/img/anim/upload.mp4'" ng-class="{'active':hiwImage == '/static/img/anim/upload.mp4'}">
                     <div class="numeric-item"><span>1</span></div>
                     <div class="hiw-step">
                         Create your inventory by uploading your collection to your disc|zump trunk.
                     </div>
                 </div>
-                <div class="hiw-item">
+                <div class="hiw-item" ng-click="hiwImage = '/static/img/anim/tag.mp4'" ng-class="{'active':hiwImage == '/static/img/anim/tag.mp4'}">
                     <div class="numeric-item"><span>2</span></div>
                     <div class="hiw-step">
                         Customize your inventory by tagging discs to provide organizable filters.
                     </div>
                 </div>
-                <div class="hiw-item">
+                <div class="hiw-item" ng-click="hiwImage = '/static/img/anim/url.mp4'" ng-class="{'active':hiwImage == '/static/img/anim/url.mp4'}">
                     <div class="numeric-item"><span>3</span></div>
                     <div class="hiw-step">
                         Share your trunk with the world via social media, email, websites, etc.
                     </div>
                 </div>
-                <div class="hiw-item">
+                <div class="hiw-item" ng-click="hiwImage = '/static/img/anim/market.mp4'" ng-class="{'active':hiwImage == '/static/img/anim/market.mp4'}">
                     <div class="numeric-item"><span>4</span></div>
                     <div class="hiw-step">
                         Mark discs to be available in the global disc|zump marketplace at your own convenience.
@@ -339,7 +339,7 @@
 
                 </div>
             </div>
-            <div class="notify-button" style="text-align: center; margin: 20px 0px"><a class="btn btn-default" href="/portal/signup" style="font-size: 1.5em; background-color: #ffba00;">Get Started</a></div>
+            <div class="notify-button" style="text-align: center; margin: 20px 0px"><a class="btn btn-default" href="/signup" style="font-size: 1.5em; background-color: #ffba00;">Get Started</a></div>
         </div>
     </div>
     <dz-footer></dz-footer>

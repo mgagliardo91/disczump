@@ -9,8 +9,8 @@ var threadSchema = mongoose.Schema({
 	},
     isPrivate: {type: Boolean, default: false},
     users: [String],
-    createDate: {type: Date, default: Date.now},
-    modifiedDate: {type: Date, default: Date.now},
+    createDate: {type: Date, default: new Date()},
+    modifiedDate: {type: Date, default: new Date()},
     messageCount: {type: Number, default: 0},
     archive: {type: Boolean, default: false}
     

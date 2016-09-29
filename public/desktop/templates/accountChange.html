@@ -1,6 +1,7 @@
 <link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
 <div dz-wrapper>
     <dz-header></dz-header>
+    <dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
     <div class="scrollable main-body">
         <div class="portal-title cont-sm" style="margin: 20px auto">
             <img src="/static/logo/logo_portal.png" />
@@ -9,30 +10,36 @@
             <div class="page-info-title">
                 Why should I upgrade?
             </div>
-            <div class="page-info-sep"></div>
             <div class="page-info-body">
-                The most significant reason to upgrade your account is to increase the amount of discs that you can place on the marketplace simultaneously. Discs that are marked for the marketplace (For Sale / For Trade) will 
+                The most significant reason to upgrade your account is to increase the number of discs that you can place on the marketplace simultaneously. Discs that are marked for the marketplace (For Sale / For Trade) will 
                 receive the most visibility on disc|zump, making it easier for your discs to be found. By upgrading your account, you will be able to increase your market cap and bring more publicity to your marketable discs.
             </div>
             <div class="page-info-sep"></div>
             <div class="page-info-title">
                 What if I change my paid membership?
             </div>
-            <div class="page-info-sep"></div>
             <div class="page-info-body">
                 You can change your account type at any time. If you are upgrading, additional charges will be prorated and your account change will take effect immediately. If you are downgrading, your account change will take place at the end of your current billing cycle.
             </div>
         </div>
         <div class="about-section" style="padding: 20px 0px;">
+            <div class="page-info small error" ng-if="account.profile && account.accountType !== account.profile.type">
+                <div class="page-info-title">
+                    <span><i class="fa fa-exclamation-triangle"></i></span>Account Change Pending
+                </div>
+                <div class="page-info-body">
+                    We see that you have made a change to your membership during this billing period. The following options will reflect your pending membership level which will begin at the end of your current billing cycle.
+                </div>
+            </div>
             <div class="membership-container">
-                <div class="membership-tile" ng-class="{'disabled':account.accountType == 'Basic'}">
+                <div class="membership-tile" ng-class="{'disabled':account.profile.type == 'Basic'}">
                     <div class="membership-tile-area">
                         <div class="membership-tile-title">
-                            The<br /><span class="dz-blue">{{getAccountType('basic')}}</span>
+                            The<br /><span class="dz-blue">{{'basic' | memType}}</span>
                         </div>
                         <div class="membership-tile-amt">
                             <div class="price">
-                                ${{getAccountCost('basic')}}
+                                ${{'basic' | memCost}}
                             </div>
                             <div class="unit">
                                 /month
@@ -58,18 +65,17 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="notify-button membership-tile-btn" ng-if="account.accountType == 'Basic'"><a class="btn" href="#">Become a {{getAccountType('basic')}}</a></div>
-                        <div class="notify-button membership-tile-btn" ng-if="account.accountType != 'Basic'"><a class="btn" ng-click="selUpgrade('basic')">Become a {{getAccountType('basic')}}</a></div>
+                        <div class="notify-button membership-tile-btn"><a class="btn" ng-disabled="account.profile.type == 'Basic'" ng-click="selUpgrade('basic')">Become a {{'basic' | memType}}</a></div>
                     </div>
                 </div>
-                <div class="membership-tile" ng-class="{'disabled':account.accountType == 'Entry'}">
+                <div class="membership-tile" ng-class="{'disabled':account.profile.type == 'Entry'}">
                     <div class="membership-tile-area">
                         <div class="membership-tile-title">
-                            The<br /><span class="dz-blue">{{getAccountType('entry')}}</span>
+                            The<br /><span class="dz-blue">{{'entry' | memType}}</span>
                         </div>
                         <div class="membership-tile-amt">
                             <div class="price">
-                                ${{getAccountCost('entry')}}
+                                ${{'entry' | memCost}}
                             </div>
                             <div class="unit">
                                 /month
@@ -101,18 +107,17 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="notify-button membership-tile-btn" ng-if="account.accountType == 'Entry'"><a class="btn" href="#">Become a {{getAccountType('entry')}}</a></div>
-                        <div class="notify-button membership-tile-btn" ng-if="account.accountType != 'Entry'"><a class="btn" ng-click="selUpgrade('entry')">Become a {{getAccountType('entry')}}</a></div>
+                        <div class="notify-button membership-tile-btn"><a class="btn" ng-disabled="account.profile.type == 'Entry'" ng-click="selUpgrade('entry')">Become a {{'entry' | memType}}</a></div>
                     </div>
                 </div>
-                <div class="membership-tile" ng-class="{'disabled':account.accountType == 'Pro'}">
+                <div class="membership-tile" ng-class="{'disabled':account.profile.type == 'Pro'}">
                     <div class="membership-tile-area">
                         <div class="membership-tile-title">
-                            The<br /><span class="dz-blue">{{getAccountType('pro')}}</span>
+                            The<br /><span class="dz-blue">{{'pro' | memType}}</span>
                         </div>
                         <div class="membership-tile-amt">
                             <div class="price">
-                                ${{getAccountCost('pro')}}
+                                ${{'pro' | memCost}}
                             </div>
                             <div class="unit">
                                 /month
@@ -144,8 +149,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="notify-button membership-tile-btn" ng-if="account.accountType == 'Pro'"><a class="btn" href="#">Become a {{getAccountType('pro')}}</a></div>
-                        <div class="notify-button membership-tile-btn" ng-if="account.accountType != 'Pro'"><a class="btn" ng-click="selUpgrade('pro')">Become a {{getAccountType('pro')}}</a></div>
+                        <div class="notify-button membership-tile-btn"><a class="btn" ng-disabled="account.profile.type == 'Pro'" ng-click="selUpgrade('pro')">Become a {{'pro' | memType}}</a></div>
                     </div>
                 </div>
                 <div class="clearfix">

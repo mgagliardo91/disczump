@@ -1,3 +1,4 @@
+<link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
 <dz-header blend="true" fixed="true"></dz-header>
 <div class="scrollable main-body has-profile" id="portal">
     <div class="nav-arrow">
@@ -20,19 +21,27 @@
                 </div>
                 <div class="clearfix"></div>
             </div>
-            <div class="intro-sep">
-                - OR -
-            </div>
-            <div style="text-align: center;">
-                <a class="btn btn-default" id="explore-btn" href="/portal/explore">Start Exploring</a>
+            <div class="about-brief" style="margin-top: 30px;">
+                disc|zump is an online <b>community</b> and <b>marketplace</b> for disc golfers interested in keeping a digital inventory of their collection as well as buying, selling and trading with others, both locally and globally.
             </div>
         </div>
     </div>
     <div dz-wrapper style="background-color: #fff;">
         <div fit-below-page id="explore-start">
-            <explore-category field="brand" fvalue="Innova"></explore-category>
+            <explore-category recent="true"></explore-category>
+            <div class="portal-section">
+                <div class="section-title">Popular Searches</div>
+                <div class="section-body" fade-time="100" fade-scroll="true">
+                    <tag-list></tag-list>
+                </div>
+            </div>
             <explore-category field="brand" fvalue="Discraft"></explore-category>
-            <explore-category field="name" fvalue="Aviar"></explore-category>
+            <explore-category field="brand" fvalue="Axiom"></explore-category>
+            <explore-category field="brand" fvalue="Innova"></explore-category>
+            <explore-category field="brand" fvalue="Dynamic Discs"></explore-category>
+            <explore-category field="type" fvalue="Distance Driver"></explore-category>
+            <explore-category field="type" fvalue="Mid-range"></explore-category>
+            <explore-category field="type" fvalue="Putt/Approach"></explore-category>
         </div>
         <dz-footer></dz-footer>
     </div>

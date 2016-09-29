@@ -73,11 +73,6 @@ var adminApiRouter = express.Router();
 require('./app/routes/adminApi.js')(adminApiRouter, passport);
 app.use('/admin/api', adminApiRouter);
 
-
-var mainRouter = express.Router();
-require('./app/routes/routes.js')(mainRouter, passport, gridFs);
-app.use('/', mainRouter);
-
 var membershipRouter = express.Router();
 require('./app/routes/membership.js')(membershipRouter);
 app.use('/membership', membershipRouter);
@@ -93,6 +88,10 @@ app.use('/oauth', oauthRouter);
 var testRouter = express.Router();
 require('./app/routes/files.js')(testRouter, gridFs);
 app.use('/files', testRouter);
+
+var mainRouter = express.Router();
+require('./app/routes/routes.js')(mainRouter, passport, gridFs);
+app.use('/', mainRouter);
 
 app.get('*', function(req, res){
   res.redirect('/'); 

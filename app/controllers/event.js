@@ -13,7 +13,9 @@ module.exports = {
         AccountDeleteConfirm : 'AccountDeleteConfirm',
         AccountPasswordInit: 'AccountPasswordInit',
         AccountPDGAClaim: 'AccountPDGAClaim',
-        AccountPDGAReset: 'AccountPDGAReset'
+        AccountPDGAReset: 'AccountPDGAReset',
+        AccountTypeChange: 'AccountTypeChange',
+        AccountReset: 'AccountReset'
     },
     
     addEvent: addEvent,

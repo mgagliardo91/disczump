@@ -26,6 +26,10 @@ function createUserReq(opts) {
             stopwords:"true",
             defType:"edismax"
         },
+        facet: {
+            pdga: {type:"terms", field: 'account.verifications.pdga',mincount: 1,limit: 2, numBuckets: false},
+            facebook: {type:"terms", field: 'account.verifications.facebook',mincount: 1,limit: 2, numBuckets: false}
+        },
         sort: 'score asc,local.username asc',
         limit: typeof opts.limit !== 'undefined' ? opts.limit : 20,
         offset: opts.start || 0
@@ -49,7 +53,6 @@ function createUserReq(opts) {
             req.params.fq = '{!tag=t_geo}{!geofilt}';
         }
         
-        req.facet = {};
         geoConfig.userFacetRanges.forEach(function(x) {
             req.facet['d_' + x] = {type:'query', q: '{!frange l=0 u=' + x + '}geodist()', mincount:'0'};
             if (opts.geo.filter) {
@@ -64,6 +67,42 @@ function createUserReq(opts) {
             req.sort = 'score asc,local.username asc';
         } else if (opts.sort == 'proximity' && geoSet) {
             req.sort = 'score asc,geodist() asc';
+        }
+    }
+    
+    if (opts.filter) {
+        var excludeActive = false;
+        for (var i = opts.filter.length - 1; i >= 0; i--) {
+            var field = opts.filter[i].name;
+             
+            if (req.facet[field] && opts.filter[i].fields.length) {
+                var fieldName = req.facet[field].field;
+                var filterString = '{!tag=t_' + fieldName  + '}';
+                for (var j = 0; j < opts.filter[i].fields.length; j++) {
+                    var value = opts.filter[i].fields[j];
+                    value = /^\[.*\]$/.test(value) ? value : '"' + value + '"';
+
+                    filterString = filterString + (j > 0 ? ' OR ': '') + fieldName + ':' + value;
+                }
+                req.filter.unshift(filterString);
+
+                if (!excludeActive) {
+                    req.facet[field].domain = {excludeTags: 't_' + fieldName};
+                }
+
+                if (opts.geo.filter) {
+                    req.facet[field].mincount = 0;
+                }
+
+                if (!excludeActive) {
+                    excludeActive = true;
+                    continue;
+                }
+                
+                if (excludeActive) {
+                    req.facet[field].mincount = 0;
+                }
+            }
         }
     }
     
@@ -85,7 +124,7 @@ function getSolrField(field) {
 
 function createFacetReq(opts, userId) {
     var facetReq = {};
-    var req = createDiscReq(opts, userId);
+    var req = createDiscReq(opts, userId, undefined, true);
 
     if (opts.facet && opts.facet.name) {
         facetReq.filter = req.filter;
@@ -116,7 +155,7 @@ function createFacetReq(opts, userId) {
     return req;
 }
 
-function createDiscReq(opts, userId, reqId) {
+function createDiscReq(opts, userId, reqId, includeTag) {
     var req = {
         filter: [],
         query: '',
@@ -201,7 +240,7 @@ function createDiscReq(opts, userId, reqId) {
         }
     }
     
-    if (userId) {
+    if (userId || includeTag) {
         req.facet.tag = {type:"terms", field: 'tag', mincount: 1, limit: 50, numBuckets: true};
     }
     

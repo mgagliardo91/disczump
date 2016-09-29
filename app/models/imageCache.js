@@ -9,7 +9,7 @@ var imageCacheSchema = mongoose.Schema({
 	},
 	fileId: String,
     thumbnailId: String,
-    createDate: {type: Date, default: Date.now}
+    createDate: {type: Date, default: new Date()}
     
 });
 

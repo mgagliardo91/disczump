@@ -10,7 +10,7 @@ var messageSchema = mongoose.Schema({
     userId: {type: String},
     threadId: {type: String},
     body: {type: String},
-    createDate: {type: Date, default: Date.now},
+    createDate: {type: Date, default: new Date()},
     attachments: [String]
     
 });

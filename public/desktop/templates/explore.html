@@ -1,5 +1,5 @@
 <dz-header></dz-header>
-<dz-profile user-id="{{trunk.userId}}" class="header-color-1" ng-if="$def(trunk.userId)" current-user="curUser._id"></dz-profile>
+<dz-profile user-id="{{trunk.userId}}" modal-opts="globalModalOpts" class="header-color-1" ng-if="$def(trunk.userId)" current-user="curUser._id"></dz-profile>
 <dz-status-bar class="header-color-2" hide-on="loading" show-count="resultList.length" total-count="pagination.total" breadcrumbs="breadcrumbs" home-url="statusHome"></dz-status-bar>
 <img class="explore-icon-fixed" src="/static/img/dz_disc_fade.png" />
 <div class="scrollable main-body has-profile" id="explore">
@@ -14,7 +14,7 @@
                     <div class="sidebar-title-container no-select" ng-click="mFacet.open = !mFacet.open" ng-init="mFacet.open = true">
                         <div class="sidebar-title-icon" style="color: #000"><i class="fa fa-plus-square" ng-show="!mFacet.open"></i></div>
                         <div class="sidebar-title-icon"><i class="fa fa-minus-square" ng-show="mFacet.open"></i></div>
-                        <div class="sidebar-title">Marketplace <span class="filter-clear hover-underline" ng-show="">[Clear]</span></div>
+                        <div class="sidebar-title">Marketplace</div>
                     </div>
                     <div class="sidebar-item-container" ng-show="mFacet.open">
                         <div ng-repeat="facet in resultFilters.statFilters">
@@ -99,21 +99,26 @@
         </div>
         <div class="right-container" id="results-container" ng-class="{'fullscreen': fullscreen}">
             <div class="result-header">
-                <div class="menu-btn" ng-attr-title="{{fullscreen ? 'Minimize' : 'Maximize'}}">
-                    <span><i class="fa fa-arrows-alt" ng-click="fullscreen = !fullscreen;" ng-class="{'active':fullscreen}"></i></span>
+                <div id="result-header-static" style="float:right;">
+                    <div class="menu-btn" ng-attr-title="{{fullscreen ? 'Minimize' : 'Maximize'}}">
+                        <span><i class="fa fa-arrows-alt" ng-click="fullscreen = !fullscreen;" ng-class="{'active':fullscreen}"></i></span>
+                    </div>
+                    <div class="menu-btn" ng-if="$def(trunk.userId) && trunk.userId == curUser._id">
+                        <span><i class="fa fa-check-square" ng-click="msOpts.toggleMS()" ng-class="{'active': msOpts.active}" title="Multi-select Mode"></i></span>
+                    </div>
+                    <div class="menu-btn" ng-if="$def(trunk.userId)">
+                        <span><i class="fa fa-share-square-o" ng-click="shareTrunk()" title="Share Trunk"></i></span>
+                    </div>
+                    <div id="result-sort">
+                        <select class="form-control" ng-model="sortParam" ng-change="updateSort()" ng-init="sortParam = sortParam || 'dAsc'">
+                          <option value="rel">Sort by Relevance</option>
+                          <option value="new" ng-hide="isMarketplaceModeActive('all');">Sort by Newly Available</option>
+                          <option value="alpha">Sort Alphabetically</option>
+                          <option value="createDate">Sort by Date Added</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="menu-btn" ng-if="$def(trunk.userId) && trunk.userId == curUser._id">
-                    <span><i class="fa fa-check-square" ng-click="msOpts.toggleMS()" ng-class="{'active': msOpts.active}" title="Multi-select Mode"></i></span>
-                </div>
-                <div id="result-sort">
-                    <select class="form-control" ng-model="sortParam" ng-change="updateSort()" ng-init="sortParam = sortParam || 'dAsc'">
-                      <option value="rel">Sort by Relevance</option>
-                      <option value="new">Sort by Newly Available</option>
-                      <option value="alpha">Sort Alphabetically</option>
-                      <option value="createDate">Sort by Date Added</option>
-                    </select>
-                </div>
-                <div class="search-container pad">
+                <div id="result-header-fluid" class="search-container pad">
                     <div class="search-btn round-left no-right float-left active">
                         <i class="fa fa-database"></i>
                     </div>
@@ -134,7 +139,7 @@
                     <div class="no-results-title"><i class="fa fa-exclamation-triangle dz-blue"></i> No Results</div>
                     <div class="no-results-msg">Please revise your search terms and try again.</div>
                 </div>
-                <disc-item  ng-repeat="disc in resultList" ng-repeat-finish="resizeRes()" disc="disc" current-user="curUser" ms-opts="msOpts"></disc-item>
+                <disc-item ng-repeat="disc in resultList" ng-repeat-finish="resizeRes()" disc="disc" current-user="curUser" lb-opts="lbOpts" ms-opts="msOpts"></disc-item>
                 <div class="grid-item load-item" ng-show="loading || loadingMore">
                     <div><i class="fa fa-spinner fa-spin"></i></div>
                 </div>
@@ -151,10 +156,11 @@
         <div class="ms-tb-title">Multi-select Toolbox</div>
         <div class="ms-count dz-blue">{{msOpts.count}}</div>
         <div class="ms-btn-container">
-            <div class="ms-tb-btn" title="Bump Discs" ng-click="msOpts.bumpDiscs()"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></div>
-            <div class="ms-tb-btn edit" title="Manage Tags" ng-click="msOpts.manageTags()"><i class="fa fa-lg fa-tags"></i></div>
-            <div class="ms-tb-btn delete" title="Delete" ng-click="msOpts.deleteDiscs()"><i class="fa fa-lg fa-trash"></i></div>
+            <div class="ms-tb-btn" title="Bump Discs" ng-click="msOpts.bumpDiscs()" ng-class="{disabled:msOpts.count == 0}"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></div>
+            <div class="ms-tb-btn edit" title="Manage Tags" ng-click="msOpts.manageTags()" ng-class="{disabled:msOpts.count == 0}"><i class="fa fa-lg fa-tags"></i></div>
+            <div class="ms-tb-btn delete" title="Delete" ng-click="msOpts.deleteDiscs()" ng-class="{disabled:msOpts.count == 0}"><i class="fa fa-lg fa-trash"></i></div>
         </div>
     </div>
-    <dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>
 </div>
+<lightbox disc-id="lbOpts.discId" trigger="lbOpts.show" scroll-lock="pgSettings.scrollLock"></lightbox>
+<dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>

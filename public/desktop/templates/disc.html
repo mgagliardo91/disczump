@@ -1,33 +1,51 @@
 <div dz-wrapper>
     <dz-header></dz-header>
     <dz-status-bar class="header-color-1" breadcrumbs="breadcrumbs"></dz-status-bar>
-    <div class="private-warning dz-blue-background" ng-show="!loading && !disc.visible">
+    <div class="private-warning dz-blue-background" ng-show="!loading.disc && !disc.visible">
         <span><i class="fa fa-eye-slash fa-lg"></i>This disc is private!<i class="fa fa-eye-slash fa-lg"></i></span>
     </div>
     <div class="scrollable main-body">
         <div class="page-content full-width">
-            <dz-alert alert-data="discAlert"></dz-alert>
             <div class="title-row">
-                <span class="title-btn float-right" ng-show="!discInit"><i class="fa fa-spin fa-spinner"></i></span>
+                <span class="title-btn-size float-right" ng-show="!discInit"><i class="fa fa-spin fa-spinner"></i></span>
                 <div class="title-btn-container float-right" ng-show="discInit">
-                    <span class="title-btn"><i class="fa fa-facebook-square hover-fb-color hover-pointer" title="Share Disc"></i></span>
-                    <span class="title-btn"><i class="fa fa-link hover-link-color hover-pointer" title="Copy Link"></i></span>
-                    <span class="title-btn" directive-on="discInit" directive-set="{'ng-if':'givePermission()'}"><a ng-href="/portal/d/{{disc._id}}/edit"><i class="fa fa-pencil hover-edit-color hover-pointer" title="Edit Disc"></i></a></span>
-                    <span class="title-btn" directive-on="discInit" directive-set="{'ng-if':'givePermission()'}" ng-click="modalFns.createDeleteModal(disc)"><i class="fa fa-trash hover-delete-color hover-pointer" title="Delete Disc"></i></a></span>
+                    <div class="fixed-wrapper title-btn-size" ng-show="disc.visible">
+                        <div ng-click="shareDisc()">
+                            <i class="fa fa-share-square-o dz-blue-hover hover-pointer" title="Share Disc"></i>
+                        </div>
+                    </div>
+                    <div class="fixed-wrapper title-btn-size" directive-on="discInit" directive-set="{'ng-if':'givePermission()'}">
+                        <div>
+                            <i class="fa fa-spinner fa-spin" ng-show="loading.privacy"></i>
+                            <i class="fa fa-eye-slash dz-blue-hover hover-pointer" ng-show="!loading.privacy && !disc.visible" ng-click="togglePrivacy()" title="Make Public"></i>
+                            <i class="fa fa-eye dz-blue-hover hover-pointer" ng-show="!loading.privacy && disc.visible" ng-click="warnPrivacy()" title="Make Private"></i>
+                        </div>
+                    </div>
+                    <div class="fixed-wrapper title-btn-size" directive-on="discInit" directive-set="{'ng-if':'givePermission()'}">
+                        <div>
+                            <a ng-href="/d/{{disc._id}}/edit"><i class="fa fa-pencil hover-edit-color hover-pointer" title="Edit Disc"></i></a>
+                        </div>
+                    </div>
+                    <div class="fixed-wrapper title-btn-size" directive-on="discInit" directive-set="{'ng-if':'givePermission()'}">
+                        <div ng-click="deleteDisc()">
+                            <i class="fa fa-trash hover-delete-color hover-pointer" title="Delete Disc"></i>
+                        </div>
+                    </div>
                     <div class="clearfix"></div>
                 </div>
                 <div class="page-title handle-overflow" ng-show="!disc">Loading...</div>
                 <div class="page-title handle-overflow" ng-show="disc">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></div>
                 <hr>
             </div>
+            <dz-alert class="full-width" alert-data="discAlert"></dz-alert>
             <div id="dv-content">
                 <div class="dv-container dv-image-container">
-                    <div match-width class="dv-image-block" style="font-size: 4em;" ng-show="loading">
+                    <div match-width class="dv-image-block" style="font-size: 4em;" ng-show="loading.disc">
                         <div class="table-cell">
                             <i class="fa fa-spinner fa-spin fa-lg"></i>
                         </div>
                     </div>
-                    <div match-width class="dv-image-block dv-image-border" ng-show="!loading">
+                    <div match-width class="dv-image-block dv-image-border" ng-show="!loading.disc">
                         <div class="table-cell">
                             <img directive-on="discInit" directive-set="{'img-src':'/files/{{imageBlock.fileId}\}'}" ng-show="imageBlock" class="fit-parent hover-pointer" ng-click="showLightbox = true;" img-load>
                             <img img-src="/static/logo/logo_small_faded.svg" ng-show="!imageBlock" class="fit-parent" img-load>
@@ -36,7 +54,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="image-list" ng-show="!loading">
+                    <div class="image-list" ng-show="!loading.disc">
                         <div class="image-list-container simple">
                             <div class="image-list-table">
                                 <div class="image-item-container" ng-repeat="img in disc.imageList">
@@ -57,36 +75,40 @@
                             <span ng-show="tempMarketplace.counts.marketCap == -1" style="font-size:28px;">&#8734;</span>
                         </div>
                         <div class="dv-marketplace-row dv-marketplace-title">Marketplace Options</div>
-                        <form name="marketplaceForm" class="dv-marketplace-row" style="height:40px;">
-                            <div class="width-33 float-left">
-                                <div class="dv-marketplace-section-wrapper input-row">
-                                    <span>Price:</span>
-                                    <input type="text" name="price" class="form-control validation dv-marketplace-price" ng-model="tempMarketplace.value" placeholder="0.00" ng-pattern="/^[0-9]+(\.[0-9]{1,2})?$/">
+                        <div ng-show="!disc.visible" style="line-height:50px;">This disc must be made public before adding it to the marketplace.</div>
+                        <div ng-show="disc.visible">
+                            <dz-alert alert-data="marketAlert"></dz-alert>
+                            <form name="marketplaceForm" class="dv-marketplace-row" style="height:40px;">
+                                <div class="width-33 float-left">
+                                    <div class="dv-marketplace-section-wrapper input-row">
+                                        <span>Price:</span>
+                                        <input type="text" name="price" class="form-control validation dv-marketplace-price" ng-model="tempMarketplace.value" placeholder="0.00" ng-pattern="/^[0-9]+(\.[0-9]{1,2})?$/">
+                                    </div>
+                                </div>
+                                <div class="width-33 float-left">
+                                    <div class="dv-marketplace-section-wrapper input-row">For Sale: <switch class="dv-marketplace-switch sale-switch" type="checkbox" ng-model="tempMarketplace.forSale"></switch></div>
+                                </div>
+                                <div class="width-33 float-left">
+                                    <div class="dv-marketplace-section-wrapper input-row">For Trade: <switch class="dv-marketplace-switch trade-switch" type="checkbox" ng-model="tempMarketplace.forTrade"></switch></div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </form>
+                            <div class="dv-marketplace-row" style="height:30px;">
+                                <div class="dv-marketplace-section-wrapper btn-row">
+                                    <div class="dv-marketplace-btn" directive-on="discInit" directive-set="{'ng-class':'{disabled: !isDirty() || marketplaceForm.price.$invalid}'}" ng-click="(isDirty() && marketplaceForm.price.$valid && !isSaving) && saveDisc()">
+                                        <span ng-show="!isSaving">Apply</span>
+                                        <span ng-show="isSaving"><i class="fa fa-spinner fa-spin fa-lg"></i></span>
+                                    </div>
+                                    <div class="dv-marketplace-btn" ng-click="bumpDisc()" ng-show="isMarket() && bumpReady">Bump</div>
+                                    <div class="dv-marketplace-btn disabled" ng-show="isMarket() && !bumpReady" directive-on="userInit && !publicMode" directive-set="{'countdown':''}" sec-left="disc.marketplace.bumpRemaining" counts="tempMarketplace.bump" done="bumpReady" show="showCountdown">
+                                        <span ng-show="showCountdown"><span ng-bind="tempMarketplace.bump.hours"></span> : <span ng-bind="tempMarketplace.bump.minutes"></span> : <span ng-bind="tempMarketplace.bump.seconds"></span></span>
+                                        <span ng-show="!showCountdown"><i class="fa fa-spinner fa-spin fa-lg"></i></span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="width-33 float-left">
-                                <div class="dv-marketplace-section-wrapper input-row">For Sale: <switch class="dv-marketplace-switch sale-switch" type="checkbox" ng-model="tempMarketplace.forSale"></switch></div>
+                            <div class="dv-marketplace-row" style="font-style:italic;color:#BEBEBE;" ng-show="isMarket() && disc.marketplace.postedDate">
+                                Posted: {{disc.marketplace.postedDate | date : 'medium'}}
                             </div>
-                            <div class="width-33 float-left">
-                                <div class="dv-marketplace-section-wrapper input-row">For Trade: <switch class="dv-marketplace-switch trade-switch" type="checkbox" ng-model="tempMarketplace.forTrade"></switch></div>
-                            </div>
-                            <div class="clearfix"></div>
-                        </form>
-                        <div class="dv-marketplace-row" style="height:30px;">
-                            <div class="dv-marketplace-section-wrapper btn-row">
-                                <div class="dv-marketplace-btn" directive-on="discInit" directive-set="{'ng-class':'{disabled: !isDirty() || marketplaceForm.price.$invalid}'}" ng-click="(isDirty() && marketplaceForm.price.$valid && !isSaving) && saveDisc()">
-                                    <span ng-show="!isSaving">Apply</span>
-                                    <span ng-show="isSaving"><i class="fa fa-spinner fa-spin fa-lg"></i></span>
-                                </div>
-                                <div class="dv-marketplace-btn" ng-click="bumpDisc()" ng-show="bumpReady">Bump</div>
-                                <div class="dv-marketplace-btn disabled" ng-show="!bumpReady" directive-on="userInit && !publicMode" directive-set="{'countdown':''}" sec-left="disc.marketplace.bumpRemaining" counts="tempMarketplace.bump" done="bumpReady" show="showCountdown">
-                                    <span ng-show="showCountdown"><span ng-bind="tempMarketplace.bump.hours"></span> : <span ng-bind="tempMarketplace.bump.minutes"></span> : <span ng-bind="tempMarketplace.bump.seconds"></span></span>
-                                    <span ng-show="!showCountdown"><i class="fa fa-spinner fa-spin fa-lg"></i></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="dv-marketplace-row" style="font-style:italic;color:#BEBEBE;" ng-show="disc.marketplace.postedDate">
-                            Posted: {{disc.marketplace.postedDate | date : 'medium'}}
                         </div>
                     </div>
                     <table class="info-table">
@@ -97,7 +119,7 @@
                                         <img directive-on="userInit" directive-set="{'img-src':'{{getUserImage(user)}\}'}" class="fit-parent" img-load>
                                     </div>
                                     <div class="dv-profile-preview-btn-container float-right">
-                                        <a class="dv-profile-preview-btn" ng-href="/portal/t/{{user.username}}">
+                                        <a class="dv-profile-preview-btn" ng-href="/t/{{user.username}}">
                                             <i class="fa fa-reply"></i> Trunk
                                         </a>
                                         <a class="dv-profile-preview-btn" ng-if="disc && !givePermission()" ng-click="initMessage()">
@@ -108,7 +130,7 @@
                                     <div class="dv-profile-preview-info">
                                         <overflow-wrapper>
                                             <div class="dv-profile-preview-text-lg handle-overflow">
-                                                <a ng-href="/portal/t/{{user.username}}" class="hover-underline">{{user.username}}</a>
+                                                <a ng-href="/t/{{user.username}}" class="hover-underline">{{user.username}}</a>
                                             </div>
                                         </overflow-wrapper>
                                         <overflow-wrapper ng-if="user.shortLocation">
@@ -278,5 +300,5 @@
     </div>
     <dz-footer></dz-footer>
 </div>
-<lightbox image-block-id="imageBlock._id" image-list="disc.imageList" trigger="showLightbox" scroll-lock="pgSettings.scrollLock"></lightbox>
-<dz-modal modal-opts="modalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>
+<lightbox disc-id="disc._id" cur-img="imageBlock._id" trigger="showLightbox" scroll-lock="pgSettings.scrollLock"></lightbox>
+<dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>

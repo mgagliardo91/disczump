@@ -8,8 +8,9 @@ module.exports = {
     },
     'secret': 'c3b6bd821123318539d8660d22f7815fd1dcf9e7e4fa8ee2f4c66dee96',
     'admins': [
-            'mike@disczump.com',
-            'ben@disczump.com',
+//             'mike@disczump.com',
+//             'ben@disczump.com',
+            'disczump@gmail.com',
             'support@disczump.com'
         ],
     'tokenTTL': '1h',
@@ -39,6 +40,9 @@ module.exports = {
         'sessionTTL': '30m',
         'term': 0,
         'payPeriod': 'MONT',
+        'retryDays': 2,
+        'reminderHours': 48,
+        'failRetryAttempts': 3
     },
     'membership': {
         'TypeBasic': 'Basic',

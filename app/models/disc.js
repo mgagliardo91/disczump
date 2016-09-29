@@ -25,8 +25,8 @@ var discSchema = mongoose.Schema({
     tagList: [String],
     visible: {type:Boolean, default: false},
     condition: Number,
-    createDate: {type: Date, default: Date.now},
-	modifiedDate: {type: Date, default: Date.now},
+    createDate: {type: Date, default: new Date()},
+	modifiedDate: {type: Date, default: new Date()},
     marketplace: {
         forSale: {type: Boolean, default: false},
         forTrade: {type: Boolean, default: false},

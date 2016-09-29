@@ -1,10 +1,14 @@
-<dz-header></dz-header>
+<dz-header id="page-top"></dz-header>
 <dz-status-bar class="header-color-1" breadcrumbs="breadcrumbs"></dz-status-bar>
-<div class="scrollable main-body" id="disc-edit">
+<div class="scrollable main-body">
     <div class="page-content full-width">
         <div class="title-row">
             <div class="title-btn-container float-right">
-                <span class="title-btn"><i class="fa fa-eraser hover-icon-color hover-pointer" title="Reset Form" ng-click="clearForm()"></i></span>
+				<div class="fixed-wrapper title-btn-size">
+					<div>
+						<i class="fa fa-eraser hover-icon-color hover-pointer" title="Reset Form" ng-click="clearForm()"></i>
+					</div>
+				</div>
                 <div class="clearfix"></div>
             </div>
             <div class="page-title handle-overflow"><span ng-show="!$def(disc._id)">Create</span><span ng-show="$def(disc._id)">Edit</span> | <span class="dz-blue">Disc</span></div>
@@ -14,7 +18,7 @@
         <div class="form-horizontal" ng-form name="discForm">
             <div class="dz-label">
                 General
-                <span class="dz-label-icon"><i class="fa fa-question-circle" title="Help" section="general"></i></span>
+                <span class="dz-label-icon" ng-click="showGeneralHelp()"><i class="fa fa-question-circle" title="Help" section="general"></i></span>
             </div>
             <div class="modify-form-section">
     			<div class="form-group">
@@ -57,7 +61,7 @@
             </div>
             <div class="dz-label">
                 Advanced
-                <span class="dz-label-icon"><i class="fa fa-question-circle" title="Help" section="advanced"></i></span>
+                <span class="dz-label-icon" ng-click="showAdvancedHelp()"><i class="fa fa-question-circle" title="Help" section="advanced"></i></span>
             </div>
             <div class="modify-form-section">
 	            <div class="form-group">
@@ -118,11 +122,12 @@
                 </div>
             </div>
 			<div class="dz-label">Marketplace</div>
+			<div class="page-info">The disc must be made public before adding it to the marketplace.  Alternatively, a disc is automatically removed from the marketplace if marked private.</div>
 			<div class="modify-form-section">
 				<div class="form-group">
 	                <label class="col-sm-2 control-label">For Sale</label>
 	                <div class="col-sm-4">
-	                    <switch type="checkbox" ng-model="disc.marketplace.forSale"></switch>
+	                    <switch type="checkbox" disabled="!disc.visible" ng-model="disc.marketplace.forSale"></switch>
 	                </div>
 	                <label class="col-sm-2 col-sm-offset-1 control-label">Value (USD)</label>
 	                <div class="col-sm-3">
@@ -132,15 +137,13 @@
 				<div class="form-group">
 	                <label class="col-sm-2 control-label">For Trade</label>
 	                <div class="col-sm-4">
-	                    <switch type="checkbox" ng-model="disc.marketplace.forTrade"></switch>
+	                    <switch type="checkbox" disabled="!disc.visible" ng-model="disc.marketplace.forTrade"></switch>
 	                </div>
                 </div>
 			</div>
             <div ng-show="disc.imageList.length">
                 <div class="dz-label">Current Images</div>
-                <div class="page-info">
-                    Drag images to reorder. Click the star to select a primary image.
-                </div>
+                <div class="page-info">Drag images to reorder. Click the star to select a primary image.</div>
                 <div class="modify-form-section">
                     <div class="image-list">
 		                <div class="image-list-container image-list-container simple" id="existing-image-container">
@@ -194,3 +197,4 @@
     </div>
 </div>
 <image-cropper cropper-options="discImageCropper"></image-cropper>
+<dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>

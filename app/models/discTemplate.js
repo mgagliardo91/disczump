@@ -12,10 +12,10 @@ var discTemplateSchema = mongoose.Schema({
     name: String,
     type: String,
     material: String,
-    speed: String,
-    glide: String,
-    turn: String,
-    fade: String
+    speed: Number,
+    glide: Number,
+    turn: Number,
+    fade: Number
     
 });
 

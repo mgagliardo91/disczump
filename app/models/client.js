@@ -24,7 +24,7 @@ var clientSchema = mongoose.Schema({
     },
     createDate: {
 		type: Date, 
-		default: Date.now
+		default: new Date()
 	},
     permissions: {
         createUsers: {type: Boolean, default: false},

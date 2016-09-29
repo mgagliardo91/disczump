@@ -6,6 +6,7 @@ var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 module.exports = {
     createRequest: createRequest,
     createFullRequest: createFullRequest,
+    createPaymentChangeRequest: createPaymentChangeRequest,
     getRequest: getRequest,
     completeRequest: completeRequest,
     failRequest: failRequest
@@ -20,18 +21,23 @@ function generateId() {
     return id;
 }
 
-function createFullRequest(userId, fromAccount, toAccount, immedCharge, callback) {
+function createFullRequest(userId, email, fromAccount, toAccount, immedCharge, callback, paymentChange) {
     AccountChangeRequest.remove({userId: userId, completed: false}, function(err) {
         if (err)
             return callback(Error.createError(err, Error.internalError));
         
        var req = new AccountChangeRequest({
            userId: userId,
+           userEmail: email,
            fromAccount: fromAccount,
            toAccount: toAccount,
            immediateCharge: immedCharge,
            sessionId: generateId()
        });
+        
+        if (paymentChange) {
+            req.paymentChange = true;
+        }
         
         req.save(function(err) {
             if (err)
@@ -42,8 +48,12 @@ function createFullRequest(userId, fromAccount, toAccount, immedCharge, callback
     });
 }
 
-function createRequest(userId, fromAccount, toAccount, callback) {
-    return createFullRequest(userId, fromAccount, toAccount, 0.0, callback);
+function createRequest(userId, email, fromAccount, toAccount, callback) {
+    return createFullRequest(userId, email, fromAccount, toAccount, 0.0, callback);
+}
+
+function createPaymentChangeRequest(userId, email, fromAccount, toAccount, callback) {
+    return createFullRequest(userId, email, fromAccount, toAccount, 0.0, callback, true);
 }
 
 function getRequest(sessionId, callback) {

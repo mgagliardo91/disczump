@@ -7,47 +7,17 @@ var logger = require('./logger.js');
 var Error = require('./error.js');
 
 var membershipConfig = require('../../config/config').membership;
+var MembershipTypes = require('./membershipTypes');
 
 module.exports = {
     reqAccountCreate: reqAccountCreate,
     reqAccountModify: reqAccountModify,
     reqAccountCancel: reqAccountCancel,
+    reqAccountChangePayment: reqAccountChangePayment,
     getAccountChangeReq: getAccountChangeReq,
     confirmAccountCreate: confirmAccountCreate,
     confirmAccountModify: confirmAccountModify,
     confirmAccountCancel: confirmAccountCancel
-}
-
-function getMembershipCost(type) {
-    switch(type) {
-        case membershipConfig.TypeBasic: {
-            return membershipConfig.CostBasic;
-        }
-        case membershipConfig.TypeEntry: {
-            return membershipConfig.CostEntry;
-        }
-        case membershipConfig.TypePro: {
-            return membershipConfig.CostPro;
-        }
-        default:
-            return 0;
-    }
-}
-
-function checkType(type) {
-    if (type.toLowerCase() == membershipConfig.TypeBasic.toLowerCase()) {
-        return membershipConfig.TypeBasic;
-    }
-    
-    if (type.toLowerCase() == membershipConfig.TypeEntry.toLowerCase()) {
-        return membershipConfig.TypeEntry;
-    }
-    
-    if (type.toLowerCase() == membershipConfig.TypePro.toLowerCase()) {
-        return membershipConfig.TypePro;
-    }
-    
-    return undefined;
 }
 
 var getProrateAmt = function(profile, curAccount, newAccount) {
@@ -112,6 +82,12 @@ function canModify(user, type) {
     return false;
 }
 
+function canChangePayment(user) {
+    return typeof(user.account.profile.profileId) !== 'undefined' && 
+        (user.account.profile.type == membershipConfig.TypeEntry || 
+        user.account.profile.type == membershipConfig.TypePro);
+}
+
 function canCancel(user) {
     return user.account.profile && (user.account.profile.type == membershipConfig.TypeEntry ||
         user.account.profile.type == membershipConfig.TypePro);
@@ -127,7 +103,7 @@ function reqAccountCreate(userId, type, callback) {
         if (err)
             return callback(err);
         
-        var accountType = checkType(type);
+        var accountType = MembershipTypes.checkType(type);
         
         if (!accountType)
             return callback(Error.createError('Invalid membership type.', Error.invalidDataError));
@@ -137,17 +113,17 @@ function reqAccountCreate(userId, type, callback) {
         
         var curAccount = {
             type: user.account.type,
-            amount: getMembershipCost(user.account.type)
+            amount: MembershipTypes.getTypeCost(user.account.type)
         }
         
         var newAccount = {
             type: accountType,
-            amount: getMembershipCost(accountType)
+            amount: MembershipTypes.getTypeCost(accountType)
         }
         
         var prorateAmt = getProrateAmt(user.account.profile, curAccount, newAccount);
         
-        AccountChangeRequestController.createFullRequest(user._id, curAccount, newAccount, prorateAmt, function(err, request) {
+        AccountChangeRequestController.createFullRequest(user._id, user.local.email, curAccount, newAccount, prorateAmt, function(err, request) {
             if (err)
                 return callback(err);
             
@@ -166,7 +142,7 @@ function reqAccountModify(userId, type, callback) {
         if (err)
             return callback(err);
         
-        var accountType = checkType(type);
+        var accountType = MembershipTypes.checkType(type);
         
         if (!accountType)
             return callback(Error.createError('Invalid membership type.', Error.invalidDataError));
@@ -176,17 +152,17 @@ function reqAccountModify(userId, type, callback) {
         
         var curAccount = {
             type: user.account.type,
-            amount: getMembershipCost(user.account.type)
+            amount: MembershipTypes.getTypeCost(user.account.type)
         }
         
         var newAccount = {
             type: accountType,
-            amount: getMembershipCost(accountType)
+            amount: MembershipTypes.getTypeCost(accountType)
         }
         
         var prorateAmt = getProrateAmt(user.account.profile, curAccount, newAccount);
         
-        AccountChangeRequestController.createFullRequest(user._id, curAccount, newAccount, prorateAmt, function(err, request) {
+        AccountChangeRequestController.createFullRequest(user._id, user.local.email, curAccount, newAccount, prorateAmt, function(err, request) {
             if (err)
                 return callback(err);
             
@@ -207,7 +183,7 @@ function reqAccountCancel(userId, callback) {
         
         var curAccount = {
             type: user.account.type,
-            amount: getMembershipCost(user.account.type)
+            amount: MembershipTypes.getTypeCost(user.account.type)
         }
         
         var newAccount = {
@@ -215,7 +191,7 @@ function reqAccountCancel(userId, callback) {
             amount: membershipConfig.CostBasic
         }
         
-        AccountChangeRequestController.createRequest(user._id, curAccount, newAccount, function(err, request) {
+        AccountChangeRequestController.createRequest(user._id, user.local.email, curAccount, newAccount, function(err, request) {
             if (err)
                 return callback(err);
             
@@ -223,6 +199,35 @@ function reqAccountCancel(userId, callback) {
             
             return callback(null, request, user.account.profile.profileId);
         });
+    });
+}
+
+function reqAccountChangePayment(userId, callback) {
+    UserController.getUser(userId, function(err, user) {
+        if (err)
+            return callback(err);
+        
+        if (!canChangePayment(user))
+            return callback(Error.createError('Unable to cancel account due to its current membership level.', Error.unauthorizedError));
+        
+        var curAccount = {
+            type: user.account.type,
+            amount: MembershipTypes.getTypeCost(user.account.type)
+        }
+        
+        var newAccount = {
+            type: user.account.profile.type,
+            amount: MembershipTypes.getTypeCost(user.account.profile.type)
+        }
+        
+        AccountChangeRequestController.createPaymentChangeRequest(user._id, user.local.email, curAccount, newAccount, function(err, request) {
+            if (err)
+                return callback(err);
+            
+            logger.debug('Created payment change request.', request.toObject());
+            
+            return callback(null, request);
+        }, true);
     });
 }
 
@@ -238,14 +243,14 @@ function getAccountChangeReq(sessionId, callback) {
     });
 }
 
-function confirmAccountCreate(req, profile, callback) {
+function confirmAccountCreate(req, profile, immedCharge, callback) {
     logger.debug('Creating account with profile', profile);
     UserController.setAccountProfile(req.userId, req, profile, function(err, user) {
         if (err)
             return callback(err);
         
-        req.success(req.toAccount.amount, function(err) {
-            callback(null, req);
+        req.success(immedCharge, function(err) {
+            return callback(null, req);
         });
     });
 }
@@ -257,7 +262,7 @@ function confirmAccountModify(req, profileUpdate, immedCharge, callback) {
             return callback(err);
         
         req.success(immedCharge, function(err) {
-            callback(null, req);
+            return callback(null, req);
         });
     });
 }
@@ -269,7 +274,7 @@ function confirmAccountCancel(req, profileUpdate, callback) {
             return callback(err);
         
         req.success(0.0, function(err) {
-            callback(null, req);
+            return callback(null, req);
         });
     });
 }

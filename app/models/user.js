@@ -18,8 +18,8 @@ var userSchema = mongoose.Schema({
         lastName: String,
         email: {type: String, unique: true},
         password: String,
-        dateJoined: {type: Date, default: Date.now},
-        lastAccess: {type: Date, default: Date.now},
+        dateJoined: {type: Date, default: new Date()},
+        lastAccess: {type: Date, default: new Date()},
         active: {type: Boolean, default: false},
         passcode: String,
         image: String,
@@ -52,25 +52,28 @@ var userSchema = mongoose.Schema({
 		type: {type: String, default: membershipConfig.TypeBasic},
 		marketCap: {type: Number, default: membershipConfig.CapBasic},
 		profile: {
-			type: {type: String},
+			type: {type: String, default: membershipConfig.TypeBasic},
+			lastModified: {type: Date},
 			startDate: {type: Date},
 			nextBillDate: {type: Date},
-			payPeriod: {type: String, default: 'MONT'},
+			payPeriod: {type: String},
 			tender: {type: String},
 			origPNRef: {type: String},
 			origBAId: {type: String},
-			draftAmount: {type: Number},
+			draftAmount: {type: Number, default: 0},
 			profileId: {type: String},
 			acct: {type: String},
 			expDate: {type: String},
-			freeze: {type: Boolean, default: false},
-			active: {type: Boolean, default: false}
+			pendingReset: {type: Boolean, default: false},
+			active: {type: Boolean, default: true}
 		},
         notifications: {
-            newMessage: {type: Boolean, default: true }
+            newMessage: {type: Boolean, default: true },
+			siteUpdates: {type: Boolean, default: true }
         },
-		permissions: {
-			showFacebookId: {type: Boolean, default: false}
+		verifications: {
+			facebook: {type: Boolean, default: false},
+			pdga: {type: Boolean, default: false}
 		}
 	},
     internal: {
@@ -86,12 +89,17 @@ userSchema.methods.totalAccessCount = function() {
     return this.local.accessCount.desktop + this.local.accessCount.mobile;
 }
 
+userSchema.methods.setPending = function() {
+    this.account.profile.pendingReset = true;
+	this.save();
+}
+
 userSchema.methods.addEvent = function(type, event) {
     if (typeof(event) !== 'undefined') {
         this.internal.eventLog.push({
            type: type,
            message: event,
-           dateCreated: Date.now()
+           dateCreated: new Date()
         });
         
         this.save();
@@ -100,7 +108,7 @@ userSchema.methods.addEvent = function(type, event) {
 
 userSchema.methods.updateAccessCount = function(platform) {
     this.local.accessCount[platform] += 1;
-    this.local.lastAccess = Date.now();
+    this.local.lastAccess = new Date();
     this.save();
 }
 
@@ -152,9 +160,11 @@ userSchema.methods.accountToString = function() {
 		account.firstUse = this.local.accessCount.desktop <= 1;
 	}
 	
-	if (typeof(this.facebook.id) !== 'undefined' && this.account.permissions.showFacebookId) {
+	if (this.account.verifications.facebook === true) {
 		account.fbId = this.facebook.id;
 	}
+	
+	account.verifications = this.account.verifications;
 	
 	return account;
 }
@@ -165,12 +175,22 @@ userSchema.methods.fullAccountToString = function() {
 	account.email = this.local.email;
 	account.accountType = this.account.type;
 	account.marketCap = this.account.marketCap;
-	account.profile = {
-		startDate: this.account.profile.startDate,
-		payPeriod: this.account.profile.payPeriod,
-		tender: this.account.profile.tender,
-		draftAmount: this.account.profile.draftAmount,
-		type: this.account.profile.type
+	
+	if (this.account.profile.active) { 
+		account.profile = {
+			tender: this.account.profile.tender,
+			draftAmount: this.account.profile.draftAmount,
+			nextBillDate: this.account.profile.nextBillDate,
+			type: this.account.profile.type ? this.account.profile.type : this.account.type,
+			exists: typeof(this.account.profile.profileId) !== 'undefined'
+		}
+	} else {
+		account.profile = {
+			tender: this.account.profile.tender,
+			draftAmount: this.account.profile.draftAmount,
+			type: this.account.profile.type ? this.account.profile.type : this.account.type,
+			exists: typeof(this.account.profile.profileId) !== 'undefined'
+		}
 	}
 	
 	if (this.account.profile.tender === 'C') {

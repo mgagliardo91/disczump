@@ -50,10 +50,10 @@ mongoose.connection.on('connected', function() {
                         name: properties[1].length ? properties[1] : undefined,
                         type: properties[2].length ? properties[2] : undefined,
                         material: properties[3].length ? properties[3] : undefined,
-                        speed: properties[4].length ? properties[4] : undefined,
-                        glide: properties[5].length ? properties[5] : undefined,
-                        turn: properties[6].length ? properties[6] : undefined,
-                        fade: properties[7].length ? properties[7] : undefined
+                        speed: properties[4].length ? parseInt(properties[4]) : undefined,
+                        glide: properties[5].length ? parseInt(properties[5]) : undefined,
+                        turn: properties[6].length ? parseInt(properties[6]) : undefined,
+                        fade: properties[7].length ? parseInt(properties[7]) : undefined
                     });
                     count++;
                 }

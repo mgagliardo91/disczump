@@ -81,7 +81,7 @@ module.exports = function(app, gridFs) {
 						return next(err);
 
 					logger.debug('Sending delete confirmation email to user [%s]', user._id);
-					Mailer.sendMail(user.local.email, 'disc|zump Account Deletion', message, function(err, result) {
+					Mailer.sendMail(user.local.email, Mailer.TypeAccountDeletion, message, function(err, result) {
 						if (err)
 							return next(err);
 
@@ -127,48 +127,17 @@ module.exports = function(app, gridFs) {
 	app.route('/account/image')
 		.post(Access.hasAccess, function(req, res, next) {
 			logger.debug('User [%s] is requesting access to post account image', req.user._id);
-			var sendResponse = false;
-			var busboy = new Busboy({
-				headers: req.headers
+			UserController.postUserImage(req.user._id, req.body._id, gfs, function(err, user) {
+				if (err)
+					return next(err);
+
+				StringUtils.stringifyUser(user, function(err, account) {
+					if (err)
+						return next(err);
+
+					return res.json(account);
+				}, true);
 			});
-
-			busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-				if (fieldname == 'accountImage' && /^image\//.test(mimetype)) {
-					logger.debug('Receving image file [%s] from user [%s]', filename, req.user._id);
-
-					FileUtil.saveImage(gm, gfs, file, {
-						mimetype: mimetype,
-						filename: filename,
-						maxSize: config.images.maxSize
-					}, function(err, newFile) {
-						if (err) return next(err);
-
-						UserController.postUserImage(req.user._id, newFile._id, gfs, function(err, user) {
-							if (err)
-								return next(err);
-
-							StringUtils.stringifyUser(user, function(err, account) {
-								if (err)
-									return next(err);
-
-								return res.json(account);
-							}, true);
-						});
-					});
-				} else {
-					sendResponse = true;
-					file.resume();
-				}
-
-			});
-		
-			busboy.on('finish', function() {
-				if (sendResponse) {
-					return res.json({});
-				}
-			});
-		
-			req.pipe(busboy);
 		})
 		.delete(Access.hasAccess, function(req, res, next) {
 			logger.debug('User [%s] is requesting access to delete account image', req.user._id);
@@ -196,9 +165,27 @@ module.exports = function(app, gridFs) {
 			return next(Error.createError('/preferences will be a future implementation.', Error.notImplemented));
 		});
 	
-	app.route('/account/permissions')
+	app.route('/account/notifications')
+		.get(Access.hasAccess, function(req, res, next) {
+			UserController.getAccountNotifications(req.user._id, function(err, notifications) {
+				if (err)
+					return next(err);
+				
+				return res.json(notifications);
+			})
+		})
 		.put(Access.hasAccess, function(req, res, next) {
-			UserController.setAccountPermissions(req.user._id, req.body, function(err, user) {
+			UserController.setAccountNotifications(req.user._id, req.body, function(err, notifications) {
+				if (err)
+					return next(err);
+				
+				return res.json(notifications);
+			})
+		})
+	
+	app.route('/account/verifications')
+		.put(Access.hasAccess, function(req, res, next) {
+			UserController.setAccountVerifications(req.user._id, req.body, function(err, user) {
 				if (err)
 					return next(err);
 				
@@ -213,7 +200,7 @@ module.exports = function(app, gridFs) {
 
 	app.route('/account/market')
 		.get(Access.hasAccess, function(req, res, next) {
-			logger.debug('User [%s] is requesting access to get account mareket settings', req.user._id);
+			logger.debug('User [%s] is requesting access to get account market settings', req.user._id);
 			DiscController.getMarketplaceDiscCount(req.user._id, function(err, count) {
 				if (err)
 					return next(err);
@@ -224,6 +211,20 @@ module.exports = function(app, gridFs) {
 					marketAvailable: req.user.account.marketCap - count
 				});
 			});
+		});
+	
+	app.route('/account/count')
+		.get(Access.hasAccess, function(req, res, next) {
+			logger.debug('User [%s] is requesting access to get account disc count settings', req.user._id);
+			DiscController.getDiscCountByUser(req.user._id, function(err, count) {
+				if (err)
+					return next(err);
+
+				return res.json({
+					count: count,
+					status: 'OK'
+				});
+			}, true);
 		});
 
 	app.route('/account/reset')
@@ -253,7 +254,7 @@ module.exports = function(app, gridFs) {
 				if (err)
 					return next(err);
 
-				Mailer.sendMail(req.body.email, 'disc|zump Password Recovery', message, function(err, result) {
+				Mailer.sendMail(req.body.email, Mailer.TypePasswordRecovery, message, function(err, result) {
 					if (err)
 						return next(err);
 
@@ -385,18 +386,17 @@ module.exports = function(app, gridFs) {
 				return res.json(dataItem);
 			});
 		});
-
+	
 	app.route('/images')
-		.post(Access.hasAccess, function(req, res, next) {
-			logger.debug('User [%s] is posting a new image', req.user._id);
+		.post(function(req, res, next) {
 			var sendResponse = false;
 			var busboy = new Busboy({
 				headers: req.headers
 			});
 
 			busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-				if (fieldname == 'discImage' && /^image\//.test(mimetype)) {
-					logger.debug('Receving image file [%s] from user [%s]', filename, req.user._id);
+				if ((fieldname == 'discImage' || fieldname == 'accountImage') && /^image\//.test(mimetype)) {
+					logger.debug('Receving image file [%s]', filename);
 
 					FileUtil.saveImage(gm, gfs, file, {
 						mimetype: mimetype,
@@ -405,22 +405,21 @@ module.exports = function(app, gridFs) {
 					}, function(err, newFile) {
 						if (err) return next(err);
 
-						ImageController.pushImageCache(gm, gfs, req.user._id, newFile._id, function(err, imageObj) {
+						ImageController.pushImageCache(gm, gfs, newFile._id, function(err, imageObj) {
 							if (err)
 								return next(err);
 
 							return res.json(imageObj);
-						});
+						}, fieldname == 'accountImage');
 					});
 				} else {
 					sendResponse = true;
 					file.resume();
 				}
-
 			});
 			busboy.on('finish', function() {
 				if (sendResponse) {
-					return res.json({});
+					return res.json(Error.createError('Invalid image post.', Error.invalidDataError));
 				}
 			});
 			req.pipe(busboy);
@@ -456,6 +455,7 @@ module.exports = function(app, gridFs) {
 				body: requestString,
 				method: 'POST'
 			}
+			
 			request(options, function(err, response, body) {
 				if (err || response.statusCode != 200) {
 					return next(Error.createError('Error processing query request.', Error.internalError));
@@ -635,7 +635,7 @@ module.exports = function(app, gridFs) {
 						return next(err);
 					}
 
-					Mailer.sendMail(user.local.email, 'disc|zump Account Confirmation', message, function(err, result) {
+					Mailer.sendMail(user.local.email, Mailer.TypeAccountConfirmation, message, function(err, result) {
 						if (err) {
 							return next(err);
 						}

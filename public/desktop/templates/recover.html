@@ -7,9 +7,7 @@
                 <div class="portal-title no-pad cont-sm">
                     <img src="/static/logo/logo_portal.png">
                 </div>
-                <div class="notify-container">
-                    <div class="notify-text">Recover Account</div>
-                </div>
+                <div class="page-info small"><div class="page-info-title">Recover Account</div><div class="page-info-body">Enter the email address associated with your account below. You will receive an email containing a link to reset your password.</div></div>
                 <div class="login-form-stacked form-xsmall" ng-form name="recoverForm" ng-enter="recoverForm.$valid && doRecover()">
                      <div class="input-group" ng-class="{'has-error': !recoverForm.username.$pristine && recoverForm.username.$invalid, 'has-success': !recoverForm.username.$pristine && recoverForm.username.$valid}">
                         <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
