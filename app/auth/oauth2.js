@@ -46,10 +46,13 @@ server.exchange(oauth2orize.exchange.password(function(client, username, passwor
             return done(err);
         
         if (!user) 
-            return done(null, false);
+            return done(Error.createError('Unable to locate user with provided email address.', Error.invalidDataError));
         
         if (!user.validPassword(password)) 
-            return done(null, false);
+            return done(Error.createError('Invalid password.', Error.unauthorizedError));
+        
+        if (!user.local.active)
+            return done(Error.createError('Account is not active.', Error.inactiveError));
 
         return createToken(user, client._id, done);
     });
@@ -62,14 +65,17 @@ server.exchange(oauth2orize.exchange.refreshToken(function(client, refreshToken,
             return done(err);
         
         if (!token) 
-            return done(null, false);
+            return done(Error.createError('Invalid authorization token.', Error.invalidDataError));
         
         UserController.getUserInternal(token.userId, function(err, user) {
             if (err) 
                 return done(err);
             
             if (!user) 
-                return done(null, false);
+                return done(Error.createError('Unable to locate user with provided email address.', Error.invalidDataError));
+        
+            if (!user.local.active)
+                return done(Error.createError('Account is not active.', Error.inactiveError));
             
              return createToken(user, client._id, done);
         });
@@ -83,5 +89,5 @@ exports.removeToken = removeToken;
 exports.token = [
     passport.authenticate(['basic', 'oauth2-client-password'], { session: false }),
     server.token(),
-    server.errorHandler()
+    //server.errorHandler()
 ]

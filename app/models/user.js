@@ -18,8 +18,8 @@ var userSchema = mongoose.Schema({
         lastName: String,
         email: {type: String, unique: true},
         password: String,
-        dateJoined: {type: Date, default: new Date()},
-        lastAccess: {type: Date, default: new Date()},
+        dateJoined: {type: Date},
+        lastAccess: {type: Date},
         active: {type: Boolean, default: false},
         passcode: String,
         image: String,
@@ -79,6 +79,15 @@ var userSchema = mongoose.Schema({
     internal: {
         eventLog: [mongoose.Schema.Types.Mixed]
     }
+});
+
+userSchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.dateJoined = new Date();
+		this.lastAccess = new Date();
+    }
+	
+    next();
 });
 
 userSchema.methods.pref = function(preference) {

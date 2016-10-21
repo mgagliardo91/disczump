@@ -122,7 +122,7 @@
                         <i class="fa fa-spinner fa-spin fa-lg"></i>
                     </div>
                     <div class="search-bar-wrapper">
-                        <input id="search-explore" ng-enter="startSearch();" ng-model="searchParam" class="search-bar" type="text" placeholder="Search users..."></input>
+                        <input id="search-explore" ng-model-enter="startSearch();" ng-model="searchParam" class="search-bar" type="text" placeholder="Search users..."></input>
                         <div class="close-icon" ng-show="searchParam.length" ng-click="searchParam = ''; updateUrl();"></div>
                     </div>
                 </div>

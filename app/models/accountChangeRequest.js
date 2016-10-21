@@ -48,8 +48,7 @@ var accountChangeRequestSchema = mongoose.Schema({
 		default: false
 	},
     createDate: {
-        type: Date,
-        default: new Date()
+        type: Date
     }
     
 });
@@ -80,5 +79,13 @@ accountChangeRequestSchema.methods.fail = function(error, callback) {
 		return callback();
 	});
 }
+
+accountChangeRequestSchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.createDate = new Date();
+    }
+	
+    next();
+});
 
 module.exports = mongoose.model('AccountChangeRequest', accountChangeRequestSchema);

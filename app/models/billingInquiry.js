@@ -12,8 +12,7 @@ var billingInquirySchema = mongoose.Schema({
         required: true
     },
     inquiryDate: {
-        type: Date,
-        default: new Date()
+        type: Date
     },
     profileId: {
         type: String
@@ -75,5 +74,13 @@ billingInquirySchema.methods.archive = function(status) {
 	this.complete = true;
 	this.save();
 }
+
+billingInquirySchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.inquiryDate = new Date();
+    }
+	
+    next();
+});
 
 module.exports = mongoose.model('BillingInquiry', billingInquirySchema);

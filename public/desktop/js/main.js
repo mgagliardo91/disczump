@@ -1,5 +1,11 @@
 var app = angular.module('disczump', ['ngRoute', 'ngAnimate', 'smoothScroll', 'as.sortable', 'oc.lazyLoad', 'uiSwitch', 'disczump.controllers']);
 
+var resolveForce = {
+    account: ['StartUp', function(StartUp){
+        return StartUp.init(true);
+    }]
+}
+
 var resolve = {
     account: ['StartUp', function(StartUp){
         return StartUp.init();
@@ -8,6 +14,13 @@ var resolve = {
 
 var resolveFb = {
     account: resolve.account,
+    fbInit: ['FacebookUtils', function(FacebookUtils){
+        return FacebookUtils.initFacebook();
+    }]
+}
+
+var resolveForceFb = {
+    account: resolveForce.account,
     fbInit: ['FacebookUtils', function(FacebookUtils){
         return FacebookUtils.initFacebook();
     }]
@@ -129,7 +142,7 @@ app.config(['$routeProvider', '$httpProvider', '$locationProvider', function($ro
         templateUrl: '/static/desktop/templates/account.html',
         controller: 'AccountController',
         reloadOnSearch: false,
-        resolve: resolveFb
+        resolve: resolveForceFb
     }).when('/login', {
         templateUrl: '/static/desktop/templates/login.html',
         controller: 'LoginController',
@@ -148,6 +161,11 @@ app.config(['$routeProvider', '$httpProvider', '$locationProvider', function($ro
     }).when('/confirm/:authorizationId', {
         templateUrl: '/static/desktop/templates/confirm.html',
         controller: 'ConfirmController',
+        reloadOnSearch: false,
+        resolve: resolve
+    }).when('/confirm', {
+        templateUrl: '/static/desktop/templates/confirmInit.html',
+        controller: 'ConfirmInitController',
         reloadOnSearch: false,
         resolve: resolve
     }).when('/recover/:authorizationId', {

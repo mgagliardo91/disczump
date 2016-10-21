@@ -9,8 +9,16 @@ var imageCacheSchema = mongoose.Schema({
 	},
 	fileId: String,
     thumbnailId: String,
-    createDate: {type: Date, default: new Date()}
+    createDate: {type: Date}
     
+});
+
+imageCacheSchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.createDate = new Date();
+    }
+	
+    next();
 });
 
 module.exports = mongoose.model('ImageCache', imageCacheSchema);

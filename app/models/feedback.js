@@ -9,8 +9,16 @@ var feedback = mongoose.Schema({
 	},
     feedback: {type: String},
     userId: {type: String},
-    createDate: {type: Date, default: new Date()}
+    createDate: {type: Date}
     
+});
+
+feedback.pre('save', function(next) {
+    if (this.isNew) {
+		this.createDate = new Date();
+    }
+	
+    next();
 });
 
 module.exports = mongoose.model('Feedback', feedback);

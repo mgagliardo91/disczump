@@ -630,26 +630,31 @@ angular.module('disczump.controllers', ['disczump.services'])
 			var inputBlur = function() {
 				$timeout(function() {
 					scope.active = false;
-				}, 100);
-			}
-			
-			var handleEnter = function(evt) {
-				if ((evt.keyCode == 13 || evt.keyCode == 0) && scope.activeIndex > -1) {
-					evt.stopImmediatePropagation();
-					scope.setLocation(scope.results[scope.activeIndex]);
-					scope.active = false;
-				}
+				}, 200);
 			}
 			
 			var handleKey = function(evt) {
+				if ((evt.keyCode == 13 || evt.keyCode == 0) && scope.activeIndex > -1) {
+					evt.preventDefault();
+					evt.stopImmediatePropagation();
+					scope.setLocation(scope.results[scope.activeIndex]);
+					$timeout(function() {
+						scope.activeIndex = -1;
+						scope.active = false;
+					});
+					return;
+				}
+				
 				switch(evt.keyCode) {
 					case 38: {
+						evt.stopImmediatePropagation();
 						$timeout(function() {
 							scope.activeIndex = Math.max(-1, scope.activeIndex - 1);
 						});
 						break;
 					}
 					case 40: {
+						evt.stopImmediatePropagation();
 						$timeout(function() {
 							scope.activeIndex = Math.min(scope.results.length - 1, scope.activeIndex + 1);
 						});
@@ -662,7 +667,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 			elem.bind('focus', inputFocus);
 			elem.bind('blur', inputBlur);
 			elem.bind('keyup', handleKey);
-			elem.bind('keydown', handleEnter);
 			
 			scope.$watch(function () {
 				return ngModel.$modelValue;
@@ -679,7 +683,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 				elem.unbind('focus', inputFocus);
 				elem.unbind('blur', inputBlur);
 				elem.unbind('keyup', handleKey);
-				elem.unbind('keydown', handleEnter);
 			})
 			
 			initLoc();
@@ -701,6 +704,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 			scope.active = false;
 			scope.init = false;
 			scope.activeIndex = -1;
+			var setLock = false;
+			var lastQueried;
 			var ac;
 			
 			var resizeAC = function() {
@@ -733,6 +738,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			var queryField = function() {
+				var query = ngModel.$modelValue;
 				QueryService.queryFacet({
 					query: ngModel.$modelValue,
 					userId: scope.userId,
@@ -744,6 +750,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					}}, function(success, response) {
                     if (success) {
                         scope.results = postFilter(response.facets.dynFilters[attrs.dzAutoComplete].filters);
+						lastQueried = query;
 						scope.activeIndex = -1;
                     }
                 });
@@ -752,20 +759,23 @@ angular.module('disczump.controllers', ['disczump.services'])
 			scope.setInput = function(val) {
 				$timeout(function() {
 					scope.ngModel = val;
+					setLock = true;
 					elem[0].focus();
 				});
 			}
 			
 			var inputFocus = function() {
+				if (setLock) {
+					setLock = false;
+					return;
+				}
+				
 				$timeout(function() {
 					scope.active = true;
 				});
 				
-				if (!scope.init && ngModel.$modelValue && ngModel.$modelValue.length) {
+				if (lastQueried != ngModel.$modelValue && ngModel.$modelValue && ngModel.$modelValue.length) {
 					queryField();
-					scope.init = true;
-				} else {
-					scope.results = [];
 				}
 				
 			}
@@ -947,7 +957,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 * DIRECTIVES
 * 
 *******************************************************************************/
-.directive('dzHeader', ['$window', '$location', 'PageUtils', 'AccountService', function($window, $location, PageUtils, AccountService) {
+.directive('dzHeader', ['$window', '$location', '$timeout', 'PageUtils', 'AccountService', 'MessageService', function($window, $location, $timeout, PageUtils, AccountService, MessageService) {
     return {
         restrict: 'E',
         replace: true,
@@ -981,7 +991,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                                     '<a class="dz-navbar-item dz-navbar-btn" href="/trunks" ng-class="{\'active\':isItemActive(\'trunks\')}">Trunks</a>' +
                                     '<a class="dz-navbar-item dz-navbar-btn" ng-if="!user" href="/about" ng-class="{\'active\':isItemActive(\'about\')}">About</a>' +
                                     '<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/t/{{user.username}}" ng-class="{\'active\':isItemActive(\'t/{{user.username}}\')}">My Trunk</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/inbox" ng-class="{\'active\':isItemActive(\'inbox\')}">Inbox</a>' +
+                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/inbox" ng-class="{\'active\':isItemActive(\'inbox\')}">Inbox<span ng-show="unreadCount > 0" style="color: #ffa840;"> ({{unreadCount}})</span></a>' +
                                     '<a class="dz-navbar-item dz-navbar-btn" href="/login" ng-if="!user" ng-class="{\'active\':isItemActive(\'login\')}">Sign In</a>' +
                                     '<a class="dz-navbar-item dz-navbar-btn" href="/signup" ng-if="!user" ng-class="{\'active\':isItemActive(\'signup\')}">Sign Up</a>' +
                                 '</div>' +
@@ -992,6 +1002,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         link: function(scope, element, attrs) {
 			scope.user = AccountService.getAccount();
 			scope.showOptions = false;
+			scope.unreadCount = 0;
             scope.safeApply = function(fn) {
                 var phase = this.$root.$$phase;
                 if (phase == '$apply' || phase == '$digest') {
@@ -1034,21 +1045,30 @@ angular.module('disczump.controllers', ['disczump.services'])
 				var urlTest = new RegExp(item + '(\\?.*)?$');
                 return urlTest.test($location.url());
             }
+					
+			scope.toggleDropdown = function(forceTo) {
+				if (typeof(forceTo) !== 'undefined') {
+					scope.showOptions = forceTo;
+				} else {
+					scope.showOptions = !scope.showOptions;
+				}
+
+				console.log('changing state: ' + scope.showOptions);
+
+			}
+			
+			var updateMessageCount = function(unreadCount) {
+				$timeout(function() {
+					scope.unreadCount = unreadCount.messageCount;
+				});
+			}
+			
+			MessageService.addListener(updateMessageCount);
             
             scope.$on('$destroy', function() {
                 angular.element(document).unbind('scroll', blendHeader);
+				MessageService.removeListener(updateMessageCount);
             });
-					
-					scope.toggleDropdown = function(forceTo) {
-						if (typeof(forceTo) !== 'undefined') {
-							scope.showOptions = forceTo;
-						} else {
-							scope.showOptions = !scope.showOptions;
-						}
-						
-						console.log('changing state: ' + scope.showOptions);
-						
-					}
             
         }
     }
@@ -1230,7 +1250,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					}
 					
 					if (typeof(scope.userId) !== 'undefined') {
-						CacheService.getUser(scope.userId, function(success, user) {
+						CacheService.reloadUser(scope.userId, function(success, user) {
 							if (success) {
 								$timeout(function() {
 									scope.user = user;
@@ -1541,7 +1561,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 						'<span ng-if="disc[\'marketplace.value\']">{{disc[\'marketplace.value\'] | currency:"":2}}</span>' +
                     '</div>' +
                     '<div class="grid-item-icon top-right for-trade" ng-show="disc[\'marketplace.forTrade\'] && !flip">' +
-                        '<i class="fa fa-refresh"></i>' +
+                        '<i class="fa fa-exchange"></i>' +
                     '</div>' +
                     '<div class="grid-img-container flip" ng-mouseenter="displayHoverIcon=true;" ng-mouseleave="displayHoverIcon=false;">' +
                         '<div class="grid-img-inner">' + 
@@ -1588,6 +1608,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                         '</div>' + 
                     '</div>' +
                     '<div class="grid-item-info">' +
+						'<div class="private-icon" ng-if="!disc.visible"><i class="fa fa-eye-slash"></i></div>' +
                         '<div class="grid-item-label handle-overflow">' +
                             '<a class="hover-underline" ng-href="/d/{{disc._id}}">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></a>' +
                         '</div>' +
@@ -1635,8 +1656,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 			profileModal: '='
         },
         template: '<div class="grid-item">' +
-                    '<div class="grid-item-icon top-left location handle-overflow" ng-show="location">' +
+                    '<div class="grid-item-icon top-left location handle-overflow" ng-show="location" ng-attr-title="{{location}}">' +
 						'<span><i class="fa fa-street-view"></i>{{location}}</span>' +
+                    '</div>' +
+                    '<div class="grid-item-icon top-right cert-icon" ng-if="(user[\'account.verifications.pdga\'] || user[\'account.verifications.facebook\'])" title="Verified User">' +
+                        '<span class="fa-stack"><i class="fa fa-certificate fa-stack-2x"></i><i class="fa fa-check fa-stack-1x"></i></span>' + 
                     '</div>' +
                     '<div class="grid-img-container" ng-mouseenter="displayHoverIcon=true;" ng-mouseleave="displayHoverIcon=false;">' +
 						'<div class="grid-img-inner">' +
@@ -1655,7 +1679,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 						'</div>' + 
 					'</div>' +
                     '<div class="grid-item-info">' +
-                        '<div class="grid-item-label handle-overflow">' +
+						'<div class="grid-item-text float-right" ng-attr-title="{{user.discCount}} public disc(s)">{{user.discCount}} <span><i class="fa fa-database" ng-style="discStyle"></i></span></div>' +
+                        '<div class="grid-item-label handle-overflow text-left">' +
                             '<a class="hover-underline" ng-href="/t/{{user[\'local.username\']}}">{{user[\'local.username\']}}</a>' +
                         '</div>' +
                         '<div class="grid-item-text float-left">' +
@@ -1672,6 +1697,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 				if (success) {
 					scope.location = user.shortLocation;
 					scope.user.image = user.image;
+					scope.user.discCount = user.discCount;
+					scope.discStyle = {color:(user.discCount >= 200 ? '#008EDD' : (user.discCount >= 50 ? '#8bd1ff' : '#bebebe'))};
 					scope.init = true;
 				}
 			});
@@ -1864,17 +1891,18 @@ angular.module('disczump.controllers', ['disczump.services'])
         });
 
         scope[attrs.dropzone].getDropzone = function() {
-            return dropzone
+            return dropzone;
         };
     };
 })
 
-.directive('imageCropper', ['$window', 'ImageService', 'PageUtils', 
-    function($window, ImageService, PageUtils) {
+.directive('imageCropper', ['$window', '$timeout', 'ImageService', 'PageUtils', 
+    function($window, $timeout, ImageService, PageUtils) {
         return {
             restrict: 'E',
             scope: {
-                cropperOptions: "="
+                cropperOptions: '=',
+				scrollLock: '='
             },
             template: '<div class="backdrop backdrop-dark photo-crop" ng-show="show" ng-style="{\'top\':topMarg + \'px\'}">' + 
                             '<div class="crop-container" ng-style="{\'top\':topInnerMarg + \'px\', \'left\':leftInnerMarg + \'px\'}">' + 
@@ -1901,53 +1929,11 @@ angular.module('disczump.controllers', ['disczump.services'])
                 var resizeCropper = function() {
                     var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
                     var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-                    scope.safeApply(function() {
+					
+                    $timeout(function() {
                         scope.topInnerMarg = ($window.innerHeight - 500) / 2;
                         scope.leftInnerMarg = (width - 500) / 2;
                     });
-                }
-                
-                angular.element($window).bind('resize', resizeCropper);
-            
-                scope.$on('$destroy', function() {
-                    angular.element($window).unbind('resize load', resizeCropper);
-                });
-    
-                scope.cropperOptions.showCropper = function(name, src) {
-                    imageName = name;
-                    imageSrc = src;
-                    scope.safeApply(function() {
-                        scope.show = true;
-                    });
-                    var parent = document.getElementById('image-parent');
-                    parent.innerHTML = '<img src="' + src + '" id="test-crop"' + 
-                        ' filename="' + name + '"/>';
-                    initCropper();
-                }
-    
-                scope.cancel = function(e) {
-                    e.preventDefault();
-                    cropper.destroy();
-                    scope.safeApply(function() {
-                        scope.show = false;
-                    });
-                }
-    
-                scope.finish = function(e) {
-                    e.preventDefault();
-                    scope.safeApply(function() {
-                        scope.cropperOptions.cropperLoading = true;
-                        scope.show = false;
-                    });
-                    setTimeout(function() {
-                        var blob = cropper.getCroppedCanvas().toDataURL();
-                        var newFile = ImageService.dataURItoBlob(blob);
-                        cropper.destroy();
-                        newFile.cropped = true;
-                        newFile.name = imageName;
-                        scope.cropperOptions.onFinish(newFile);
-                        
-                    }, 100);
                 }
     
                 var initCropper = function() {
@@ -1968,6 +1954,53 @@ angular.module('disczump.controllers', ['disczump.services'])
                         }
                     });
                 }
+                
+                angular.element($window).bind('resize', resizeCropper);
+            
+                scope.$on('$destroy', function() {
+                    angular.element($window).unbind('resize load', resizeCropper);
+                });
+    
+                scope.cropperOptions.showCropper = function(name, src) {
+                    imageName = name;
+                    imageSrc = src;
+                    scope.safeApply(function() {
+                        scope.show = true;
+						scope.scrollLock = true;
+                    });
+                    var parent = document.getElementById('image-parent');
+                    parent.innerHTML = '<img src="' + src + '" id="test-crop"' + 
+                        ' filename="' + name + '"/>';
+					$timeout(initCropper);
+                }
+    
+                scope.cancel = function(e) {
+                    e.preventDefault();
+                    $timeout(function() {
+                        scope.show = false;
+						scope.scrollLock = false;
+						scope.cropperOptions.onFinish();
+                    cropper.destroy();
+                    });
+                }
+    
+                scope.finish = function(e) {
+                    e.preventDefault();
+                    $timeout(function() {
+                        scope.cropperOptions.cropperLoading = true;
+                        scope.show = false;
+						scope.scrollLock = false;
+                    });
+                    $timeout(function() {
+                        var blob = cropper.getCroppedCanvas().toDataURL();
+                        var newFile = ImageService.dataURItoBlob(blob);
+                        cropper.destroy();
+                        newFile.cropped = true;
+                        newFile.name = imageName;
+                        scope.cropperOptions.onFinish(newFile);
+                        
+                    }, 100);
+                }
     
                 scope.safeApply = function(fn) {
                     var phase = this.$root.$$phase;
@@ -1985,6 +2018,60 @@ angular.module('disczump.controllers', ['disczump.services'])
             }
         }
     }])
+
+.directive('smartMsg', [function() {
+	return {
+		restrict: 'A',
+		replace: true,
+		scope: {
+			smartMsg: '='
+		},
+		template: '<span></span>',
+		link: function(scope, element, attrs) {
+			
+			scope.$watch('smartMsg', function() {
+				element[0].innerHTML = '';
+				
+				if (typeof scope.smartMsg === 'undefined') return;
+			
+				if (typeof scope.smartMsg === 'string') {
+					element[0].textContent = scope.smartMsg;
+					return;
+				}
+
+				var getMatches = function(regex, val) {
+					 var matchGroups = [];
+					 var match = regex.exec(val);
+					 while (match != null) {
+						 matchGroups.push(match[1]);
+						 match = regex.exec(val);
+					 }
+
+					 return matchGroups;
+				 }
+
+				if (scope.smartMsg.hasOwnProperty('smartConfig')) {
+					var config = scope.smartMsg.smartConfig;
+					var text = config.text;
+					var output = '';
+
+					if (config.links) {
+						var urlRegex = /\<\!(.+)\>/g;
+						var matches = getMatches(urlRegex, text);
+						for (var i = 0; i < matches.length; i++) {
+							var url = config.links.length > i ? config.links[i] : '#';
+							text = text.split('<!' + matches[i] + '>').join('<a class="hover-underline dz-blue" href="' + url +'">' + matches[i] + '</a>');
+						}
+					} 
+
+					output = '<span>' + text + '</span>';
+
+					element[0].innerHTML = output;
+				}
+			});
+		}
+	}
+}])
     
 .directive('dzAlert', ['$timeout', function($timeout){
     return {
@@ -1999,21 +2086,21 @@ angular.module('disczump.controllers', ['disczump.services'])
                         '<button type="button" class="close" aria-label="Close" ng-click="alertData.success.show=false;" ng-if="!alertData.success.hideClose"><span aria-hidden="true">×</span></button>' +
                         '<div class="alert-body">' +
                             '<strong ng-if="alertData.success.title">{{alertData.success.title}}! </strong>' +
-                            '{{alertData.success.message}}' +
+                            '<span smart-msg="alertData.success.message"></span>' +
                         '</div>' +
                     '</div>' +
                     '<div class="alert alert-info" ng-show="alertData.info.show" ng-class="{\'slide-down\': dock == \'top\', \'slide-top\': dock == \'bottom\'}">' +
                         '<button type="button" class="close" aria-label="Close" ng-click="alertData.info.show=false;" ng-if="!alertData.info.hideClose"><span aria-hidden="true">×</span></button>' +
                         '<div class="alert-body">' +
                             '<strong ng-if="alertData.info.title">{{alertData.info.title}}! </strong>' +
-                            '{{alertData.info.message}}' +
+                            '<span smart-msg="alertData.info.message"></span>' +
                         '</div>' +
                     '</div>' +
                     '<div class="alert alert-danger" ng-show="alertData.error.show" ng-class="{\'slide-down\': dock == \'top\', \'slide-top\': dock == \'bottom\'}">' +
                         '<button type="button" class="close" aria-label="Close" ng-click="alertData.error.show=false;" ng-if="!alertData.error.hideClose"><span aria-hidden="true">×</span></button>' +
                         '<div class="alert-body">' +
                             '<strong ng-if="alertData.error.title">{{alertData.error.title}}! </strong>' +
-                            '{{alertData.error.message}}' +
+                            '<span smart-msg="alertData.error.message"></span>' +
                         '</div>' +
                     '</div>' +
                 '</div>',
@@ -2386,7 +2473,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                             '<div class="explore-item" ng-repeat="disc in exploreList | startFrom:start | limitTo:dispCount">' +
 								'<a ng-href="/d/{{disc._id}}">' + 
 									'<div class="explore-item-icon top-left for-sale"><i class="fa fa-usd"></i>{{disc[\'marketplace.value\'] | currency:"":2}}</div>' +
-									'<div class="explore-item-icon top-right for-trade"><i class="fa fa-refresh"></i></div>' +
+									'<div class="explore-item-icon top-right for-trade"><i class="fa fa-exchange"></i></div>' +
 									'<img img-src="{{getSolrPrimaryImage(disc)}}" img-load />' + 
 									'<div class="explore-item-title handle-overflow">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></div>' + 
 								'</a>' + 
@@ -2715,7 +2802,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 						'<div ng-show="opts.loading" style="line-height:105px;"><i class="fa fa-spinner fa-spin fa-3x"></i></div>' +
 						'<div ng-show="!opts.loading">' +
 							'<div style="position:relative;">' +
-								'<input type="text" class="dz-modal-tag-input" placeholder="Enter tag and press enter..." ng-model="tempTag" ng-model-options="{\'updateOn\':\'default blur\',\'debounce\':{\'default\':500,\'blur\':0}}" ng-enter="pushTempTag();" directive-on="opts.isShowing" directive-set="{\'dz-auto-complete\':\'tag\'}" user-id="data.user" dz-multi="true" >' +
+								'<input type="text" class="dz-modal-tag-input" placeholder="Enter tag and press enter..." ng-model="tempTag" ng-model-options="{\'updateOn\':\'default blur\',\'debounce\':{\'default\':500,\'blur\':0}}" ng-model-enter="pushTempTag();" directive-on="opts.isShowing" directive-set="{\'dz-auto-complete\':\'tag\'}" user-id="data.user" dz-multi="true" >' +
 							'</div>' +
 							'<div class="dz-modal-tag-container">' +
 								'<li class="tag-item" ng-repeat="tag in newTags">' +
@@ -2892,10 +2979,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 									'<div class="handle-overflow">{{getAccountName()}}</div>' +
 									'<div class="handle-overflow">{{user.discCount}} Public Discs</div>' +
 									'<div class="handle-overflow">Member since {{user.dateJoined | date:\'MM/dd/yyyy\'}}</div>' +
-									'<div class="handle-overflow" ng-show="user.pdgaNumber"><i style="color:#4FC74F;" class="fa fa-check fa-tools" aria-hidden="true"></i>PDGA Verified</div>' +
-									'<div class="handle-overflow" ng-show="!user.pdgaNumber"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>PDGA Verified</div>' +
-									'<div class="handle-overflow" ng-show="user.fbId"><i style="color:#4FC74F;" class="fa fa-check fa-tools" aria-hidden="true"></i>Facebook Verified</div>' +
-									'<div class="handle-overflow" ng-show="!user.fbId"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>Facebook Verified</div>' +
+									'<div class="handle-overflow" ng-show="user.pdgaNumber"><i style="color:#4FC74F;width:14px;" class="fa fa-check fa-tools" aria-hidden="true"></i>PDGA Verified</div>' +
+									'<div class="handle-overflow" ng-show="!user.pdgaNumber"><i style="color:#E85947;width:14px;" class="fa fa-times fa-tools" aria-hidden="true"></i>PDGA Verified</div>' +
+									'<div class="handle-overflow" ng-show="user.fbId"><i style="color:#4FC74F;width:14px;" class="fa fa-check fa-tools" aria-hidden="true"></i>Facebook Verified</div>' +
+									'<div class="handle-overflow" ng-show="!user.fbId"><i style="color:#E85947;width:14px;" class="fa fa-times fa-tools" aria-hidden="true"></i>Facebook Verified</div>' +
 								'</div>' +
 							'</div>' +
 							'<div class="dz-modal-bio" id="modal-bio" parse-text="user.bio" parse-url parse-disc ng-if="user.bio">{{user.bio}}</div>' +
@@ -2906,6 +2993,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>' +
 						'<div class="dz-modal-btn btn-blue" ng-if="!isOwner" ng-show="!opts.loading" ng-click="initMessage()">Message</div>' +
 						'<div class="dz-modal-btn trunk" ng-if="!isTrunk" ng-show="!opts.loading" ng-click="viewTrunk()">View Trunk</div>' +
+						'<div class="dz-modal-btn btn-blue" ng-if="isOwner" ng-show="!opts.loading" ng-click="viewAccount()">My Account</div>' +
 					'</div>' +
 				'</div>',
 		link: function(scope, elem, attrs) {
@@ -2930,6 +3018,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 			
 			scope.viewTrunk = function() {
 				$location.path('/t/' + scope.user.username);
+			}
+			
+			scope.viewAccount = function() {
+				$location.path('/account');
 			}
 			
 			scope.resize = function(){
@@ -3005,11 +3097,13 @@ angular.module('disczump.controllers', ['disczump.services'])
 						'<div class="dz-modal-triangle"></div>' +
 						'<div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
 						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>' +
-						'<div class="dz-modal-btn" ng-show="!opts.loading" ng-click="!opts.loading && confirm()" style="background-color: #e85947">Delete</div>' +
+						'<div class="dz-modal-btn" ng-show="!opts.loading && !opts.confirmed" ng-click="!opts.loading && confirm()" style="background-color: #e85947">Delete</div>' +
 					'</div>' +
 				'</div>',
 		link: function(scope, elem, attrs) {
-			scope.opts = {};
+			scope.opts = {
+				confirmed: true
+			};
 			scope.modalAlert = {};
 			
 			scope.getAccountImage = function() {
@@ -3027,6 +3121,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 							message: 'An email confirmation has been sent to your email address.',
 							show: true
 						}
+						scope.opts.confirmed = true;
 					} else {
 						scope.modalAlert.error = {
 							title: 'Error',
@@ -3034,7 +3129,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 							show: true
 						}
 					}
-						
+					
 					scope.opts.loading = false;
 					scope.lock = false;
 				});
@@ -3398,6 +3493,24 @@ angular.module('disczump.controllers', ['disczump.services'])
 .directive('ngEnter', ['$timeout', function ($timeout) {
 	return {
 		restrict: 'A',
+		link: function (scope, element, attrs) {
+        	element.bind("keyup", function (event) {
+            	if(event.which === 13) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					$timeout(function (){
+						scope.$eval(attrs.ngEnter);
+						event.preventDefault();
+					});
+				}
+			});
+		}
+	}
+}])
+
+.directive('ngModelEnter', ['$timeout', function ($timeout) {
+	return {
+		restrict: 'A',
 		require: 'ngModel',
 		link: function (scope, element, attrs, ngModelCtrl) {
         	element.bind("keyup", function (event) {
@@ -3405,7 +3518,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					event.stopImmediatePropagation();
 					$timeout(function (){
 						ngModelCtrl.$commitViewValue()
-						scope.$eval(attrs.ngEnter);
+						scope.$eval(attrs.ngModelEnter);
 						event.preventDefault();
 					});
 				}
@@ -3490,9 +3603,9 @@ angular.module('disczump.controllers', ['disczump.services'])
             return QueryService.getSolrPrimaryImage(disc);
         }
         
-				$scope.toggle = function(val) {
-					val = !val;
-				}
+		$scope.toggle = function(val) {
+			val = !val;
+		}
 				
     }
 ])
@@ -3501,11 +3614,14 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         PortalController
 * Description:  Controller for explore/marketplace functionality. 
 *******************************************************************************/
-.controller('PortalController', ['$scope', '$location', '$window', 'smoothScroll', 'PageUtils',
-    function($scope, $location, $window, smoothScroll, PageUtils) {
-        $scope.transform = 'rotate(0deg)';
+.controller('PortalController', ['$scope', '$location', '$window', '$timeout', 'smoothScroll', 'PageUtils',
+    function($scope, $location, $window, $timeout, smoothScroll, PageUtils) {
         var topExplore = document.getElementById('explore-start');
+		var lastX;
         
+		$location.search({}); // clear search params
+        $scope.transform = 'rotate(0deg)';
+		
         $scope.scrollPage = function() {
             var options = {
                 duration: 700,
@@ -3518,9 +3634,13 @@ angular.module('disczump.controllers', ['disczump.services'])
         
         var updatePageIcon = function() {
             var x = Math.min(180, PageUtils.getScrollPos());
-            $scope.safeApply(function() {
-                $scope.transform = 'rotate(' + x + 'deg)';
-            });
+			
+			if (x != lastX) {
+				$timeout(function() {
+					$scope.transform = 'rotate(' + x + 'deg)';
+				});
+				lastX = x;
+			}
         }
         
         angular.element(document).bind('scroll', updatePageIcon);
@@ -3934,6 +4054,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         var init = true;
         var sortSet = false;
         var reqSize = 20;
+		$scope.view = {};
         $scope.curUser = AccountService.getAccount();
         $scope.activeFilters = [];
 		$scope.breadcrumbs = [];
@@ -3944,12 +4065,12 @@ angular.module('disczump.controllers', ['disczump.services'])
 		$scope.lbOpts = {};
 		$scope.alertOpts = {};
 		
-		var isOwnedTrunk = $routeParams.username && $scope.curUser && $routeParams.username === $scope.curUser.username;
+		$scope.isOwnedTrunk = $routeParams.username && $scope.curUser && $routeParams.username === $scope.curUser.username;
 		
 		$scope.marketplace = {
-			forSale: !isOwnedTrunk,
-			forTrade: !isOwnedTrunk,
-			all: isOwnedTrunk
+			forSale: !$scope.isOwnedTrunk,
+			forTrade: !$scope.isOwnedTrunk,
+			all: $scope.isOwnedTrunk
 		}
         $scope.pagination = { start: 0, total: 0 };
         
@@ -4083,9 +4204,18 @@ angular.module('disczump.controllers', ['disczump.services'])
 			$scope.breadcrumbs.push({
 				title: 'Showing',
 				links: [
-					{text: $scope.marketplace.forSale ? ($scope.marketplace.forTrade ? 'For Sale and Trade' : 'For Sale') : ($scope.marketplace.forTrade ? 'For Trade' : 'All Public')}
+					{text: $scope.marketplace.forSale ? ($scope.marketplace.forTrade ? 'For Sale and Trade' : 'For Sale') : ($scope.marketplace.forTrade ? 'For Trade' : 'All Discs')}
 				]
 			});
+			
+			if (typeof($scope.view.visible) !== 'undefined') {
+				$scope.breadcrumbs.push({
+					title: 'Displaying',
+					links: [
+						{text: ($scope.view.visible ? 'Public Only' : 'Private Only')}
+					]
+				});
+			}
 			
 			var filters = [];
 			_.each($scope.activeFilters, function(filter) {
@@ -4107,7 +4237,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 							query: $scope.searchParam,
 							sort: sortSet ? $scope.sortParam : undefined,
 							filter: filters,
-							marketplace: $scope.marketplace
+							marketplace: $scope.marketplace,
+							visible: $scope.view.visible
 						})
 					});
 				});
@@ -4126,6 +4257,28 @@ angular.module('disczump.controllers', ['disczump.services'])
             }
         }
 		
+		$scope.getVisibleTitle = function() {
+			if (typeof($scope.view.visible) === 'undefined') {
+				return 'Displaying All';
+			} else if ($scope.view.visible) {
+				return 'Displaying Public';
+			} else {
+				return 'Displaying Private';
+			}
+		}
+		
+		$scope.toggleVisibillty = function() {
+			if (typeof($scope.view.visible) === 'undefined') {
+				$scope.view.visible = true;
+			} else if ($scope.view.visible) {
+				$scope.view.visible = false;
+			} else {
+				$scope.view.visible = undefined;
+			}
+			
+			$scope.updateUrl();
+		}
+		
 		$scope.startSearch = function() {
 			$scope.activeFilters = [];
 			$scope.updateUrl();
@@ -4137,7 +4290,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 				query: $scope.searchParam,
 				sort: sortSet ? $scope.sortParam : undefined,
 				filter: $scope.activeFilters,
-				marketplace: $scope.marketplace
+				marketplace: $scope.marketplace,
+				visible: $scope.view.visible
 			}));
         }
         
@@ -4193,7 +4347,8 @@ angular.module('disczump.controllers', ['disczump.services'])
                 valueRange: true,
                 limit: reqSize,
 				marketplace: $scope.marketplace,
-                userId: $scope.trunk.userId || undefined
+                userId: $scope.trunk.userId || undefined,
+				visible: $scope.view.visible
             }, function(success, response) {
                     if (success) {
                         $scope.pagination.start = response.start;
@@ -4298,6 +4453,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                 filter: $scope.activeFilters,
                 userId: $scope.trunk.userId || undefined,
 				marketplace: $scope.marketplace,
+				visible: $scope.view.visible,
 				facet: {
 					name: 'tag',
                     limit: 2,
@@ -4347,6 +4503,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 					$scope.sortParam = 'new';
 				} else {
 					$scope.sortParam = 'createDate';
+				}
+				
+				if (typeof(ret.visible) !== 'undefined' && $scope.isOwnedTrunk) {
+					$scope.view.visible = ret.visible;
 				}
 				
 				updateBreadcrumbs();
@@ -4454,9 +4614,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Description:  Controller for disc page functionality. 
 *******************************************************************************/
 .controller('DiscController', ['$scope', '$location', '$routeParams', '$timeout', '$window', '_', 
-							   'CacheService', 'AccountService', 'DiscService', 'MessageService',
-    function($scope, $location, $routeParams, $timeout, $window, _, CacheService, AccountService, DiscService, MessageService) {
+							   'RedirectService', 'CacheService', 'AccountService', 'DiscService', 'MessageService',
+    function($scope, $location, $routeParams, $timeout, $window, _, RedirectService, CacheService, AccountService, DiscService, MessageService) {
         var discId = $routeParams.discId;
+		
+		$location.search({}); // clear search params
         $scope.breadcrumbs = [];
         
 		$scope.bumpReady = false;
@@ -4594,7 +4756,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			
 			var tempDisc = {
 				_id: $scope.disc._id,
-				'visible': !$scope.disc.visible
+				visible: !$scope.disc.visible
 			};
 			
 			DiscService.editDisc(tempDisc, function(success, disc) {
@@ -4641,7 +4803,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 		
 		CacheService.getDisc(discId, function(success, disc) {
             if (!success) {
-                return $scope.nav();
+                return RedirectService.setRedirect('explore');
             } else {
                	$scope.disc = disc;
 				$scope.imageBlock = _.findWhere(disc.imageList, {_id: disc.primaryImage});
@@ -4671,9 +4833,15 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         DiscTemplateController
 * Description:  Controller for disc template search
 *******************************************************************************/
-.controller('DiscTemplateController', ['$scope', '$window', '$routeParams', '$timeout', '_', 'APIService', 
-    function($scope, $window, $routeParams, $timeout, _, APIService) {
+.controller('DiscTemplateController', ['$scope', '$window', '$location', '$routeParams', '$timeout', '_', 'AccountService', 'APIService', 
+    function($scope, $window, $location, $routeParams, $timeout, _, AccountService, APIService) {
         
+		if (!AccountService.isLoggedIn()) {
+			var curPath = $location.path();
+			return $location.path('/login').search('redirect', curPath);
+		}
+		
+		$location.search({}); // clear search params
         $scope.templates = [];
         $scope.loading = false;
         
@@ -4707,7 +4875,7 @@ angular.module('disczump.controllers', ['disczump.services'])
             var resCont = document.getElementById('results-container');
             var resList = document.getElementById('results-list');
             $timeout(function() {
-             angular.element(resList).css('width',  Math.floor(resCont.clientWidth / 208) * 208 + 'px');
+            	angular.element(resList).css('width', Math.floor(resCont.clientWidth / 208) * 208 + 'px');
             });
         }
         
@@ -4726,11 +4894,12 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         ModifyDiscController
 * Description:  Controller for disc page functionality. 
 *******************************************************************************/
-.controller('ModifyDiscController', ['$compile', '$scope', '$routeParams', '$location', '$timeout', '_', 'smoothScroll', '$ocLazyLoad', 'APIService', 'CacheService', 'ImageService', 'AccountService', 'DiscService', 
-    function($compile, $scope, $routeParams, $location, $timeout, _, smoothScroll, $ocLazyLoad, APIService, CacheService, ImageService, AccountService, DiscService) {
-        if (!AccountService.isLoggedIn()) {
-            return $location.path('/login');
-        }
+.controller('ModifyDiscController', ['$compile', '$scope', '$routeParams', '$location', '$timeout', '_', 'smoothScroll', '$ocLazyLoad', 'APIService', 'CacheService', 'ImageService', 'AccountService', 'DiscService', 'RedirectService', 
+    function($compile, $scope, $routeParams, $location, $timeout, _, smoothScroll, $ocLazyLoad, APIService, CacheService, ImageService, AccountService, DiscService, RedirectService) {
+		if (!AccountService.isLoggedIn()) {
+			var curPath = $location.path();
+			return $location.path('/login').search('redirect', curPath);
+		}
         
         var discId = $routeParams.discId;
         var templateId = $routeParams.templateId;
@@ -4748,6 +4917,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                         '</div>' +
                     '</div>' +
                 '</div>';
+		var queuedImages = [];
 		
 		$scope.editAlert = {};
 		$scope.account = AccountService.getAccount();
@@ -4864,10 +5034,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 		}
 		
-		$scope.clearForm = function() {
+		$scope.clearForm = function(skipAlert) {
 			$scope.disc = {_id: $scope.disc._id, visible: true, tagList: [], imageList: []};
-			$scope.editAlert = {}
 			$scope.discForm.$setPristine();
+			if (!skipAlert) $scope.editAlert = {};
 		}
 		
         $scope.currentTagDrag = {
@@ -4883,6 +5053,31 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.disc = {_id: discId, visible: true, tagList: [], imageList: []};
         $scope.settings = {discReady: false,dropzoneReady: false,dropzoneProcessing: false}
         
+		$scope.hasImages = function() {
+			if (typeof($scope.disc.imageList) !== 'undefined') {
+				return $scope.disc.imageList.length > 0;
+			}
+		}
+		
+		var processImg = function(file) {
+			ImageService.getDataUri(file, function(dataUri) {
+				$scope.discImageCropper.showCropper(file.name, dataUri);
+			});
+		}
+		
+		var handleQueue = function(file) {
+			if (!file) {
+				if (queuedImages.length) processImg(queuedImages[0]);
+				return;
+			}
+			
+			queuedImages.push(file);
+			
+			if (queuedImages.length == 1) {
+				processImg(file);
+			}
+		}
+		
         $scope.dropzoneConfig = {
             options: {
                 url: '/api/images',
@@ -4916,10 +5111,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                         $scope.discImageCropper.cropperLoading = true;
                     });
                     $scope.dropzoneConfig.getDropzone().removeFile(file);
-                    ImageService.getDataUri(file, function(dataUri) {
-                        $scope.discImageCropper.showCropper(file.name, dataUri);
-                    });
-                    
+					handleQueue(file);
                     return done('Processing');
                 },
                 success: function(file, response) {
@@ -4949,6 +5141,8 @@ angular.module('disczump.controllers', ['disczump.services'])
                 if (file) {
                     $scope.dropzoneConfig.getDropzone().addFile(file);
                 }
+				queuedImages.shift();
+				handleQueue();
             },
             cropperLoading: false
         }
@@ -5027,14 +5221,18 @@ angular.module('disczump.controllers', ['disczump.services'])
             } else {
 				DiscService.createDisc($scope.disc, function(success, disc) {
                     if (success) {
-                        $scope.disc = undefined;
                         $scope.editAlert.success = {
                             title: 'Success',
-                            message: disc.brand + ' ' + disc.name + ' has been created successfully.',
+                            message: {
+								smartConfig: {
+									text: '<!' + disc.brand + ' ' + disc.name + '> has been created successfully.',
+									links: ['/d/' + disc._id]
+								}
+							},
                             show: true
                         }
                         scrollTop();
-						$scope.discForm.$setPristine();
+						$scope.clearForm(true);
                     } else {
                         $scope.editAlert.error = {
                             title: disc.type,
@@ -5051,6 +5249,15 @@ angular.module('disczump.controllers', ['disczump.services'])
 		$scope.$watch('disc.visible', function(newVal) {
 			if (typeof(newVal) !== 'undefined') {
 				if (!newVal && $scope.disc.marketplace) {
+					$scope.disc.marketplace.forSale = false;
+					$scope.disc.marketplace.forTrade = false;
+				}
+			}
+		});
+		
+		$scope.$watchCollection('disc.imageList', function(newList) {
+			if (typeof(newList) !== 'undefined') {
+				if (newList.length === 0 && $scope.disc.marketplace) {
 					$scope.disc.marketplace.forSale = false;
 					$scope.disc.marketplace.forTrade = false;
 				}
@@ -5081,10 +5288,10 @@ angular.module('disczump.controllers', ['disczump.services'])
         if (typeof(discId) !== 'undefined') { // Edit Mode
             CacheService.getDisc(discId, function(success, disc) {
                 if (!success) {
-                    return $scope.nav();
+                    return RedirectService.setRedirect('explore');
                 } else {
 					if (!AccountService.compareTo(disc.userId)) {
-                        return $scope.nav();
+                        return RedirectService.setRedirect('explore');
                     }
                     $scope.disc = disc;
 					
@@ -5157,7 +5364,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 								  'SocketUtils', 'PageUtils', 'CacheService', 'Random', 'MessageService',
     function($scope, $location, $timeout, $q, _, smoothScroll, APIService, AccountService, SocketUtils, PageUtils, CacheService, Random, MessageService) {
 			if (!AccountService.isLoggedIn()) {
-					return $location.path('/login');
+				var curPath = $location.path();
+				return $location.path('/login').search('redirect', curPath);
 			}
 			
 			var messageTextArea = angular.element(document.getElementById('message-text-area'));
@@ -5200,7 +5408,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					var footer = document.getElementById('footer-bar');
 					var height = PageUtils.getWindowHeight();
 					var rectTop = PageUtils.getTop(inboxArea);
-					angular.element(inboxArea).css('height', (height - rectTop - 20 - footer.clientHeight) + 'px');
+					angular.element(inboxArea).css('height', (height - rectTop - 40 - footer.clientHeight) + 'px');
 				});
 			}
 			
@@ -5396,6 +5604,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					if (firstLoad) {
 						if ($scope.activeThread.messages.length) {
 							setThreadRead($scope.activeThread);
+							MessageService.reloadUnreadCount();
 							return;
 						}
 						
@@ -5408,6 +5617,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 							$scope.activeThread.refId = messages.length ? messages[messages.length - 1]._id : undefined;
 							
 							$scope.activeThread.messageCount = $scope.activeThread.currentMessageCount;
+							MessageService.reloadUnreadCount();
 							
 							if (firstLoad && !$scope.activeThread.active) {
 								$scope.messageAlert.info = {
@@ -5641,8 +5851,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('AccountController', ['$scope', '$location', '$window', '$timeout', '$compile', '$ocLazyLoad', 'AccountService', 'APIService', 'FacebookUtils', 'ImageService', 'TempStore', 
     function($scope, $location, $window, $timeout, $compile, $ocLazyLoad, AccountService, APIService, FacebookUtils, ImageService, TempStore) {
 		if (!AccountService.isLoggedIn()) {
-			return $location.path('/login');
+			var curPath = $location.path();
+			return $location.path('/login').search('redirect', curPath);
 		}
+		
+		$location.search({}); // clear search params
 
 		$scope.page = {
 			active: 'account'
@@ -5705,10 +5918,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 					account: $scope.account
 				}
 			}
-		}
-		
-		$scope.manageFb = function() {
-			
 		}
 
 		$scope.dropzoneConfig = {
@@ -5816,9 +6025,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 
 
 		$scope.getJoinDays = function() {
-			var joinDate = new Date($scope.account.dateJoined);
-
-			return Math.round(Math.abs((joinDate.getTime() - (new Date()).getTime())/(24*60*60*1000)));
+			return Math.round(Math.abs(((new Date($scope.account.dateJoined)).getTime() - (new Date()).getTime())/(24*60*60*1000)));
 		}
 
 		$scope.countVerifications = function() {
@@ -5915,8 +6122,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 				if (success) {
 
 				}
-
-				console.log(data);
 			});
 		}
 
@@ -6023,9 +6228,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('AccountChangeSelController', ['$scope', '$location', '$window', 'AccountService', 'APIService', 'MembershipService', 'TempStore', 
     function($scope, $location, $window, AccountService, APIService, MembershipService, TempStore) {
 		if (!AccountService.isLoggedIn()) {
-			return $location.path('/login');
+			var curPath = $location.path();
+			return $location.path('/login').search('redirect', curPath);
 		}
-
+		
+		$location.search({}); // clear search params
 		$scope.account = AccountService.getAccount();
 		
 		$scope.breadcrumbs = [
@@ -6034,7 +6241,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 		]
 		
 		$scope.selUpgrade = function(type) {
-			$location.url('/account/membership/process?key=' + TempStore.setTemp(type));
+			$location.path('/account/membership/process').search('key', TempStore.setTemp(type));
 		}
 		
 		$scope.getAccountType = function(type) {
@@ -6054,9 +6261,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('AccountAdjustController', ['$scope', '$location', '$window', 'smoothScroll', 'AccountService', 'APIService', 'MembershipService', 'TempStore', 
     function($scope, $location, $window, smoothScroll, AccountService, APIService, MembershipService, TempStore) {
 		if (!AccountService.isLoggedIn()) {
-			return $location.path('/login');
+			var curPath = $location.path();
+			return $location.path('/login').search('redirect', curPath);
 		}
 
+		$location.search({}); // clear search params
 		$scope.account = AccountService.getAccount();
 		
 		$scope.breadcrumbs = [
@@ -6089,7 +6298,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 			$scope.paypalLoading = true;
 			MembershipService.createHostedPageAdj($scope.billing, function(success, request) {
 				if (success) {
-					console.log(request);
 					$scope.request = request.request;
 					$scope.paypalConfig.params = {
 						src: 'https://payflowlink.paypal.com?MODE=TEST&SECURETOKENID=' + request.hostedPage.secureTokenId + '&SECURETOKEN=' + request.hostedPage.secureToken,
@@ -6120,7 +6328,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('AccountChangeController', ['$scope', '$location', '$window', 'smoothScroll', 'AccountService', 'APIService', 'MembershipService', 'TempStore', 
     function($scope, $location, $window, smoothScroll, AccountService, APIService, MembershipService, TempStore) {
 		if (!AccountService.isLoggedIn()) {
-			return $location.path('/login');
+			var curPath = $location.path();
+			return $location.path('/login').search('redirect', curPath);
 		}
 
 		$scope.account = AccountService.getAccount();
@@ -6143,7 +6352,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 		
 		$scope.type = TempStore.getTemp($location.search().key);
 		if (typeof($scope.type) === 'undefined') {
-			return $location.url('/account/change');
+			return $location.path('/account/change').replace();
 		}
 		
 		$scope.accountMethod = MembershipService.getChangeType($scope.account.profile.type, $scope.type);
@@ -6240,7 +6449,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 		}
 		
 		if (typeof($scope.accountMethod) === 'undefined')
-			return $location.path('/account/change');
+			return $location.path('/account/change').replace();
 		
 		$scope.getAccountType = function(type) {
 			return MembershipService.getAccountName(type);
@@ -6259,15 +6468,14 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('AccountChangeResultController', ['$scope', '$location', '$window', '$timeout', 'AccountService', 'APIService', 'MembershipService', 'TempStore', 
     function($scope, $location, $window, $timeout, AccountService, APIService, MembershipService, TempStore) {
 		if (!AccountService.isLoggedIn()) {
-			return $location.path('/login');
+			var curPath = $location.path();
+			return $location.path('/login').search('redirect', curPath);
 		}
 		
 		$scope.breadcrumbs = [
 			{links: [{text: 'My Account', href:'/account'}]},
 			{links: [{text: 'Membership', href: '/account/membership'}]}
 		]
-		
-		console.log($location.search());
 		
 		$scope.loading = true;
 		$scope.error = {
@@ -6307,7 +6515,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					$scope.loading = false;
 				}
 			} else {
-				return $location.path('/account/change');
+				return $location.path('/account/change').replace();
 			}
 		});
 		
@@ -6321,9 +6529,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('VerificationsController', ['$scope', '$location', 'AccountService', 'APIService', 'VerificationService', 
     function($scope, $location, AccountService, APIService, VerificationService) {
 		if (!AccountService.isLoggedIn()) {
-			return $location.path('/login');
+			var curPath = $location.path();
+			return $location.path('/login').search('redirect', curPath);
 		}
 		
+		$location.search({}); // clear search params
 		$scope.account = AccountService.getAccount();
 		
 		$scope.pdga = {
@@ -6422,6 +6632,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 *******************************************************************************/
 .controller('LoginController', ['$scope', '$location', '$window', 'AccountService', 'APIService', 'FacebookUtils', 
 	function($scope, $location, $window, AccountService, APIService, FacebookUtils) {
+		var redirect = $location.search().redirect;
+		
 		if (AccountService.isLoggedIn()) {
 			return $location.path('/account');
 		}
@@ -6437,10 +6649,19 @@ angular.module('disczump.controllers', ['disczump.services'])
 		$scope.doFbLogin = function() {
 			FacebookUtils.login(function(success, err) {
 				if (success) {
-					return $location.path('/explore');
+					return typeof(redirect) !== 'undefined' ? $location.path(redirect).search({}) : $location.path('/explore').search({});
 				}
 				
 				if (err) {
+					if (err.type == 'Inactive') {
+						err.message = {
+							smartConfig: {
+								text: err.message + ' To resend a confirmation email, <!click here>.',
+								links: ['/confirm']
+							}
+						}
+					}
+					
 					$scope.loginAlert.error = {
 						title: err.type,
 						message: err.message,
@@ -6455,7 +6676,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			$scope.loginAlert = {};
 			AccountService.doLogin($scope.cred.username, $scope.cred.password, function(success, err) {
 				if (success) {
-					return $location.path('/explore');
+					return typeof(redirect) !== 'undefined' ? $location.path(redirect).search({}) : $location.path('/explore').search({});
 				}
 				
 				$scope.loading = false;
@@ -6475,10 +6696,15 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         SignupController
 * Description:  Handles verification of pdga account
 *******************************************************************************/
-.controller('SignupController', ['$scope', '$location', '$window', '$timeout', 'AccountService', 'APIService', 'LocationService', 'FacebookUtils', 
-	function($scope, $location, $window, $timeout, AccountService, APIService, LocationService, FacebookUtils) {
+.controller('SignupController', ['$scope', '$location', '$window', '$timeout', 'AccountService', 'APIService', 'LocalStorage', 'LocationService', 'FacebookUtils', 
+	function($scope, $location, $window, $timeout, AccountService, APIService, LocalStorage, LocationService, FacebookUtils) {
 		if (AccountService.isLoggedIn()) {
-			return $location.path('/account');
+			return $location.path('/account').replace();
+		}
+		
+		if (!LocalStorage.itemExists('dz-signup')) {
+			LocalStorage.addItem('dz-signup', true);
+			return $location.path('/about').replace();
 		}
 		
 		var formats = {
@@ -6575,6 +6801,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 						message: 'A confirmation email has been sent to ' + data.email + '.',
 						show: true
 					}
+					$scope.signupComplete = true;
 				} else {
 					$scope.signupAlert.error = {
 						title: data.type,
@@ -6593,6 +6820,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 *******************************************************************************/
 .controller('TrunkLookupController', ['$scope', '$location', 'RedirectService', '$routeParams', 'CacheService',
 	function($scope, $location, RedirectService, $routeParams, CacheService) {
+		$location.search({}); // clear search params
+		
 		CacheService.getUser($routeParams.userId, function(success, user) {
 			if (success) {
 				RedirectService.setRedirect('t/' + user.username);
@@ -6610,9 +6839,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('ConfirmController', ['$scope', '$location', '$timeout', '$routeParams', 'AccountService',
 	function($scope, $location, $timeout, $routeParams, AccountService) {
 		if (AccountService.isLoggedIn()) {
-			return $location.path('/account');
+			return $location.path('/account').search({});
 		}
 		
+		$location.search({}); // clear search params
 		$scope.confirmAlert = {};
 		$scope.loading = true;
 		
@@ -6620,7 +6850,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 		
 		AccountService.doAccountConfirm($routeParams.authorizationId, function(success, err) {
 			if (success) {
-				return $location.path('/explore');
+				return $location.path('/explore').replace();
 			}
 			
 			$scope.loading = false;
@@ -6643,9 +6873,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('DeleteController', ['$scope', '$location', '$timeout', '$routeParams', 'AccountService',
 	function($scope, $location, $timeout, $routeParams, AccountService) {
 		if (!AccountService.isLoggedIn()) {
-			return $location.path('/redirect');
+			var curPath = $location.path();
+			return $location.path('/login').search('redirect', curPath);
 		}
 		
+		$location.search({}); // clear search params
 		$scope.deleteAlert = {};
 		$scope.loading = true;
 		$scope.deleteSuccess = false;
@@ -6676,9 +6908,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('RecoverController', ['$scope', '$location', '$timeout', '$routeParams', 'AccountService', 'APIService', 
 	function($scope, $location, $timeout, $routeParams, AccountService, APIService) {
 		if (AccountService.isLoggedIn()) {
-			return $location.path('/redirect');
+			return $location.path('/account').replace();
 		}
 		
+		$location.search({}); // clear search params
 		$scope.recoverAlert = {};
 		$scope.cred = {};
 		$scope.loading = false;
@@ -6697,6 +6930,45 @@ angular.module('disczump.controllers', ['disczump.services'])
 					}
 				} else {
 					$scope.recoverAlert.error = {
+						title: result.type,
+						message: result.message,
+						show: true
+					}
+				}
+			});
+		}
+	}
+])
+
+/******************************************************************************
+* Name:         ConfirmInitController
+* Description:  Handles verification of pdga account
+*******************************************************************************/
+.controller('ConfirmInitController', ['$scope', '$location', '$timeout', '$routeParams', 'AccountService', 'APIService', 
+	function($scope, $location, $timeout, $routeParams, AccountService, APIService) {
+		if (AccountService.isLoggedIn()) {
+			return $location.path('/account').replace();
+		}
+		
+		$location.search({}); // clear search params
+		$scope.confirmAlert = {};
+		$scope.cred = {};
+		$scope.loading = false;
+		
+		$scope.doConfirmInit = function() {
+			$scope.loading = true;
+			APIService.Post('/account/confirm', {
+				email: $scope.cred.username
+			}, function(success, result) {
+				$scope.loading = false;
+				if (success) {
+					$scope.confirmAlert.success = {
+						title: 'Success',
+						message: 'A confirmation email has been sent the above email address with instructions on how to activate your account.',
+						show: true
+					}
+				} else {
+					$scope.confirmAlert.error = {
 						title: result.type,
 						message: result.message,
 						show: true
@@ -6756,6 +7028,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 	function($scope, $location, $timeout, $routeParams, AccountService, APIService) {
 		
 		$scope.isReset = typeof($routeParams.authorizationId) === 'undefined';
+		$location.search({}); // clear search params
 		
 		if ((!$scope.isReset && AccountService.isLoggedIn()) ||
 			($scope.isReset && !AccountService.isLoggedIn())){
@@ -6851,6 +7124,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 .controller('AboutController', ['$scope', '$location', '$compile', '$timeout', 'AccountService', 'MembershipService', 
 	function($scope, $location, $compile, $timeout, AccountService, MembershipService) {
 		$scope.account = AccountService.getAccount();
+		$location.search({}); // clear search params
 		
 		$scope.getAccountType = function(type) {
 			return MembershipService.getAccountName(type);

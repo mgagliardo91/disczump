@@ -25,14 +25,25 @@ var discSchema = mongoose.Schema({
     tagList: [String],
     visible: {type:Boolean, default: false},
     condition: Number,
-    createDate: {type: Date, default: new Date()},
-	modifiedDate: {type: Date, default: new Date()},
+    createDate: {type: Date},
+	modifiedDate: {type: Date},
     marketplace: {
         forSale: {type: Boolean, default: false},
         forTrade: {type: Boolean, default: false},
         value: Number,
-		postedDate: {type: Date }
+		postedDate: {type: Date}
     }
+});
+
+discSchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.createDate = new Date();
+		this.modifiedDate = new Date();
+    } else {
+		this.modifiedDate = new Date();
+	}
+	
+    next();
 });
 
 discSchema.methods.getImage = function() {

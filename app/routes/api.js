@@ -226,6 +226,44 @@ module.exports = function(app, gridFs) {
 				});
 			}, true);
 		});
+	
+		app.route('/account/confirm')
+		.post(Access.clientAccess, function(req, res, next) {
+			logger.debug('User [%s] is requesting access to confirm account via email', req.body.email);
+		
+			if (!req.body.email)
+				return next(Error.createError('A valid email is required for a password reset.', Error.invalidDataError));
+			
+			UserController.getUserByEmail(req.body.email, function(err, user) {
+				if (err)
+					return next(err);
+				
+				if (!user)
+					return next(Error.createError('Unable to locate user with provided email address.', Error.invalidDataError));
+				
+				if (user.local.active)
+					return next(Error.createError('The account is already activated.', Error.invalidDataError));
+				
+				Confirm.initializeConfirmAccount(user._id, function(err, user, message) {
+					if (err) {
+						return next(err);
+					}
+
+					Mailer.sendMail(user.local.email, Mailer.TypeAccountConfirmation, message, function(err, result) {
+						if (err) {
+							return next(err);
+						}
+						
+						StringUtils.stringifyUser(user, function(err, account) {
+							if (err)
+								return next(err);
+
+							return res.json(account);
+						}, true);
+					});
+				});
+			});
+		});
 
 	app.route('/account/reset')
 		.post(Access.hasAccess, function(req, res, next) {
@@ -523,6 +561,16 @@ module.exports = function(app, gridFs) {
 				return res.json(template);
 			});
 		});
+	
+	app.route('/threads/messageCount')
+		.get(Access.hasAccess, function(req, res, next) {
+		MessageController.getTotalUnread(req.user._id, function(err, threads) {
+				if (err)
+					return next(err);
+
+				return res.json(threads);
+		});
+	});
 	
 	app.route('/threads')
 		.get(Access.hasAccess, function(req, res, next) {

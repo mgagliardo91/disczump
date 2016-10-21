@@ -282,6 +282,8 @@ function createDiscReq(opts, userId, reqId, includeTag) {
     
     if (!reqId || reqId !== userId) {
         req.filter.unshift('visible:true');
+    } else if (typeof(opts.visible) !== 'undefined') {
+        req.filter.unshift('visible:' + opts.visible.toString());
     }
     
     if (userId) {

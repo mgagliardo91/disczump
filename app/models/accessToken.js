@@ -22,12 +22,10 @@ var accessTokenSchema = mongoose.Schema({
         required: true
     },
     lastAccess: {
-        type: Date,
-        default: new Date()
+        type: Date
     },
     createDate: {
-        type: Date,
-        default: new Date()
+        type: Date
     }
     
 });
@@ -36,5 +34,14 @@ accessTokenSchema.methods.updateAccess = function() {
     this.lastAccess = new Date();
     this.save();
 };
+
+accessTokenSchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.createDate = new Date();
+		this.lastAccess = new Date();
+    }
+	
+    next();
+});
 
 module.exports = mongoose.model('AccessToken', accessTokenSchema);

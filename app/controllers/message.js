@@ -16,6 +16,7 @@ var Handlebars = require('handlebars');
 
 module.exports = {
     getThreadState: getThreadState,
+    getTotalUnread: getTotalUnread,
     putThreadState: putThreadState,
     deactivateThread: deactivateThread,
     getMessages: getMessages,
@@ -34,6 +35,44 @@ function getThreadState(userId, threadId, callback) {
             
             return callback(null, localThreadObj);
         });
+    });
+}
+
+function getTotalUnread(userId, callback) {
+    ThreadLocal.aggregate([
+        {
+            $match: {
+                userId: userId
+            }
+        },
+        {
+            $lookup: {
+                from: 'threads',
+                localField: 'threadId',
+                foreignField: '_id',
+                as: 'parentThread'
+            }
+        },
+        {
+             $match: { 'parentThread': { $ne: [] } }
+        },
+        {
+            $project: {
+                unreadMsgCount: { $subtract: [ {$arrayElemAt:['$parentThread.messageCount', 0]}, '$messageCount' ] }
+              }
+        },
+        {
+            $group : {
+               _id : null,
+               totalUnread: { $sum: '$unreadMsgCount' },
+            }
+        }
+    ], function (err, result) {
+        if (err) {
+            return callback(Error.createError(err, Error.internalError));
+        } else {
+           return callback(null, result.length ? result[0] : {totalUnread: 0});
+        }
     });
 }
 

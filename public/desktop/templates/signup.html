@@ -8,13 +8,13 @@
                 </div>
                  <dz-alert alert-data="signupAlert" class="form-small"></dz-alert>
                 <div class="form-small" style="text-align: center; margin-bottom: 20px;">
-                    <a class="btn btn-primary" ng-click="getFBAccount()" ng-show="!facebook">Sign Up with Facebook</a>
+                    <a class="btn btn-primary" ng-click="!signupComplete && getFBAccount()" ng-disabled="signupComplete" ng-show="!facebook">Sign Up with Facebook</a>
                     <div class="page-info input-note" ng-show="facebook">
                         The following information was pulled from your Facebook account. Please complete the form to continue.
                     </div>
 
                 </div>
-                <div class="form-horizontal form-small" name="signup.form" ng-form  ng-enter="signup.form.$valid && doSignUp();">
+                <div class="form-horizontal form-small" name="signup.form" ng-form  ng-enter="!signupComplete && signup.form.$valid && doSignUp();">
                     <div class="form-group">
                         <label for="account-first-name" class="col-sm-3 control-label">
                             First Name
@@ -38,10 +38,11 @@
                         <div class="col-sm-5 col-marg-repl" style="position: relative">
                             <input type="text" class="form-control validation" valid-if="location.curLocation"  name="location" id="account-postal-code" placeholder="Postal Code" ng-model="location.search" ng-model-options="{updateOn: 'default blur',debounce:{'default': 500,'blur': 0 }}" location-search="locSelected" />
                         </div>
-                        <div class="col-sm-9 col-sm-offset-3" ng-show="location.curLocation">
+                        <div class="col-sm-9 col-sm-offset-3">
                             <div class="page-info input-note round">
-                                <span class="pull-right" style="cursor: pointer;" title="Clear Selection" ng-click="location.curLocation = undefined;"><i class="fa fa-close"></i></span>
-                                <b>Selected location: </b>{{location.curLocation}}
+                                <span class="pull-right" style="cursor: pointer;" title="Clear Selection" ng-click="location.curLocation = undefined;" ng-show="location.curLocation"><i class="fa fa-close"></i></span>
+                                <span ng-show="location.curLocation"><b>Selected location: </b>{{location.curLocation}}</span>
+                                <span ng-show="!location.curLocation"><i class="fa fa-map-marker" style="margin-right: 5px;"></i>Enter a zip code above and select a location.</span>
                             </div>
                         </div>
                     </div>
@@ -117,7 +118,7 @@
                     <div class="legal-note"><i class="fa fa-info-circle"></i>By clicking <b>Sign Up</b>, I agree to the <a class="dz-blue hover-underline" href="#">Terms and Condtions</a> and <a class="dz-blue hover-underline" href="#">Privacy Policy</a>.</div>
                     <div class="form-group">
                         <div class="col-sm-12">
-                            <button class="btn btn-primary pull-right" ng-disabled="signup.form.$invalid || !location.curLocation" ng-click="signup.form.$valid && doSignUp();">{{loading ? 'Registering...' : 'Sign Up'}}</button>
+                            <button class="btn btn-primary pull-right" ng-disabled="signupComplete || signup.form.$invalid || !location.curLocation" ng-click="!signupComplete && signup.form.$valid && doSignUp();">{{loading ? 'Registering...' : 'Sign Up'}}</button>
                         </div>
                     </div>
                 </div>

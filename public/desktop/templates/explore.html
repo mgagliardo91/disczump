@@ -29,7 +29,8 @@
                             </div>
                             <div class="sidebar-item inactive no-select" ng-show="!statFilterOpts.length">
                                 <span class="sidebar-item-icon">
-                                    <i class="fa fa-square-o"></i>
+                                    <i class="fa fa-square-o" ng-show="!isMarketplaceModeActive(facet.prop);"></i>
+                                    <i class="fa fa-check-square-o" ng-show="isMarketplaceModeActive(facet.prop);"></i>
                                 </span>
                                 <div class="filter-item-val handle-overflow">{{facet.text}}</div>
                                 <div class="clearfix"></div>
@@ -103,6 +104,9 @@
                     <div class="menu-btn" ng-attr-title="{{fullscreen ? 'Minimize' : 'Maximize'}}">
                         <span><i class="fa fa-arrows-alt" ng-click="fullscreen = !fullscreen;" ng-class="{'active':fullscreen}"></i></span>
                     </div>
+                   <div class="menu-btn" ng-if="$def(trunk.userId) && trunk.userId == curUser._id">
+                        <span><i class="fa" ng-click="toggleVisibillty()" ng-class="{'fa-eye': !$def(view.visible) || view.visible, 'highlight': $def(view.visible), 'fa-eye-slash': $def(view.visible) && !view.visible}" ng-attr-title="{{getVisibleTitle()}}"></i></span>
+                    </div>
                     <div class="menu-btn" ng-if="$def(trunk.userId) && trunk.userId == curUser._id">
                         <span><i class="fa fa-check-square" ng-click="msOpts.toggleMS()" ng-class="{'active': msOpts.active}" title="Multi-select Mode"></i></span>
                     </div>
@@ -122,14 +126,14 @@
                     <div class="search-btn round-left no-right float-left active">
                         <i class="fa fa-database"></i>
                     </div>
-                    <div class="search-btn round-right no-left float-right" ng-click="startSearch();"  ng-show="!loading">
-                        <i class="fa fa-search"></i>
+                    <div class="search-btn round-right no-left float-right" ng-click="!loading && startSearch();">
+                        <i class="fa fa-search" ng-class="{'fa-search': !loading, 'fa-spin': loading, 'fa-spinner':loading}"></i>
                     </div>
-                    <div class="search-btn round-right no-left float-right" ng-show="loading">
+<!--                     <div class="search-btn round-right no-left float-right" ng-show="loading">
                         <i class="fa fa-spinner fa-spin fa-lg"></i>
-                    </div>
+                    </div> -->
                     <div class="search-bar-wrapper">
-                        <input id="search-explore" ng-enter="startSearch();" ng-model="searchParam" class="search-bar" type="text" placeholder="Search discs..."></input>
+                        <input id="search-explore" ng-model-enter="startSearch();" ng-model="searchParam" class="search-bar" type="text" placeholder="Search discs..."></input>
                         <div class="close-icon" ng-show="searchParam.length" ng-click="searchParam = ''; updateUrl();"></div>
                     </div>
                 </div>

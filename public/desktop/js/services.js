@@ -12,6 +12,32 @@ angular.module('CryptoJS', [])
 
 angular.module('disczump.services', ['underscore', 'CryptoJS'])
 
+.factory('LocalStorage', [function() {
+	
+	var addItem = function(key, item) {
+		window.localStorage.setItem(key, item);
+	}
+	
+	var getItem = function(key) {
+		return window.localStorage.getItem(key);
+	}
+	
+	var removeItem = function(key) {
+		window.localStorage.removeItem(key);
+	}
+	
+	var itemExists = function(key) {
+		return getItem(key) != null;
+	}
+	
+	return {
+		addItem: addItem,
+		getItem: getItem,
+		removeItem: removeItem,
+		itemExists: itemExists
+	}
+}])
+
 .factory('Random', [function() {
 	
 	var random = function(length) {
@@ -60,10 +86,10 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 
 .factory('StartUp', ['$q', 'AccountService', 'SocketUtils', function($q, AccountService, SocketUtils) {
 	
-	var init = function() {
+	var init = function(forceReload) {
 		var deffered = $q.defer();
 		
-		AccountService.initAccount().then(function(account) {
+		AccountService.initAccount(forceReload).then(function(account) {
 			if (account) {
 				SocketUtils.init();
 			}
@@ -182,32 +208,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		}, function(response){
 			console.log(response);
 		});
-	}
-
-	/*
-	* Code credited to: http://www.xtf.dk/2011/08/center-new-popup-window-even-on.html
-	* Modified to fit our code
-	*/
-	function generatePopup(url, title, w, h) {
-		// Fixes dual-screen position                         Most browsers      Firefox
-		var dualScreenLeft = $window.screenLeft != undefined ? $window.screenLeft : screen.left;
-		var dualScreenTop = $window.screenTop != undefined ? $window.screenTop : screen.top;
-
-		var width = $window.innerWidth ? $window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
-		var height = $window.innerHeight ? $window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
-
-		var left = ((width / 2) - (w / 2)) + dualScreenLeft;
-		var top = ((height / 2) - (h / 2)) + dualScreenTop;
-		var popupWindow = $window.open(url, title, 'toolbar=0 ,status=0, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
-		try {
-			popupWindow.focus();
-			return undefined;
-		} catch (e) {
-			return {
-					message: 'A popup blocker is enabled in this browser. Please allow popups and try again.',
-					type: 'Unable To Open'
-				}
-		}
 	}
 	
 	return {
@@ -1003,6 +1003,10 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
         if (query.s) {
             ret.sort = validSort.indexOf(query.s) > -1 ? query.s : undefined;
         }
+		
+		if (query.v) {
+			ret.visible = query.v === 'true' ? true : (query.v === 'false' ? false : undefined);
+		}
         
         var i = 0;
         while (query['f_' + i]) {
@@ -1037,6 +1041,10 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		if (opts.marketplace) {
 			var mode = opts.marketplace.forSale ? (opts.marketplace.forTrade ? 'all-market' : 'sale') : (opts.marketplace.forTrade ? 'trade' : 'all');
             qString += (qString.length > 1 ? '&' : '') + 'mode=' + mode;
+		}
+		
+		if (typeof(opts.visible) !== 'undefined') {
+			qString += (qString.length > 1 ? '&' : '') + 'v=' + opts.visible.toString();
 		}
         
         if (opts.filter) {
@@ -1082,6 +1090,8 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		if (opts.marketplace) {
 			reqParam.marketplace = opts.marketplace;
 		}
+		
+		reqParam.visible = opts.visible;
 			
 		return reqParam;
 	}
@@ -1098,45 +1108,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
         APIService.Post(urlString, reqParam, function(success, data) {
             if (success) {
                 console.log(data);
-                var response = parseResponse(data);
-                
-                if (response.error) {
-                    return callback(false, response.error);
-                }
-                
-                return callback(true, response);
-            } else {
-                return callback(false, data);
-            }
-        });
-    }
-    
-    function queryTrunk(opts, callback) {
-        
-        if (!opts.query || opts.query === '') opts.query = '*';
-        
-        var reqParam = {
-            query: opts.query,
-            sort: opts.sort
-        };
-        
-        if (opts.filter && opts.filter.length) {
-            reqParam.filter = opts.filter;
-        }
-        
-        if (opts.start) {
-            reqParam.start = opts.start;
-        }
-        
-        if (opts.limit) {
-            reqParam.limit = opts.limit;
-        }
-        
-        var urlString = '/trunk' + (opts.userId ? '/' + opts.userId : '');
-        
-        APIService.Post(urlString, reqParam, function(success, data) {
-            if (success) {
-//                 console.log(data);
                 var response = parseResponse(data);
                 
                 if (response.error) {
@@ -1288,7 +1259,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
         parseUrlQuery: parseUrlQuery,
         getQueryString: getQueryString,
         queryAll: queryAll,
-        queryTrunk: queryTrunk,
         queryFacet: queryFacet,
         isCustomRange: isCustomRange,
         getSolrPrimaryImage: getSolrPrimaryImage
@@ -1437,15 +1407,25 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 }])
 
-.factory('AccountService', ['$rootScope', '$q', '_', '$crypt', 'APIService', 'CacheService', function($rootScope, $q, _, $crypt, APIService, CacheService) {
+.factory('AccountService', ['$rootScope', '$q', '_', '$crypt', 'APIService', 'CacheService', 'LocalStorage', function($rootScope, $q, _, $crypt, APIService, CacheService, LocalStorage) {
     var account, accountId, accountMarket;
 	var authToken;
+	var registry = [];
+	
+	var sendNotification = function(msg) {
+		for (var i = 0; i < registry.length; i++) {
+			if (typeof(registry[i]) !== undefined) {
+				registry[i](msg);
+			}
+		}
+	}
 	
 	var saveMiddleWare = function(callback) {
 		return function(success, updated) {
 			if (success) {
 				account = updated;
 				CacheService.pushUser(account);
+				sendNotification('AccountUpdated');
 				callback(success, account);
 			} else {
 				callback(success, updated);
@@ -1460,7 +1440,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	var clearToken = function() {
 		authToken = undefined;
 		account = undefined;
-		window.localStorage.removeItem('dz-token');
+		LocalStorage.removeItem('dz-token');
 		APIService.setToken(undefined);
 	}
 	
@@ -1471,13 +1451,15 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	var setAuth = function(auth) {
 		authToken = auth;
 		var toStore = $crypt.AES.encrypt(JSON.stringify(auth), getUA());
-		window.localStorage.setItem('dz-token', toStore.toString());
+		LocalStorage.addItem('dz-token', toStore.toString());
 		APIService.setToken(getToken());
+		sendNotification('AccountLoggedIn');
 	}
 	
 	var doLogout = function(callback) {
 		APIService.PostExt('/oauth', '/logout', {}, function(success, result) {
 			clearToken();
+			sendNotification('AccountLoggedOut');
 			if (callback) callback();
 		});
 	}
@@ -1530,15 +1512,21 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		});
 	}
 	
-	var initAccount = function() {
+	var initAccount = function(forceReload) {
 		var deffered = $q.defer();
 		
 		if (typeof(account) !== 'undefined') {
-			deffered.resolve(account);
+			if (forceReload) {
+				getAccount(function(success, account) {
+					deffered.resolve(account);
+				});
+			} else {
+				deffered.resolve(account);
+			}
 			return deffered.promise;
 		}
 		
-		var token = window.localStorage.getItem('dz-token');
+		var token = LocalStorage.getItem('dz-token');
 		
 		if (token != null) {
 			try {
@@ -1665,6 +1653,19 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	var compareTo = function(id) {
 		return account && account._id == id;
 	}
+	
+	var addListener = function(callback) {
+		if (registry.indexOf(callback) == -1) {
+			registry.push(callback);
+		}
+	}
+	
+	var removeListener = function(callback) {
+		var index = registry.indexOf(callback);
+		if (index > -1) {
+			registry.splice(index, 1);
+		}
+	}
     
     return {
         isLoggedIn: isLoggedIn,
@@ -1692,7 +1693,9 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		doFacebookUnlink: doFacebookUnlink,
 		doLogout: doLogout,
 		compareTo: compareTo,
-		getToken: getToken
+		getToken: getToken,
+		addListener: addListener,
+		removeListener: removeListener
     }
     
 }])
@@ -1732,6 +1735,10 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
             }
         });
     }
+	
+	function reloadUser(userId, callback) {
+        return getUserObj(userId, true, callback);
+	}
 	
     function getUser(userId, callback) {
         return getUserObj(userId, false, callback);
@@ -1779,6 +1786,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
     
     return {
         getUser: getUser,
+		reloadUser: reloadUser,
 		getUserByUsername: getUserByUsername,
 		pushUser: pushUser,
 		pushDisc: pushDisc,
@@ -1805,7 +1813,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 	
 	function bumpDisc(discId, callback) {
-		return APIService.Put('/discs/' + discId, {}, discMiddleWare(callback));
+		return APIService.Put('/discs/' + discId + '/bump', {}, discMiddleWare(callback));
 	}
 	
 	function createDisc(disc, callback) {
@@ -1846,8 +1854,19 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 }])
 
-.factory('MessageService', [function() {
+.factory('MessageService', ['$location', 'AccountService', 'APIService', 'SocketUtils', function($location, AccountService, APIService, SocketUtils) {
 	var attachments = [];
+	var isRegistered = false;
+	var registry = [];
+	var messageCount;
+	
+	function sendNotification(msg) {
+		for (var i = 0; i < registry.length; i++) {
+			if (typeof(registry[i]) !== 'undefined') {
+				registry[i](msg);
+			}
+		}
+	}
 	
 	function setAttachment(type, id) {
 		attachments.push({
@@ -1866,12 +1885,66 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		return attachments.splice(0, attachments.length);
 	}
 	
+	function reloadUnreadCount() {
+		APIService.Get('/threads/messageCount', function(success, count) {
+			if (success) {
+				messageCount = count.totalUnread;
+				sendNotification({messageCount: messageCount});
+			}
+		});
+	}
+	
+	var handleIncMessage = function(message) {
+		var regex = new RegExp('threadId=' + message.threadId);
+		if (!regex.test($location.url())) {
+			messageCount++;
+			sendNotification({messageCount: messageCount});
+		}
+	}
+	
+	var addListener = function(callback) {
+		if (registry.indexOf(callback) == -1) {
+			registry.push(callback);
+		}
+		
+		if (typeof(messageCount) !== 'undefined') {
+			sendNotification({messageCount: messageCount});
+		}
+	}
+	
+	var removeListener = function(callback) {
+		var index = registry.indexOf(callback);
+		if (index > -1) {
+			registry.splice(index, 1);
+		}
+	}
+	
+	AccountService.addListener(function(notification) {
+		if (notification == 'AccountLoggedIn' && !isRegistered) {
+			SocketUtils.registerForNotification('MessageNotification', handleIncMessage);
+			reloadUnreadCount();
+			isRegistered = true;
+		} else if (notification == 'AccountLoggedOut') {
+			SocketUtils.unRegisterForNotification('MessageNotification', handleIncMessage);
+			isRegistered = false;
+		}
+	});
+	
+	if (AccountService.isLoggedIn()) {
+		SocketUtils.registerForNotification('MessageNotification', handleIncMessage);
+		reloadUnreadCount();
+		isRegistered = true;
+	}
+	
 	return {
 		TypeDisc: 'd',
 		TypeUser: 't',
 		setAttachment: setAttachment,
 		setAttachments: setAttachments,
-		getAttachments: getAttachments
+		getAttachments: getAttachments,
+		reloadUnreadCount: reloadUnreadCount,
+		addListener: addListener,
+		removeListener: removeListener
 	}
 }])
 

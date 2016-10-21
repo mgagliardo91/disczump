@@ -146,7 +146,7 @@ var io = require('socket.io')(server);
 
 require('./app/utils/socket.js').init(io, socketCache, logger);
 
-server.listen(httpsPort);
+server.listen(release ? httpsPort : httpPort);
 
-logger.info('[' + localServer.serverIdentity + '] Server running at %s:%s', process.env.IP, httpsPort);
+logger.info('[' + localServer.serverIdentity + '] Server running at %s:%s', process.env.IP, release ? httpsPort : httpPort);
 logger.info('[' + localServer.serverIdentity + '] Websocket server started.');

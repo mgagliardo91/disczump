@@ -13,8 +13,8 @@ var userArchiveSchema = mongoose.Schema({
         firstName: String,
         lastName: String,
         email: {type: String, unique: true},
-        dateJoined: {type: Date, default: new Date()},
-        lastAccess: {type: Date, default: new Date()},
+        dateJoined: {type: Date},
+        lastAccess: {type: Date},
         pdgaNumber: String,
         location: {
 			geo: String,
@@ -35,7 +35,15 @@ var userArchiveSchema = mongoose.Schema({
     internal: {
         eventLog: [mongoose.Schema.Types.Mixed]
     },
-    archiveDate: {type: Date, default: new Date()}
+    archiveDate: {type: Date}
+});
+
+userArchiveSchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.archiveDate = new Date();
+    }
+	
+    next();
 });
 
 module.exports = mongoose.model('UserArchive', userArchiveSchema);

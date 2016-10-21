@@ -8,7 +8,7 @@ var admin = mongoose.Schema({
 	    default: shortId.generate
 	},
     userId: String,
-    createDate: String,
+    createDate: Date,
     permissions: {
         accessAdmin: {type: Boolean, default: true},
         viewAccount: {type: Boolean, default: true},
@@ -18,6 +18,14 @@ var admin = mongoose.Schema({
     }
 	
     
+});
+
+admin.pre('save', function(next) {
+    if (this.isNew) {
+		this.createDate = new Date();
+    }
+	
+    next();
 });
 
 module.exports = mongoose.model('Admin', admin);

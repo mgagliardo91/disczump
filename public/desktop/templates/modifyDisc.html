@@ -51,7 +51,10 @@
                 <div class="form-group">
                     <label class="col-sm-2 control-label">Weight</label>
                     <div class="col-sm-4">
-                        <input type="number" class="form-control validation" placeholder="ex. 172" ng-model="disc.weight" ng-pattern="/^[0-9]{0,3}$/" ng-min="0" ng-max="999">
+						<div class="input-group">
+							<input type="number" class="form-control validation" placeholder="ex. 172" ng-model="disc.weight" ng-pattern="/^[0-9]{0,3}$/" ng-min="0" ng-max="999">
+							<div class="input-group-addon">g</div>
+						</div>
                     </div>
                     <label class="col-sm-2 control-label">Color</label>
                     <div class="col-sm-4">
@@ -89,9 +92,9 @@
 	                <div class="col-sm-10">
 	                    <div style="position:relative;">
 	                        <div class="input-group add-disc-tag-container" style="position:relative;">
-	                            <input type="text" class="form-control validation" placeholder="ex. Destroyer Collection" ng-model="tempTag" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }" ng-enter="pushTempTag();" dz-auto-complete="tag" user-id="account._id" dz-multi="true" >
+	                            <input type="text" class="form-control validation" placeholder="ex. Destroyer Collection" ng-model="tempTag" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }" ng-model-enter="pushTempTag();" dz-auto-complete="tag" user-id="account._id" dz-multi="true" >
 	                            <span class="input-group-btn">
-	                                <button class="btn btn-default" type="button" ng-click="pushTempTag();"><span><i class="fa fa-angle-double-down"></i></span></button>
+	                                <button class="btn btn-default" type="button" ng-click="pushTempTag();" ng-class="{'btn-pulse':tempTag.length}"><span><i class="fa fa-plus"></i></span></button>
 	                            </span>
 	                        </div>
 	                    </div>
@@ -120,28 +123,17 @@
 	                    <input type="number" class="form-control validation" placeholder="ex. 9" ng-model="disc.condition" ng-pattern="/^\d{1,2}$/" ng-min="0" ng-max="10">
 	                </div>
                 </div>
-            </div>
-			<div class="dz-label">Marketplace</div>
-			<div class="page-info">The disc must be made public before adding it to the marketplace.  Alternatively, a disc is automatically removed from the marketplace if marked private.</div>
-			<div class="modify-form-section">
 				<div class="form-group">
-	                <label class="col-sm-2 control-label">For Sale</label>
-	                <div class="col-sm-4">
-	                    <switch type="checkbox" disabled="!disc.visible" ng-model="disc.marketplace.forSale"></switch>
-	                </div>
-	                <label class="col-sm-2 col-sm-offset-1 control-label">Value (USD)</label>
+	                <label class="col-sm-2 control-label">Value</label>
 	                <div class="col-sm-3">
-						<input type="number" class="form-control validation" placeholder="ex. 11.50" ng-model="disc.marketplace.value" ng-pattern="/^[0-9]+(\.[0-9]{1,2})?$/" ng-min="0.01" step="0.01">
+						<div class="input-group">
+							<div class="input-group-addon">$</div>
+							<input type="number" class="form-control validation" placeholder="ex. 11.50" ng-model="disc.marketplace.value" ng-pattern="/^[0-9]*(\.[0-9]{1,2})?$/" ng-min="0.01" step="0.01">
+						</div>
 	                </div>
                 </div>
-				<div class="form-group">
-	                <label class="col-sm-2 control-label">For Trade</label>
-	                <div class="col-sm-4">
-	                    <switch type="checkbox" disabled="!disc.visible" ng-model="disc.marketplace.forTrade"></switch>
-	                </div>
-                </div>
-			</div>
-            <div ng-show="disc.imageList.length">
+            </div>
+			<div ng-show="disc.imageList.length">
                 <div class="dz-label">Current Images</div>
                 <div class="page-info">Drag images to reorder. Click the star to select a primary image.</div>
                 <div class="modify-form-section">
@@ -171,7 +163,7 @@
 		            </div>
 		        </div>
 		    </div>
-                <div class="dz-label">Add Images (max. 5)</div>
+            <div class="dz-label">Add Images (max. 5)</div>
 		    <div class="modify-form-section">
                 <div class="image-list" directive-on="settings.dropzoneReady" directive-set="{dropzone: 'dropzoneConfig'}">
                     <div class="image-list-container">
@@ -187,6 +179,20 @@
                     </div>
                 </div>  
             </div>
+			<div class="dz-label">Marketplace</div>
+			<div class="page-info">The disc must be made <b><u>public</u></b> and have at least <b><u>one picture</u></b> before adding it to the marketplace.  Alternatively, a disc is automatically removed from the marketplace if it is marked private or it's pictures are removed.</div>
+			<div class="modify-form-section">
+				<div class="form-group">
+	                <label class="col-sm-2 control-label">For Sale</label>
+	                <div class="col-sm-4">
+	                    <switch type="checkbox" disabled="!disc.visible || !hasImages()" ng-model="disc.marketplace.forSale"></switch>
+	                </div>
+					<label class="col-sm-2 control-label">For Trade</label>
+	                <div class="col-sm-4">
+	                    <switch type="checkbox" disabled="!disc.visible || !hasImages()" ng-model="disc.marketplace.forTrade"></switch>
+	                </div>
+                </div>
+			</div>
             <div class="modify-button-container">
                 <button type="button" class="btn btn-default" nav-back><span><i class="fa fa-save fa-tools"></i></span>Cancel</button>
                 <button type="button" class="btn btn-primary" ng-click="!settings.dropzoneProcessing && !discImageCropper.cropperLoading && submitDisc()" ng-disabled="settings.dropzoneProcessing || discImageCropper.cropperLoading">
@@ -196,5 +202,5 @@
         </div>
     </div>
 </div>
-<image-cropper cropper-options="discImageCropper"></image-cropper>
+<image-cropper cropper-options="discImageCropper" scroll-lock="pgSettings.scrollLock"></image-cropper>
 <dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>

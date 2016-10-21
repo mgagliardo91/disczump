@@ -199,7 +199,7 @@ module.exports = function(app) {
 									return cb();
 								});
 							});
-						}
+						} else return cb();
 					},
                     function(cb) {
                         Membership.confirmAccountCreate(request, trxProfile, immediateCharge ? immediateCharge.amount : 0, function(err, request) {
