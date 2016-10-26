@@ -74,7 +74,7 @@ function checkUsername(username) {
 }
 
 function checkName(val) {
-	return val.trim().length > 0;
+	return val.trim().length > 0 && val.indexOf('"') == -1;
 }
 
 function query(field, q, callback) {

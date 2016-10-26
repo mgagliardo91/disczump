@@ -165,23 +165,23 @@ function createDisc(userId, data, callback) {
 	
 	var markSale, markTrade;
     
-    disc.brand = data.brand.trim();
-    disc.name = data.name.trim();
+    disc.brand = data.brand.trim().replace(/"/g,'');
+    disc.name = data.name.trim().replace(/"/g,'');
     
     if (isDef(data.material)) {
-        disc.material = data.material.trim();
+        disc.material = data.material.trim().replace(/"/g,'');
     }
     
     if (isDef(data.type)) {
-        disc.type = data.type.trim();
+        disc.type = data.type.trim().replace(/"/g,'');
     }
     
     if (isDef(data.color)) {
-        disc.color = data.color.trim();
+        disc.color = data.color.trim().replace(/"/g,'');
     }
     
     if (isDef(data.notes)) {
-        disc.notes = data.notes.trim();
+        disc.notes = data.notes.trim().replace(/"/g,'');
     }
     
 	if (isDef(data.visible) && _.isBoolean(data.visible)) {
@@ -246,10 +246,14 @@ function createDisc(userId, data, callback) {
     if (isDef(data.tagList) && _.isArray(data.tagList)) {
         _.each(data.tagList, function(tag) {
             if (tag !== '' && !_.contains(disc.tagList, tag)) {
-                disc.tagList.push(tag);
+                disc.tagList.push(tag.trim().replace(/"/g,''));
             }
         });
     }
+	
+	if (isDef(data.imageList) && data.imageList.length > 5) {
+		return callback(Error.createError('Image list maximum size exceeded.', Error.invalidDataError));
+	}
     
     async.series([
 		function(cb) {
@@ -361,27 +365,27 @@ function updateDisc(userId, discId, data, gfs, callback) {
 		var priorActive = disc.marketplaceActive();
         
         if (isDef(data.brand) && data.brand.trim().length) {
-            disc.brand = data.brand.trim();
+            disc.brand = data.brand.trim().replace(/"/g,'');
         }
         
         if (isDef(data.name) && data.name.trim().length) {
-            disc.name = data.name.trim();
+            disc.name = data.name.trim().replace(/"/g,'');
         }
         
         if (isDef(data.material)) {
-            disc.material = data.material.trim();
+            disc.material = data.material.trim().replace(/"/g,'');
         }
         
         if (isDef(data.type)) {
-            disc.type = data.type.trim();
+            disc.type = data.type.trim().replace(/"/g,'');
         }
         
         if (isDef(data.color)) {
-            disc.color = data.color.trim();
+            disc.color = data.color.trim().replace(/"/g,'');
         }
         
         if (isDef(data.notes)) {
-            disc.notes = data.notes.trim();
+            disc.notes = data.notes.trim().replace(/"/g,'');
         }
         
         if (isDef(data.visible) && _.isBoolean(data.visible)) {
@@ -446,10 +450,14 @@ function updateDisc(userId, discId, data, gfs, callback) {
             disc.tagList = [];
             _.each(data.tagList, function(tag) {
                 if (tag !== '' && !_.contains(disc.tagList, tag)) {
-                    disc.tagList.push(tag);
+                    disc.tagList.push(tag.trim().replace(/"/g,''));
                 }
             });
         }
+		
+		if (isDef(data.imageList) && data.imageList.length > 5) {
+			return callback(Error.createError('Image list maximum size exceeded.', Error.invalidDataError));
+		}
         
         if (isDef(data.marketplace)) {
             if (data.marketplace.hasOwnProperty('value')) {

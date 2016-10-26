@@ -580,6 +580,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			scope.init = false;
 			scope.activeIndex = -1;
 			var loc;
+			var hasFocus;
 			
 			var resizeLoc = function() {
 				loc.css('width', elem[0].clientWidth + 'px');
@@ -621,6 +622,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			var inputFocus = function() {
+				hasFocus = true;
+				
 				$timeout(function() {
 					scope.active = true;
 				});
@@ -628,13 +631,21 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			var inputBlur = function() {
+				hasFocus = false;
+				
 				$timeout(function() {
 					scope.active = false;
 				}, 200);
 			}
 			
+			var keyDownEvt = function(evt) {
+				if ((evt.keyCode == 13 || evt.keyCode == 9) && scope.activeIndex > -1) {
+					evt.preventDefault();
+				}
+			}
+			
 			var handleKey = function(evt) {
-				if ((evt.keyCode == 13 || evt.keyCode == 0) && scope.activeIndex > -1) {
+				if ((evt.keyCode == 13 || evt.keyCode == 9) && scope.activeIndex > -1) {
 					evt.preventDefault();
 					evt.stopImmediatePropagation();
 					scope.setLocation(scope.results[scope.activeIndex]);
@@ -667,6 +678,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			elem.bind('focus', inputFocus);
 			elem.bind('blur', inputBlur);
 			elem.bind('keyup', handleKey);
+			elem.bind('keydown', keyDownEvt);
 			
 			scope.$watch(function () {
 				return ngModel.$modelValue;
@@ -674,6 +686,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				if (typeof(newValue) === 'undefined' || newValue == '') {
 					scope.results = [];
 				} else {
+					if (!scope.active && hasFocus) scope.active = true;
 					queryLoc();
 				}
 			});
@@ -683,6 +696,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				elem.unbind('focus', inputFocus);
 				elem.unbind('blur', inputBlur);
 				elem.unbind('keyup', handleKey);
+				elem.unbind('keydown', keyDownEvt);
 			})
 			
 			initLoc();
@@ -707,6 +721,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			var setLock = false;
 			var lastQueried;
 			var ac;
+			var hasFocus = false;
 			
 			var resizeAC = function() {
 				ac.css('width', elem[0].clientWidth + 'px');
@@ -765,6 +780,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			var inputFocus = function() {
+				
+				hasFocus = true;
+				
 				if (setLock) {
 					setLock = false;
 					return;
@@ -781,27 +799,41 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			var inputBlur = function() {
+				hasFocus = false;
+				
 				$timeout(function() {
 					scope.active = false;
 				}, 100);
 			}
 			
-			var handleEnter = function(evt) {
-				if (evt.keyCode == 13 && scope.activeIndex > -1) {
-					evt.stopImmediatePropagation();
-					scope.setInput(scope.results[scope.activeIndex].val);
+			var keyDownEvt = function(evt) {
+				if ((evt.keyCode == 13 || evt.keyCode == 9) && scope.activeIndex > -1) {
+					evt.preventDefault();
 				}
 			}
 			
 			var handleKey = function(evt) {
+				if ((evt.keyCode == 13 || evt.keyCode == 9) && scope.activeIndex > -1) {
+					evt.preventDefault();
+					evt.stopImmediatePropagation();
+					scope.setInput(scope.results[scope.activeIndex].val);
+					$timeout(function() {
+						scope.activeIndex = -1;
+						scope.active = false;
+					});
+					return;
+				}
+				
 				switch(evt.keyCode) {
 					case 38: {
+						evt.stopImmediatePropagation();
 						$timeout(function() {
 							scope.activeIndex = Math.max(-1, scope.activeIndex - 1);
 						});
 						break;
 					}
 					case 40: {
+						evt.stopImmediatePropagation();
 						$timeout(function() {
 							scope.activeIndex = Math.min(scope.results.length - 1, scope.activeIndex + 1);
 						});
@@ -814,14 +846,15 @@ angular.module('disczump.controllers', ['disczump.services'])
 			elem.bind('focus', inputFocus);
 			elem.bind('blur', inputBlur);
 			elem.bind('keyup', handleKey);
-			elem.bind('keydown', handleEnter);
+			elem.bind('keydown', keyDownEvt);
 			
 			scope.$watch(function () {
 				return ngModel.$modelValue;
-			}, function(newValue) {
-				if (typeof(newValue) === 'undefined' || newValue == '') {
+			}, function(newValue) {if (typeof(newValue) === 'undefined' || newValue == '') {
 					scope.results = [];
 				} else {
+					if (!scope.active && hasFocus) scope.active = true;
+					
 					queryField();
 				}
 			});
@@ -831,7 +864,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				elem.unbind('focus', inputFocus);
 				elem.unbind('blur', inputBlur);
 				elem.unbind('keyup', handleKey);
-				elem.unbind('keydown', handleEnter);
+				elem.unbind('keydown', keyDownEvt);
 			})
 			
 			initAC();
@@ -1038,7 +1071,7 @@ angular.module('disczump.controllers', ['disczump.services'])
             }
             
             scope.getAccountImage = function() {
-                return scope.user.image || '/static/img/dz_disc.png';
+                return scope.user.image || '/static/img/dz_profile.png';
             }
             
             scope.isItemActive = function(item) {
@@ -1564,25 +1597,25 @@ angular.module('disczump.controllers', ['disczump.services'])
                         '<i class="fa fa-exchange"></i>' +
                     '</div>' +
                     '<div class="grid-img-container flip" ng-mouseenter="displayHoverIcon=true;" ng-mouseleave="displayHoverIcon=false;">' +
-                        '<div class="grid-img-inner">' + 
-							'<div class="grid-hover-icon grid-lb-icon" ng-show="displayHoverIcon" ng-click="setLbOpts()" ng-class="{\'show\': displayHoverIcon && !flip}" title="Zoom">' + 
+                        '<div class="grid-img-inner">' +
+							'<div class="grid-hover-icon grid-lb-icon" ng-show="displayHoverIcon" ng-click="disc.primaryImage && setLbOpts()" ng-class="{\'show\': displayHoverIcon && !flip, \'disabled\': !disc.primaryImage}" title="Zoom">' + 
                                 '<span class="fa-stack">' +
                                   '<i class="fa fa-circle fa-stack-2x"></i>' +
                                   '<i class="fa fa-search-plus fa-stack-1x fa-inverse"></i>' +
                                 '</span>' +
                             '</div>' + 
+							'<a ng-href="/d/{{disc._id}}/edit" class="grid-hover-icon grid-edit-icon" ng-show="displayHoverIcon" ng-class="{\'show\': displayHoverIcon && !flip}" ng-if="currentUser && currentUser._id == disc.userId" title="Edit Disc">' + 
+                                '<span class="fa-stack">' +
+                                  '<i class="fa fa-circle fa-stack-2x"></i>' +
+                                  '<i class="fa fa-pencil fa-stack-1x fa-inverse"></i>' +
+                                '</span>' +
+                            '</a>' +
                             '<div class="grid-hover-icon grid-info-icon" ng-show="displayHoverIcon" ng-click="flip=!flip;" ng-class="{\'show\': displayHoverIcon, \'remain\': flip}" title="More Info">' + 
                                 '<span class="fa-stack">' +
                                   '<i class="fa fa-circle fa-stack-2x"></i>' +
                                   '<i class="fa fa-info fa-stack-1x fa-inverse"></i>' +
                                 '</span>' +
                             '</div>' + 
-                            '<a ng-href="/d/{{disc._id}}/edit" class="grid-hover-icon grid-edit-icon" ng-show="displayHoverIcon" ng-class="{\'show\': displayHoverIcon && !flip}" ng-if="currentUser && currentUser._id == disc.userId" title="Edit Disc">' + 
-                                '<span class="fa-stack">' +
-                                  '<i class="fa fa-circle fa-stack-2x"></i>' +
-                                  '<i class="fa fa-pencil fa-stack-1x fa-inverse"></i>' +
-                                '</span>' +
-                            '</a>' +
                             '<div class="grid-img-content flip-card" ng-class="{\'flipped\':flip}">' + 
                                 '<div class="flip-face flip-front">' + 
                                     '<a class="grid-item-nav" ng-href="/d/{{disc._id}}"></a>' +
@@ -2235,14 +2268,16 @@ angular.module('disczump.controllers', ['disczump.services'])
     }
 }])
 
-.directive('dzWrapper', ['$window', function($window) {
+.directive('dzWrapper', ['$window', '$timeout', function($window, $timeout) {
     return {
         restrict: 'A',
         link: function(scope, element, attrs) {
             element.addClass('wrapper');
             
             var resize = function() {
-                angular.element(element).css('min-height', $window.innerHeight + 'px');
+				$timeout(function() {
+                	angular.element(element).css('min-height', $window.innerHeight + 'px');
+				});
             }
             
             
@@ -2427,7 +2462,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			scope.tagList = [];
 			
 			scope.getLink = function(tag) {
-				return '/explore?mode=all-market&q=' + encodeURI(tag.val);
+				return '/explore?mode=all-market&q=' + encodeURIComponent(tag.val);
 			}
 			
 			QueryService.queryFacet({
@@ -2506,7 +2541,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				}
                 
                 scope.getLink = function() {
-                    return '/explore?mode=all-market' + (isRecent ? '' : '&s=new&f_0=' + attrs.field + ':' + encodeURI(attrs.fvalue));
+                    return '/explore?mode=all-market' + (isRecent ? '' : '&s=new&f_0=' + attrs.field + ':' + encodeURIComponent(attrs.fvalue));
                 }
                 
                 scope.navIndex = function(index) {
@@ -2979,10 +3014,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 									'<div class="handle-overflow">{{getAccountName()}}</div>' +
 									'<div class="handle-overflow">{{user.discCount}} Public Discs</div>' +
 									'<div class="handle-overflow">Member since {{user.dateJoined | date:\'MM/dd/yyyy\'}}</div>' +
-									'<div class="handle-overflow" ng-show="user.pdgaNumber"><i style="color:#4FC74F;width:14px;" class="fa fa-check fa-tools" aria-hidden="true"></i>PDGA Verified</div>' +
-									'<div class="handle-overflow" ng-show="!user.pdgaNumber"><i style="color:#E85947;width:14px;" class="fa fa-times fa-tools" aria-hidden="true"></i>PDGA Verified</div>' +
-									'<div class="handle-overflow" ng-show="user.fbId"><i style="color:#4FC74F;width:14px;" class="fa fa-check fa-tools" aria-hidden="true"></i>Facebook Verified</div>' +
-									'<div class="handle-overflow" ng-show="!user.fbId"><i style="color:#E85947;width:14px;" class="fa fa-times fa-tools" aria-hidden="true"></i>Facebook Verified</div>' +
+									'<div class="handle-overflow" ng-show="user.pdgaNumber"><i style="width:14px;" class="fa fa-check fa-tools fa-success" aria-hidden="true"></i>PDGA Verified</div>' +
+									'<div class="handle-overflow" ng-show="!user.pdgaNumber"><i style="width:14px;" class="fa fa-times fa-tools fa-error" aria-hidden="true"></i>PDGA Verified</div>' +
+									'<div class="handle-overflow" ng-show="user.fbId"><i style="width:14px;" class="fa fa-check fa-tools fa-success" aria-hidden="true"></i>Facebook Verified</div>' +
+									'<div class="handle-overflow" ng-show="!user.fbId"><i style="width:14px;" class="fa fa-times fa-tools fa-error" aria-hidden="true"></i>Facebook Verified</div>' +
 								'</div>' +
 							'</div>' +
 							'<div class="dz-modal-bio" id="modal-bio" parse-text="user.bio" parse-url parse-disc ng-if="user.bio">{{user.bio}}</div>' +
@@ -3101,9 +3136,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					'</div>' +
 				'</div>',
 		link: function(scope, elem, attrs) {
-			scope.opts = {
-				confirmed: true
-			};
+			scope.opts = {};
 			scope.modalAlert = {};
 			
 			scope.getAccountImage = function() {
@@ -3388,9 +3421,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 					'<div class="dz-modal-content">' +
 						'<i class="fa fa-5x fa-exclamation-triangle" style="color:#008EDD"></i>' +
 						'<div class="dz-modal-title-lg">Warning!</div>' +
-						'<div class="dz-modal-message" id="modal-message-1"></div>' +
+						'<div class="dz-modal-message" id="modal-message-1" ng-show="data.message1"></div>' +
 						'<br>' +
-						'<div class="dz-modal-message" id="modal-message-2"></div>' +
+						'<div class="dz-modal-message" id="modal-message-2" ng-show="data.message2"></div>' +
 					'</div>' +
 					'<div class="dz-modal-btn-container">' +
 						'<div class="dz-modal-triangle"></div>' +
@@ -3399,8 +3432,12 @@ angular.module('disczump.controllers', ['disczump.services'])
 					'</div>' +
 				'</div>',
 		link: function(scope, elem, attrs) {
-			document.getElementById('modal-message-1').innerHTML = scope.data.message1;
-			document.getElementById('modal-message-2').innerHTML = scope.data.message2;
+			if (typeof(scope.data.message1) !== 'undefined') {
+				document.getElementById('modal-message-1').innerHTML = scope.data.message1;
+			}
+			if (typeof(scope.data.message2) !== 'undefined') {
+				document.getElementById('modal-message-2').innerHTML = scope.data.message2;
+			}
 			
 			scope.confirm = function() {
 				scope.doOnClose = true;
@@ -3581,7 +3618,6 @@ angular.module('disczump.controllers', ['disczump.services'])
         }
         
         $scope.getUserImage = function(user) {
-        
             return user.image ? user.image : '/static/img/dz_profile.png';
         }
         
@@ -4739,15 +4775,19 @@ angular.module('disczump.controllers', ['disczump.services'])
 		}
 		
 		$scope.warnPrivacy = function() {
-			$scope.globalModalOpts = {
-				type: 'dz-acknowledgement-modal',
-				show: true,
-				data: {
-					message: 'This disc is currently on the marketplace, and making it private will automatically remove it from the marketplace. Do you wish to proceed?',
-					onClose: function(confirmed) {
-						if (confirmed) $scope.togglePrivacy();
+			if ($scope.isMarket()) {
+				$scope.globalModalOpts = {
+					type: 'dz-acknowledgement-modal',
+					show: true,
+					data: {
+						message1: 'This disc is currently on the marketplace, and making it private will automatically remove it from the marketplace. Do you wish to proceed?',
+						onClose: function(confirmed) {
+							if (confirmed) $scope.togglePrivacy();
+						}
 					}
 				}
+			} else {
+				$scope.togglePrivacy();
 			}
 		}
 		
@@ -4789,6 +4829,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 			if (typeof($scope.disc) !== 'undefined') {
 				return $scope.disc.marketplace.forSale || $scope.disc.marketplace.forTrade;
 			}
+		}
+		
+		$scope.isMarketInvalid = function() {
+			return !$scope.disc || !$scope.tempMarketplace.counts || (!$scope.isMarket() && $scope.tempMarketplace.counts.marketAvailable === 0) || !$scope.disc.visible || !$scope.disc.primaryImage;
 		}
 		
 		$scope.isDirty = function() {
@@ -5053,10 +5097,14 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.disc = {_id: discId, visible: true, tagList: [], imageList: []};
         $scope.settings = {discReady: false,dropzoneReady: false,dropzoneProcessing: false}
         
-		$scope.hasImages = function() {
-			if (typeof($scope.disc.imageList) !== 'undefined') {
-				return $scope.disc.imageList.length > 0;
-			}
+// 		$scope.hasImages = function() {
+// 			if (typeof($scope.disc.imageList) !== 'undefined') {
+// 				return $scope.disc.imageList.length > 0;
+// 			}
+// 		}
+		
+		$scope.isMarketInvalid = function() {
+			return !$scope.disc.visible || $scope.disc.imageList.length === 0 || (!$scope.isMarket && $scope.market.marketAvailable === 0);
 		}
 		
 		var processImg = function(file) {
@@ -5084,8 +5132,8 @@ angular.module('disczump.controllers', ['disczump.services'])
                 method: "POST",
                 thumbnailWidth: 100,
                 thumbnailHeight: 100,
-                parallelUploads: 10,
-                maxFiles: 10,
+                parallelUploads: 5,
+                maxFiles: 5,
                 paramName: 'discImage',
                 previewTemplate: dropzoneTemplate,
                 acceptedFiles: "image/*",
@@ -5093,8 +5141,8 @@ angular.module('disczump.controllers', ['disczump.services'])
                 previewsContainer: '#dropzone-previews',
                 clickable: '#add-image',
                 accept: function(file, done) {
-                    if (this.files[10] != null) {
-                        return this.removeFile(this.files[10]);
+                    if (this.files[5] != null) {
+                        return this.removeFile(this.files[5]);
                     }
                     
                     if (file.cropped || file.width < 200) {
@@ -5204,7 +5252,12 @@ angular.module('disczump.controllers', ['disczump.services'])
 						$scope.breadcrumbs.splice(1, 1, {title: 'Disc', links: [{text: disc.brand + ' ' +  disc.name + ' ' + '(#' + discId + ')', href: '/d/' + discId}]});
                         $scope.editAlert.success = {
                             title: 'Success',
-                            message: disc.brand + ' ' + disc.name + ' has been updated successfully.',
+                            message: {
+								smartConfig: {
+									text: '<!' + disc.brand + ' ' + disc.name + '> has been updated successfully.',
+									links: ['/d/' + disc._id]
+								}
+							},
                             show: true
                         }
                         scrollTop();
@@ -5246,23 +5299,32 @@ angular.module('disczump.controllers', ['disczump.services'])
             }
         }
 		
-		$scope.$watch('disc.visible', function(newVal) {
-			if (typeof(newVal) !== 'undefined') {
-				if (!newVal && $scope.disc.marketplace) {
-					$scope.disc.marketplace.forSale = false;
-					$scope.disc.marketplace.forTrade = false;
-				}
+		$scope.$watch(function() {
+			return $scope.isMarketInvalid();
+		}, function(newVal) {
+			if (newVal) {
+				$scope.disc.marketplace.forSale = false;
+				$scope.disc.marketplace.forTrade = false;
 			}
 		});
 		
-		$scope.$watchCollection('disc.imageList', function(newList) {
-			if (typeof(newList) !== 'undefined') {
-				if (newList.length === 0 && $scope.disc.marketplace) {
-					$scope.disc.marketplace.forSale = false;
-					$scope.disc.marketplace.forTrade = false;
-				}
-			}
-		});
+// 		$scope.$watch('disc.visible', function(newVal) {
+// 			if (typeof(newVal) !== 'undefined') {
+// 				if (!newVal && $scope.disc.marketplace) {
+// 					$scope.disc.marketplace.forSale = false;
+// 					$scope.disc.marketplace.forTrade = false;
+// 				}
+// 			}
+// 		});
+		
+// 		$scope.$watchCollection('disc.imageList', function(newList) {
+// 			if (typeof(newList) !== 'undefined') {
+// 				if (newList.length === 0 && $scope.disc.marketplace) {
+// 					$scope.disc.marketplace.forSale = false;
+// 					$scope.disc.marketplace.forTrade = false;
+// 				}
+// 			}
+// 		});
         
         if (typeof Dropzone === 'undefined' || typeof EXIF === 'undefined' || 
             typeof Cropper === 'undefined') {
@@ -5294,6 +5356,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                         return RedirectService.setRedirect('explore');
                     }
                     $scope.disc = disc;
+					$scope.isMarket = disc.marketplace.forSale || disc.marketplace.forTrade;
 					
 					$scope.breadcrumbs.push({title: 'Disc', links: [{text: disc.brand + ' ' +  disc.name + ' ' + '(#' + discId + ')', href: '/d/' + discId}]});
 					$scope.breadcrumbs.push({links: [{text:'Edit Disc'}]});
@@ -5333,6 +5396,18 @@ angular.module('disczump.controllers', ['disczump.services'])
                 $scope.settings.discReady = true;
             }
         }
+		
+		AccountService.getAccountMarket(function(success, data) {
+			if (success) {
+				$scope.market = data;
+			} else {
+				$scope.editAlert.error = {
+					title: data.type,
+					message: data.message,
+					show: true
+				}
+			}
+		});
     }
 ])
 

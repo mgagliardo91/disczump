@@ -35,7 +35,7 @@ function createUserReq(opts) {
         offset: opts.start || 0
     };
     
-    if (opts.query) {
+    if (typeof(opts.query) !== 'undefined') {
         req.query = opts.query !== '' ? '*' + opts.query.replace('*', '').replace(' ', '* *') + '*' : '*';
     }
     
@@ -185,7 +185,7 @@ function createDiscReq(opts, userId, reqId, includeTag) {
         offset: opts.start || 0
     };
     
-    if (opts.query) {
+    if (typeof(opts.query) !== 'undefined') {
         req.query = opts.query !== '' ? '*' + opts.query.replace('*', '').replace(' ', '* *') + '*' : '*';
     }
     

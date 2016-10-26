@@ -83,8 +83,8 @@ var userSchema = mongoose.Schema({
 
 userSchema.pre('save', function(next) {
     if (this.isNew) {
-		this.dateJoined = new Date();
-		this.lastAccess = new Date();
+		this.local.dateJoined = new Date();
+		this.local.lastAccess = new Date();
     }
 	
     next();

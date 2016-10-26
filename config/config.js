@@ -42,7 +42,8 @@ module.exports = {
         'payPeriod': 'MONT',
         'retryDays': 2,
         'reminderHours': 48,
-        'failRetryAttempts': 3
+        'failRetryAttempts': 3,
+        'failCancelAttempts': 3
     },
     'membership': {
         'TypeBasic': 'Basic',

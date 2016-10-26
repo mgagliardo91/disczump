@@ -5,6 +5,7 @@ var UserModel = require('../../app/models/user.js');
 var UserController = require('../../app/controllers/user.js');
 var DiscController = require('../../app/controllers/disc.js');
 var BillingInquiryController = require('../../app/controllers/billingInquiry.js');
+var CancelAttemptController = require('../../app/controllers/cancelAttempt.js');
 
 var PayPal = require('../../app/utils/paypal.js');
 var Mailer = require('../../app/utils/mailer.js');
@@ -94,7 +95,25 @@ var resetAccount = function(inquiry, callback) {
     });
 }
 
-var notifyAdmin = function(inquiry, callback) {
+var notifyAdminOfAttempt = function(attempt, callback) {
+    logger.info('Notifying admin of attempt [%s]', attempt._id);
+	
+    var html = fs.readFileSync('./private/html/attemptFailed.handlebars', 'utf8');
+    var template = Handlebars.compile(html);
+    var message = template({attempt: attempt, serverURL: localConfig.serverURL});
+	
+	Mailer.sendAdmin(Mailer.TypeAttemptFailed, message, function(err, result) {
+       if (err) {
+            return callback();
+        }
+        
+		attempt.archive('Admin notified of failed attempt.');
+		return callback();
+    });
+    
+}
+
+var notifyAdminOfInquiry = function(inquiry, callback) {
     logger.info('Notifying admin of inquiry [%s]', inquiry._id);
 	
     var html = fs.readFileSync('./private/html/inquiryFailed.handlebars', 'utf8');
@@ -142,6 +161,11 @@ var handleUserInquiry = function(user, currentInquiry, callback) {
 			if (currentInquiry) {
                 currentInquiry.addError(err);
                 logger.info('Incrementing try count of inquiry [%s] due to error', currentInquiry._id, err);
+				
+				if (currentInquiry.tryCount >= PaymentConfig.failRetryAttempts) {
+					return notifyAdminOfInquiry(currentInquiry, callback);
+				}
+				
                 return callback();
 			} else {
                 return createBillingInquiry(user, err, callback);
@@ -151,6 +175,11 @@ var handleUserInquiry = function(user, currentInquiry, callback) {
 		if (invalid) {
 			if (currentInquiry && currentInquiry.contactMade) {
                 currentInquiry.addError(invalid);
+				
+				if (currentInquiry.tryCount >= PaymentConfig.failRetryAttempts) {
+					return notifyAdminOfInquiry(currentInquiry, callback);
+				}
+				
                 return callback();
             }
             
@@ -164,7 +193,24 @@ var handleUserInquiry = function(user, currentInquiry, callback) {
 		return callback();
 	});
 }
-		
+
+var handleCancelAttempt = function(attempt, callback) {
+	PayPal.cancelRecurringTrx(attempt.profileId, function(err, profile) {
+		if (err) {
+			attempt.addError(err);
+			logger.info('Incrementing try count of cancel attempt [%s] due to error', attempt._id, err);
+			
+			if (attempt.tryCount >= PaymentConfig.failCancelAttempts) {
+                return notifyAdminOfAttempt(attempt, callback);
+            }
+		} else {
+			attempt.remove();
+		}
+
+		return callback();
+
+	});
+}	
 
 var simpleInquireUserByInquiry = function(inquiry, callback) {
     UserModel.findOne({_id: inquiry.userId}, function(err, user) {
@@ -185,6 +231,11 @@ var handleInquireUserByInquiry = function(inquiry, callback) {
         if (err) {
             inquiry.addError(err);
             logger.info('Incrementing try count of inquiry [%s] due to error', inquiry._id, err);
+			
+			if (inquiry.tryCount >= PaymentConfig.failRetryAttempts) {
+                return notifyAdminOfInquiry(inquiry, callback);
+            }
+			
             return callback();
         }
         
@@ -192,6 +243,10 @@ var handleInquireUserByInquiry = function(inquiry, callback) {
             var userError = Error.createError('Unable to locate user associated with inquiry.', Error.objectNotFoundError);
             inquiry.addError(userError);
             logger.info('Incrementing try count of inquiry [%s] due to error', inquiry._id, userError);
+			
+			if (inquiry.tryCount >= PaymentConfig.failRetryAttempts) {
+                return notifyAdminOfInquiry(inquiry, callback);
+            }
             return callback();
         }
         
@@ -234,6 +289,26 @@ var syncUser = function(user, callback) {
     });
 }
 
+var ProccessOCRs = function(callback) {
+	logger.info('Processing outstanding cancel requests');
+	CancelAttemptController.getActiveAttempts(function(err, attempts) {
+		if (err || !attempts)
+            return callback();
+		
+		logger.info('Found [%d] cancel attempts to process', attempts.length);
+        
+        async.eachSeries(attempts, function(attempt, cb) {
+            logger.info('Processing outstanding cancel attempt with id [%s]', attempt._id);
+            
+            return handleCancelAttempt(attempt, cb);
+            
+        }, function(err) {
+            logger.info('Completed processing outstanding cancel attempts.');
+            return callback();
+        });
+	});
+}
+
 var ProcessOIs = function(callback) {
     logger.info('Processing outstanding inquiries');
     BillingInquiryController.getActiveInquiries(function(err, inquiries) {
@@ -262,10 +337,6 @@ var ProcessOIs = function(callback) {
 						}
 					});
                 }
-            }
-            
-            if (inquiry.tryCount >= PaymentConfig.failRetryAttempts) {
-                return notifyAdmin(inquiry, cb);
             }
             
             return handleInquireUserByInquiry(inquiry, cb);
@@ -325,6 +396,7 @@ var SyncUsers = function(callback) {
 
 var DoInquiry = function(callback) {
     async.series([
+		ProccessOCRs,
         ProcessOIs,
         InquireUsers,
 		SyncUsers

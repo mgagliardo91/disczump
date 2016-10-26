@@ -39,7 +39,7 @@
                             <input type="text" class="form-control validation" valid-if="location.curLocation"  name="location" id="account-postal-code" placeholder="Postal Code" ng-model="location.search" ng-model-options="{updateOn: 'default blur',debounce:{'default': 500,'blur': 0 }}" location-search="locSelected" />
                         </div>
                         <div class="col-sm-9 col-sm-offset-3">
-                            <div class="page-info input-note round">
+                            <div class="page-info input-note round" ng-class="{'error':!location.curLocation}">
                                 <span class="pull-right" style="cursor: pointer;" title="Clear Selection" ng-click="location.curLocation = undefined;" ng-show="location.curLocation"><i class="fa fa-close"></i></span>
                                 <span ng-show="location.curLocation"><b>Selected location: </b>{{location.curLocation}}</span>
                                 <span ng-show="!location.curLocation"><i class="fa fa-map-marker" style="margin-right: 5px;"></i>Enter a zip code above and select a location.</span>

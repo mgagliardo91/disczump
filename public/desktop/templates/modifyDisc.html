@@ -134,8 +134,9 @@
                 </div>
             </div>
 			<div ng-show="disc.imageList.length">
-                <div class="dz-label">Current Images</div>
+                <div class="dz-label">Current Images (max. 5)</div>
                 <div class="page-info">Drag images to reorder. Click the star to select a primary image.</div>
+				<div class="page-info error" ng-show="disc.imageList.length > 5">You have exceeded the limit of 5 images per disc. Please revise your image list before saving this disc.</div>
                 <div class="modify-form-section">
                     <div class="image-list">
 		                <div class="image-list-container image-list-container simple" id="existing-image-container">
@@ -179,23 +180,26 @@
                     </div>
                 </div>  
             </div>
-			<div class="dz-label">Marketplace</div>
-			<div class="page-info">The disc must be made <b><u>public</u></b> and have at least <b><u>one picture</u></b> before adding it to the marketplace.  Alternatively, a disc is automatically removed from the marketplace if it is marked private or it's pictures are removed.</div>
+			<div class="dz-label">Marketplace<span class="float-right">{{market.marketCap === -1 ? 'Unlimited' : market.marketAvailable}} Marketplace Discs Remaining</span></div>
+			<div class="page-info error" ng-if="!isMarket && market.marketAvailable === 0">
+				You have reached your marketplace cap. <a href="/account/membership/" class="dz-blue hover-underline">Upgrade membership.</a>
+			</div>
+			<div class="page-info">This disc must be made <b><u>public</u></b> and have at least <b><u>one image</u></b> before adding it to the marketplace.  Alternatively, a disc is automatically removed from the marketplace if it is marked private or it's pictures are removed.</div>
 			<div class="modify-form-section">
 				<div class="form-group">
 	                <label class="col-sm-2 control-label">For Sale</label>
 	                <div class="col-sm-4">
-	                    <switch type="checkbox" disabled="!disc.visible || !hasImages()" ng-model="disc.marketplace.forSale"></switch>
+	                    <switch type="checkbox" disabled="isMarketInvalid()" ng-model="disc.marketplace.forSale"></switch>
 	                </div>
 					<label class="col-sm-2 control-label">For Trade</label>
 	                <div class="col-sm-4">
-	                    <switch type="checkbox" disabled="!disc.visible || !hasImages()" ng-model="disc.marketplace.forTrade"></switch>
+	                    <switch type="checkbox" disabled="isMarketInvalid()" ng-model="disc.marketplace.forTrade"></switch>
 	                </div>
                 </div>
 			</div>
             <div class="modify-button-container">
                 <button type="button" class="btn btn-default" nav-back><span><i class="fa fa-save fa-tools"></i></span>Cancel</button>
-                <button type="button" class="btn btn-primary" ng-click="!settings.dropzoneProcessing && !discImageCropper.cropperLoading && submitDisc()" ng-disabled="settings.dropzoneProcessing || discImageCropper.cropperLoading">
+                <button type="button" class="btn btn-primary" ng-click="!settings.dropzoneProcessing && !discImageCropper.cropperLoading && disc.imageList.length <= 5 && submitDisc()" ng-disabled="settings.dropzoneProcessing || discImageCropper.cropperLoading || disc.imageList.length > 5">
                     <span><i class="fa fa-save fa-tools" ng-show="!settings.dropzoneProcessing && !discImageCropper.cropperLoading"></i><i class="fa fa-spinner fa-spin fa-tools" ng-show="settings.dropzoneProcessing || discImageCropper.cropperLoading"></i></span>Save
                 </button>
             </div>

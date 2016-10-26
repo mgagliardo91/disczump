@@ -28,6 +28,7 @@ module.exports = {
     TypeAccountChange: 'disc|zump Account Change Alert',
     TypePaymentFailed: 'disc|zump Payment Failed Alert',
     TypeInquiryFailed: 'disc|zump Payment Inquiry Failure',
+    TypeAttemptFailed: 'disc|zump Cancel Attempt Failure',
     
     sendMail: sendMail,
     sendAdmin: sendAdmin
