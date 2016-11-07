@@ -65,7 +65,7 @@ var userSchema = mongoose.Schema({
 			acct: {type: String},
 			expDate: {type: String},
 			pendingReset: {type: Boolean, default: false},
-			active: {type: Boolean, default: true}
+			active: {type: Boolean, default: false}
 		},
         notifications: {
             newMessage: {type: Boolean, default: true },
@@ -198,6 +198,7 @@ userSchema.methods.fullAccountToString = function() {
 			tender: this.account.profile.tender,
 			draftAmount: this.account.profile.draftAmount,
 			type: this.account.profile.type ? this.account.profile.type : this.account.type,
+			nextBillDate: this.account.profile.type != this.account.type ? this.account.profile.nextBillDate : undefined,
 			exists: typeof(this.account.profile.profileId) !== 'undefined'
 		}
 	}

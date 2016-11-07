@@ -42,8 +42,8 @@ var getDiscHeaders = function(disc, url) {
             headers.push({prop:'product:weight:units', content: 'g'});
         }
 
-        if (typeof(disc.marketplace.value) !== 'undefined') {
-            headers.push({prop:'product:price:amount', content: disc.marketplace.value.toFixed(2)});
+        if (typeof(disc.value) !== 'undefined') {
+            headers.push({prop:'product:price:amount', content: disc.value.toFixed(2)});
             headers.push({prop:'product:price:currency', content: 'USD'});
         }
         

@@ -198,6 +198,8 @@ function createDiscReq(opts, userId, reqId, includeTag) {
             req.sort = 'brand asc,name asc'
         } else if (opts.sort == 'new') {
             req.sort = 'marketplace.postedDate desc'
+        } else if (opts.sort == 'modDate') {
+            req.sort = 'modifiedDate desc';
         }
     }
     
@@ -210,7 +212,7 @@ function createDiscReq(opts, userId, reqId, includeTag) {
     if (opts.valueRange) {
         req.facet.value = {
             type: 'range',
-            field: 'marketplace.value',
+            field: 'value',
             other: 'after',
             start: opts.valueRange.start || 0,
             end: opts.valueRange.end || 0,

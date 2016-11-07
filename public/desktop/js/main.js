@@ -194,5 +194,6 @@ app.config(['$routeProvider', '$httpProvider', '$locationProvider', function($ro
     $locationProvider.html5Mode(true);
 }]);
 
-app.run(['$location', function($location) {
+app.run(['PageCache', function(PageCache) {
+    PageCache.init();
 }]);

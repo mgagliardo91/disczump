@@ -2322,6 +2322,8 @@ i.dz-modal-close:hover {
 	background-color: #FFFFFF;
 	padding: 10px;
 	border-radius: 5px;
+    word-wrap: break-word;
+    font-size: 0.9em;
 }
 
 .dz-modal-title-info {
@@ -2989,6 +2991,11 @@ input.search-bar {
     padding: 5px;
     z-index: 100;
 	cursor: default;
+	color: #777777;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .grid-item-icon.location {
@@ -3001,10 +3008,16 @@ input.search-bar {
 	max-width: 196px;
 }
 
-.grid-item-icon.for-sale span {
+.grid-item-icon .grid-item-text {
 	font-size: 16px;
     padding-left: 2px;
     font-family: Calibri, sans-serif;
+    color: #bebebe;
+	
+}
+
+.grid-item-icon .market-icon {
+	width: 20px;
 }
 
 .grid-item-icon.cert-icon {
@@ -3044,11 +3057,11 @@ input.search-bar {
 }
 
 .for-sale {
-    color: #4FC74F;
+    color: #4FC74F !important;
 }
 
 .for-trade {
-    color: #ffba00;
+    color: #ffba00 !important;
 }
 
 .cert-icon .fa-certificate {
@@ -3682,10 +3695,10 @@ ul.grid-item-list li {
 	cursor: text;
 }
 
-.dv-marketplace-price.read-only {
+/* .dv-marketplace-price.read-only {
     font-style: italic;
     color: #BEBEBE;
-}
+} */
 
 .switch.dv-marketplace-switch {
 	width: 36px;

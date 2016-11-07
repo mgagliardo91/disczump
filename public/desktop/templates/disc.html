@@ -98,19 +98,12 @@
                             <div ng-show="!loading.disc && !isMarketInvalid()">
                                 <dz-alert alert-data="marketAlert"></dz-alert>
                                 <form name="marketplaceForm" class="dv-marketplace-row" style="height:40px;">
-                                    <div class="width-33 float-left">
-                                        <div class="dv-marketplace-section-wrapper input-row">
-                                            <span>Price:</span>
-                                            <input type="text" name="price" class="form-control validation dv-marketplace-price" ng-model="tempMarketplace.value" placeholder="0.00" ng-pattern="/^[0-9]+(\.[0-9]{1,2})?$/">
-                                        </div>
-                                    </div>
-                                    <div class="width-33 float-left">
+                                    <div class="width-33" style="display:inline-block;">
                                         <div class="dv-marketplace-section-wrapper input-row">For Sale: <switch class="dv-marketplace-switch sale-switch" type="checkbox" ng-model="tempMarketplace.forSale"></switch></div>
                                     </div>
-                                    <div class="width-33 float-left">
+                                    <div class="width-33" style="display:inline-block;">
                                         <div class="dv-marketplace-section-wrapper input-row">For Trade: <switch class="dv-marketplace-switch trade-switch" type="checkbox" ng-model="tempMarketplace.forTrade"></switch></div>
                                     </div>
-                                    <div class="clearfix"></div>
                                 </form>
                                 <div class="dv-marketplace-row" style="height:30px;">
                                     <div class="dv-marketplace-section-wrapper btn-row">
@@ -173,12 +166,12 @@
                             <td class="width-33">Marketplace</td>
                             <td colspan="2" class="dv-table-cell width-33">
                                 <p class="dv-table-cell-title">Price</p>
-                                <overflow-wrapper ng-if="disc.marketplace.value">
+                                <overflow-wrapper ng-if="disc.value">
                                     <div class="dv-table-cell-value handle-overflow">
-                                        {{disc.marketplace.value | currency:"$":2}}
+                                        {{disc.value | currency:"$":2}}
                                     </div>
                                 </overflow-wrapper>
-                                <p class="dv-table-cell-value" ng-if="!disc.marketplace.value">-</p>
+                                <p class="dv-table-cell-value" ng-if="!disc.value">-</p>
                             </td>
                             <td colspan="1" class="dv-table-cell width-16">
                                 <p class="dv-table-cell-title" ng-class="{inactive:!disc.marketplace.forSale}">For Sale</p>

@@ -1,5 +1,5 @@
 angular.module('underscore', [])
-
+ 
 .factory('_', ['$window', function($window) {
     return $window._;
 }]);
@@ -295,8 +295,71 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 }])
 
+
+
+.factory('PageCache', ['$location', '$rootScope', function($location, $rootScope) {
+	var currentPath, backActive;
+	var pageCache = [];
+	
+	function setCurrentPath(path) {
+		currentPath = path;
+		pageCache.push({path: path, data: {}});
+	}
+	
+	function alertPathChange(newPath) {
+		backActive = currentPath === newPath;
+		
+		if (backActive && pageCache.length > 2) {
+			pageCache.splice(pageCache.length - 2, 2);
+		}
+	}
+	
+	function isNavBack() {
+		return backActive;
+	}
+	
+	function setDataItem(key, val) {
+		if (pageCache.length) {
+			pageCache[pageCache.length - 1].data[key] = val;
+		}
+	}
+	
+	function setData(data) {
+		if (pageCache.length) {
+			pageCache[pageCache.length - 1].data = data;
+		}
+	}
+	
+	function getPageData() {
+		if (pageCache.length) {
+			return pageCache[pageCache.length - 1].data;
+		}
+		
+		return undefined;
+	}
+	
+	function init() {
+		$rootScope.$on('$locationChangeSuccess', function() {
+			setCurrentPath($location.url());
+		});        
+
+	   $rootScope.$watch(function () {return $location.url()}, function (newPath) {
+		   alertPathChange(newPath);
+		});
+	}
+	
+	return {
+		isNavBack: isNavBack,
+		setDataItem: setDataItem,
+		setData: setData,
+		init: init,
+		getPageData: getPageData
+	}
+}])
+
 .factory('PageUtils', [function() {
 	var transitionEnd;
+	var currentPath, backActive;
 	
 	function getDocHeight() {
 		var body = document.body,
@@ -373,6 +436,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		getLeft: getLeft,
         getFullHeight: getFullHeight,
 		getTransitionEndEventName: getTransitionEndEventName
+		
     }
 }])
 
@@ -921,7 +985,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
     };
     
     var validValueRange = [];
-	var validSort = ['rel', 'new', 'alpha', 'createDate'];
+	var validSort = ['rel', 'new', 'alpha', 'createDate', 'modDate'];
 	var validMode = ['all-market','sale','trade','all'];
 	var validTypes = ['brand', 'name', 'type', 'tag', 'material', 'color', 'weight', 'condition', 'speed', 'glide', 'turn', 'fade', 'value'];
 	var propText = {

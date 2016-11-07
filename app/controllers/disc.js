@@ -229,15 +229,15 @@ function createDisc(userId, data, callback) {
 			if (!isNaN(condition) && condition <= 10 && condition >= 0) disc.condition = condition;
         }
     }
+	
+	if (data.hasOwnProperty('value')) {
+		if (data.value != null) {
+			var value = parseFloat(data.value);
+			if (!isNaN(value) && value >= 0) disc.value = parseFloat((value).toFixed(2));
+		}
+	}
     
     if (isDef(data.marketplace)) {
-		if (data.marketplace.hasOwnProperty('value')) {
-			if (data.marketplace.value != null) {
-				var value = parseFloat(data.marketplace.value);
-				if (!isNaN(value) && value >= 0) disc.marketplace.value = parseFloat((value).toFixed(2));
-			}
-		}
-		
 		markSale = isDef(data.marketplace.forSale) && data.marketplace.forSale;
 		markTrade = isDef(data.marketplace.forTrade) && data.marketplace.forTrade;
     }
@@ -458,17 +458,17 @@ function updateDisc(userId, discId, data, gfs, callback) {
 		if (isDef(data.imageList) && data.imageList.length > 5) {
 			return callback(Error.createError('Image list maximum size exceeded.', Error.invalidDataError));
 		}
+		
+		if (isDef(data.value)) {
+			if (data.value === null) {
+					disc.value = undefined;
+			} else {
+				var value = parseFloat(data.value);
+				if (!isNaN(value) && value >= 0) disc.value = parseFloat((value).toFixed(2));
+			}
+		}
         
         if (isDef(data.marketplace)) {
-            if (data.marketplace.hasOwnProperty('value')) {
-				if (data.marketplace.value === null) {
-						disc.marketplace.value = undefined;
-				} else {
-					var value = parseFloat(data.marketplace.value);
-					if (!isNaN(value) && value >= 0) disc.marketplace.value = parseFloat((value).toFixed(2));
-				}
-			}
-			
 			markSale = typeof data.marketplace.forSale !== 'undefined';
 			markTrade = typeof data.marketplace.forTrade !== 'undefined';
         }

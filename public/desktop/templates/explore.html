@@ -119,6 +119,7 @@
                           <option value="new" ng-hide="isMarketplaceModeActive('all');">Sort by Newly Available</option>
                           <option value="alpha">Sort Alphabetically</option>
                           <option value="createDate">Sort by Date Added</option>
+                          <option value="modDate" ng-if="isOwnedTrunk">Sort by Date Modified</option>
                         </select>
                     </div>
                 </div>
@@ -143,7 +144,7 @@
                     <div class="no-results-title"><i class="fa fa-exclamation-triangle dz-blue"></i> No Results</div>
                     <div class="no-results-msg">Please revise your search terms and try again.</div>
                 </div>
-                <disc-item ng-repeat="disc in resultList" ng-repeat-finish="resizeRes()" disc="disc" current-user="curUser" lb-opts="lbOpts" ms-opts="msOpts"></disc-item>
+                <disc-item ng-repeat="disc in resultList" ng-repeat-finish="onLastDisc()" disc="disc" current-user="curUser" lb-opts="lbOpts" ms-opts="msOpts"></disc-item>
                 <div class="grid-item load-item" ng-show="loading || loadingMore">
                     <div><i class="fa fa-spinner fa-spin"></i></div>
                 </div>

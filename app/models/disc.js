@@ -27,10 +27,10 @@ var discSchema = mongoose.Schema({
     condition: Number,
     createDate: {type: Date},
 	modifiedDate: {type: Date},
+	value: Number,
     marketplace: {
         forSale: {type: Boolean, default: false},
         forTrade: {type: Boolean, default: false},
-        value: Number,
 		postedDate: {type: Date}
     }
 });
