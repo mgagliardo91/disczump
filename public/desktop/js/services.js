@@ -1366,6 +1366,25 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 }])
 
 .factory('MembershipService', ['APIService', function(APIService) {
+	var accountPermissions = {
+		'msDelete': 'basic',
+		'msVisibility': 'basic',
+		'msTag': 'entry',
+		'msMarketplace': 'entry',
+		'msBump': 'pro',
+		'msSelect': 'pro'
+	};
+	
+	var hasPermission = function(msFn, accountType) {
+		if (!msFn || !accountType) return false;
+		
+		switch (accountPermissions[msFn]) {
+			case 'basic': return true;
+			case 'entry': return accountType.toLowerCase() == 'entry' || accountType.toLowerCase() == 'pro';
+			case 'pro': return accountType.toLowerCase() == 'pro';
+			default: return false;
+		}
+	}
 	
 	var getChangeType = function(fromType, toType) {
 		switch (fromType.toLowerCase()) {
@@ -1460,6 +1479,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 	
 	return {
+		hasPermission: hasPermission,
 		getChangeType: getChangeType,
 		getAccountName: getAccountName,
 		getAccountCost: getAccountCost,

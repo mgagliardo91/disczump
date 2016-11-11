@@ -80,7 +80,7 @@ function initializeConfirmDelete(userId, callback) {
                 if (err)
 			        return callback(Error.createError(err, Error.internalError));
                 
-                user.addEvent(EventController.Types.AccountDeleteInit, 'Account deletion request initialized [' + confirm._id + '].');
+				UserController.addUserEvent(user._id, EventController.Types.AccountDeleteInit, 'Account deletion request initialized [' + confirm._id + '].');
                 callback(null, user, confirmDeleteEmail(user, confirm));
             });
         });

@@ -19,4 +19,6 @@ var discTemplateSchema = mongoose.Schema({
     
 });
 
+discTemplateSchema.index({ textSearch: 1 });
+
 module.exports = mongoose.model('DiscTemplate', discTemplateSchema);

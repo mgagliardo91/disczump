@@ -44,4 +44,6 @@ clientSchema.pre('save', function(next) {
     next();
 });
 
+clientSchema.index({ clientId: 1 });
+
 module.exports = mongoose.model('Client', clientSchema);

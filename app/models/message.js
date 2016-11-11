@@ -23,4 +23,6 @@ messageSchema.pre('save', function(next) {
     next();
 });
 
+messageSchema.index({ threadId: 1 });
+
 module.exports = mongoose.model('Message', messageSchema);

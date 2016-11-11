@@ -44,4 +44,6 @@ accessTokenSchema.pre('save', function(next) {
     next();
 });
 
+accessTokenSchema.index({ token: 1 });
+
 module.exports = mongoose.model('AccessToken', accessTokenSchema);

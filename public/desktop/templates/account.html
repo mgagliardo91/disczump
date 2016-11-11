@@ -32,16 +32,16 @@
             </div>
             <div class="account-mod-container" fade-time="9000" fade-start="page.ready" fade-override="skip" fade-complete="hideSkip">
                 <div class="account-mod-select">
-                    <div class="mod-item" ng-class="{'active':page.active == 'account'}" ng-click="page.active = 'account'">
+                    <div class="mod-item" ng-class="{'active':page.active == 'account'}" ng-click="updateTarget('account')">
                         Account
                     </div>
-                    <div class="mod-item" ng-class="{'active':page.active == 'profile-pic'}" ng-click="page.active = 'profile-pic';">
+                    <div class="mod-item" ng-class="{'active':page.active == 'profile-pic'}" ng-click="updateTarget('profile-pic');">
                         Profile Picture
                     </div>
-                    <div class="mod-item" ng-class="{'active':page.active == 'membership'}" ng-click="page.active = 'membership'">
+                    <div class="mod-item" ng-class="{'active':page.active == 'membership'}" ng-click="updateTarget('membership')">
                         Membership
                     </div>
-                    <div class="mod-item" ng-class="{'active':page.active == 'notification'}" ng-click="page.active = 'notification'">
+                    <div class="mod-item" ng-class="{'active':page.active == 'notification'}" ng-click="updateTarget('notification')">
                         Notification Settings
                     </div>
                 </div>

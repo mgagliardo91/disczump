@@ -275,7 +275,7 @@ module.exports = function(app, gridFs) {
 					if (err)
 						return next(err);
 
-					user.addEvent(EventController.Types.AccountPasswordReset, 'User authenticated password reset.');
+					UserController.addUserEvent(user._id, EventController.Types.AccountPasswordReset, 'User authenticated password reset.');
 					return res.json({
 						userId: req.user._id,
 						status: 'OK'

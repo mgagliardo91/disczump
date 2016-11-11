@@ -6,7 +6,7 @@
                 <div class="portal-title no-pad cont-sm">
                     <img src="/static/logo/logo_portal.png">
                 </div>
-                 <dz-alert alert-data="loginAlert" class="form-small"></dz-alert>
+                 <dz-alert alert-data="loginAlert" class="form-small" force-scroll="true"></dz-alert>
                 <div class="login-form-stacked form-xsmall" ng-form name="loginForm" ng-enter="loginForm.$valid && doLogin()">
                     <div class="input-group" ng-class="{'has-error': !loginForm.username.$pristine && loginForm.username.$invalid, 'has-success': !loginForm.username.$pristine && loginForm.username.$valid}">
                         <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>

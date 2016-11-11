@@ -23,7 +23,7 @@
                                     <i class="fa fa-square-o" ng-show="!isMarketplaceModeActive(facet.prop);"></i>
                                     <i class="fa fa-check-square-o" ng-show="isMarketplaceModeActive(facet.prop);"></i>
                                 </span>
-                                <div class="filter-item-val handle-overflow">{{facet.text}}</div>
+                                <div class="filter-item-val handle-overflow" ng-attr-title="{{facet.text}}">{{facet.text}}</div>
                                 <div class="filter-item-count handle-overflow">({{filter.count}})</div>
                                 <div class="clearfix"></div>
                             </div>
@@ -32,7 +32,7 @@
                                     <i class="fa fa-square-o" ng-show="!isMarketplaceModeActive(facet.prop);"></i>
                                     <i class="fa fa-check-square-o" ng-show="isMarketplaceModeActive(facet.prop);"></i>
                                 </span>
-                                <div class="filter-item-val handle-overflow">{{facet.text}}</div>
+                                <div class="filter-item-val handle-overflow" ng-attr-title="{{facet.text}}">{{facet.text}}</div>
                                 <div class="clearfix"></div>
                             </div>
                         </div>
@@ -42,7 +42,7 @@
                                     <i class="fa fa-square-o" ng-show="!isMarketplaceModeActive('all');"></i>
                                     <i class="fa fa-check-square-o" ng-show="isMarketplaceModeActive('all');"></i>
                                 </span>
-                                <div class="filter-item-val handle-overflow">All</div>
+                                <div class="filter-item-val handle-overflow" title="All">All</div>
                                 <div class="clearfix"></div>
                             </div>
                         </div>
@@ -60,7 +60,7 @@
                                 <i class="fa fa-square-o" ng-show="!isFilterActive(facet, filter)"></i>
                                 <i class="fa fa-check-square-o" ng-show="isFilterActive(facet, filter)"></i>
                             </span>
-                            <div class="filter-item-val handle-overflow">{{filter.text}}</div>
+                            <div class="filter-item-val handle-overflow" ng-attr-title="{{filter.text}}">{{filter.text}}</div>
                             <div class="filter-item-count handle-overflow" ng-if="filter.count">({{filter.count}})</div>
                             <div class="clearfix"></div>
                         </div>
@@ -89,7 +89,7 @@
                                 <i class="fa fa-square-o" ng-show="!isFilterActive(facet, filter)"></i>
                                 <i class="fa fa-check-square-o" ng-show="isFilterActive(facet, filter)"></i>
                             </span>
-                            <div class="filter-item-val handle-overflow">{{filter.val}}</div>
+                            <div class="filter-item-val handle-overflow" ng-attr-title="{{filter.val}}">{{filter.val}}</div>
                             <div class="filter-item-count handle-overflow" ng-if="filter.count">({{filter.count}})</div>
                             <div class="clearfix"></div>
                         </div>
@@ -130,9 +130,6 @@
                     <div class="search-btn round-right no-left float-right" ng-click="!loading && startSearch();">
                         <i class="fa fa-search" ng-class="{'fa-search': !loading, 'fa-spin': loading, 'fa-spinner':loading}"></i>
                     </div>
-<!--                     <div class="search-btn round-right no-left float-right" ng-show="loading">
-                        <i class="fa fa-spinner fa-spin fa-lg"></i>
-                    </div> -->
                     <div class="search-bar-wrapper">
                         <input id="search-explore" ng-model-enter="startSearch();" ng-model="searchParam" class="search-bar" type="text" placeholder="Search discs..."></input>
                         <div class="close-icon" ng-show="searchParam.length" ng-click="searchParam = ''; updateUrl();"></div>
@@ -154,16 +151,32 @@
     </div>
     <div class="ms-toolbox no-select" ng-show="msOpts.active">
         <div class="ms-tool-container">
-            <div class="ms-tb-tool" title="Select All" ng-click="msOpts.selectAll()"><i class="fa fa-lg fa-object-group"></i></div>
-            <div class="ms-tb-tool" title="Deselect All" ng-click="msOpts.deselectAll()"><i class="fa fa-lg fa-object-ungroup"></i></div>
+            <div class="ms-tb-tool ineligible" title="Select All" ng-if="!hasMsPermission('msSelect')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-object-group"></i></div>
+            <div class="ms-tb-tool" title="Select All" ng-click="msOpts.selectAll()" ng-if="hasMsPermission('msSelect')"><i class="fa fa-lg fa-object-group"></i></div>
+            <div class="ms-tb-tool ineligible" title="Deselect All" ng-if="!hasMsPermission('msSelect')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-object-ungroup"></i></div>
+            <div class="ms-tb-tool" title="Deselect All" ng-click="msOpts.deselectAll()" ng-if="hasMsPermission('msSelect')"><i class="fa fa-lg fa-object-ungroup"></i></div>
         </div>
+        <div class="ms-tb-info" ng-click="msOpts.showMsHelp()"><i class="fa fa-question-circle"></i></div>
         <div class="ms-tb-close" ng-click="msOpts.toggleMS()"><i class="fa fa-times"></i></div>
         <div class="ms-tb-title">Multi-select Toolbox</div>
         <div class="ms-count dz-blue">{{msOpts.count}}</div>
+        <div class="ms-feedback">
+            <div ng-show="msOpts.showNoCount">Must select at least 1 disc.</div>
+            <div ng-show="msOpts.showIneligible">Account type ineligible.</div>
+        </div>
         <div class="ms-btn-container">
-            <div class="ms-tb-btn" title="Bump Discs" ng-click="msOpts.bumpDiscs()" ng-class="{disabled:msOpts.count == 0}"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></div>
-            <div class="ms-tb-btn edit" title="Manage Tags" ng-click="msOpts.manageTags()" ng-class="{disabled:msOpts.count == 0}"><i class="fa fa-lg fa-tags"></i></div>
-            <div class="ms-tb-btn delete" title="Delete" ng-click="msOpts.deleteDiscs()" ng-class="{disabled:msOpts.count == 0}"><i class="fa fa-lg fa-trash"></i></div>
+            <div class="ms-tb-btn ineligible" title="Visibility" ng-if="!hasMsPermission('msVisibility')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-eye"></i></div>
+            <div class="ms-tb-btn" title="Visibility" ng-click="msOpts.setVisibility()" ng-if="hasMsPermission('msMarketplace')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-eye"></i></div>
+            <div class="ms-tb-btn ineligible" title="Marketplace" ng-if="!hasMsPermission('msMarketplace')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-usd"></i></div>
+            <div class="ms-tb-btn" title="Marketplace" ng-click="msOpts.setMarketplace()" ng-if="hasMsPermission('msMarketplace')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-usd"></i></div>
+            <div class="ms-tb-btn ineligible" title="Bump Discs" ng-if="!hasMsPermission('msBump')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></div>
+            <div class="ms-tb-btn" title="Bump Discs" ng-click="msOpts.bumpDiscs()" ng-if="hasMsPermission('msBump')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></div>
+        </div>
+        <div class="ms-btn-container">
+            <div class="ms-tb-btn ineligible edit" title="Manage Tags" ng-if="!hasMsPermission('msTag')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-tags"></i></div>
+            <div class="ms-tb-btn edit" title="Manage Tags" ng-click="msOpts.manageTags()" ng-if="hasMsPermission('msTag')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-tags"></i></div>
+            <div class="ms-tb-btn ineligible delete" title="Delete" ng-if="!hasMsPermission('msDelete')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-trash"></i></div>
+            <div class="ms-tb-btn delete" title="Delete" ng-click="msOpts.deleteDiscs()" ng-if="hasMsPermission('msDelete')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-trash"></i></div>
         </div>
     </div>
 </div>

@@ -26,6 +26,11 @@ MongoClient.connect(url, function (err, db) {
               e.local.lastAccess = cDate;
           }
           
+          if (e.archiveDate) {
+              var archDate = new Date(e.archiveDate);
+              e.archiveDate = archDate;
+          }
+          
           if (e.local.location) {
               var location = e.local.location;
               e.local.location = {
@@ -39,35 +44,6 @@ MongoClient.connect(url, function (err, db) {
                     country: location.country,
                     countryCode: location.countryCode
               };
-          }
-          
-          var prefs = e.preferences;
-          var newMessage = false;
-          if (prefs && prefs.notifications) {
-              newMessage = prefs.notifications.newMessage;
-          }
-          delete e.preferences;
-          delete e.local.pdgaNumber;
-          
-          e.account = {
-              type: 'Basic',
-              marketCap: 2,
-              profile: {
-                    type: 'Basic',
-                    lastModified: new Date(),
-                    startDate: new Date(e.local.dateJoined),
-                    draftAmount: 0,
-                    pendingReset: false,
-                    active: false
-                },
-                notifications: {
-                    newMessage: newMessage,
-                    siteUpdates: true
-                },
-                verifications: {
-                    facebook: false,
-                    pdga: false
-                }
           }
           
           collection.save(e);

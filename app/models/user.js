@@ -103,18 +103,6 @@ userSchema.methods.setPending = function() {
 	this.save();
 }
 
-userSchema.methods.addEvent = function(type, event) {
-    if (typeof(event) !== 'undefined') {
-        this.internal.eventLog.push({
-           type: type,
-           message: event,
-           dateCreated: new Date()
-        });
-        
-        this.save();
-    }
-}
-
 userSchema.methods.updateAccessCount = function(platform) {
     this.local.accessCount[platform] += 1;
     this.local.lastAccess = new Date();
@@ -225,5 +213,7 @@ userSchema.methods.hashId = function() {
     crypted += cipher.final('hex');
     return crypted;
 }
+
+userSchema.index({ "local.username": 1 });
 
 module.exports = mongoose.model('User', userSchema);

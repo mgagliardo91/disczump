@@ -34,4 +34,6 @@ refreshTokenSchema.pre('save', function(next) {
     next();
 });
 
+refreshTokenSchema.index({ token: 1 });
+
 module.exports = mongoose.model('RefreshToken', refreshTokenSchema);

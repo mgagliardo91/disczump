@@ -31,7 +31,7 @@ module.exports = {
                     if (err)
     			        return callback(Error.createError(err, Error.internalError));
                     
-                    user.addEvent(EventController.Types.AccountPasswordInit, 'Password recovery initialized [' + recover._id + '].');
+                    UserController.addUserEvent(user._id, EventController.Types.AccountPasswordInit, 'Password recovery initialized [' + recover._id + '].');
                     callback(null, generateRecoveryEmail(user, recover));
                 });
             });
@@ -66,7 +66,7 @@ module.exports = {
                    if (err)
 			            return callback(Error.createError(err, Error.internalError));
                     
-                    user.addEvent(EventController.Types.AccountPasswordReset, 'Password recovery used to reset password [' + recover._id + '].');
+                    UserController.addUserEvent(user._id, EventController.Types.AccountPasswordReset, 'Password recovery used to reset password [' + recover._id + '].');
                     callback(null, user);
                 });
             });

@@ -43,7 +43,7 @@
                                     <i class="fa fa-circle-o" ng-show="!isProximityActive(facet);"></i>
                                     <i class="fa fa-dot-circle-o" ng-show="isProximityActive(facet);"></i>
                                 </span>
-                                <div class="filter-item-val handle-overflow">{{facet.val}} {{units}}</div>
+                                <div class="filter-item-val handle-overflow" ng-attr-title="{{facet.val}} {{units}}">{{facet.val}} {{units}}</div>
                                 <div class="filter-item-count handle-overflow" ng-if="facet.count">({{facet.count}})</div>
                                 <div class="clearfix"></div>
                             </div>
@@ -63,7 +63,7 @@
                                     <i class="fa fa-square-o" ng-show="!isVerificationActive(facet);"></i>
                                     <i class="fa fa-check-square-o" ng-show="isVerificationActive(facet);"></i>
                                 </span>
-                                <div class="filter-item-val handle-overflow">{{facet.text}}</div>
+                                <div class="filter-item-val handle-overflow" ng-attr-title="{{facet.text}}">{{facet.text}}</div>
                                 <div class="filter-item-count handle-overflow">({{filter.count}})</div>
                                 <div class="clearfix"></div>
                             </div>
@@ -89,7 +89,7 @@
                                 <i class="fa fa-square-o" ng-show="!isFilterActive(facet, filter)"></i>
                                 <i class="fa fa-check-square-o" ng-show="isFilterActive(facet, filter)"></i>
                             </span>
-                            <div class="filter-item-val handle-overflow">{{filter.val}}</div>
+                            <div class="filter-item-val handle-overflow" ng-attr-title="{{filter.val}}">{{filter.val}}</div>
                             <div class="filter-item-count handle-overflow" ng-if="filter.count">({{filter.count}})</div>
                             <div class="clearfix"></div>
                         </div>

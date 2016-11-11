@@ -11,7 +11,6 @@ var eventSchema = mongoose.Schema({
     type: {type: String},
     message: {type: String},
     createDate: {type: Date}
-    
 });
 
 eventSchema.pre('save', function(next) {

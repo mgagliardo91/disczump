@@ -76,4 +76,6 @@ discSchema.methods.toDescString = function() {
     return retString;
 }
 
+discSchema.index({ userId: 1 });
+
 module.exports = mongoose.model('Disc', discSchema);

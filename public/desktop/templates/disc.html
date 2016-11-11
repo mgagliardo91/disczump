@@ -99,15 +99,15 @@
                                 <dz-alert alert-data="marketAlert"></dz-alert>
                                 <form name="marketplaceForm" class="dv-marketplace-row" style="height:40px;">
                                     <div class="width-33" style="display:inline-block;">
-                                        <div class="dv-marketplace-section-wrapper input-row">For Sale: <switch class="dv-marketplace-switch sale-switch" type="checkbox" ng-model="tempMarketplace.forSale"></switch></div>
+                                        <div class="dv-marketplace-section-wrapper input-row">For Sale: <switch class="marketplace-switch sale-switch" type="checkbox" ng-model="tempMarketplace.forSale"></switch></div>
                                     </div>
                                     <div class="width-33" style="display:inline-block;">
-                                        <div class="dv-marketplace-section-wrapper input-row">For Trade: <switch class="dv-marketplace-switch trade-switch" type="checkbox" ng-model="tempMarketplace.forTrade"></switch></div>
+                                        <div class="dv-marketplace-section-wrapper input-row">For Trade: <switch class="marketplace-switch trade-switch" type="checkbox" ng-model="tempMarketplace.forTrade"></switch></div>
                                     </div>
                                 </form>
                                 <div class="dv-marketplace-row" style="height:30px;">
                                     <div class="dv-marketplace-section-wrapper btn-row">
-                                        <div class="dv-marketplace-btn" directive-on="discInit" directive-set="{'ng-class':'{disabled: !isDirty() || marketplaceForm.price.$invalid}'}" ng-click="(isDirty() && marketplaceForm.price.$valid && !isSaving) && saveDisc()">
+                                        <div class="dv-marketplace-btn" directive-on="discInit" directive-set="{'ng-class':'{disabled: !isDirty()}'}" ng-click="(isDirty() && !isSaving) && saveDisc()">
                                             <span ng-show="!isSaving">Apply</span>
                                             <span ng-show="isSaving"><i class="fa fa-spinner fa-spin fa-lg"></i></span>
                                         </div>

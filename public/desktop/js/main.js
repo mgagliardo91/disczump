@@ -43,6 +43,7 @@ app.config(['$routeProvider', '$httpProvider', '$locationProvider', function($ro
         resolve: resolve
     }).when('/faq', {
         templateUrl: '/static/desktop/templates/faq.html',
+        controller: 'FAQController',
         reloadOnSearch: false,
         resolve: resolve
     }).when('/privacy', {

@@ -26,4 +26,7 @@ threadLocalSchema.pre('save', function(next) {
     next();
 });
 
+threadLocalSchema.index({ threadId: 1, userId: 1 });
+threadLocalSchema.index({ userId: 1, active: 1 });
+
 module.exports = mongoose.model('ThreadLocal', threadLocalSchema);

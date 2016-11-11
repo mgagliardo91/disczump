@@ -6,6 +6,7 @@ var geolib = require('geolib');
 var fbGraph = require('fbgraph');
 var Error = require('../utils/error');
 var User = require('../models/user');
+var UserInternal = require('../models/userInternal');
 var ImageController = require('./imageCache.js');
 var ArchiveController = require('./archive.js');
 var EventController = require('./event.js');
@@ -24,7 +25,7 @@ var handleConfig = require('../utils/handleConfig.js');
 
 module.exports = {
 	query: query,
-	createUserInternal: createUserInternal,
+	createActiveUser: createActiveUser,
 	createUser: createUser,
 	getUser: getUser,
 	getUserInternal: getUserInternal,
@@ -53,6 +54,7 @@ module.exports = {
 	unsubscribe: unsubscribe,
 	linkFacebook: linkFacebook,
 	unlinkFacebook: unlinkFacebook,
+	addUserEvent: addUserEvent,
 	
 	FBConnect: FBConnect,
     
@@ -87,7 +89,28 @@ function query(field, q, callback) {
 	})
 }
 
-function createUserInternal(info, callback) {
+function addUserEvent(userId, type, message) {
+	
+	UserInternal.findOne({userId: userId}, function(err, intUser) {
+		if (err) return cb(err);
+
+		if (intUser) {
+			intUser.addEvent(type, message);
+		} else {
+			var user = new UserInternal({
+				userId: userId,
+			});
+			
+			user.save(function(err) {
+				if (!err) {
+					user.addEvent(type, message);
+				}
+			});
+		}
+	});
+}
+
+function createActiveUser(info, callback) {
 	createUser(info, function(err, user) {
 		if (err)
 			return callback(err);
@@ -366,7 +389,7 @@ function setAccountProfileImmed(userId, profile, callback) {
 			if (err)
 				return callback(err);
 			
-			user.addEvent(EventController.Types.AccountReset, 'The user account profile was reset by the system.');
+			addUserEvent(user._id, EventController.Types.AccountReset, 'The user account profile was reset by the system.');
 			return callback(null, user);
 		});
 	});
@@ -463,7 +486,7 @@ function setAccountProfile(userId, changeRequest, profile, callback) {
 			}
 			
 			var eventProf = user.account.profile.profileId ? 'with ID [' + user.account.profile.profileId + '] ' : ''; 
-			user.addEvent(EventController.Types.AccountTypeChange, 'The user account profile ' + eventProf + 'was altered by the user. From: [' + changeRequest.fromAccount.type + '] To: [' + changeRequest.toAccount.type + ']');
+			addUserEvent(user._id, EventController.Types.AccountTypeChange, 'The user account profile ' + eventProf + 'was altered by the user. From: [' + changeRequest.fromAccount.type + '] To: [' + changeRequest.toAccount.type + ']');
 			
             var email = generateAccountChangedEmail(user, changeRequest.toObject());
 			logger.info('Sending email to notify account change to %s', user.local.email);
@@ -538,7 +561,7 @@ function setPDGA(userId, pdgaNumber, callback) {
 				if (err)
 					return callback(err);
 
-				user.addEvent(EventController.Types.AccountPDGAClaim, 'The account has successfully claimed the PDGA number [' + pdgaNumber + '].');
+				addUserEvent(user._id, EventController.Types.AccountPDGAClaim, 'The account has successfully claimed the PDGA number [' + pdgaNumber + '].');
 				
 				callback(null, user);
 			});
@@ -557,7 +580,7 @@ function resetPDGA(userId, callback) {
 			if (err)
                 return callback(err);
             
-			user.addEvent(EventController.Types.AccountPDGAReset, 'The account has successfully reset the PDGA verification.');
+			addUserEvent(user._id, EventController.Types.AccountPDGAReset, 'The account has successfully reset the PDGA verification.');
             callback(null, user);
 		});
 	});
@@ -748,7 +771,7 @@ function linkFacebook(fbID, token, user, callback) {
 			if (err)
 				return callback(err);
 			
-			user.addEvent(EventController.Types.AccountLink, 'The account has been successfully linked to Facebook.');
+			addUserEvent(user._id, EventController.Types.AccountLink, 'The account has been successfully linked to Facebook.');
 			callback(null, user);
 		}, fbID);
 	});
@@ -764,7 +787,7 @@ function unlinkFacebook(user, callback) {
 		if (err)
 			return callback(Error.createError(err, Error.internalError));
 
-		user.addEvent(EventController.Types.AccountUnlink, 'The account has been successfully unlinked from Facebook.');
+		addUserEvent(user._id, EventController.Types.AccountUnlink, 'The account has been successfully unlinked from Facebook.');
 		return callback(null, user);
 	});
 }
