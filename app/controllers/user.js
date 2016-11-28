@@ -141,7 +141,7 @@ function createUser(info, callback) {
 	if (!isDef(info.lastName) || !checkName(info.lastName))
 		return callback(Error.createError('A valid last name is required to create an account.', Error.invalidDataError));
 		
-	if (!isDef(info.locLat) || !isDef(info.locLng))
+	if (!isDef(info.geoLat) || !isDef(info.geoLng))
 		return callback(Error.createError('Geocoordinates (lat/lng) are required to create an account.', Error.invalidDataError));
 	
 	async.series([
@@ -170,7 +170,7 @@ function createUser(info, callback) {
 			});
 		},
 		function(cb) {
-			Geo.getReverse(info.locLat, info.locLng, function(err, loc) {
+			Geo.getReverse(info.geoLat, info.geoLng, function(err, loc) {
 				if (err)
 					return cb(err);
 				
@@ -337,13 +337,17 @@ function updateAccount(userId, account, callback) {
 				}
 			},
 			function(cb) {
-				if (isDef(account.locLat) && isDef(account.locLng)) {
-					Geo.getReverse(account.locLat, account.locLng, function(err, loc) {
+				logger.info('Checking to update location');
+				if (isDef(account.geoLat) && isDef(account.geoLng)) {
+					logger.info('Updating location');
+					Geo.getReverse(account.geoLat, account.geoLng, function(err, loc) {
 						if (err)
 							return cb(err);
 
 						if (!loc)
 							return cb(Error.createError('Unknown location.', Error.internalError));
+						
+						logger.info('Using location', loc);
 
 						user.local.location = loc;
 

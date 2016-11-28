@@ -4430,27 +4430,37 @@ angular.module('disczump.controllers', ['disczump.services'])
 									'<tr>' +
 										'<td class="ms-help-icon"><i class="fa fa-lg fa-eye"></i></td>' +
 										'<td class="ms-help-label">Visibility</td>' +
-										'<td class="ms-help-text">Here is the text that describes the visibility funciton.</td>' +
+										'<td class="ms-help-text">Use the visibility function to simultaneously set the visibility parameter of all selected discs.</td>' +
 									'</tr>' +
 									'<tr>' +
 										'<td class="ms-help-icon"><i class="fa fa-lg fa-usd"></i></td>' +
 										'<td class="ms-help-label">Marketplace</td>' +
-										'<td class="ms-help-text">Here is the text that describes the marketplace funciton.</td>' +
+										'<td class="ms-help-text">Use the marketplace function to manage the for sale/trade status of all selected discs.<br><br><span>Requires Entrepreneur <a href="/account/membership/" class="dz-blue hover-underline">account</a> or higher.</span></td>' +
 									'</tr>' +
 									'<tr>' +
 										'<td class="ms-help-icon"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></td>' +
 										'<td class="ms-help-label">Bump</td>' +
-										'<td class="ms-help-text">Here is the text that describes the bumping funciton.</td>' +
+										'<td class="ms-help-text">Use the bump function to quickly bump all available discs within your selection.<br><br><span>Requires Chief Executive <a href="/account/membership/" class="dz-blue hover-underline">account</a>.</span></td>' +
 									'</tr>' +
 									'<tr>' +
 										'<td class="ms-help-icon"><i class="fa fa-lg fa-tags"></i></td>' +
 										'<td class="ms-help-label">Tags</td>' +
-										'<td class="ms-help-text">Here is the text that describes the tagging funciton.</td>' +
+										'<td class="ms-help-text">Use the tag function to conveniently manage shared tags across all selected discs.<br><br><span>Requires Entrepreneur <a href="/account/membership/" class="dz-blue hover-underline">account</a> or higher.</span></td>' +
 									'</tr>' +
 									'<tr>' +
 										'<td class="ms-help-icon"><i class="fa fa-lg fa-trash"></i></td>' +
 										'<td class="ms-help-label">Delete</td>' +
-										'<td class="ms-help-text">Here is the text that describes the delete funciton.</td>' +
+										'<td class="ms-help-text">Use the delete function to quickly delete all selected discs.</td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="ms-help-icon"><i class="fa fa-lg fa-object-group"></i></td>' +
+										'<td class="ms-help-label">Select All</td>' +
+										'<td class="ms-help-text">Use the select all function to load and select all discs within the current filter settings.<br><br><span>Requires Chief Executive <a href="/account/membership/" class="dz-blue hover-underline">account</a>.</span></td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="ms-help-icon"><i class="fa fa-lg fa-object-ungroup"></i></td>' +
+										'<td class="ms-help-label">Deselect All</td>' +
+										'<td class="ms-help-text">Use the deselect all function clear all selected discs from the multi-select tool.<br><br><span>Requires Chief Executive <a href="/account/membership/" class="dz-blue hover-underline">account</a>.</span></td>' +
 									'</tr>' +
 								'</tbody>' +
 							'</table>' +
@@ -7297,8 +7307,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 				firstName: $scope.signup.firstName,
 				lastName: $scope.signup.lastName,
 				password: $scope.signup.password,
-				locLat: $scope.location.geo.latitude,
-				locLng: $scope.location.geo.longitude,
+				geoLat: $scope.location.geo.latitude,
+				geoLng: $scope.location.geo.longitude,
 				facebook: $scope.facebook
 			}, function(success, data) {
 				$scope.loading = false;
