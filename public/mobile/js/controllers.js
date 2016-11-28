@@ -788,10 +788,10 @@ angular.module('disczump.controllers', ['disczump.services'])
             typeof Cropper === 'undefined') {
             $ocLazyLoad.load(
                 ['https://cdn.rawgit.com/exif-js/exif-js/master/exif.js',
-                '/static/js-dist/dropzone.min.js'
+                '/static/src/js-dist/dropzone.min.js'
                 ]).then(function() {
                     $ocLazyLoad.load([
-                        '/static/js-dist/cropper.min.js',
+                        '/static/src/js-dist/cropper.min.js',
                         {type: 'css', path: 'https://cdn.rawgit.com/fengyuanchen/cropperjs/master/dist/cropper.min.css'}
                     ]).then(function() {
                             $scope.settings.modulesLoaded = true;

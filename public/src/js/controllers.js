@@ -932,8 +932,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 			
 			var spans = inner.split('\n');
 			for (var i = 0; i < spans.length; i++) {
-				if (!spans[i].length)
+				if (!spans[i].length) {
+					innerHTML += '<br />';
 					continue;
+				}
 				
 				if (!/^(\<a|\<inline-disc)/g.test(spans[i])) {
 					innerHTML += '<span>' + spans[i] + '</span>';
@@ -3763,8 +3765,17 @@ angular.module('disczump.controllers', ['disczump.services'])
 	return {
 		restrict: 'A',
 		link: function (scope, element, attrs) {
+			
+			if (typeof(attrs.ngEnterLock) !== 'undefined') {
+				element.bind('keydown', function(event) {
+					if(event.which === 13 && !event.shiftKey) {
+						event.preventDefault();
+					};
+				})
+			}
+			
         	element.bind("keyup", function (event) {
-            	if(event.which === 13) {
+				if(event.which === 13 && !event.shiftKey) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					$timeout(function (){
@@ -3783,7 +3794,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 		require: 'ngModel',
 		link: function (scope, element, attrs, ngModelCtrl) {
         	element.bind("keyup", function (event) {
-            	if(event.which === 13) {
+            	if(event.which === 13 && !event.shiftKey) {
 					event.stopImmediatePropagation();
 					$timeout(function (){
 						ngModelCtrl.$commitViewValue()
@@ -5764,10 +5775,10 @@ angular.module('disczump.controllers', ['disczump.services'])
             typeof Cropper === 'undefined') {
             $ocLazyLoad.load(
                 ['https://cdn.rawgit.com/exif-js/exif-js/master/exif.js',
-                '/static/js/dropzone.js'
+                '/static/src/js/dropzone.js'
                 ]).then(function() {
                     $ocLazyLoad.load([
-                        '/static/js-dist/cropper.min.js',
+                        '/static/src/js-dist/cropper.min.js',
                         {type: 'css', path: 'https://cdn.rawgit.com/fengyuanchen/cropperjs/master/dist/cropper.min.css'}
                     ]).then(function() {
                             $scope.settings.dropzoneReady = true;
@@ -6648,10 +6659,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 				typeof Cropper === 'undefined') {
 				$ocLazyLoad.load(
 					['https://cdn.rawgit.com/exif-js/exif-js/master/exif.js',
-					'/static/js/dropzone.js'
+					'/static/src/js/dropzone.js'
 					]).then(function() {
 						$ocLazyLoad.load([
-							'/static/js-dist/cropper.min.js',
+							'/static/src/js-dist/cropper.min.js',
 							{type: 'css', path: 'https://cdn.rawgit.com/fengyuanchen/cropperjs/master/dist/cropper.min.css'}
 						]).then(function() {
 								$scope.page.dropzoneReady = true;

@@ -3,10 +3,10 @@
     <link rel="stylesheet" href="/static/mobile/css-dist/mobile-angular-ui-base.min.css">
     
     {{#if isRelease}}
-        <link rel="stylesheet" href="/static/css-dist/mobile/discview.min.css">
+        <link rel="stylesheet" href="/static/src/css-dist/mobile/discview.min.css">
         <link rel="stylesheet" href="/static/mobile/css-dist/mobile.min.css">
     {{else}}
-        <link rel="stylesheet" href="/static/css/mobile/discview.css">
+        <link rel="stylesheet" href="/static/src/css/mobile/discview.css">
         <link rel="stylesheet" href="/static/mobile/css/mobile.css">
     {{/if}}
     {{#if disc.visible}}
@@ -46,9 +46,9 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
     <script src="https://cdn.rawgit.com/jashkenas/underscore/master/underscore.js"></script>
     {{#if isRelease}}
-    <script src="/static/js-dist/main.min.js"></script>
+    <script src="/static/src/js-dist/main.min.js"></script>
     {{else}}
-    <script src="/static/js/main.js"></script>
+    <script src="/static/src/js/main.js"></script>
     {{/if}}
     </head>
 {{/section}}
@@ -224,8 +224,8 @@
     </div>
     
     {{#if isRelease}}
-    <script src="/static/js-dist/mobile/discview.min.js "></script>
+    <script src="/static/src/js-dist/mobile/discview.min.js "></script>
     {{else}}
-    <script src="/static/js/mobile/discview.js "></script>
+    <script src="/static/src/js/mobile/discview.js "></script>
     {{/if}}
 </body>

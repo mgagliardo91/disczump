@@ -112,7 +112,7 @@
                   </span>
               </div>
               <div class="add-message-text">
-                  <textarea id="message-text-area" ng-class="{'disabled': !activeThread || !activeThread.active || lockout}" ng-disabled="!activeThread || !activeThread.active || lockout" ng-enter="sendOnEnter && activeThread && activeThread.active && !lockout && sendMessage()" ng-model="userMessage" placeholder="Enter Message..."></textarea>
+                  <textarea id="message-text-area" ng-class="{'disabled': !activeThread || !activeThread.active || lockout}" ng-disabled="!activeThread || !activeThread.active || lockout" ng-enter="sendOnEnter && activeThread && activeThread.active && !lockout && sendMessage()" ng-enter-lock ng-model="userMessage" placeholder="Enter Message..."></textarea>
               </div>
               <div class="clearfix"></div>
               <div class="create-message-option no-select"  ng-class="{'disabled': !activeThread || !activeThread.active || lockout}" >

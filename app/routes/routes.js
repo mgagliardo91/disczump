@@ -60,41 +60,4 @@ module.exports = function(app, passport, gridFs) {
        });
     });
     
-//     app.get('/unsubscribe', function(req, res) {
-//         UserController.getUserFromHash(req.query.hashId, function(err, user) {
-//             if (err) {
-//                  return res.render('notification', {
-//                     isRelease: localConfig.release,
-//                     isMobile: req.device.isMobile,
-//                     notify : {
-//                         pageHeader: err.error.type,
-//                         header: err.error.type,
-//                         strong: err.error.message,
-//                         text: 'Please try again.',
-//                         buttonIcon: 'fa-home',
-//                         buttonText: 'Return Home',
-//                         buttonLink: '/dashboard'
-//                    }
-//                 });
-//             }
-            
-//             user.preferences.notifications.newMessage = false;
-//             user.save();
-            
-//             return res.render('notification', {
-//                 isRelease: localConfig.release,
-//                 isMobile: req.device.isMobile,
-//                 notify : {
-//                    pageHeader: 'Preferences Updated',
-//                    header: 'Preferences Updated',
-//                    strong: 'You have been successfully unsubscribed from new message notifications!',
-//                    text: 'You can change this preference at any time under the preferences area of your dashboard.',
-//                    buttonIcon: 'fa-home',
-//                    buttonText: 'Return Home',
-//                    buttonLink: '/dashboard'
-//                }
-//             });
-//         });
-//     });
-    
 };
