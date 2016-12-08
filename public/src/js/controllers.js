@@ -34,6 +34,15 @@ angular.module('disczump.controllers', ['disczump.services'])
   };
 })
 
+.filter('dateLocal', function() {
+	return function(date) {
+		var localDate = new Date(date);
+		var localTime = localDate.getTime();
+		var localOffset = localDate.getTimezoneOffset() * 60000;
+		return (new Date(localTime + localOffset));
+	}
+})
+
 .filter('memType', ['MembershipService', function(MembershipService) {
 	return function(type) {
 		return MembershipService.getAccountName(type);
@@ -64,6 +73,40 @@ angular.module('disczump.controllers', ['disczump.services'])
     }
   }; 
 })
+
+.directive('popContainer', ['$timeout', '$window', 'PageUtils', function($timeout, $window, PageUtils) {
+	return {
+		restrict: 'A',
+		scope: true,
+		link: function(scope, elem, attrs) {
+			var monitor = {origTop: 0};
+			
+			var setFixed = function(fixed) {
+				monitor.origTop = PageUtils.getTop(elem[0]);
+				if (fixed) {
+					elem.css({'position':'fixed', 'top': '0px'});
+				} else {
+					elem.css({'position': 'relative', 'top': 'auto'});
+				}
+				monitor.fixed = fixed;
+			}
+			
+			var popCont = function() {
+				var scrollPos = PageUtils.getScrollPos();
+				if (!monitor.fixed && scrollPos >= PageUtils.getTop(elem[0])) {
+					setFixed(true);
+				} else if (monitor.fixed && scrollPos < monitor.origTop) {
+					setFixed(false);
+				}
+			}
+			angular.element(document).bind('scroll', popCont);
+			
+			scope.$on('destroy', function() {
+				angular.element(document).unbind('scroll', popCont);
+			});
+		}
+	}
+}])
 
 .directive('fadeTime', ['$window', '$timeout', '$parse', 'PageUtils', function($window, $timeout, $parse, PageUtils) {
 	return {
@@ -179,9 +222,12 @@ angular.module('disczump.controllers', ['disczump.services'])
 	}
 }])
 
-.directive('filterDropdown', ['$window', '$compile', '$location', 'AccountService', 'PageUtils', function($window, $compile, $location, AccountService, PageUtils) {
+.directive('filterDropdown', ['$window', '$compile', '$location', 'AccountService', 'PageUtils', 'CacheService', function($window, $compile, $location, AccountService, PageUtils, CacheService) {
 	return {
 		restrict: 'A',
+		scope: {
+			user: '='
+		},
 		link: function(scope, element, attrs) {
 			var opts, dropdown, backdrop;
 			var buffer = 5;
@@ -211,23 +257,26 @@ angular.module('disczump.controllers', ['disczump.services'])
 				hideFilter(evt);
 			}
 			
-			scope.doFilter = function(global) {
+			scope.doFilter = function(global, username) {
 				var filter = opts.prop + ':' + opts.val;
 				hideFilter();
 				if (global) {
 					$location.url('/explore?s=rel&f_0=' + filter);
 				} else {
-					$location.url('/t/' + AccountService.getAccount().username + '?s=rel&f_0=' + filter);
+					var user = username || AccountService.getAccount().username;
+					$location.url('/t/' + user  + '?s=rel&f_0=' + filter);
 				}
 			}
 			
 			var handleClick = function() {
+				var isOwned = !scope.hasOwnProperty('user') || AccountService.compareTo(scope.user._id);
 				backdrop = angular.element('<div class="full-backdrop" ng-click="hideFilter($event)"></div>');
 				
 				dropdown = angular.element('<div class="filter-dropdown">' + 
 										   		'<div class="filter-marker"></div>' + 
 										   		'<div class="filter-dd-title">' + (opts.text ? opts.text : opts.prop) + ': ' + opts.val + (opts.suffix ? opts.suffix : '') + '</div>' +
 										   		'<div class="filter-dd-opt"><span class="hover-underline" ng-click="doFilter(true);"><span><i class="fa fa-filter"></i></span>Filter globally</span></div>' + 
+										   		(!isOwned ? '<div class="filter-dd-opt hover-underline"><span class="hover-underline" ng-click="doFilter(false, user.username);"><span><i class="fa fa-filter"></i></span>Filter in ' + scope.user.username + '\'s trunk</span></div>' : '') + 
 										   		(AccountService.isLoggedIn() ? '<div class="filter-dd-opt hover-underline"><span class="hover-underline" ng-click="doFilter();"><span><i class="fa fa-filter"></i></span>Filter in my trunk</span></div>' : '') + 
 										   '</div>');
 				document.body.appendChild(backdrop[0]);
@@ -299,6 +348,66 @@ angular.module('disczump.controllers', ['disczump.services'])
 					element.remove();
 				}
 			});
+		}
+	}
+}])
+
+.directive('backToTop', ['PageUtils', 'smoothScroll', '$timeout', function(PageUtils, smoothScroll, $timeout) {
+	return {
+		restrict: 'E',
+		replace: true,
+		scope: true,
+		template: '<div class="back-top" ng-click="scrollTop()">Back to Top</div>',
+		link: function(scope, element, attrs) {
+			var isShowing = false;
+			var parent = element[0].parentElement;
+			var top = PageUtils.getTop(parent);
+			
+			
+			function resize() {
+				top = PageUtils.getTop(parent);
+				var pLeft = PageUtils.getLeft(parent);
+				var left = pLeft + (parent.clientWidth - 100)/2;
+				element.css({'left': left + 'px'});
+			}
+			
+			function showContainer() {
+				if (PageUtils.getScrollPos() > top) {
+					if (!isShowing) {
+						element.css({'display':'block'});
+						isShowing = true;
+					}
+				} else {
+					if (isShowing){
+						element.css({'display':'none'});
+						isShowing = false;
+					}
+				}
+			}
+			
+			scope.scrollTop = function() {
+				var options = {
+					duration: 200,
+					easing: 'easeInQuad'
+				}
+
+				smoothScroll(parent, options);
+			}
+			
+			angular.element(document).bind('scroll', showContainer);
+			
+			scope.$watch(function() {
+				 return parent.clientWidth;
+			 }, function() {
+				resize();
+			});
+			
+			scope.$on('destroy', function() {
+				angular.element(document).unbind('scroll', showContainer);
+			});
+			
+			$timeout(resize);
+			
 		}
 	}
 }])
@@ -731,7 +840,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			var initAC = function() {
 				ac = document.createElement('ul');
 				ac.classList.add('ac-container');
-				ac.innerHTML = '<li style="text-align:left;" ng-repeat="result in results track by $index" ng-class="{\'active\':activeIndex == $index}" ng-click="setInput(result.val)">{{result.val}}</li>';
+				ac.innerHTML = '<li style="text-align:left;" ng-repeat="result in results track by $index" ng-class="{\'active\':activeIndex == $index}" ng-click="setInput(result.val)">{{result.val}} ({{result.count}})</li>';
 				elem[0].parentNode.insertBefore(ac, elem[0].nextSibling);
 				ac = angular.element(ac);
 				ac.attr('ng-show', 'results.length && active');
@@ -807,13 +916,16 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			var keyDownEvt = function(evt) {
-				if ((evt.keyCode == 13 || evt.keyCode == 9) && scope.activeIndex > -1) {
+				var handle = (evt.keyCode == 13 && scope.activeIndex > -1) || (evt.keyCode == 9 && scope.activeIndex > -1);
+				if (handle) {
 					evt.preventDefault();
 				}
 			}
 			
 			var handleKey = function(evt) {
-				if ((evt.keyCode == 13 || evt.keyCode == 9) && scope.activeIndex > -1) {
+				var handle = (evt.keyCode == 13 && scope.activeIndex > -1) || (evt.keyCode == 9 && scope.activeIndex > -1);
+				
+				if (handle) {
 					evt.preventDefault();
 					evt.stopImmediatePropagation();
 					scope.setInput(scope.results[scope.activeIndex].val);
@@ -1002,16 +1114,14 @@ angular.module('disczump.controllers', ['disczump.services'])
                         '<div class="dz-navbar-btn-container float-right">' +
                             '<div class="dz-navbar-btn-list">' + 
                                 '<div class="dz-navbar-item dz-navbar-dropdown" ng-if="user" ng-click="toggleDropdown()">' +
-                                    '<img ng-src="{{getAccountImage()}}">' +
-                                    '<span>' +
-                                        '<i class="fa fa-angle-double-down fa-lg"></i>' +
-                                    '</span>' +
+									'<div class="default-bg-image" img-load="/static/img/dz_profile.png" img-src="{{getAccountImage()}}" bg-image="true"></div>' +
+									'<i class="fa fa-angle-double-down fa-lg" style="line-height:40px;"></i>' +
                                 '</div>' +
                                 '<div class="backdrop" ng-show="showOptions" ng-click="toggleDropdown(false)" ng-if="user"></div>' +
                                 '<ul class="dz-dropdown-menu" ng-show="showOptions" ng-if="user">' +
-                                    '<li><a href="/account"><span><i class="fa fa-tools fa-cogs"></i></span>Settings</a></li>' +
+                                    '<li><a href="/account"><span><i class="fa fa-tools fa-user"></i></span>My Account</a></li>' +
 									'<li class="menu-sep"></li>' +
-                                    '<li><a href="#" id="menu-feedback"><span><i class="fa fa-comment fa-tools"></i></span>Feedback</a></li>' +
+                                    '<li><a ng-click="showFeedbackModal()" id="menu-feedback"><span><i class="fa fa-comment fa-tools"></i></span>Feedback</a></li>' +
                                     '<li><a href="/faq"><span><i class="fa fa-tools fa-question-circle"></i></span>FAQ</a></li>' +
                                     '<li><a href="/about"><span><i class="fa fa-tools fa-info-circle"></i></span>About</a></li>' +
 									'<li class="menu-sep"></li>' +
@@ -1029,11 +1139,14 @@ angular.module('disczump.controllers', ['disczump.services'])
                             '</div>' +
                         '</div>' +
                         '<div class="clearfix"></div>' +
+						'<dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>' +
                     '</div>',
         link: function(scope, element, attrs) {
+			var alert = new Audio('/static/audio/whoosh.wav');
+			scope.globalModalOpts = {};
 			scope.user = AccountService.getAccount();
 			scope.showOptions = false;
-			scope.unreadCount = 0;
+			scope.unreadCount = undefined;
             scope.safeApply = function(fn) {
                 var phase = this.$root.$$phase;
                 if (phase == '$apply' || phase == '$digest') {
@@ -1084,12 +1197,19 @@ angular.module('disczump.controllers', ['disczump.services'])
 					scope.showOptions = !scope.showOptions;
 				}
 
-				console.log('changing state: ' + scope.showOptions);
-
+			}
+			
+			scope.showFeedbackModal = function() {
+				scope.toggleDropdown();
+				scope.globalModalOpts = {
+					type: 'dz-feedback-modal',
+					show: true
+				}
 			}
 			
 			var updateMessageCount = function(unreadCount) {
 				$timeout(function() {
+					if (typeof(scope.unreadCount) !== 'undefined' && unreadCount.messageCount > scope.unreadCount) alert.play();
 					scope.unreadCount = unreadCount.messageCount;
 				});
 			}
@@ -1109,7 +1229,7 @@ angular.module('disczump.controllers', ['disczump.services'])
     return {
         restrict: 'E',
         replace: true,
-        template: '<div class="footer-bar" id="footer-bar" ng-init="pgSettings.hasFooter=true;">' + 
+        template: '<div class="footer-bar" id="footer-bar" ng-init="pgSettings.hasFooter=true;" ng-show="footerReady">' + 
                     '<div>' + 
                         '<span class="footer-copyright">' + 
                             '<span class="cr-main">' + 
@@ -1146,12 +1266,14 @@ angular.module('disczump.controllers', ['disczump.services'])
                     '</div>' + 
               '</div>',
         link: function(scope, element, attrs) {
-            
+            $timeout(function() {
+				scope.footerReady = true;
+			});
         }
     }
 }])
 
-.directive('dzProfile', ['$window', '$timeout', 'CacheService', '$compile', function($window, $timeout, CacheService, $compile) {
+.directive('dzProfile', ['$window', '$timeout', 'CacheService', 'AccountService', '$compile', function($window, $timeout, CacheService, AccountService, $compile) {
     return {
         restrict: 'E',
         replace: true,
@@ -1165,7 +1287,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 						'<div id="card-remain" style="display: inline-block">' +
 							'<div class="profile-card p-info">' +
 								'<div class="p-info-img">' +
-									'<img img-load="/static/img/dz_profile.png" directive-on="loaded" directive-set="{\'img-src\':\'{{getAccountImage()}\}\'}" ng-class="{\'has-img\':ready}"/>' +
+									'<div class="default-bg-image" img-load="/static/img/dz_profile.png" directive-on="loaded" directive-set="{\'img-src\':\'{{getAccountImage()}\}\'}" bg-image="true" ng-class="{\'has-img\':ready}"></div>' +
 								'</div>' +
 								'<div class="p-info-content p-container">' +
 									'<div class="p-info-icon">' +
@@ -1245,6 +1367,14 @@ angular.module('disczump.controllers', ['disczump.services'])
 					scope.getAccountImage = function() {
 						return scope.user ? scope.user.image : '/static/img/dz_profile.png';
 					}
+					
+					var accountUpdate = function(msg) {
+						if (msg === 'AccountUpdated') {
+							if (AccountService.compareTo(scope.user._id)) {
+								scope.user = AccountService.getAccount();
+							}
+						}
+					}
 
 					var resizeProfile = function() {
 						$timeout(function(){
@@ -1283,6 +1413,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 					if (typeof(scope.userId) !== 'undefined') {
 						CacheService.reloadUser(scope.userId, function(success, user) {
 							if (success) {
+								
+								if (AccountService.compareTo(user._id)) {
+									AccountService.addListener(accountUpdate);
+								}
+								
 								$timeout(function() {
 									scope.user = user;
 									
@@ -1315,6 +1450,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 
 					scope.$on('$destroy', function() {
 						angular.element($window).unbind('resize', resizeProfile);
+						AccountService.removeListener(accountUpdate);
 					});
         }
     }
@@ -1385,7 +1521,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 						'<div class="p-container">' +
 							'<div class="p-icon-text align-vmid">' +
 								'<div class="p-icon-style shadow"><i class="fa fa-calendar"></i></div>' +
-								'<div class="p-icon-label">Member Since {{user.dateJoined | date:\'MM/dd/yyyy\'}}</div>' +
+								'<div class="p-icon-label">Member Since {{user.dateJoined | dateLocal | date:\'MM/dd/yyyy\'}}</div>' +
 							'</div>' +
 						'</div>' +
 					'</div>',
@@ -1703,11 +1839,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 								  '<i class="fa fa-info fa-stack-1x fa-inverse"></i>' +
 								'</span>' +
 							'</div>' + 
-							'<div class="grid-img-content">' + 
-								'<div>' + 
-									'<a class="grid-item-nav" ng-href="/t/{{user[\'local.username\']}}"></a>' +
-									'<img img-load="/static/img/dz_profile.png" directive-on="init" directive-set="{\'img-src\':\'{{user.image}\}\'}">' +
-								'</div>' +
+							'<div class="default-bg-image" style="width:100%;height:100%;" img-load="/static/img/dz_profile.png" directive-on="init" directive-set="{\'img-src\':\'{{user.image}\}\'}" bg-image="true">' + 
+								'<a class="grid-item-nav" ng-href="/t/{{user[\'local.username\']}}"></a>' +
 							'</div>' +
 						'</div>' + 
 					'</div>' +
@@ -1771,6 +1904,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 							'</div>' +
 						'</div>',
 			link: function(scope, element, attrs) {
+				var lb = document.getElementById('lb-content');
 				var lbContent, lbImageList, lbImage;
 				var pad = 100;
 				var padList = 85;
@@ -1879,6 +2013,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					} else if (val === false) {
 						scope.showLightbox = false;
 						scope.scrollLock = false;
+						scope.disc = {};
 					}
 				})
 				
@@ -2252,12 +2387,14 @@ angular.module('disczump.controllers', ['disczump.services'])
             var offset = attrs.offset ? parseInt(attrs.offset) | 0 : 0;
             
             var resize = function() {
-				var child = element[0].children[0];
-				if (child.clientHeight <= $window.innerHeight) {
-                	angular.element(element).css('height', ($window.innerHeight + offset) + 'px');
-				} else {
-					angular.element(element).css('height', 'auto');
-				}
+				$timeout(function() {
+					var child = element[0].children[0];
+					if (child.clientHeight <= $window.innerHeight) {
+						angular.element(element).css('height', ($window.innerHeight + offset) + 'px');
+					} else {
+						angular.element(element).css('height', 'auto');
+					}
+				});
             }
             
             
@@ -2273,7 +2410,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                 angular.element($window).unbind('resize', resize);
             })
             
-			$timeout(resize);
+			resize();
         }
     }
 }])
@@ -2295,7 +2432,7 @@ angular.module('disczump.controllers', ['disczump.services'])
             
             scope.$on('$destroy', function() {
                 angular.element($window).unbind('resize', resize);
-            })
+            });
             
             resize();
         }
@@ -2431,14 +2568,24 @@ angular.module('disczump.controllers', ['disczump.services'])
     return {
         restrict: 'A', 
         link: function(scope, element, attrs) {
+			var bgImg = attrs.bgImage === 'true';
+			
+			function setSource(src) {
+				if (bgImg) {
+					element.css('background-image', 'url(' + src + ')');
+				} else {
+					attrs.$set('src', src);
+				}
+			}
+			
 			function handleUrl() {
 				var imageObj = new Image();
 				imageObj.addEventListener('load', function() {
-					attrs.$set('src', imageObj.src);
+					setSource(imageObj.src);
 				});
 				imageObj.src = attrs.imgSrc;
 				if (!imageObj.complete) {
-					attrs.$set('src', attrs.imgLoad || '/static/img/dz_disc.png');
+					setSource(attrs.imgLoad || '/static/img/dz_disc.png');
 				}
 			}
 			
@@ -2451,7 +2598,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			if (attrs.imgSrc) {
 				handleUrl();
 			} else {
-				attrs.$set('src', attrs.imgLoad || '/static/img/dz_disc.png');
+				setSource(attrs.imgLoad || '/static/img/dz_disc.png');
 			}
 			startObs();
         }
@@ -2644,7 +2791,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 			
 			var showModal = function() {
 				$timeout(function() {
-// 					scope.modalOpts.loading = true;
 					scope.modalOpts.data = data;
 					scope.modalOpts.type = attrs.modalTrigger;
 					scope.modalOpts.show = true;
@@ -2688,6 +2834,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 				});
 			}
 			
+			scope.$on('$locationChangeStart', function(e) {
+				scope.scrollLock = false;
+			});
+			
 			scope.$watch('modalOpts.show', function(newVal) {
 				if (typeof(newVal) === 'undefined')
 					return;
@@ -2698,7 +2848,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				if (!newVal) {
 					scope.scrollLock = false;
 					scope.showModal = false;
-					if (typeof(scope.modalOpts.data.onClose) !== 'undefined') {
+					if (typeof(scope.modalOpts.data) !== 'undefined' && typeof(scope.modalOpts.data.onClose) !== 'undefined') {
 						scope.modalOpts.data.onClose(scope.childOpts.doOnClose);
 					}
 					return;
@@ -2710,7 +2860,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 				scope.scrollLock = true;
 				$timeout(function() {
 					scope.showModal = true;
-// 					scope.modalOpts.loading = false;
 				});
 			});
 			
@@ -2721,6 +2870,52 @@ angular.module('disczump.controllers', ['disczump.services'])
 			angular.element($window).bind('resize', scope.resize);
 			
 			scope.resize();
+		}
+	}
+}])
+
+.directive('dzFeedbackModal', ['APIService', function(APIService) {
+	return {
+		restrict: 'E',
+		scope: {
+			data: '=data',
+			show: '='
+		},
+		replace: true,
+		template: '<div>' +
+					'<div class="dz-modal-content">' +
+						'<div class="dz-modal-title-sm left">disc|zump Feedback</div>' +
+						'<div class="dz-modal-text">We would love to hear from you!  Use the form below to submit questions, suggestions, or comments and we will address them as soon as possible.</div>' +
+						'<dz-alert class="full-width" alert-data="feedbackAlert"></dz-alert>' +
+						'<textarea class="dz-feedback no-focus" ng-attr-placeholder="Enter feedback here..." placeholder="Enter feedback here..." ng-model="feedback"></textarea>' +
+					'</div>' +
+					'<div class="dz-modal-btn-container">' +
+						'<div class="dz-modal-triangle"></div>' +
+						'<div class="dz-modal-btn cancel" ng-click="show = false">Close</div>' +
+						'<div class="dz-modal-btn btn-blue" ng-click="feedback.length && submit()" ng-class="{disabled:!feedback.length}">Submit</div>' +
+					'</div>' +
+				'</div>',
+		link: function(scope, elem, attrs) {
+			scope.feedback = '';
+			scope.feedbackAlert = {};
+			
+			scope.submit = function() {
+				var body = {
+					data: scope.feedback
+				};
+				
+				APIService.Post('/feedback', body, function(success, data) {
+					if (success) {
+						scope.show = false;
+					} else {
+						scope.feedbackAlert.error = {
+							title: data.type,
+							message: data.message,
+							show: true
+						}
+					}
+				})
+			}
 		}
 	}
 }])
@@ -2804,27 +2999,25 @@ angular.module('disczump.controllers', ['disczump.services'])
 			
 			scope.confirm = function() {
 				_.each(scope.data.discs, function(disc) {
-					if (typeof(disc.countdown) !== 'undefined') {
-						if (disc.countdown.bumpReady) {
-							scope.opts.loading = true;
-							scope.doOnClose = true;
-							scope.lock = true;
-							
-							DiscService.bumpDisc(disc._id, function(success, data) {
-								if (success) {
-									disc.success = true;
-								} else {
-									scope.modalAlert.error = {
-										title: data.type,
-										message: data.message,
-										show: true
-									}
+					if (typeof(disc.countdown) !== 'undefined' && disc.countdown.bumpReady) {
+						scope.opts.loading = true;
+						scope.doOnClose = true;
+						scope.lock = true;
+
+						DiscService.bumpDisc(disc._id, function(success, data) {
+							if (success) {
+								disc.success = true;
+							} else {
+								scope.modalAlert.error = {
+									title: data.type,
+									message: data.message,
+									show: true
 								}
-								scope.opts.loading = false;
-								scope.opts.hideBump = true;
-								scope.lock = false;
-							});
-						}
+							}
+							scope.opts.loading = false;
+							scope.opts.hideBump = true;
+							scope.lock = false;
+						});
 					}
 				});
 			}
@@ -2849,10 +3042,16 @@ angular.module('disczump.controllers', ['disczump.services'])
 						'<dz-alert class="full-width" alert-data="tagAlert"></dz-alert>' +
 						'<div ng-show="opts.loading" style="line-height:105px;"><i class="fa fa-spinner fa-spin fa-3x"></i></div>' +
 						'<div ng-show="!opts.loading">' +
-							'<div style="position:relative;">' +
-								'<input type="text" class="dz-modal-tag-input" placeholder="Enter tag and press enter..." ng-model="tempTag" ng-model-options="{\'updateOn\':\'default blur\',\'debounce\':{\'default\':500,\'blur\':0}}" ng-model-enter="pushTempTag();" directive-on="opts.isShowing" directive-set="{\'dz-auto-complete\':\'tag\'}" user-id="data.user" dz-multi="true" >' +
+							'<div class="input-group" style="position:relative;height:20px;margin:5px;">' +
+								'<input type="text" class="dz-modal-tag-input" placeholder="Enter tag..." ng-model="tempTag" ng-model-options="{\'updateOn\':\'default blur\',\'debounce\':{\'default\':500,\'blur\':0}}" ng-model-enter="pushTempTag();" directive-on="opts.isShowing" directive-set="{\'dz-auto-complete\':\'tag\'}" user-id="data.user" dz-multi="true" >' +
+								'<span class="tag-input-addon hover-pointer">' +
+									'<div ng-click="pushTempTag();" ng-class="{\'btn-pulse\':tempTag.length}">' +
+										'<i class="fa fa-plus" aria-hidden="true"></i>' +
+									'</div>' +
+								 '</span>' +
 							'</div>' +
 							'<div class="dz-modal-tag-container">' +
+								'<div class="watermark">Current Tags</div>' +
 								'<li class="tag-item" ng-repeat="tag in newTags">' +
 									'<div>{{tag}}<span class="tag-item-remove" ng-click="removeNewTag($index)"><i class="fa fa-times"></i></span></div>' +
 								'</li>' +
@@ -2863,7 +3062,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 									'<i class="fa fa-check-square-o hover-pointer" ng-show="opts.overwrite" aria-hidden="true" ng-click="opts.overwrite = !opts.overwrite"></i>' +
 								'</span>' +
 								'<span class="hover-pointer" ng-click="opts.overwrite = !opts.overwrite">Overwrite Tags</span>' +
-								'<span><i class="fa fa-question-circle hover-pointer" aria-hidden="true" style="margin-left:4px;" ng-click="showOverwriteAlert()"></i></span>' +
 							'</div>' +
 						'</div>' +
 						'<dz-alert class="full-width" alert-data="overwriteAlert" style="text-align:left;"></dz-alert>' +
@@ -2911,13 +3109,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 						scope.newTags.push(scope.tempTag);
 						scope.tempTag = '';
 					}
-				}
-			}
-			
-			scope.showOverwriteAlert = function() {
-				scope.overwriteAlert.info = {
-					message: 'Enabling this option will REPLACE all tags across all selected discs with the tag list shown above!',
-					show: true
 				}
 			}
 			
@@ -2979,9 +3170,17 @@ angular.module('disczump.controllers', ['disczump.services'])
 			});
 			
 			scope.$watch('opts.overwrite', function(newVal) {
-				if (typeof(newVal) !== 'undefined' && newVal === true) {
-					scope.opts.allowSave = true;
-					scope.showOverwriteAlert();
+				if (typeof(newVal) !== 'undefined') {
+					if (newVal) {
+						scope.opts.allowSave = true;
+						scope.overwriteAlert.info = {
+							message: 'Enabling this option will REPLACE all tags across all selected discs with the tag list shown above!',
+							hideClose: true,
+							show: true
+						}
+					} else {
+						scope.overwriteAlert.info.show = false;
+					}
 				}
 			});
 			
@@ -3021,12 +3220,12 @@ angular.module('disczump.controllers', ['disczump.services'])
 									'<div class="handle-overflow">{{user.shortLocation}}</div>' +
 								'</div>' +
 								'<div class="dz-modal-profile-cell">' +
-									'<div class="dz-modal-profile-img"><img ng-src="{{getUserImage()}}" /></div>' +
+									'<div class="dz-modal-profile-img default-bg-image" img-load="/static/img/dz_profile.png" img-src="{{getUserImage()}}" bg-image="true"></div>' +
 								'</div>' +
 								'<div class="dz-modal-profile-cell left">' +
 									'<div class="handle-overflow">{{getAccountName()}}</div>' +
 									'<div class="handle-overflow">{{user.discCount}} Public Discs</div>' +
-									'<div class="handle-overflow">Member since {{user.dateJoined | date:\'MM/dd/yyyy\'}}</div>' +
+									'<div class="handle-overflow">Member since {{user.dateJoined | dateLocal | date:\'MM/dd/yyyy\'}}</div>' +
 									'<div class="handle-overflow"><i style="width:14px;" class="fa fa-check fa-tools" aria-hidden="true" ng-class="{\'fa-success\':user.pdgaNumber,\'fa-gray\':!user.pdgaNumber}"></i>PDGA Verified</div>' +
 									'<div class="handle-overflow"><i style="width:14px;" class="fa fa-check fa-tools" aria-hidden="true" ng-class="{\'fa-success\':user.fbId,\'fa-gray\':!user.fbId}"></i>Facebook Verified</div>' +
 								'</div>' +
@@ -4444,34 +4643,34 @@ angular.module('disczump.controllers', ['disczump.services'])
 										'<td class="ms-help-text">Use the visibility function to simultaneously set the visibility parameter of all selected discs.</td>' +
 									'</tr>' +
 									'<tr>' +
-										'<td class="ms-help-icon"><i class="fa fa-lg fa-usd"></i></td>' +
-										'<td class="ms-help-label">Marketplace</td>' +
-										'<td class="ms-help-text">Use the marketplace function to manage the for sale/trade status of all selected discs.<br><br><span>Requires Entrepreneur <a href="/account/membership/" class="dz-blue hover-underline">account</a> or higher.</span></td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="ms-help-icon"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></td>' +
-										'<td class="ms-help-label">Bump</td>' +
-										'<td class="ms-help-text">Use the bump function to quickly bump all available discs within your selection.<br><br><span>Requires Chief Executive <a href="/account/membership/" class="dz-blue hover-underline">account</a>.</span></td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="ms-help-icon"><i class="fa fa-lg fa-tags"></i></td>' +
-										'<td class="ms-help-label">Tags</td>' +
-										'<td class="ms-help-text">Use the tag function to conveniently manage shared tags across all selected discs.<br><br><span>Requires Entrepreneur <a href="/account/membership/" class="dz-blue hover-underline">account</a> or higher.</span></td>' +
-									'</tr>' +
-									'<tr>' +
 										'<td class="ms-help-icon"><i class="fa fa-lg fa-trash"></i></td>' +
 										'<td class="ms-help-label">Delete</td>' +
 										'<td class="ms-help-text">Use the delete function to quickly delete all selected discs.</td>' +
 									'</tr>' +
 									'<tr>' +
+										'<td class="ms-help-icon"><i class="fa fa-lg fa-usd"></i></td>' +
+										'<td class="ms-help-label">Marketplace</td>' +
+										'<td class="ms-help-text">Use the marketplace function to manage the for sale/trade status of all selected discs.<br><br><span>*Requires Entrepreneur <a href="/account/membership/" class="dz-blue hover-underline">account</a> or higher.</span></td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="ms-help-icon"><i class="fa fa-lg fa-tags"></i></td>' +
+										'<td class="ms-help-label">Tags</td>' +
+										'<td class="ms-help-text">Use the tag function to conveniently manage shared tags across all selected discs.<br><br><span>*Requires Entrepreneur <a href="/account/membership/" class="dz-blue hover-underline">account</a> or higher.</span></td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="ms-help-icon"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></td>' +
+										'<td class="ms-help-label">Bump</td>' +
+										'<td class="ms-help-text">Use the bump function to quickly bump all available discs within your selection.<br><br><span>*Requires Chief Executive <a href="/account/membership/" class="dz-blue hover-underline">account</a>.</span></td>' +
+									'</tr>' +
+									'<tr>' +
 										'<td class="ms-help-icon"><i class="fa fa-lg fa-object-group"></i></td>' +
 										'<td class="ms-help-label">Select All</td>' +
-										'<td class="ms-help-text">Use the select all function to load and select all discs within the current filter settings.<br><br><span>Requires Chief Executive <a href="/account/membership/" class="dz-blue hover-underline">account</a>.</span></td>' +
+										'<td class="ms-help-text">Use the select all function to load and select all discs within the current filter settings.<br><br><span>*Requires Chief Executive <a href="/account/membership/" class="dz-blue hover-underline">account</a>.</span></td>' +
 									'</tr>' +
 									'<tr>' +
 										'<td class="ms-help-icon"><i class="fa fa-lg fa-object-ungroup"></i></td>' +
 										'<td class="ms-help-label">Deselect All</td>' +
-										'<td class="ms-help-text">Use the deselect all function clear all selected discs from the multi-select tool.<br><br><span>Requires Chief Executive <a href="/account/membership/" class="dz-blue hover-underline">account</a>.</span></td>' +
+										'<td class="ms-help-text">Use the deselect all function clear all selected discs from the multi-select tool.<br><br><span>*Requires Chief Executive <a href="/account/membership/" class="dz-blue hover-underline">account</a>.</span></td>' +
 									'</tr>' +
 								'</tbody>' +
 							'</table>' +
@@ -4517,6 +4716,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 					data: {
 						discs: results,
 						onClose: function(reload) {
+							AccountService.getAccount(function(success, account) {
+								$scope.curUser = account;
+							});
+							
 							if (reload) $scope.handleUrl();
 						}
 					}
@@ -4553,6 +4756,43 @@ angular.module('disczump.controllers', ['disczump.services'])
 		
 		$scope.msOpts.bumpDiscs = function() {
 			var results = _.where($scope.resultList, {selected: true});
+			// call reloadDisc to get curent bump remaining
+			
+// 			if (results.length) {
+// 				var promises = [];
+
+// 				var updateDisc = function(disc) {
+// 					var deferred = $q.defer();
+
+// 					CacheService.reloadDisc(disc._id, function(success, data) {
+// 						if (success) {
+// 							//overwrite disc in results array
+// 							deferred.resolve();
+// 						} else {
+// 							deferred.reject();
+// 						}
+// 						return deferred.promise;
+// 					});
+// 				}
+
+// 				_.each(results, function(res) {
+// 					promises.push(updateDisc(res));
+// 				});
+
+// 				$q.all(promises).then(
+// 					$scope.globalModalOpts = {
+// 						type: 'dz-bump-modal',
+// 						show: true,
+// 						data: {
+// 							discs: results,
+// 							onClose: function(reload) {
+// 								if (reload) $scope.handleUrl();
+// 							}
+// 						}
+// 					}
+// 				);
+// 			}
+			
 			
 			if (results.length) {
 				$scope.globalModalOpts = {
@@ -4780,6 +5020,16 @@ angular.module('disczump.controllers', ['disczump.services'])
                 }
             }
         }
+		
+		function processFacets(facet) {
+			for (var i = 0; i < facet.filters.length; i++) {
+				var filter = facet.filters[i];
+				if (!filter.count && !$scope.isFilterActive(facet, filter)) {
+					facet.filters.splice(i, 1);
+					i--;
+				}
+			}
+		}
         
         $scope.performSearch = function(appendOnly, callback) {
             if (appendOnly) {
@@ -4819,6 +5069,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                                 
                                 for (var facetName in facetTypeList) {
                                     var facet = facetTypeList[facetName];
+									processFacets(facet);
                                     
                                     if (facet.filters.length) {
                                         if (i < 4) facet.open = true;
@@ -5156,6 +5407,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 			refreshMarket();
 		}
 		
+		$scope.isDef = function(x) {
+			return typeof(x) !== 'undefined';
+		}
+		
 		$scope.shareDisc = function() {
 			$scope.globalModalOpts = {
 				type: 'dz-share-modal',
@@ -5302,7 +5557,7 @@ angular.module('disczump.controllers', ['disczump.services'])
             return AccountService.compareTo($scope.disc.userId);
         }
 		
-		CacheService.getDisc(discId, function(success, disc) {
+		CacheService.reloadDisc(discId, function(success, disc) {
             if (!success) {
                 return RedirectService.setRedirect('explore');
             } else {
@@ -5459,7 +5714,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 									'</tr>' +
 									'<tr>' +
 										'<td class="help-label">Weight</td>' +
-										'<td class="help-text">Enter the weight of the disc in grams. The weight is frequently printed or written on the underside of the flight plate. <b>NOTE: </b>This field only accepts positive integers with up to 3 digits, and weights typically range from 150 to 180.</td>' +
+										'<td class="help-text">Enter the weight of the disc in grams. The weight is frequently printed or written on the underside of the flight plate.<br><b>NOTE: </b>This field only accepts positive integers with up to 3 digits, and weights typically range from 150 to 180.</td>' +
 										'<td class="help-ex">172</td>' +
 									'</tr>' +
 									'<tr>' +
@@ -5490,27 +5745,27 @@ angular.module('disczump.controllers', ['disczump.services'])
 									'</tr>' +
 									'<tr>' +
 										'<td class="help-label">Speed</td>' +
-										'<td class="help-text">Enter the speed of the disc. Speed is the first of four flight numbers, and it relates to the speed at which the disc must be thrown to achieve the designed flight path. <b>NOTE: </b>This field only accepts positive numbers with up to 2 digits and 1 decimal place. Speed values typically range from 1 to 15.</td>' +
+										'<td class="help-text">Enter the speed of the disc. Speed is the first of four flight numbers, and it relates to the speed at which the disc must be thrown to achieve the designed flight path.<br><b>NOTE: </b>This field only accepts positive numbers with up to 2 digits and 1 decimal place. Speed values typically range from 1 to 15.</td>' +
 										'<td class="help-ex">12</td>' +
 									'</tr>' +
 									'<tr>' +
 										'<td class="help-label">Glide</td>' +
-										'<td class="help-text">Enter the glide of the disc. Glide is the second of four flight numbers, and it relates to the disc\'s ability to stay afloat during it\'s flight. <b>NOTE: </b>This field only accepts positive numbers with up to 2 digits and 1 decimal place. Glide values typically range from 1 to 7.</td>' +
+										'<td class="help-text">Enter the glide of the disc. Glide is the second of four flight numbers, and it relates to the disc\'s ability to stay afloat during it\'s flight.<br><b>NOTE: </b>This field only accepts positive numbers with up to 2 digits and 1 decimal place. Glide values typically range from 1 to 7.</td>' +
 										'<td class="help-ex">5</td>' +
 									'</tr>' +
 									'<tr>' +
 										'<td class="help-label">Turn</td>' +
-										'<td class="help-text">Enter the turn of the disc. Turn is the third of four flight numbers, and it relates to the disc\'s resistance to turning during the high speed portion of it\'s flight. <b>NOTE: </b>This field only accepts positive and negative numbers with up to 2 digits and 1 decimal place. Turn values typically range from -5 to 1.</td>' +
+										'<td class="help-text">Enter the turn of the disc. Turn is the third of four flight numbers, and it relates to the disc\'s resistance to turning during the high speed portion of it\'s flight.<br><b>NOTE: </b>This field only accepts positive and negative numbers with up to 2 digits and 1 decimal place. Turn values typically range from -5 to 1.</td>' +
 										'<td class="help-ex">-1</td>' +
 									'</tr>' +
 									'<tr>' +
 										'<td class="help-label">Fade</td>' +
-										'<td class="help-text">Enter the fade of the disc. Fade is the fourth of four flight numbers, and it relates to the disc\'s resistance to turning during the low speed portion of it\'s flight. <b>NOTE: </b>This field only accepts positive and negative numbers with up to 2 digits and 1 decimal place. Fade values typically range from 0 to 6.</td>' +
+										'<td class="help-text">Enter the fade of the disc. Fade is the fourth of four flight numbers, and it relates to the disc\'s resistance to turning during the low speed portion of it\'s flight.<br><b>NOTE: </b>This field only accepts positive and negative numbers with up to 2 digits and 1 decimal place. Fade values typically range from 0 to 6.</td>' +
 										'<td class="help-ex">3</td>' +
 									'</tr>' +
 									'<tr>' +
 										'<td class="help-label">Tags</td>' +
-										'<td class="help-text">Enter tags that you associate with this disc. Use tags to group discs outside of inherent traits such as brand, material, color, etc. Tags are great ways to associate discs with specific collections, bags, or tournaments. They are completely customizable, and examples include "Thrower", "CFR", "Glow", "xxx Collection", "xxx Bag", etc. <b>NOTE: </b>A disc can have multiple tags, and a tag can be associated with multiple discs.</td>' +
+										'<td class="help-text">Enter tags that you associate with this disc. Use tags to group discs outside of inherent traits such as brand, material, color, etc. Tags are great ways to associate discs with specific collections, bags, or tournaments. They are completely customizable, and examples include "Thrower", "CFR", "Glow", "xxx Collection", "xxx Bag", etc.<br><b>NOTE: </b>A disc can have multiple tags, and a tag can be associated with multiple discs.</td>' +
 										'<td class="help-ex">Thrower<br>Glow Bag<br>Zone Collection</td>' +
 									'</tr>' +
 									'<tr>' +
@@ -5520,13 +5775,18 @@ angular.module('disczump.controllers', ['disczump.services'])
 									'</tr>' +
 									'<tr>' +
 										'<td class="help-label">Public</td>' +
-										'<td class="help-text">Toggle the visibility setting to allow or prevent other users from viewing your disc. If public mode is turned on, then your disc is visible to the public and can be shared via Facebook or public URL. If public mode is turned off, then your disc is only privately viewable by the creator and shareable links will not work. <b>NOTE: </b>Visibility is saved for each disc independently and it can be toggled directly from the disc page by clicking on the eyeball icon. Each disc must be marked \'Public\' before adding it to the marketplace.</td>' +
+										'<td class="help-text">Toggle the visibility setting to allow or prevent other users from viewing your disc. If public mode is turned on, then your disc is visible to the public and can be shared via Facebook or public URL. If public mode is turned off, then your disc is only privately viewable by the creator and shareable links will not work.<br><b>NOTE: </b>Visibility is saved for each disc independently and it can be toggled directly from the disc page by clicking on the eyeball icon. Each disc must be marked \'Public\' before adding it to the marketplace.</td>' +
 										'<td class="help-ex"></td>' +
 									'</tr>' +
 									'<tr>' +
 										'<td class="help-label">Condition</td>' +
-										'<td class="help-text">Enter the condition of the disc based on the sleepy scale. <b>NOTE: </b>This field only accepts integers from 0 to 10.</td>' +
+										'<td class="help-text">Enter the condition of the disc based on the sleepy scale.<br><b>NOTE: </b>This field only accepts integers from 0 to 10.</td>' +
 										'<td class="help-ex">9</td>' +
+									'</tr>' +
+									'<tr>' +
+										'<td class="help-label">Value</td>' +
+										'<td class="help-text">Enter the value of the disc in USD ($).<br><b>NOTE: </b>This field only accepts numbers from 0 to 9,999.99.</td>' +
+										'<td class="help-ex">$12.50</td>' +
 									'</tr>' +
 								'</tbody>' +
 							'</table>' +
@@ -5775,7 +6035,7 @@ angular.module('disczump.controllers', ['disczump.services'])
             typeof Cropper === 'undefined') {
             $ocLazyLoad.load(
                 ['https://cdn.rawgit.com/exif-js/exif-js/master/exif.js',
-                '/static/src/js/dropzone.js'
+                '/static/src/js-dist/dropzone.min.js'
                 ]).then(function() {
                     $ocLazyLoad.load([
                         '/static/src/js-dist/cropper.min.js',
@@ -5898,6 +6158,14 @@ angular.module('disczump.controllers', ['disczump.services'])
 			];
 			
 			$scope.scrollBottom = function() {
+				if ($scope.activeThread.state) {
+					$timeout(function() {
+						messageList.scrollTop = $scope.activeThread.state.scrollPos || messageList.scrollHeight;
+						delete $scope.activeThread.state;
+					});
+					return;
+				}
+				
 				var lastMessage = angular.element(messageList)[0].querySelector('.message-item:last-child');
 				
 				var options = {
@@ -5918,7 +6186,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					var footer = document.getElementById('footer-bar');
 					var height = PageUtils.getWindowHeight();
 					var rectTop = PageUtils.getTop(inboxArea);
-					angular.element(inboxArea).css('height', (height - rectTop - 40 - footer.clientHeight) + 'px');
+					angular.element(inboxArea).css('height', (height - rectTop - 100) + 'px');
 				});
 			}
 			
@@ -5933,12 +6201,16 @@ angular.module('disczump.controllers', ['disczump.services'])
 					return user != $scope.account._id;
 				});
 				CacheService.getUser(userId, function(success, user) {
-					if (success && user.image) {
-						thread.image = user.image;
+					if (success) {
 						thread.user = user;
-						thread.imgInit = true;
+						thread.userInit = true;
+						if (user.image) {
+							thread.image = user.image;
+							thread.imgInit = true;
+						}
 					} else {
 						// HANDLE ERROR
+						thread.removed = true;
 					}
 				});
 			}
@@ -6005,7 +6277,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				});
 			}
 			
-			var setThreadRead = function(thread) {
+			var setThreadRead = function(thread, callback) {
 				if (thread.currentMessageCount == thread.messageCount)
 					return;
 				
@@ -6019,6 +6291,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 							show: true
 						}
 					}
+					if (callback) callback();
 				});
 			}
 			
@@ -6106,6 +6379,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			$scope.getMessages = function(firstLoad) {
+				$scope.messageAlert = {};
 				if (typeof($scope.activeThread) !== 'undefined') {
 					if ($scope.activeThread.newThread) {
 						return;
@@ -6113,8 +6387,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 					
 					if (firstLoad) {
 						if ($scope.activeThread.messages.length) {
-							setThreadRead($scope.activeThread);
-							MessageService.reloadUnreadCount();
+							if ($scope.activeThread.state) {
+								messageList.scrollTop = $scope.activeThread.state.scrollPos || messageList.clientHeight;
+							}
+							setThreadRead($scope.activeThread, MessageService.reloadUnreadCount);
 							return;
 						}
 						
@@ -6129,12 +6405,19 @@ angular.module('disczump.controllers', ['disczump.services'])
 							$scope.activeThread.messageCount = $scope.activeThread.currentMessageCount;
 							MessageService.reloadUnreadCount();
 							
-							if (firstLoad && !$scope.activeThread.active) {
-								$scope.messageAlert.info = {
-									title: 'Read-Only',
-									message: 'Unarchive this conversation to continue sending messages.',
-									show: true,
-									timeout: 5000
+							if (firstLoad) {
+								if (!$scope.activeThread.active) {
+									$scope.messageAlert.info = {
+										title: 'Read-Only',
+										message: 'Unarchive this conversation to continue sending messages.',
+										show: true
+									}
+								} else if ($scope.activeThread.removed) {
+									$scope.messageAlert.info = {
+										title: 'User Account Removed',
+										message: 'The user associated with this thread has deleted his/her account.',
+										show: true
+									}
 								}
 							}
 						} else {
@@ -6209,6 +6492,12 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			$scope.activateThread = function(thread, replace) {
+				if ($scope.activeThread) {
+					$scope.activeThread.state = {
+						scrollPos: messageList.scrollTop
+					}
+				}
+				
 				if (replace) {
 					$location.url($location.path() + '?threadId=' + thread.threadId + (!thread.active ? '&archived=true' : '')).replace();
 				} else {
@@ -6303,9 +6592,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 							$scope.createThread($location.search().userId);
 							
 							if (attachments.length) {
-								$scope.userMessage = '';
+								$scope.userMessage = 'Hi! I am interested in the following disc' + (attachments.length > 1 ? '(s):' : ':');
 								attachments.forEach(function(attachment) {
-									$scope.userMessage += $location.host() + '/' + attachment.type + '/' + attachment.id + '\r\n';
+									$scope.userMessage += '\r\n' + $location.host() + '/' + attachment.type + '/' + attachment.id;
 								});
 							}
 						}
@@ -6659,7 +6948,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				typeof Cropper === 'undefined') {
 				$ocLazyLoad.load(
 					['https://cdn.rawgit.com/exif-js/exif-js/master/exif.js',
-					'/static/src/js/dropzone.js'
+					'/static/src/js-dist/dropzone.min.js'
 					]).then(function() {
 						$ocLazyLoad.load([
 							'/static/src/js-dist/cropper.min.js',
@@ -6925,7 +7214,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					$scope.paypalConfig.params = {
 						src: 'https://payflowlink.paypal.com?MODE=TEST&SECURETOKENID=' + request.hostedPage.secureTokenId + '&SECURETOKEN=' + request.hostedPage.secureToken,
 						width: '490',
-						height: '250',
+						height: '380',
 						border: '0',
 						frameborder: '0',
 						scrolling: 'no',
@@ -7267,13 +7556,13 @@ angular.module('disczump.controllers', ['disczump.services'])
 						if (success) {
 							if (!user._id) {
 								$timeout(function() {
-									$scope.signup.firstName = data.account.first_name;
+									$scope.signup.user.firstName = data.account.first_name;
 									$scope.signup.form.firstName.$setDirty();
 
-									$scope.signup.lastName = data.account.last_name;
+									$scope.signup.user.lastName = data.account.last_name;
 									$scope.signup.form.lastName.$setDirty();
 
-									$scope.signup.email = data.account.email;
+									$scope.signup.user.email = data.account.email;
 									$scope.signup.form.email.$setDirty();
 									$scope.facebook = {
 										userID: data.token.userID,
@@ -7302,6 +7591,19 @@ angular.module('disczump.controllers', ['disczump.services'])
 			});
 		}
 		
+		$scope.clearForm = function() {
+			$scope.signupAlert = {};
+			$scope.location = {
+				results: [],
+				loading: false,
+				locSet: false,
+				geo: {}
+			};
+			$scope.facebook = undefined;
+			$scope.signup.user = undefined;
+			$scope.signup.form.$setPristine();
+		}
+		
 		$scope.matchFormat = function(param, format) {
 			if (!$scope.signup[param]) return false;
 			if (!formats[format]) return false;
@@ -7313,11 +7615,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 			$scope.loading = true;
 			$scope.signupAlert = {};
 			APIService.Post('/users', {
-				username: $scope.signup.username,
-				email: $scope.signup.email,
-				firstName: $scope.signup.firstName,
-				lastName: $scope.signup.lastName,
-				password: $scope.signup.password,
+				username: $scope.signup.user.username,
+				email: $scope.signup.user.email,
+				firstName: $scope.signup.user.firstName,
+				lastName: $scope.signup.user.lastName,
+				password: $scope.signup.user.password,
 				geoLat: $scope.location.geo.latitude,
 				geoLng: $scope.location.geo.longitude,
 				facebook: $scope.facebook

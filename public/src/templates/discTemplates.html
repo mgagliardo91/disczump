@@ -35,7 +35,9 @@
                                 Material
                             </div>
                             <ul class="grid-item-list">
-                                <li class="handle-overflow hover-underline" ng-repeat="template in model.templates | orderBy:'material'"><a ng-href="/d/create?templateId={{template._id}}"><span class="pull-right"><i class="fa fa-arrow-right"></i></span>{{template.material}}</a></li>
+                                <li class="handle-overflow" ng-repeat="template in model.templates | orderBy:'material'">
+                                    <a class="hover-underline" ng-href="/d/create?templateId={{template._id}}"><span class="pull-right"><i class="fa fa-arrow-right"></i></span>{{template.material}}</a>
+                                </li>
                             </ul>
                         </div>
                     </div>

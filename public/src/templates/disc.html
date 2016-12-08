@@ -1,6 +1,6 @@
 <div dz-wrapper>
     <dz-header></dz-header>
-    <dz-status-bar class="header-color-1" breadcrumbs="breadcrumbs"></dz-status-bar>
+    <dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
     <div class="private-warning dz-blue-background" ng-show="!loading.disc && !disc.visible">
         <span><i class="fa fa-eye-slash fa-lg"></i>This disc is private!<i class="fa fa-eye-slash fa-lg"></i></span>
     </div>
@@ -129,7 +129,7 @@
                             <td colspan="5" class="dv-profile-td">
                                 <div class="dv-profile-preview">
                                     <div class="dv-profile-preview-image float-left">
-                                        <img directive-on="userInit" directive-set="{'img-src':'{{user.image}\}'}" class="fit-parent" img-load="/static/img/dz_profile_nobg.png" ng-class="{'bg-white': !user.image}">
+                                        <div directive-on="userInit" directive-set="{'img-src':'{{user.image}\}'}" class="default-bg-image" img-load="/static/img/dz_profile_nobg.png" ng-class="{'bg-white': !user.image}" bg-image="true"></div>
                                     </div>
                                     <div class="dv-profile-preview-btn-container float-right">
                                         <a class="dv-profile-preview-btn" ng-href="/t/{{user.username}}">
@@ -198,7 +198,7 @@
                                 <div ng-if="!disc.type">-</div>
                                 <overflow-wrapper ng-if="disc.type">
                                     <div class="handle-overflow">
-                                        <a filter-dropdown="{prop:'type',val:'{{disc.type}}',text:'Type'}" class="hover-underline">{{disc.type}}</a>
+                                        <a filter-dropdown="{prop:'type',val:'{{disc.type}}',text:'Type'}" user="user" class="hover-underline">{{disc.type}}</a>
                                     </div>
                                 </overflow-wrapper>
                             </td>
@@ -209,7 +209,7 @@
                                 <div ng-if="!disc.material">-</div>
                                 <overflow-wrapper ng-if="disc.material">
                                     <div class="handle-overflow">
-                                        <a filter-dropdown="{prop:'material',val:'{{disc.material}}',text:'Material'}" class="hover-underline">{{disc.material}}</a>
+                                        <a filter-dropdown="{prop:'material',val:'{{disc.material}}',text:'Material'}" user="user" class="hover-underline">{{disc.material}}</a>
                                     </div>
                                 </overflow-wrapper>
                             </td>
@@ -220,7 +220,7 @@
                                 <div ng-if="!disc.color">-</div>
                                 <overflow-wrapper ng-if="disc.color">
                                     <div class="handle-overflow">
-                                        <a filter-dropdown="{prop:'color',val:'{{disc.color}}',text:'Color'}" class="hover-underline">{{disc.color}}</a>
+                                        <a filter-dropdown="{prop:'color',val:'{{disc.color}}',text:'Color'}" user="user" class="hover-underline">{{disc.color}}</a>
                                     </div>
                                 </overflow-wrapper>
                             </td>
@@ -231,7 +231,7 @@
                                 <div ng-if="!disc.weight">-</div>
                                 <overflow-wrapper ng-if="disc.weight">
                                     <div class="handle-overflow">
-                                        <a filter-dropdown="{prop:'weight',val:'{{disc.weight}}',text:'Weight', suffix: 'g'}" class="hover-underline">{{disc.weight}}g</a>
+                                        <a filter-dropdown="{prop:'weight',val:'{{disc.weight}}',text:'Weight', suffix: 'g'}" user="user" class="hover-underline">{{disc.weight}}g</a>
                                     </div>
                                 </overflow-wrapper>
                             </td>
@@ -242,7 +242,7 @@
                                 <div ng-if="!disc.condition">-</div>
                                 <overflow-wrapper ng-if="disc.condition">
                                     <div class="handle-overflow">
-                                        <a filter-dropdown="{prop:'condition',val:'{{disc.condition}}',text:'Condition'}" class="hover-underline">{{disc.condition}}/10</a></div>
+                                        <a filter-dropdown="{prop:'condition',val:'{{disc.condition}}',text:'Condition'}" user="user" class="hover-underline">{{disc.condition}}/10</a></div>
                                     </div>
                                 </overflow-wrapper>
                             </td>
@@ -251,37 +251,37 @@
                             <td class="width-33">Flight Numbers</td>
                             <td class="dv-table-cell width-16">
                                 <p class="dv-table-cell-title">Speed</p>
-                                <div class="dv-table-cell-value" ng-if="!disc.speed">-</div>
-                                <overflow-wrapper ng-if="disc.speed">
+                                <div class="dv-table-cell-value" ng-if="!isDef(disc.speed)">-</div>
+                                <overflow-wrapper ng-if="isDef(disc.speed)">
                                     <div class="dv-table-cell-value handle-overflow">
-                                        <a filter-dropdown="{prop:'speed',val:'{{disc.speed}}',text:'Speed'}" class="hover-underline">{{disc.speed}}</a>
+                                        <a filter-dropdown="{prop:'speed',val:'{{disc.speed}}',text:'Speed'}" user="user" class="hover-underline">{{disc.speed}}</a>
                                     </div>
                                 </overflow-wrapper>
                             </td>
                             <td class="dv-table-cell width-16">
                                 <p class="dv-table-cell-title">Glide</p>
-                                <div class="dv-table-cell-value" ng-if="!disc.glide">-</div>
-                                <overflow-wrapper ng-if="disc.glide">
+                                <div class="dv-table-cell-value" ng-if="!isDef(disc.glide)">-</div>
+                                <overflow-wrapper ng-if="isDef(disc.glide)">
                                     <div class="dv-table-cell-value handle-overflow">
-                                        <a filter-dropdown="{prop:'glide',val:'{{disc.glide}}',text:'Glide'}" class="hover-underline">{{disc.glide}}</a>
+                                        <a filter-dropdown="{prop:'glide',val:'{{disc.glide}}',text:'Glide'}" user="user" class="hover-underline">{{disc.glide}}</a>
                                     </div>
                                 </overflow-wrapper>
                             </td>
                             <td class="dv-table-cell width-16">
                                 <p class="dv-table-cell-title">Turn</p>
-                                <div class="dv-table-cell-value" ng-if="!disc.turn">-</div>
-                                <overflow-wrapper ng-if="disc.turn">
+                                <div class="dv-table-cell-value" ng-if="!isDef(disc.turn)">-</div>
+                                <overflow-wrapper ng-if="isDef(disc.turn)">
                                     <div class="dv-table-cell-value handle-overflow">
-                                        <a filter-dropdown="{prop:'turn',val:'{{disc.turn}}',text:'Turn'}" class="hover-underline">{{disc.turn}}</a>
+                                        <a filter-dropdown="{prop:'turn',val:'{{disc.turn}}',text:'Turn'}" user="user" class="hover-underline">{{disc.turn}}</a>
                                     </div>
                                 </overflow-wrapper>
                             </td>
                             <td class="dv-table-cell width-16">
                                 <p class="dv-table-cell-title handle-overflow">Fade</p>
-                                <div class="dv-table-cell-value" ng-if="!disc.fade">-</div>
-                                <overflow-wrapper ng-if="disc.fade">
+                                <div class="dv-table-cell-value" ng-if="!isDef(disc.fade)">-</div>
+                                <overflow-wrapper ng-if="isDef(disc.fade)">
                                     <div class="dv-table-cell-value">
-                                        <a filter-dropdown="{prop:'fade',val:'{{disc.fade}}',text:'Fade'}" class="hover-underline">{{disc.fade}}</a>
+                                        <a filter-dropdown="{prop:'fade',val:'{{disc.fade}}',text:'Fade'}" user="user" class="hover-underline">{{disc.fade}}</a>
                                     </div>
                                 </overflow-wrapper>
                             </td>
@@ -292,7 +292,7 @@
                                 <div ng-if="disc.tagList.length">
                                     <div class="tag-item hover-underline no-select" ng-repeat="tag in disc.tagList">
                                         <span class="tag-item-text">
-                                            <a filter-dropdown="{prop:'tag',val:'{{tag}}',text:'Tag'}" class="hover-underline">{{tag}}</a>
+                                            <a filter-dropdown="{prop:'tag',val:'{{tag}}',text:'Tag'}" user="user" class="hover-underline">{{tag}}</a>
                                         </span>
                                     </div>
                                 </div>

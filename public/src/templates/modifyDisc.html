@@ -1,221 +1,224 @@
-<dz-header id="page-top"></dz-header>
-<dz-status-bar class="header-color-1" breadcrumbs="breadcrumbs"></dz-status-bar>
-<div class="scrollable main-body">
-    <div class="page-content full-width">
-        <div class="title-row">
-            <div class="title-btn-container float-right">
-				<div class="fixed-wrapper title-btn-size">
-					<div>
-						<a href="/d/create/templates" class="dz-blue-hover"><i class="fa fa-table hover-pointer" title="Disc Templates"></i></a>
-					</div>
-				</div>
-				<div class="fixed-wrapper title-btn-size">
-					<div>
-						<i class="fa fa-eraser hover-icon-color hover-pointer" title="Reset Form" ng-click="clearForm()"></i>
-					</div>
-				</div>
-                <div class="clearfix"></div>
-            </div>
-            <div class="page-title handle-overflow"><span ng-show="!$def(disc._id)">Create</span><span ng-show="$def(disc._id)">Edit</span> | <span class="dz-blue">Disc</span></div>
-            <hr>
-        </div>
-        <dz-alert alert-data="editAlert"></dz-alert>
-		<div class="page-info" ng-if="!isMarket && market.marketAvailable === 0">
-			<b>Warning!</b>  You have reached your marketplace cap. <a href="/account/membership/" class="dz-blue hover-underline">Upgrade membership.</a>
-		</div>
-        <div class="form-horizontal" ng-form name="discForm">
-            <div class="dz-label">
-                General
-                <span class="dz-label-icon" ng-click="showGeneralHelp()"><i class="fa fa-question-circle" title="Help" section="general"></i></span>
-            </div>
-            <div class="modify-form-section">
-    			<div class="form-group">
-                    <label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>
-                    <div class="col-sm-4">
-                        <input type="text" class="form-control validation" placeholder="ex. Innova" ng-model="disc.brand" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }" required dz-auto-complete="brand">
-                    </div>
-                    <label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>
-                    <div class="col-sm-4">
-                        <input type="text" class="form-control validation" placeholder="ex. Destroyer" ng-model="disc.name"  ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }" required dz-auto-complete="name">
-                    </div>
-                </div>
-                 <div class="form-group">
-                    <label class="col-sm-2 control-label">Type</label>
-                    <div class="col-sm-4">
-                        <select class="form-control validation" placeholder="ex. Distance Driver" ng-model="disc.type">
-                            <option value="" selected=""></option>
-                            <option value="Distance Driver">Distance Driver</option>
-                            <option value="Fairway Driver">Fairway Driver</option>
-                            <option value="Mid-range">Mid-range</option>
-                            <option value="Putt/Approach">Putt/Approach</option>
-                            <option value="Mini">Mini</option>
-                         </select>
-                    </div>
-                    <label class="col-sm-2 control-label">Material</label>
-                    <div class="col-sm-4">
-                        <input type="text" class="form-control validation" placeholder="ex. Champion" ng-model="disc.material" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }" dz-auto-complete="material">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-2 control-label">Weight</label>
-                    <div class="col-sm-4">
-						<div class="input-group">
-							<input type="number" class="form-control validation" placeholder="ex. 172" ng-model="disc.weight" ng-pattern="/^[0-9]{0,3}$/" ng-min="0" ng-max="999">
-							<div class="input-group-addon">g</div>
+<div dz-wrapper>
+	<dz-header id="page-top"></dz-header>
+	<dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
+	<div class="scrollable main-body">
+		<div class="page-content full-width">
+			<div class="title-row">
+				<div class="title-btn-container float-right">
+					<div class="fixed-wrapper title-btn-size">
+						<div>
+							<a href="/d/create/templates" class="dz-blue-hover"><i class="fa fa-table hover-pointer" title="Disc Templates"></i></a>
 						</div>
-                    </div>
-                    <label class="col-sm-2 control-label">Color</label>
-                    <div class="col-sm-4">
-                        <input type="text" class="form-control validation" placeholder="ex. Orange" ng-model="disc.color" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }" dz-auto-complete="color">
-                    </div>
-                </div>
-            </div>
-            <div class="dz-label">
-                Advanced
-                <span class="dz-label-icon" ng-click="showAdvancedHelp()"><i class="fa fa-question-circle" title="Help" section="advanced"></i></span>
-            </div>
-            <div class="modify-form-section">
-	            <div class="form-group">
-	                <label class="col-sm-2 control-label">Speed</label>
-	                <div class="col-sm-3">
-	                    <input type="number" class="form-control validation" placeholder="ex. 12" ng-model="disc.speed" ng-pattern="/^[0-9]{1,2}(\.[0-9]{1})?$/" ng-min="0" ng-max="100">
-	                </div>
-	                <label class="col-sm-2 col-sm-offset-2 control-label">Glide</label>
-	                <div class="col-sm-3">
-	                    <input type="number" class="form-control validation" placeholder="ex. 5" ng-model="disc.glide" ng-pattern="/^\d{1,2}([.]?\d)?$/" ng-min="0" ng-max="100">
-	                </div>
-	            </div>
-	            <div class="form-group">
-	                <label class="col-sm-2 control-label">Turn</label>
-	                <div class="col-sm-3">
-	                    <input type="number" class="form-control validation" placeholder="ex. -1" ng-model="disc.turn" ng-pattern="/^[-]?\d{1,2}([.]\d)?$/" ng-min="-100" ng-max="100">
-	                </div>
-	                <label class="col-sm-2 col-sm-offset-2 control-label">Fade</label>
-	                <div class="col-sm-3">
-	                    <input type="number" class="form-control validation" placeholder="ex. 3" ng-model="disc.fade" ng-pattern="/^[-]?\d{1,2}([.]\d)?$/" ng-min="-100" ng-max="100">
-	                </div>
-	            </div>
-	            <div class="form-group tag-input-group">
-	                <label class="col-sm-2 control-label">Tags</label>
-	                <div class="col-sm-10">
-	                    <div style="position:relative;">
-	                        <div class="input-group add-disc-tag-container" style="position:relative;">
-	                            <input type="text" class="form-control validation" placeholder="ex. Destroyer Collection" ng-model="tempTag" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }" ng-model-enter="pushTempTag();" dz-auto-complete="tag" user-id="account._id" dz-multi="true" >
-	                            <span class="input-group-btn">
-	                                <button class="btn btn-default" type="button" ng-click="pushTempTag();" ng-class="{'btn-pulse':tempTag.length}"><span><i class="fa fa-plus"></i></span></button>
-	                            </span>
-	                        </div>
-	                    </div>
-	                </div>
-	                <div class="col-sm-10 col-sm-offset-2">
-	                    <ul class="tag-list-container" ng-model="disc.tagList" as-sortable="currentTagDrag" id="tag-list">
-	                        <li class="tag-item" ng-repeat="tag in disc.tagList" as-sortable-item>
-	                            <div class="draggable" as-sortable-item-handle>{{tag}}<span class="tag-item-remove" ng-click="removeTag($index)"><i class="fa fa-times"></i></span></div>
-	                        </li>
-	                    </ul>
-	                </div>
-	            </div>
-	            <div class="form-group">
-	                <label class="col-sm-2 control-label">Notes</label>
-	                <div class="col-sm-10">
-	                    <textarea class="form-control" style="resize: vertical;" rows="3" placeholder="ex. Found on hole 7 at..." ng-model="disc.notes"></textarea>
-	                </div>
-	            </div>
-	            <div class="form-group">
-	                <label class="col-sm-2 control-label">Public</label>
-	                <div class="col-sm-4">
-	                    <switch type="checkbox" param="visible" ng-model="disc.visible"></switch>
-	                </div>
-	                <label class="col-sm-2 col-sm-offset-1 control-label">Condition</label>
-	                <div class="col-sm-3">
-	                    <input type="number" class="form-control validation" placeholder="ex. 9" ng-model="disc.condition" ng-pattern="/^\d{1,2}$/" ng-min="0" ng-max="10">
-	                </div>
-                </div>
-				<div class="form-group">
-	                <label class="col-sm-2 control-label">Value</label>
-	                <div class="col-sm-3">
-						<div class="input-group">
-							<div class="input-group-addon">$</div>
-							<input type="number" class="form-control validation" placeholder="ex. 11.50" ng-model="disc.value" ng-pattern="/^[0-9]*(\.[0-9]{1,2})?$/" ng-min="0.01" step="0.01">
+					</div>
+					<div class="fixed-wrapper title-btn-size">
+						<div>
+							<i class="fa fa-eraser hover-icon-color hover-pointer" title="Reset Form" ng-click="clearForm()"></i>
 						</div>
-	                </div>
-                </div>
-            </div>
-			<div ng-show="disc.imageList.length">
-                <div class="dz-label">Current Images (max. 5)</div>
-                <div class="page-info">Drag images to reorder. Click the star to select a primary image.</div>
-				<div class="page-info error" ng-show="disc.imageList.length > 5">You have exceeded the limit of 5 images per disc. Please revise your image list before saving this disc.</div>
-                <div class="modify-form-section">
-                    <div class="image-list">
-		                <div class="image-list-container image-list-container simple" id="existing-image-container">
-		                    <div class="image-list-table" ng-model="disc.imageList" as-sortable="currentImageDrag">
-		                        <div class="image-item-container" ng-repeat="image in disc.imageList" ng-mouseenter="showOverlay=true;" ng-mouseleave="showOverlay=false;" as-sortable-item>
-		                            <div class="image-item" as-sortable-item-handle>
-		                                <div class="image-entity">
-		                                    <img ng-src="/files/{{image.thumbnailId}}" class="fit-parent">
-	                                    </div>
-    	                                <div class="image-overlay draggable" ng-show="showOverlay">
-    	                                    <span class="image-remove">
-    	                                        <i class="fa fa-times fa-lg" ng-click="removeImage($index)"></i>
-    	                                    </span>
-    	                                    <div class="image-make-primary" title="Make Primary" ng-show="disc.primaryImage != image._id" ng-click="disc.primaryImage = image._id"><i class="fa fa-star-o fa-lg"></i></div>
-    	                                </div>
-        	                            <div class="image-overlay-static" ng-show="disc.primaryImage == image._id">
-        	                                <div class="primary-image-banner-static">
-        	                                    <i class="fa fa-star fa-lg"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-		                    </div>
-		                </div>
-		            </div>
-		        </div>
-		    </div>
-            <div class="dz-label">Add Images (max. 5)</div>
-		    <div class="modify-form-section">
-                <div class="image-list" directive-on="settings.dropzoneReady" directive-set="{dropzone: 'dropzoneConfig'}">
-                    <div class="image-list-container">
-                        <div class="image-list-table" id="dropzone-previews">
-                            <div class="image-item-container image-add dz-clickable" id="add-image">
-                                <div class="image-item">
-                                    <div class="image-entity">
-                                        <span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>  
-            </div>
-			<div ng-show="marketLoading" style="text-align:center;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>
-			<div ng-show="!marketLoading">
-				<div class="dz-label">Marketplace<span class="float-right">{{market.marketCap === -1 ? 'Unlimited' : market.marketAvailable}} Marketplace Discs Remaining</span></div>
-				<div class="page-info error" ng-if="!isMarket && market.marketAvailable === 0">
-					You have reached your marketplace cap. <a href="/account/membership/" class="dz-blue hover-underline">Upgrade membership.</a>
+					</div>
+					<div class="clearfix"></div>
 				</div>
-				<div class="modify-form-section" ng-if="isMarket || market.marketAvailable !== 0">
-					<div class="page-info" ng-class="{error: marketError}">This disc must be made <b><u>public</u></b> and have at least <b><u>one image</u></b> before adding it to the marketplace.  Alternatively, a disc is automatically removed from the marketplace if it is marked private or it's pictures are removed.</div>
+				<div class="page-title handle-overflow"><span ng-show="!$def(disc._id)">Create</span><span ng-show="$def(disc._id)">Edit</span> | <span class="dz-blue">Disc</span></div>
+				<hr>
+			</div>
+			<dz-alert alert-data="editAlert"></dz-alert>
+			<div class="page-info" ng-if="!isMarket && market.marketAvailable === 0">
+				<b>Warning!</b>  You have reached your marketplace cap. <a href="/account/membership/" class="dz-blue hover-underline">Upgrade membership.</a>
+			</div>
+			<div class="form-horizontal" ng-form name="discForm">
+				<div class="dz-label">
+					General
+					<span class="dz-label-icon" ng-click="showGeneralHelp()"><i class="fa fa-question-circle" title="Help" section="general"></i></span>
+				</div>
+				<div class="modify-form-section">
 					<div class="form-group">
-						<label class="col-sm-2 control-label">For Sale</label>
+						<label class="col-sm-2 control-label"><span class="required-field">* </span>Brand</label>
 						<div class="col-sm-4">
-							<switch type="checkbox" ng-model="disc.marketplace.forSale"></switch>
+							<input type="text" class="form-control validation" placeholder="ex. Innova" ng-model="disc.brand" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }" required dz-auto-complete="brand">
 						</div>
-						<label class="col-sm-2 control-label">For Trade</label>
+						<label class="col-sm-2 control-label"><span class="required-field">* </span>Name</label>
 						<div class="col-sm-4">
-							<switch type="checkbox" ng-model="disc.marketplace.forTrade"></switch>
+							<input type="text" class="form-control validation" placeholder="ex. Destroyer" ng-model="disc.name"  ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }" required dz-auto-complete="name">
 						</div>
 					</div>
+					 <div class="form-group">
+						<label class="col-sm-2 control-label">Type</label>
+						<div class="col-sm-4">
+							<select class="form-control validation" placeholder="ex. Distance Driver" ng-model="disc.type">
+								<option value="" selected=""></option>
+								<option value="Distance Driver">Distance Driver</option>
+								<option value="Fairway Driver">Fairway Driver</option>
+								<option value="Mid-range">Mid-range</option>
+								<option value="Putt/Approach">Putt/Approach</option>
+								<option value="Mini">Mini</option>
+							 </select>
+						</div>
+						<label class="col-sm-2 control-label">Material</label>
+						<div class="col-sm-4">
+							<input type="text" class="form-control validation" placeholder="ex. Champion" ng-model="disc.material" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }" dz-auto-complete="material">
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Weight</label>
+						<div class="col-sm-4">
+							<div class="input-group">
+								<input type="number" class="form-control validation" placeholder="ex. 172" ng-model="disc.weight" ng-pattern="/^[0-9]{0,3}$/" ng-min="0" ng-max="999">
+								<div class="input-group-addon">g</div>
+							</div>
+						</div>
+						<label class="col-sm-2 control-label">Color</label>
+						<div class="col-sm-4">
+							<input type="text" class="form-control validation" placeholder="ex. Orange" ng-model="disc.color" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }" dz-auto-complete="color">
+						</div>
+					</div>
+				</div>
+				<div class="dz-label">
+					Advanced
+					<span class="dz-label-icon" ng-click="showAdvancedHelp()"><i class="fa fa-question-circle" title="Help" section="advanced"></i></span>
+				</div>
+				<div class="modify-form-section">
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Speed</label>
+						<div class="col-sm-3">
+							<input type="number" class="form-control validation" placeholder="ex. 12" ng-model="disc.speed" ng-pattern="/^[0-9]{1,2}(\.[0-9]{1})?$/" ng-min="0" ng-max="100">
+						</div>
+						<label class="col-sm-2 col-sm-offset-2 control-label">Glide</label>
+						<div class="col-sm-3">
+							<input type="number" class="form-control validation" placeholder="ex. 5" ng-model="disc.glide" ng-pattern="/^\d{1,2}([.]?\d)?$/" ng-min="0" ng-max="100">
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Turn</label>
+						<div class="col-sm-3">
+							<input type="number" class="form-control validation" placeholder="ex. -1" ng-model="disc.turn" ng-pattern="/^[-]?\d{1,2}([.]\d)?$/" ng-min="-100" ng-max="100">
+						</div>
+						<label class="col-sm-2 col-sm-offset-2 control-label">Fade</label>
+						<div class="col-sm-3">
+							<input type="number" class="form-control validation" placeholder="ex. 3" ng-model="disc.fade" ng-pattern="/^[-]?\d{1,2}([.]\d)?$/" ng-min="-100" ng-max="100">
+						</div>
+					</div>
+					<div class="form-group tag-input-group">
+						<label class="col-sm-2 control-label">Tags</label>
+						<div class="col-sm-10">
+							<div style="position:relative;">
+								<div class="input-group add-disc-tag-container" style="position:relative;">
+									<input type="text" class="form-control validation" placeholder="ex. Destroyer Collection" ng-model="tempTag" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }" ng-model-enter="pushTempTag();" dz-auto-complete="tag" user-id="account._id" dz-multi="true" >
+									<span class="input-group-btn">
+										<button class="btn btn-default" type="button" ng-click="pushTempTag();" ng-class="{'btn-pulse':tempTag.length}"><span><i class="fa fa-plus"></i></span></button>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div class="col-sm-10 col-sm-offset-2">
+							<ul class="tag-list-container" ng-model="disc.tagList" as-sortable="currentTagDrag" id="tag-list">
+								<li class="tag-item" ng-repeat="tag in disc.tagList" as-sortable-item>
+									<div class="draggable" as-sortable-item-handle>{{tag}}<span class="tag-item-remove" ng-click="removeTag($index)"><i class="fa fa-times"></i></span></div>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Notes</label>
+						<div class="col-sm-10">
+							<textarea class="form-control" style="resize: vertical;" rows="3" placeholder="ex. Found on hole 7 at..." ng-model="disc.notes"></textarea>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Public</label>
+						<div class="col-sm-4">
+							<switch type="checkbox" param="visible" ng-model="disc.visible"></switch>
+						</div>
+						<label class="col-sm-2 col-sm-offset-1 control-label">Condition</label>
+						<div class="col-sm-3">
+							<input type="number" class="form-control validation" placeholder="ex. 9" ng-model="disc.condition" ng-pattern="/^\d{1,2}$/" ng-min="0" ng-max="10">
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Value</label>
+						<div class="col-sm-3">
+							<div class="input-group">
+								<div class="input-group-addon">$</div>
+								<input type="number" class="form-control validation" placeholder="ex. 11.50" ng-model="disc.value" ng-pattern="/^[0-9]*(\.[0-9]{1,2})?$/" ng-min="0.01" ng-max="9999.99" step="0.01">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div ng-show="disc.imageList.length">
+					<div class="dz-label">Current Images (max. 5)</div>
+					<div class="page-info">Drag images to reorder. Click the star to select a primary image.</div>
+					<div class="page-info error" ng-show="disc.imageList.length > 5">You have exceeded the limit of 5 images per disc. Please revise your image list before saving this disc.</div>
+					<div class="modify-form-section">
+						<div class="image-list">
+							<div class="image-list-container image-list-container simple" id="existing-image-container">
+								<div class="image-list-table" ng-model="disc.imageList" as-sortable="currentImageDrag">
+									<div class="image-item-container" ng-repeat="image in disc.imageList" ng-mouseenter="showOverlay=true;" ng-mouseleave="showOverlay=false;" as-sortable-item>
+										<div class="image-item" as-sortable-item-handle>
+											<div class="image-entity">
+												<img ng-src="/files/{{image.thumbnailId}}" class="fit-parent">
+											</div>
+											<div class="image-overlay draggable" ng-show="showOverlay">
+												<span class="image-remove">
+													<i class="fa fa-times fa-lg" ng-click="removeImage($index)"></i>
+												</span>
+												<div class="image-make-primary" title="Make Primary" ng-show="disc.primaryImage != image._id" ng-click="disc.primaryImage = image._id"><i class="fa fa-star-o fa-lg"></i></div>
+											</div>
+											<div class="image-overlay-static" ng-show="disc.primaryImage == image._id">
+												<div class="primary-image-banner-static">
+													<i class="fa fa-star fa-lg"></i>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="dz-label">Add Images (max. 5)</div>
+				<div class="modify-form-section">
+					<div class="image-list" directive-on="settings.dropzoneReady" directive-set="{dropzone: 'dropzoneConfig'}">
+						<div class="image-list-container">
+							<div class="image-list-table" id="dropzone-previews">
+								<div class="image-item-container image-add dz-clickable" id="add-image">
+									<div class="image-item">
+										<div class="image-entity">
+											<span class="image-default"><i class="fa fa-camera-retro fa-5x"></i></span>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>  
+				</div>
+				<div ng-show="marketLoading" style="text-align:center;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>
+				<div ng-show="!marketLoading">
+					<div class="dz-label">Marketplace<span class="float-right">{{market.marketCap === -1 ? 'Unlimited' : market.marketAvailable}} Marketplace Discs Remaining</span></div>
+					<div class="page-info error" ng-if="!isMarket && market.marketAvailable === 0">
+						You have reached your marketplace cap. <a href="/account/membership/" class="dz-blue hover-underline">Upgrade membership.</a>
+					</div>
+					<div class="modify-form-section" ng-if="isMarket || market.marketAvailable !== 0">
+						<div class="page-info" ng-class="{error: marketError}">This disc must be made <b><u>public</u></b> and have at least <b><u>one image</u></b> before adding it to the marketplace.  Alternatively, a disc is automatically removed from the marketplace if it is marked private or it's pictures are removed.</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">For Sale</label>
+							<div class="col-sm-4">
+								<switch type="checkbox" ng-model="disc.marketplace.forSale"></switch>
+							</div>
+							<label class="col-sm-2 control-label">For Trade</label>
+							<div class="col-sm-4">
+								<switch type="checkbox" ng-model="disc.marketplace.forTrade"></switch>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modify-button-container">
+					<button type="button" class="btn btn-default" nav-back>Cancel</button>
+					<button type="button" class="btn btn-primary" ng-click="!settings.dropzoneProcessing && !discImageCropper.cropperLoading && disc.imageList.length <= 5 && submitDisc()" ng-disabled="settings.dropzoneProcessing || discImageCropper.cropperLoading || disc.imageList.length > 5">
+						<span><i class="fa fa-save fa-tools" ng-show="!settings.dropzoneProcessing && !discImageCropper.cropperLoading"></i><i class="fa fa-spinner fa-spin fa-tools" ng-show="settings.dropzoneProcessing || discImageCropper.cropperLoading"></i></span>Save
+					</button>
 				</div>
 			</div>
-            <div class="modify-button-container">
-                <button type="button" class="btn btn-default" nav-back>Cancel</button>
-                <button type="button" class="btn btn-primary" ng-click="!settings.dropzoneProcessing && !discImageCropper.cropperLoading && disc.imageList.length <= 5 && submitDisc()" ng-disabled="settings.dropzoneProcessing || discImageCropper.cropperLoading || disc.imageList.length > 5">
-                    <span><i class="fa fa-save fa-tools" ng-show="!settings.dropzoneProcessing && !discImageCropper.cropperLoading"></i><i class="fa fa-spinner fa-spin fa-tools" ng-show="settings.dropzoneProcessing || discImageCropper.cropperLoading"></i></span>Save
-                </button>
-            </div>
-        </div>
-    </div>
+		</div>
+	</div>
+	<dz-footer></dz-footer>
 </div>
 <image-cropper cropper-options="discImageCropper" scroll-lock="pgSettings.scrollLock"></image-cropper>
 <dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>

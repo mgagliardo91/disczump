@@ -11,7 +11,7 @@
                 <div class="sidebar-section">
                     <div class="location-container" ng-class="{'inactive':!location.editable}" >
                         <div>
-                            <div class="location-icon" ng-attr-title="{{locationAllowed() ? (locSet ? 'Use Current Location' : '') : 'Location Not Allowed'}}" ng-class="{'active':locationAllowed() && location.locSet}" ng-click="locationAllowed() && !location.locSet && getLocation()">
+                            <div class="location-icon" ng-attr-title="{{locationAllowed() ? (location.locSet ? 'Use Current Location' : '') : 'Location Not Allowed'}}" ng-class="{'active':locationAllowed() && location.locSet}" ng-click="locationAllowed() && location.locSet && getLocation()">
                                 <i class="fa fa-crosshairs"></i>
                             </div>
                             <div class="location-loading" ng-show="location.loading">
@@ -138,6 +138,7 @@
                 </div>
                 <div class="clearfix"></div>
             </div>
+            <back-to-top></back-to-top>
         </div>
     </div>
 </div>

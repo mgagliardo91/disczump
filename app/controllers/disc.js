@@ -191,21 +191,21 @@ function createDisc(userId, data, callback) {
 	if (data.hasOwnProperty('weight')) {
         if (data.weight != null) {
 			var weight = parseInt(data.weight);
-			if (!isNaN(weight) && weight < 1000 && weight > 0) disc.weight = weight;
+			if (!isNaN(weight) && weight < 1000 && weight >= 0) disc.weight = weight;
         }
     }
 	
 	if (data.hasOwnProperty('speed')) {
         if (data.speed != null) {
 			var speed = parseFloat(data.speed);
-			if (!isNaN(speed) && speed < 100 && speed > 0) disc.speed = parseFloat((speed).toFixed(1));
+			if (!isNaN(speed) && speed < 100 && speed >= 0) disc.speed = parseFloat((speed).toFixed(1));
         }
     }
 	
 	if (data.hasOwnProperty('glide')) {
         if (data.glide != null) {
 			var glide = parseFloat(data.glide);
-			if (!isNaN(glide) && glide < 100 && glide > 0) disc.glide = parseFloat((glide).toFixed(1));
+			if (!isNaN(glide) && glide < 100 && glide >= 0) disc.glide = parseFloat((glide).toFixed(1));
         }
     }
 	
@@ -397,7 +397,7 @@ function updateDisc(userId, discId, data, gfs, callback) {
 				disc.weight = undefined;
 			} else {
 				var weight = parseInt(data.weight);
-				if (!isNaN(weight) && weight < 1000 && weight > 0) disc.weight = weight;
+				if (!isNaN(weight) && weight < 1000 && weight >= 0) disc.weight = weight;
 			}
 		}
 
@@ -406,7 +406,7 @@ function updateDisc(userId, discId, data, gfs, callback) {
 				disc.speed = undefined;
 			} else {
 				var speed = parseFloat(data.speed);
-				if (!isNaN(speed) && speed < 100 && speed > 0) disc.speed = parseFloat((speed).toFixed(1));
+				if (!isNaN(speed) && speed < 100 && speed >= 0) disc.speed = parseFloat((speed).toFixed(1));
 			}
 		}
 
@@ -415,7 +415,7 @@ function updateDisc(userId, discId, data, gfs, callback) {
 				disc.glide = undefined;
 			} else {
 				var glide = parseFloat(data.glide);
-				if (!isNaN(glide) && glide < 100 && glide > 0) disc.glide = parseFloat((glide).toFixed(1));
+				if (!isNaN(glide) && glide < 100 && glide >= 0) disc.glide = parseFloat((glide).toFixed(1));
 			}
 		}
 
@@ -464,7 +464,7 @@ function updateDisc(userId, discId, data, gfs, callback) {
 					disc.value = undefined;
 			} else {
 				var value = parseFloat(data.value);
-				if (!isNaN(value) && value >= 0) disc.value = parseFloat((value).toFixed(2));
+				if (!isNaN(value) && value >= 0) disc.value = parseFloat((Math.min(value, 9999.99)).toFixed(2));
 			}
 		}
         

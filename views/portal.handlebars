@@ -2,8 +2,14 @@
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" media="screen">
     <link rel="stylesheet" href="/static/src/css-dist/angular-ui-switch.min.css">
     <link rel="stylesheet" href="/static/src/css-dist/ng-sortable.min.css">
+	
+	{{#if isRelease}}
+    <link rel="stylesheet" href="/static/src/css-dist/animate.min.css">
+    <link rel="stylesheet" href="/static/src/css-dist/main.min.css">
+	{{else}}
     <link rel="stylesheet" href="/static/src/css/animate.css">
     <link rel="stylesheet" href="/static/src/css/main.css">
+	{{/if}}
 
 	<script>
 		window.serverURL = '{{serverURL}}';
@@ -16,13 +22,21 @@
     <script src="https://cdn.rawgit.com/jashkenas/underscore/master/underscore.js"></script>
     <script src="https://cdn.rawgit.com/ocombe/ocLazyLoad/master/dist/ocLazyLoad.js"></script>
     <script src="https://cdn.rawgit.com/d-oliveros/ngSmoothScroll/master/lib/angular-smooth-scroll.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
     
     <script src="/static/src/js-dist/angular-ui-switch.min.js"></script>
     <script src="/static/src/js-dist/ng-sortable.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+	
+	{{#if isRelease}}
+    <script src="/static/src/js-dist/main.min.js"></script>
+    <script src="/static/src/js-dist/controllers.min.js"></script>
+    <script src="/static/src/js-dist/services.min.js"></script>
+	{{else}}
     <script src="/static/src/js/main.js"></script>
     <script src="/static/src/js/controllers.js"></script>
     <script src="/static/src/js/services.js"></script>
+	{{/if}}
+	
     <base href="/">
     
 {{/section}}

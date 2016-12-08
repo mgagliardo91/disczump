@@ -147,6 +147,7 @@
                 </div>
                 <div class="clearfix"></div>
             </div>
+        <back-to-top></back-to-top>
         </div>
     </div>
     <div class="ms-toolbox no-select" ng-show="msOpts.active">
@@ -166,17 +167,17 @@
         </div>
         <div class="ms-btn-container">
             <div class="ms-tb-btn ineligible" title="Visibility" ng-if="!hasMsPermission('msVisibility')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-eye"></i></div>
-            <div class="ms-tb-btn" title="Visibility" ng-click="msOpts.setVisibility()" ng-if="hasMsPermission('msMarketplace')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-eye"></i></div>
+            <div class="ms-tb-btn" title="Visibility" ng-click="msOpts.setVisibility()" ng-if="hasMsPermission('msVisibility')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-eye"></i></div>
             <div class="ms-tb-btn ineligible" title="Marketplace" ng-if="!hasMsPermission('msMarketplace')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-usd"></i></div>
             <div class="ms-tb-btn" title="Marketplace" ng-click="msOpts.setMarketplace()" ng-if="hasMsPermission('msMarketplace')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-usd"></i></div>
             <div class="ms-tb-btn ineligible" title="Bump Discs" ng-if="!hasMsPermission('msBump')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></div>
             <div class="ms-tb-btn" title="Bump Discs" ng-click="msOpts.bumpDiscs()" ng-if="hasMsPermission('msBump')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></div>
         </div>
         <div class="ms-btn-container">
-            <div class="ms-tb-btn ineligible edit" title="Manage Tags" ng-if="!hasMsPermission('msTag')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-tags"></i></div>
-            <div class="ms-tb-btn edit" title="Manage Tags" ng-click="msOpts.manageTags()" ng-if="hasMsPermission('msTag')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-tags"></i></div>
             <div class="ms-tb-btn ineligible delete" title="Delete" ng-if="!hasMsPermission('msDelete')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-trash"></i></div>
             <div class="ms-tb-btn delete" title="Delete" ng-click="msOpts.deleteDiscs()" ng-if="hasMsPermission('msDelete')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-trash"></i></div>
+            <div class="ms-tb-btn ineligible edit" title="Manage Tags" ng-if="!hasMsPermission('msTag')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-tags"></i></div>
+            <div class="ms-tb-btn edit" title="Manage Tags" ng-click="msOpts.manageTags()" ng-if="hasMsPermission('msTag')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-tags"></i></div>
         </div>
     </div>
 </div>

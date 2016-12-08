@@ -92,8 +92,8 @@ module.exports = {
             default:
                 {
                     return {
-                        shortLocation: location.city + ', ' + location.countryCode,
-                        longLocation: location.city + ', ' + location.country
+                        shortLocation: (location.city || location.administrationArea) + ', ' + location.countryCode,
+                        longLocation: (location.city || location.administrationArea) + ', ' + location.country
                     }
                 }
         }

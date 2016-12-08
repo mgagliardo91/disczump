@@ -26,8 +26,10 @@ function pushImageCache(gm, gfs, fileId, callback, skipThumbnail) {
 				return cb();
 			
 			createThumbnail(gm, gfs, fileId, function(err, thumbnailId) {
-				if (err || !thumbnailId)
+				if (err || !thumbnailId) {
+					console.log(err);
 					return cb(Error.createError('Unable to generate thumbnail for image.', Error.internalError));
+				}
 				
 				imageObj.thumbnailId = thumbnailId;
 				return cb();

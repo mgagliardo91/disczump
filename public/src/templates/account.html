@@ -11,14 +11,12 @@
                 Welcome, <span class="dz-blue">{{account.username}}</span>!
             </div>
             <div class="account-preview">
-                <div class="preview-line preview-image" fade-time="200" fade-start="page.ready" fade-override="skip">
-                    <img img-load="/static/img/dz_profile.png" img-src="{{account.image}}" />
-                </div>
+                <div class="preview-line preview-image default-bg-image" fade-time="1000" fade-start="page.ready" fade-override="skip" img-load="/static/img/dz_profile.png" img-src="{{account.image}}" bg-image="true"></div>
                 <div class="preview-label" fade-time="2000" fade-start="page.ready" fade-override="skip">
                     - here's a little about you -
                 </div>
                 <div class="preview-line" fade-time="4000" fade-start="page.ready" fade-override="skip">
-                    You joined disc|zump <span class="dz-blue" ng-attr-title="{{account.dateJoined | date:'medium'}}" ng-attr-alt="{{account.dateJoined | date:'medium'}}">{{getJoinDays()}}</span> day(s) ago.
+                    You joined disc|zump <span class="dz-blue" ng-attr-title="{{account.dateJoined | dateLocal | date:'medium'}}" ng-attr-alt="{{account.dateJoined | dateLocal | date:'medium'}}">{{getJoinDays()}}</span> day(s) ago.
                 </div>
                 <div class="preview-line" fade-time="5000" fade-start="page.ready" fade-override="skip">
                     You currently have <span class="dz-blue">{{count}}</span> discs.
@@ -56,7 +54,7 @@
                             <span><i class="fa fa-spin fa-spinner"></i></span>
                         </div>
                     </div>
-                    <dz-alert alert-data="accountAlert"></dz-alert>
+                    <dz-alert alert-data="accountAlert" force-scroll="true"></dz-alert>
                     <div class="account-page has-btns" ng-show="page.active == 'account'">
                         <div class="form-horizontal form-small" ng-form name="page.personalForm">
                             <div class="form-group">
@@ -86,7 +84,7 @@
                                 <label class="col-sm-3 control-label">Date Joined
                                 </label>
                                 <div class="col-sm-9">
-                                    <div class="form-label">{{account.dateJoined | date:'MM/dd/yyyy'}}</div>
+                                    <div class="form-label">{{account.dateJoined | dateLocal | date:'MM/dd/yyyy'}}</div>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -176,9 +174,7 @@
                             </div>
                             <div class="profile-img" ng-if="account.facebookImage">
                                 <div class="profile-img-container no-select">
-                                    <div>
-                                        <img img-load="/static/img/dz_profile.png" img-src="{{account.facebookImage}}" />
-                                    </div>
+                                    <div class="default-bg-image" img-load="/static/img/dz_profile.png" img-src="{{account.facebookImage}}" bg-image="true"></div>
                                 </div>
                                 <div class="profile-img-buttons">
                                     <a class="btn btn-primary" ng-click="deleteAccountImage()">Use Facebook Photo</a>
@@ -216,7 +212,7 @@
                                 <label class="col-sm-3 control-label">Next Bill Date
                                 </label>
                                 <div class="col-sm-9">
-                                    <div class="form-label">{{account.profile.nextBillDate | date:'MM/dd/yyyy'}}</div>
+                                    <div class="form-label">{{account.profile.nextBillDate | dateLocal | date:'MM/dd/yyyy'}}</div>
                                 </div>
                             </div>
                             <div class="form-group" ng-if="account.profile.nextBillDate">

@@ -734,12 +734,12 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		});
 	}
 	
-	function isLocationAvailable() {
-		return typeof(curLocation) !== 'undefined';
-	}
-	
 	function isGeoAvailable() {
 		return geoAvailable;
+	}
+	
+	function isLocationAvailable() {
+		return isGeoAvailable() || typeof(curLocation) !== 'undefined';
 	}
 	
 	function getLocation(callback) {
@@ -1846,6 +1846,10 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
         });
     }
 	
+	function reloadDisc(discId, callback) {
+        return getDiscObj(discId, true, callback);
+	}
+	
 	function getDisc(discId, callback) {
 		return getDiscObj(discId, false, callback);
 	}
@@ -1871,6 +1875,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
     return {
         getUser: getUser,
 		reloadUser: reloadUser,
+		reloadDisc: reloadDisc,
 		getUserByUsername: getUserByUsername,
 		pushUser: pushUser,
 		pushDisc: pushDisc,

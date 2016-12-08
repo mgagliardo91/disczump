@@ -343,6 +343,29 @@ a.btn-primary {
     border-color: #ffba00;
 }
 
+.back-top {
+	position: fixed;
+    bottom: 5%;
+    background-color: #008edd;
+    width: 100px;
+    text-align: center;
+    padding: 0px 2px;
+    border-radius: 5px;
+    opacity: 0.5;
+    color: white;
+    cursor: pointer;
+    font-size: 0.8em;
+    z-index: 150;
+	-webkit-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.5);
+	-moz-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.5);
+	box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.5);
+	display: none;
+}
+
+.back-top:hover {
+    opacity: 1;
+}
+
 .title-row {
     margin: 0px auto 20px auto;
 }
@@ -362,6 +385,12 @@ a.btn-primary {
 img.fit-parent {
     max-width: 100%;
     max-height: 100%;
+}
+
+.default-bg-image {
+	background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
 }
 
 .fancy-scroll::-webkit-scrollbar {
@@ -629,15 +658,8 @@ img.fit-parent {
 }
 
 .account-preview .preview-image {
-	max-width: 150px;
-    max-height: 150px;
+	height: 150px;
     width: 150px;
-    overflow: hidden;
-}
-
-.account-preview .preview-image > img {
-	max-width: 100%;
-	max-height: 100%;
 }
 
 .preview-line {
@@ -772,16 +794,9 @@ img.fit-parent {
     margin-bottom: 10px;
 }
 
-.profile-img-container > div {
-    display: table-cell;
-    vertical-align: middle;
-}
-
-.profile-img-container > div > img {
-	max-width: 150px;
-    max-height: 150px;
-    width: 100%;
-    height: 100%;
+.profile-img-container > div.default-bg-image {
+	width: 150px;
+    height: 150px;
 }
 
 .profile-img-buttons {
@@ -1515,10 +1530,11 @@ img.fit-parent {
     margin-left: 20px;
 }
 
-.dz-navbar-dropdown > img {
-    max-width: 40px;
-    max-height: 40px;
+.dz-navbar-dropdown > .default-bg-image {
+    width: 40px;
+    height: 40px;
     margin-right: 5px;
+	float: left;
 }
 
 .dz-dropdown-menu {
@@ -1842,12 +1858,13 @@ img.fit-parent {
 	background-color: rgba(0, 142, 221, 0.24);
 }
 
-.p-info-img > img {
-    height: 100%;
+.p-info-img > div {
+    height: 96px;
+	width: 96px;
 }
 
-.p-info-img > img.has-img {
-	border: 1px solid #666
+.p-info-img > div.has-img {
+	border: 1px solid #666;
 }
 
 .p-info-bio {
@@ -2401,6 +2418,15 @@ input.has-error {
 /*---------- dz Modal CSS -----------*/
 /*-----------------------------------*/
 
+.dz-feedback {
+	resize: none;
+	width: 100%;
+	height: 150px;
+	border: none;
+	border-radius: 5px;
+	padding: 5px;
+}
+
 .dz-modal-container {
 	width: 40%;
 	min-width: 500px;
@@ -2452,10 +2478,11 @@ i.dz-modal-close:hover {
 	margin-right: 10px;
 }
 
-.dz-modal-profile-img img {
-	max-height: 125px;
-	max-width: 125px;
+.dz-modal-profile-img {
+	height: 125px;
+	width: 125px;
 	border-radius: 15px;
+	margin: auto;
 }
 
 .dz-modal-text {
@@ -2557,6 +2584,7 @@ i.dz-modal-close:hover {
 }
 
 .dz-modal-tag-container {
+	position: relative;
     height: 52px;
 	overflow: auto;
     margin-bottom: 10px;
@@ -2564,17 +2592,43 @@ i.dz-modal-close:hover {
 	border-bottom: 1px solid #BEBEBE;
 }
 
+.dz-modal-tag-container .watermark {
+	font-size: 20px;
+    color: rgba(190, 190, 190, 0.5);
+    line-height: 50px;
+    position: absolute;
+    left: 0;
+    right: 0;
+	z-index: 0;
+}
+
 .dz-modal-tag-input {
 	background-color: #FFFFFF;
     border: none;
-	border-radius: 2px;
+	border-top-left-radius: 2px;
+	border-bottom-left-radius: 2px;
     width: 100%;
 	padding: 0px 5px;
-    margin-bottom: 5px;
 }
 
 .dz-modal-tag-input:focus {
 	outline: none;
+}
+
+.tag-input-addon {
+	border-top-right-radius: 2px;
+	border-bottom-right-radius: 2px;
+	background-color: #FFFFFF;
+	display: table-cell;
+	width: 1%;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.tag-input-addon i {
+	width: 25px;
+	color: #DADADA;
+	font-size: 10px;
 }
 
 .dz-modal-table {
@@ -2679,6 +2733,10 @@ i.dz-modal-close:hover {
 .ms-help-text {
 	width: 60%;
 	text-align: left;
+}
+
+.ms-help-text > span {
+	color: red;
 }
 
 .dz-modal-action {
@@ -3174,8 +3232,8 @@ input.search-bar {
     position: absolute;
     left: 5px;
     top: 5px;
-    height: 100%;
-    width: 100%;
+    height: 184px;
+    width: 184px;
 }
 
 .grid-img-container .grid-img-content {
@@ -3187,7 +3245,6 @@ input.search-bar {
     max-height: 100%;
     max-width: 100%;
 }
-
 
 .grid-img-container .grid-quick-info {
     background-color: #fff;
@@ -3962,8 +4019,13 @@ ul.grid-item-list li {
 }
 
 .dv-profile-preview-image {
-    max-width: 75px;
-    max-height: 75px;
+    width: 75px;
+    height: 75px;
+}
+
+.dv-profile-preview-image > div {
+	width: 100%;
+	height: 100%;
 }
 
 .dv-profile-preview-btn-container {
@@ -4085,6 +4147,8 @@ ul.grid-item-list li {
 
 .tag-item {
 	display: block;
+	position: relative;
+	z-index: 1;
     float: left;
     padding: 2px 5px;
     background-color: #bebebe;
@@ -4622,15 +4686,10 @@ ul.grid-item-list li {
 }
 
 .thread-item-image {
-	height: 100%;
-	width: 75px;
+	height: 74px;
+	width: 74px;
 	float: left;
 	border-right: 1px solid #ddd;
-}
-
-.thread-item-image > img {
-	height: 100%;
-	width: 100%;
 }
 
 .thread-item-icon {
@@ -4662,6 +4721,10 @@ ul.grid-item-list li {
 
 .thread-item.unread .thread-item-title {
 	font-weight: bold;
+}
+
+.thread-item-title.removed {
+	text-decoration: line-through;
 }
 
 .thread-item.unread .thread-item-icon {

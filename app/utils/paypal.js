@@ -158,10 +158,17 @@ function doInquiry(profileId, callback) {
             return callback(Error.createError('Unable to create recurring payment profile.' + (resp.err ? ' Response: ' + resp.err + '.' : ''), Error.paypalError));
         
         var data = resp.data;
-		
+		logger.debug('PayPal start date', data.START);
 		var start = parsePayPalDate(data.START);
+		logger.debug('Parsed start date', start);
+		
+		logger.debug('PayPal next date', data.NEXTPAYMENT);
 		var nextPayment = parsePayPalDate(data.NEXTPAYMENT);
+		logger.debug('Parsed next date', nextPayment);
+		
+		logger.debug('PayPal create date', data.CREATIONDATE);
 		var createDate = parsePayPalDate(data.CREATIONDATE);
+		logger.debug('Parsed create date', createDate);
         
         return callback(null, {
             profileId: data.PROFILEID,
@@ -224,7 +231,9 @@ function createRecurringTrx(amount, email, body, immedCharge, callback) {
 		requestParams['OPTIONALTRXAMT'] = immedCharge;
 	}
     
+	logger.debug('Current date', new XDate());
     var date = (new XDate()).addMonths(1);
+	logger.debug('Start date', date);
     
     requestParams['START'] = date.toString('MMddyyyy');
     

@@ -3,9 +3,20 @@ var logger = require('./logger.js');
 var geoConfig = require('../../config/config.js').geo;
 
 module.exports = {
+    stripBody: stripBody,
     createUserReq: createUserReq,
     createDiscReq: createDiscReq,
     createFacetReq: createFacetReq
+}
+
+function stripBody(body) {
+    if (typeof(body.responseHeader) !== 'undefined') {
+        body.responseHeader = {
+            status: body.responseHeader.status
+        }
+    }
+    
+    return body;
 }
 
 function checkGeo(geo) {

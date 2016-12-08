@@ -8,19 +8,20 @@
                 </div>
                  <dz-alert alert-data="signupAlert" class="form-small" force-scroll="true"></dz-alert>
                 <div class="form-small" style="text-align: center; margin-bottom: 20px;">
-                    <a class="btn btn-primary" ng-click="!signupComplete && getFBAccount()" ng-disabled="signupComplete" ng-show="!facebook">Sign Up with Facebook</a>
+                    <a class="btn btn-primary" ng-click="!signupComplete && getFBAccount()" ng-show="!signupComplete || !facebook.userID" ng-show="!facebook">Sign Up with Facebook</a>
                     <div class="page-info input-note" ng-show="facebook">
-                        The following information was pulled from your Facebook account. Please complete the form to continue.
+                        The following information was pulled from your Facebook account. Please complete the form to continue. 
+                        <span ng-click="clearForm()" class="dz-blue hover-underline">Reset Form</span>
                     </div>
 
                 </div>
-                <div class="form-horizontal form-small" name="signup.form" ng-form  ng-enter="!signupComplete && signup.form.$valid && doSignUp();">
+                <div class="form-horizontal form-small" ng-show="!signupComplete" name="signup.form" ng-form  ng-enter="!signupComplete && signup.form.$valid && doSignUp();">
                     <div class="form-group">
                         <label for="account-first-name" class="col-sm-3 control-label">
                             First Name
                         </label>
                         <div class="col-sm-9">
-                            <input type="text" class="form-control validation" id="account-first-name" name="firstName" placeholder="First name" ng-model="signup.firstName" required>
+                            <input type="text" class="form-control validation" id="account-first-name" name="firstName" placeholder="First name" ng-model="signup.user.firstName" required>
                         </div>
                     </div>
                     <div class="form-group">
@@ -28,7 +29,7 @@
                             Last Name
                         </label>
                         <div class="col-sm-9">
-                            <input type="text" class="form-control validation" id="account-last-name" name="lastName" placeholder="Last name" ng-model="signup.lastName" required>
+                            <input type="text" class="form-control validation" id="account-last-name" name="lastName" placeholder="Last name" ng-model="signup.user.lastName" required>
                         </div>
                     </div>
                     <div class="form-group">
@@ -51,7 +52,7 @@
                             Email
                         </label>
                         <div class="col-sm-9">
-                            <input type="email" class="form-control validation" id="account-email" name="email" placeholder="Email" ng-model="signup.email" ng-focus="emailActive = true;" ng-blur="emailActive = false;" required>
+                            <input type="email" class="form-control validation" id="account-email" name="email" placeholder="Email" ng-model="signup.user.email" ng-focus="emailActive = true;" ng-blur="emailActive = false;" required>
                         </div>
                         <div class="col-sm-9 col-sm-offset-3" ng-show="emailActive">
                             <div class="page-info input-note round">
@@ -69,7 +70,7 @@
                             Username
                         </label>
                         <div class="col-sm-9">
-                            <input type="text" class="form-control validation" id="account-username" placeholder="Username" ng-model="signup.username" ng-focus="usernameActive = true;" ng-blur="usernameActive = false;" required pattern-set="^[a-zA-Z0-9\_]{6,15}$">
+                            <input type="text" class="form-control validation" id="account-username" placeholder="Username" ng-model="signup.user.username" ng-focus="usernameActive = true;" ng-blur="usernameActive = false;" required pattern-set="^[a-zA-Z0-9\_]{6,15}$">
                         </div>
                         <div class="col-sm-9 col-sm-offset-3" ng-show="usernameActive">
                             <div class="page-info input-note round">
@@ -92,7 +93,7 @@
                             Password
                         </label>
                         <div class="col-sm-5">
-                            <input type="password" class="form-control validation" id="account-username" placeholder="Password" ng-model="signup.password" ng-focus="pwActive = true;" ng-blur="pwActive = false;" required ng-pattern="/^.{6,}$/">
+                            <input type="password" class="form-control validation" id="account-username" placeholder="Password" ng-model="signup.user.password" ng-focus="pwActive = true;" ng-blur="pwActive = false;" required ng-pattern="/^.{6,}$/">
                         </div>
                         <div class="col-sm-9 col-sm-offset-3" ng-show="pwActive">
                             <div class="page-info input-note round">
@@ -112,7 +113,7 @@
                             Verify Password
                         </label>
                         <div class="col-sm-5">
-                            <input type="password" class="form-control validation" id="account-vpassword" placeholder="Retype password" ng-model="signup.vpassword" required must-match="signup.password">
+                            <input type="password" class="form-control validation" id="account-vpassword" placeholder="Retype password" ng-model="signup.user.vpassword" required must-match="signup.user.password">
                         </div>
                     </div>
                     <div class="legal-note"><i class="fa fa-info-circle"></i>By clicking <b>Sign Up</b>, I agree to the <a class="dz-blue hover-underline" href="#">Terms and Condtions</a> and <a class="dz-blue hover-underline" href="#">Privacy Policy</a>.</div>
