@@ -7,9 +7,10 @@
                     <img src="/static/logo/logo_portal.png">
                 </div>
                  <dz-alert alert-data="signupAlert" class="form-small" force-scroll="true"></dz-alert>
+                <div class="notify-button" style="text-align: center; margin: 20px 0px" ng-show="signupComplete"><a class="btn btn-default" href="/" style="font-size: 1.2em; background-color: #ffba00;">Go Home</a></div>
                 <div class="form-small" style="text-align: center; margin-bottom: 20px;">
-                    <a class="btn btn-primary" ng-click="!signupComplete && getFBAccount()" ng-show="!signupComplete || !facebook.userID" ng-show="!facebook">Sign Up with Facebook</a>
-                    <div class="page-info input-note" ng-show="facebook">
+                    <a class="btn btn-primary" ng-click="!signupComplete && getFBAccount()" ng-show="!signupComplete && !facebook">Sign Up with Facebook</a>
+                    <div class="page-info input-note" ng-show="!signupComplete && facebook">
                         The following information was pulled from your Facebook account. Please complete the form to continue. 
                         <span ng-click="clearForm()" class="dz-blue hover-underline">Reset Form</span>
                     </div>

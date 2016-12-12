@@ -1,0 +1,60 @@
+<div class="profile-container">
+    <div class="card-container" ng-show="loaded">
+        <div id="card-remain" style="display: inline-block">
+            <div class="profile-card p-info">
+                <div class="p-info-img">
+                    <div class="default-bg-image" img-load="/static/img/dz_profile.png" directive-on="loaded" directive-set="{'img-src':'{{getAccountImage()}}'}" bg-image="true" ng-class="{'has-img':ready}"></div>
+                </div>
+                <div class="p-info-content p-container">
+                    <div class="p-info-icon">
+                        <span style="cursor:pointer;" class="fa-stack dz-blue-hover" modal-trigger="dz-profile-modal" data="{'userId':'userId'}" modal-opts="modalOpts">
+                            <i class="fa fa-circle fa-stack-2x"></i>
+                            <i class="fa fa-info fa-stack-1x fa-inverse"></i>
+                        </span>
+                    </div>
+                    <div class="p-info-text">
+                        <div class="p-username handle-overflow">{{user.username}}</div>
+                        <div class="p-name handle-overflow">{{user.firstName}} {{user.lastName}}</div>
+                    </div>
+                    <div class="p-info-bio fancy-scroll" ng-class="{'has-ph':!user.bio}">
+                        <span class="placeholder" ng-if="!user.bio">Hello, welcome to my trunk...</span>
+                        <div parse-text="user.bio" parse-url parse-disc id="user-bio">
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <div class="profile-card p-icon-button" ng-if="currentUser != userId">
+                <div class="p-container">
+                    <a class="p-icon-text align-vmid" ng-href="/inbox?userId={{user._id}}">
+                        <div class="p-icon-style"><i class="fa fa-envelope"></i></div>
+                        <div class="p-icon-label">Message</div>
+                    </a>
+                </div>
+            </div>
+            <div class="profile-card p-icon-button" ng-if="currentUser == userId">
+                <div class="p-container">
+                    <a class="p-icon-text align-vmid" href="/d/create/templates">
+                        <div class="p-icon-style"><i class="fa fa-plus-circle"></i></div>
+                        <div class="p-icon-label">Add Disc</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="profile-card p-icon-button" ng-show="!cardLoaded">
+            <div class="p-container">
+                <div class="p-icon-text align-vmid">
+                    <div class="p-icon-style"><i class="fa fa-spin fa-spinner"></i></div>
+                </div>
+            </div>
+        </div>
+        <div ng-style="contStyle" class="card-list" id="card-list" ng-show="cardLoaded">
+        </div>
+    </div>
+    <div class="explore-nav" ng-show="navArr.length > 1" ng-init="start = 0">
+        <span>
+            <i class="fa fa-angle-double-left nav-list-arrow" ng-click="pageBack()" ng-class="{inactive: start == 0}"></i>
+            <i class="fa" ng-repeat="i in navArr track by $index" ng-click="navIndex($index)" ng-class="{active: start == $index, 'fa-circle': start == $index, 'fa-circle-thin': start != $index}"></i>
+            <i class="fa fa-angle-double-right nav-list-arrow" ng-click="pageNext()" ng-class="{inactive: start == navArr.length - 1}"></i>
+        </span>
+    </div>
+</div>

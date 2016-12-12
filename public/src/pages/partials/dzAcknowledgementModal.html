@@ -1,0 +1,14 @@
+<div>
+    <div class="dz-modal-content">
+        <i class="fa fa-5x fa-exclamation-triangle" style="color:#008EDD"></i>
+        <div class="dz-modal-title-lg">Warning!</div>
+        <div class="dz-modal-message" id="modal-message-1" ng-show="data.message1"></div>
+        <br>
+        <div class="dz-modal-message" id="modal-message-2" ng-show="data.message2"></div>
+    </div>
+    <div class="dz-modal-btn-container">
+        <div class="dz-modal-triangle"></div>
+        <div class="dz-modal-btn cancel" ng-click="show = false">Cancel</div>
+        <div class="dz-modal-btn" ng-click="confirm()" style="background-color: #008EDD">OK</div>
+    </div>
+</div>

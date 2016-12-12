@@ -1,0 +1,14 @@
+<div>
+    <div class="dz-modal-content">
+        <div class="dz-modal-title-sm left">Bump Discs</div>
+        <div class="dz-modal-text">The table below shows each bump status of the selected discs. Clicking "Bump" will automatically bump all available discs in the table below.</div>
+        <dz-alert class="full-width" alert-data="modalAlert"></dz-alert>
+        <dz-modal-table table-opts="tableOpts"></dz-modal-table>
+    </div>
+    <div class="dz-modal-btn-container">
+        <div class="dz-modal-triangle"></div>
+        <div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>
+        <div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>
+        <div class="dz-modal-btn btn-blue" ng-click="!opts.loading && !opts.disableBump && confirm()" ng-show="!opts.loading" ng-class="{disabled:opts.disableBump}">Bump</div>
+    </div>
+</div>

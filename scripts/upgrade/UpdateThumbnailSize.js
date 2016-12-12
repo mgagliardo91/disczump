@@ -1,9 +1,9 @@
 var mongoose            = require('mongoose');
-var Disc            = require('../app/models/disc.js');
-var ImageCache            = require('../app/models/imageCache.js');
-var FileUtil            = require('../app/utils/file.js');
+var Disc            = require('../../app/models/disc.js');
+var ImageCache            = require('../../app/models/imageCache.js');
+var FileUtil            = require('../../app/utils/file.js');
 var _ = require('underscore');
-var config = require('../config/config.js');
+var config = require('../../config/config.js');
 var async = require('async');
 var Grid = require('gridfs-stream');
 var async = require('async');
@@ -46,18 +46,19 @@ mongoose.connect('mongodb://' + config.database.host + ':' +
 var gfs = Grid(mongoose.connection.db);
    
 Disc.find({}, function(err, discs) {
-    console.log('Going through [' + discs.length + '] discs.');
+	var discCount = discs.length;
+    console.log('Going through [' + discCount + '] discs.');
+	var i = 1;
     async.eachSeries(discs, function (disc, callback) {
-        console.log('Updating disc [' + disc._id + ']');
         var imageArr = [];
+		if (i++ % 10 === 0)
+			console.log('Working disc ' + i + '/' + discCount);
         async.eachSeries(disc.imageList, function(image, cb) {
-            console.log('Creating thumbnail for disc image [' + image._id + ']');
             createThumbnail(gm, gfs, image.fileId, function(err, thumbnailId) {
                 if (err)
                     return cb('Error creating thumbnail. ' + err);
                 
                 var oldId = image.thumbnailId;
-                console.log('Created thumbnail with id [' + thumbnailId + '] to replace id [' + oldId + ']');
                 image.thumbnailId = thumbnailId;
                 
                 imageArr.push(image);
@@ -72,7 +73,6 @@ Disc.find({}, function(err, discs) {
         }, function(err) {
             if (err)
                 console.log('Error within disc [' + disc._id + ']: ' + err);
-            console.log(imageArr);
             
             Disc.findOne({'_id':disc._id}, function(err, foundDisc) {
                 if (err) {
@@ -85,8 +85,6 @@ Disc.find({}, function(err, discs) {
         		    if (err)
                         console.log('Error saving disc: ' + err);
                     
-        		    console.log(upDisc.imageList);
-                    console.log('Finished updating disc images.');
                     return callback();
         		});
             });

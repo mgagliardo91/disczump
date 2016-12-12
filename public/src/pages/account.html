@@ -1,6 +1,6 @@
 <link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
 <div dz-wrapper>
-    <dz-header></dz-header>
+    <dz-header modal-opts="globalModalOpts"></dz-header>
     <dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
     <div class="scrollable main-body" id="disc-templates" ng-show="page.ready">
         <div class="page-content full-width">
@@ -126,7 +126,7 @@
                                     Location
                                 </label>
                                 <div class="col-sm-5 col-marg-repl" style="position: relative">
-                                    <input type="text" class="form-control" name="location" id="account-postal-code" placeholder="Postal Code" ng-model="location.search" ng-model-options="{updateOn: 'default blur',debounce:{'default': 500,'blur': 0 }}" location-search="locSelected" />
+                                    <input type="text" class="form-control" name="location" id="account-postal-code" placeholder="Enter Postal Code..." ng-model="location.search" ng-model-options="{updateOn: 'default blur',debounce:{'default': 500,'blur': 0 }}" location-search="locSelected" />
                                 </div>
                                 <div class="col-sm-9 col-sm-offset-3" ng-show="location.curLocation">
                                     <div class="page-info input-note round">
@@ -264,4 +264,3 @@
     <dz-footer></dz-footer>
 </div>
 <image-cropper cropper-options="discImageCropper"></image-cropper>
-<dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>

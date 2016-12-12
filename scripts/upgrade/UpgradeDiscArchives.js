@@ -4,7 +4,7 @@ var MongoClient = mongodb.MongoClient;
 var configDB = require('../../config/config.js');
 
 var url = 'mongodb://' + configDB.database.host + ':' + 
-    configDB.database.port + '/bak';
+    configDB.database.port + '/' + configDB.database.db;
 
 MongoClient.connect(url, function (err, db) {
   if (err) {

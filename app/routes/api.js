@@ -25,7 +25,6 @@ var Solr = require('../utils/solr.js');
 var Verify = require('../utils/verification.js');
 var Access = require('../utils/access.js');
 var StringUtils = require('../utils/stringUtils.js');
-var AccountDelete = require('../external/accountDelete.js');
 
 var config = require('../../config/config.js');
 var localConfig = require('../../config/localConfig.js');
@@ -43,7 +42,6 @@ module.exports = function(app, gridFs) {
 			UserController.getAccount(req.user._id, function(err, user) {
 				if (err)
 					return next(err);
-				
 				
 				StringUtils.stringifyUser(user, function(err, account) {
 					if (err)
@@ -117,7 +115,6 @@ module.exports = function(app, gridFs) {
 					EventController.addEvent(user._id, EventController.Types.AccountDeletion, 'Account has been deleted for user [' + user._id + '].');
 					logger.info('User [%s] has successfully deleted account', req.user._id);
 					
-					AccountDelete.externalDelete(user);
 					return res.json({
 						userId: user._id,
 						status: 'OK'
@@ -363,13 +360,32 @@ module.exports = function(app, gridFs) {
 		});
 	
 	app.route('/discs/:discId/bump')
+        .get(Access.hasAccess, function(req, res, next) {
+			logger.debug('User [%s] is requesting access to get bump remaining for disc [%s]', req.user._id, req.params.discId);
+            DiscController.getDisc(req.user._id, req.params.discId, function(err, disc) {
+				if (err)
+					return next(err);
+				
+                var tempDisc = StringUtils.stringifyDisc(disc);
+                
+				return res.json({
+                    _id: tempDisc._id,
+                    bumpRemaining: tempDisc.marketplace.bumpRemaining
+                });
+			});
+        })
 		.put(Access.hasAccess, function(req, res, next) {
 			logger.debug('User [%s] is requesting access to bump disc [%s]', req.user._id, req.params.discId);
 			DiscController.bumpDisc(req.user._id, req.params.discId, function(err, disc) {
 				if (err)
 					return next(err);
 				
-				return res.json(StringUtils.stringifyDisc(disc));
+				var tempDisc = StringUtils.stringifyDisc(disc);
+                
+				return res.json({
+                    _id: tempDisc._id,
+                    bumpRemaining: tempDisc.marketplace.bumpRemaining
+                });
 			});
 		});
 

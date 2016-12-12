@@ -1,0 +1,21 @@
+<div class="full-screen-backdrop no-select dz-cloak" ng-show="showLightbox" ng-click="backdropExit($event);">
+    <div class="lb-container">
+        <div id="lb-content" class="lb-image-block no-focus" tabindex="0" ng-show="isReady">
+            <dz-alert class="full-width" alert-data="lbAlert"></dz-alert>
+            <div ng-show="loading"><i class="fa fa-spinner fa-spin fa-6x"></i></div>
+            <div ng-show="!loading">
+                <div id="lb-image-list" class="lb-image-list float-left fancy-scroll lite">
+                    <img class="image-preview" ng-src="/files/{{img.thumbnailId}}" ng-repeat="img in disc.imageList track by $index" ng-class="{active: index == $index}" ng-click="setImage($index)">
+                </div>
+                <div id="lb-image" class="lb-image">
+                    <div style="display:table-cell; vertical-align:middle;">
+                        <img class="fit-parent" img-load img-src="/files/{{disc.imageList[index].fileId}}">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="lb-x absolute-top-right">
+        <p class="lb-close" ng-click="trigger=false">×</p>
+    </div>
+</div>

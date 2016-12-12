@@ -1,5 +1,5 @@
 <div dz-wrapper>
-    <dz-header></dz-header>
+    <dz-header modal-opts="globalModalOpts"></dz-header>
     <dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
     <div class="private-warning dz-blue-background" ng-show="!loading.disc && !disc.visible">
         <span><i class="fa fa-eye-slash fa-lg"></i>This disc is private!<i class="fa fa-eye-slash fa-lg"></i></span>
@@ -314,4 +314,3 @@
     <dz-footer></dz-footer>
 </div>
 <lightbox disc-id="disc._id" cur-img="imageBlock._id" trigger="showLightbox" scroll-lock="pgSettings.scrollLock"></lightbox>
-<dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>

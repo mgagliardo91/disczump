@@ -1,0 +1,36 @@
+<div class="dz-navbar min-window-width" ng-class="{'fixed':fixed}" ng-style="{'background-color':'rgba(74,74,74,' + (alphaValue/100) +')'}">
+    <div class="dz-navbar-btn-container float-left">
+        <div class="dz-navbar-btn-list">
+            <a href="/" ng-style="{'opacity': alphaValue}"><img src="/static/logo/logo_text.png" class="dz-navbar-logo"></a>
+        </div>
+    </div>
+    <div class="dz-navbar-btn-container float-right">
+        <div class="dz-navbar-btn-list">
+            <div class="dz-navbar-item dz-navbar-dropdown" ng-if="user" ng-click="toggleDropdown()">
+                <div class="default-bg-image" img-load="/static/img/dz_profile.png" img-src="{{getAccountImage()}}" bg-image="true"></div>
+                <i class="fa fa-angle-double-down fa-lg" style="line-height:40px;"></i>
+            </div>
+            <div class="backdrop" ng-show="showOptions" ng-click="toggleDropdown(false)" ng-if="user"></div>
+            <ul class="dz-dropdown-menu" ng-show="showOptions" ng-if="user">
+                <li><a href="/account"><span><i class="fa fa-tools fa-user"></i></span>My Account</a></li>
+                <li class="menu-sep"></li>
+                <li><a ng-click="showFeedbackModal()" id="menu-feedback" class="hover-pointer"><span><i class="fa fa-comment fa-tools"></i></span>Feedback</a></li>
+                <li><a href="/faq"><span><i class="fa fa-tools fa-question-circle"></i></span>FAQ</a></li>
+                <li><a href="/about"><span><i class="fa fa-tools fa-info-circle"></i></span>About</a></li>
+                <li class="menu-sep"></li>
+                <li><a href="/logout" data-ajax="false"><span><i class="fa fa-sign-out fa-tools"></i></span>Logout</a></li>
+            </ul>
+            <div class="dz-navbar-links">
+                <a class="dz-navbar-item dz-navbar-btn" href="/explore" ng-class="{'active':isItemActive('explore')}">Explore</a>
+                <a class="dz-navbar-item dz-navbar-btn" href="/trunks" ng-class="{'active':isItemActive('trunks')}">Trunks</a>
+                <a class="dz-navbar-item dz-navbar-btn" ng-if="!user" href="/about" ng-class="{'active':isItemActive('about')}">About</a>
+                <a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/t/{{user.username}}" ng-class="{'active':isItemActive('t/{{user.username}}')}">My Trunk</a>
+                <a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/inbox" ng-class="{'active':isItemActive('inbox')}">Inbox<span ng-show="unreadCount > 0" style="color: #ffa840;"> ({{unreadCount}})</span></a>
+                <a class="dz-navbar-item dz-navbar-btn" href="/login" ng-if="!user" ng-class="{'active':isItemActive('login')}">Sign In</a>
+                <a class="dz-navbar-item dz-navbar-btn" href="/signup" ng-if="!user" ng-class="{'active':isItemActive('signup')}">Sign Up</a>
+            </div>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+    <dz-modal modal-opts="globalModalOpts"></dz-modal>
+</div>

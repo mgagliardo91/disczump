@@ -1,0 +1,17 @@
+<div>
+    <div class="dz-modal-content">
+        <div class="dz-modal-title-sm left"><img class="dz-modal-title-img" ng-src="{{getAccountImage()}}" />Delete Account - {{data.account.username}}</div>
+        <dz-alert class="full-width" alert-data="modalAlert"></dz-alert>
+        <i class="fa fa-5x fa-exclamation-triangle" style="color:#e85947"></i>
+        <div class="dz-modal-title-lg">Warning!</div>
+        <div class="dz-modal-text">Are you sure you want to permanently delete your disc|zump account?</div>
+        <br>
+        <div class="dz-modal-text">Upon clicking delete, a confirmation email will be sent to your disc|zump account email address. Click the link in this email to complete the deletion process.</div>
+    </div>
+    <div class="dz-modal-btn-container">
+        <div class="dz-modal-triangle"></div>
+        <div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>
+        <div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>
+        <div class="dz-modal-btn" ng-show="!opts.loading && !opts.confirmed" ng-click="!opts.loading && confirm()" style="background-color: #e85947">Delete</div>
+    </div>
+</div>

@@ -1,0 +1,39 @@
+<div>
+    <div class="dz-modal-content">
+        <div class="dz-modal-title-sm left">Multi-select Tag Manager</div>
+        <div class="dz-modal-text">Tags shown below are common to all selected discs. Use this window to add and remove tags to/from multiple discs at once. When saved, all tags in this list will be added to the discs below.</div>
+        <dz-alert class="full-width" alert-data="tagAlert"></dz-alert>
+        <div ng-show="opts.loading" style="line-height:105px;"><i class="fa fa-spinner fa-spin fa-3x"></i></div>
+        <div ng-show="!opts.loading">
+            <div class="input-group" style="position:relative;height:20px;margin:5px;">
+                <input type="text" class="dz-modal-tag-input" placeholder="Enter tag..." ng-model="tempTag" ng-model-options="{'updateOn':'default blur','debounce':{'default':500,'blur':0}}" ng-model-enter="pushTempTag();" directive-on="opts.isShowing" directive-set="{'dz-auto-complete':'tag'}" user-id="data.user" dz-multi="true" >
+                <span class="tag-input-addon hover-pointer">
+                    <div ng-click="pushTempTag();" ng-class="{'btn-pulse':tempTag.length}">
+                        <i class="fa fa-plus" aria-hidden="true"></i>
+                    </div>
+                 </span>
+            </div>
+            <div class="dz-modal-tag-container">
+                <div class="watermark">Common Tags</div>
+                <li class="tag-item" ng-repeat="tag in newTags">
+                    <div>{{tag}}<span class="tag-item-remove" ng-click="removeNewTag($index)"><i class="fa fa-times"></i></span></div>
+                </li>
+            </div>
+            <div style="text-align:left;">
+                <span style="margin-right:5px;">
+                    <i class="fa fa-square-o hover-pointer" ng-show="!opts.overwrite" aria-hidden="true" ng-click="opts.overwrite = !opts.overwrite"></i>
+                    <i class="fa fa-check-square-o hover-pointer" ng-show="opts.overwrite" aria-hidden="true" ng-click="opts.overwrite = !opts.overwrite"></i>
+                </span>
+                <span class="hover-pointer" ng-click="opts.overwrite = !opts.overwrite">Overwrite Tags</span>
+            </div>
+        </div>
+        <dz-alert class="full-width" alert-data="overwriteAlert" style="text-align:left;"></dz-alert>
+        <dz-modal-table table-opts="tableOpts"></dz-modal-table>
+    </div>
+    <div class="dz-modal-btn-container">
+        <div class="dz-modal-triangle"></div>
+        <div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>
+        <div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>
+        <div class="dz-modal-btn btn-blue" ng-click="!opts.loading && opts.allowSave && confirm()" ng-show="!opts.loading" ng-class="{disabled:!opts.allowSave}">Save</div>
+    </div>
+</div>

@@ -1,0 +1,33 @@
+<div>
+    <div class="dz-modal-content">
+        <dz-alert class="full-width" alert-data="modalAlert"></dz-alert>
+        <div ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>
+        <div ng-show="userInit && !opts.loading">
+            <div class="dz-modal-profile-table" id="profile-table">
+                <div class="dz-modal-profile-cell right">
+                    <div class="handle-overflow" style="font-weight:bold;font-size:20px;">{{user.username}}</div>
+                    <div class="handle-overflow">{{user.firstName}} {{user.lastName}}</div>
+                    <div class="handle-overflow">{{user.shortLocation}}</div>
+                </div>
+                <div class="dz-modal-profile-cell">
+                    <div class="dz-modal-profile-img default-bg-image" img-load="/static/img/dz_profile.png" img-src="{{getUserImage()}}" bg-image="true"></div>
+                </div>
+                <div class="dz-modal-profile-cell left">
+                    <div class="handle-overflow">{{getAccountName()}}</div>
+                    <div class="handle-overflow">{{user.discCount}} Public Discs</div>
+                    <div class="handle-overflow">Member since {{user.dateJoined | dateLocal | date:'MM/dd/yyyy'}}</div>
+                    <div class="handle-overflow"><i style="width:14px;" class="fa fa-check fa-tools" aria-hidden="true" ng-class="{'fa-success':user.pdgaNumber,'fa-gray':!user.pdgaNumber}"></i>PDGA Verified</div>
+                    <div class="handle-overflow"><i style="width:14px;" class="fa fa-check fa-tools" aria-hidden="true" ng-class="{'fa-success':user.fbId,'fa-gray':!user.fbId}"></i>Facebook Verified</div>
+                </div>
+            </div>
+            <div class="dz-modal-bio" id="modal-bio" parse-text="user.bio" parse-url parse-disc ng-if="user.bio">{{user.bio}}</div>
+        </div>
+    </div>
+    <div class="dz-modal-btn-container">
+        <div class="dz-modal-triangle"></div>
+        <div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>
+        <div class="dz-modal-btn btn-blue" ng-if="!isOwner" ng-show="!opts.loading" ng-click="initMessage()">Message</div>
+        <div class="dz-modal-btn trunk" ng-if="!isTrunk" ng-show="!opts.loading" ng-click="viewTrunk()">View Trunk</div>
+        <div class="dz-modal-btn btn-blue" ng-if="isOwner" ng-show="!opts.loading" ng-click="viewAccount()">My Account</div>
+    </div>
+</div>

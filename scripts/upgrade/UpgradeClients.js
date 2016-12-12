@@ -4,30 +4,26 @@ var MongoClient = mongodb.MongoClient;
 var configDB = require('../../config/config.js');
 
 var url = 'mongodb://' + configDB.database.host + ':' + 
-    configDB.database.port + '/bak';
+    configDB.database.port + '/' + configDB.database.db;
 
 MongoClient.connect(url, function (err, db) {
   if (err) {
     console.log('Unable to connect to the mongoDB server. Error:', err);
   } else {
       var collection = db.collection('clients');
-      var arr = collection.find().snapshot();
-      
-      var q = async.queue(function(e, callback) {
-          e.createDate = new Date();
-          collection.save(e);
-          return callback();
-      }, Infinity);
-      
-      arr.forEach(function(e) {
-          q.push(e);
+      collection.drop();
+      collection.insert({
+        "_id" : "H1DUdRlF",
+        "clientSecret" : "$2a$08$sQFudHDBzv/73DneBmETbueGq9ulpG3lPIK.68mRIUQT/xjdUHkWW",
+        "name" : "disc|zump web",
+        "clientId" : "dzWeb",
+        "permissions" : {
+                "deleteUsers" : true,
+                "createUsers" : true
+        },
+        "__v" : 0
       });
-      
-      q.drain = function() {
-          if (arr.isClosed()) {
-              console.log('All items have been processed.');
-              db.close();
-          }
-      }
+      console.log('All items have been processed.');
+      db.close();
   }
 });

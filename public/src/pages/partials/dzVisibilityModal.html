@@ -1,0 +1,24 @@
+<div>
+    <div class="dz-modal-content">
+        <div class="dz-modal-title-sm left">Multi-select Visibility Manager</div>
+        <div class="dz-modal-text">Change the visibility setting for all discs selected below.</div>
+        <div class="page-info error" ng-show="!makePublic">Warning! Making discs private will automatically remove them from the marketplace.</div>
+        <div class="full-width-table">
+            <div class="dz-modal-action sm hover-pointer" ng-click="makePublic = true;" ng-class="{active: makePublic}">
+                <div><i class="fa fa-eye" aria-hidden="true" style="font-size:4em;"></i></div>
+                <div class="dz-modal-action-text">Public</div>
+            </div>
+            <div class="dz-modal-action sm hover-pointer" ng-click="makePublic = false;" ng-class="{active: !makePublic}">
+                <div><i class="fa fa-eye-slash" aria-hidden="true" style="font-size:4em;"></i></div>
+                <div style="font-weight:bold;font-size:20px;">Private</div>
+            </div>
+        </div>
+        <dz-modal-table table-opts="tableOpts"></dz-modal-table>
+    </div>
+    <div class="dz-modal-btn-container">
+        <div class="dz-modal-triangle"></div>
+        <div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>
+        <div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>
+        <div class="dz-modal-btn btn-blue" ng-click="!opts.loading && confirm()" ng-show="!opts.loading">Save</div>
+    </div>
+</div>

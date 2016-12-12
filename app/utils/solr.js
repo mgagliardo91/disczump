@@ -25,6 +25,24 @@ function checkGeo(geo) {
     return /^(\-?\d+(\.\d+)?)$/.test(geo.latitude) && /^(\-?\d+(\.\d+)?)$/.test(geo.longitude);
 }
 
+function getUserFilterField(fieldName) {
+    if (/account\.verifications/.test(fieldName)) {
+        return 'verification';
+    }
+    
+    return fieldName;
+}
+
+function getUserAssocFields(field) {
+    switch(field) {
+        case 'pdga':
+        case 'facebook':
+            return ['pdga', 'facebook'];
+        default:
+            return [field];
+    }
+}
+
 function createUserReq(opts) {
     var geoSet = false;
     var req = {
@@ -35,13 +53,14 @@ function createUserReq(opts) {
             qf:"q_username^2 local.pdgaNumber^2 q_firstName q_lastName",
             lowercaseOperators:"true",
             stopwords:"true",
-            defType:"edismax"
+            defType:"edismax",
+            tie:1
         },
         facet: {
-            pdga: {type:"terms", field: 'account.verifications.pdga',mincount: 1,limit: 2, numBuckets: false},
-            facebook: {type:"terms", field: 'account.verifications.facebook',mincount: 1,limit: 2, numBuckets: false}
+            pdga: {type:"terms", field: 'account.verifications.pdga', mincount: 1, limit: 2, numBuckets: false},
+            facebook: {type:"terms", field: 'account.verifications.facebook', mincount: 1, limit: 2, numBuckets: false}
         },
-        sort: 'score asc,local.username asc',
+        sort: 'score desc,local.username asc',
         limit: typeof opts.limit !== 'undefined' ? opts.limit : 20,
         offset: opts.start || 0
     };
@@ -75,11 +94,15 @@ function createUserReq(opts) {
     
     if (opts.sort) {
         if (opts.sort == 'rel') {
-            req.sort = 'score asc,local.username asc';
+            req.sort = 'score desc,local.username asc';
         } else if (opts.sort == 'proximity' && geoSet) {
-            req.sort = 'score asc,geodist() asc';
+            req.sort = 'score desc,geodist() asc,local.username asc';
+        } else if (opts.sort == 'alpha') {
+            req.sort = 'local.username asc'
         }
     }
+    
+    var filterItems = [];
     
     if (opts.filter) {
         var excludeActive = false;
@@ -88,32 +111,44 @@ function createUserReq(opts) {
              
             if (req.facet[field] && opts.filter[i].fields.length) {
                 var fieldName = req.facet[field].field;
-                var filterString = '{!tag=t_' + fieldName  + '}';
+                var filterName = getUserFilterField(fieldName);
+                var excludeString = '{!tag=t_' + filterName  + '}';
+                var filterString = '(';
                 for (var j = 0; j < opts.filter[i].fields.length; j++) {
                     var value = opts.filter[i].fields[j];
                     value = /^\[.*\]$/.test(value) ? value : '"' + value + '"';
 
                     filterString = filterString + (j > 0 ? ' OR ': '') + fieldName + ':' + value;
                 }
-                req.filter.unshift(filterString);
-
-                if (!excludeActive) {
-                    req.facet[field].domain = {excludeTags: 't_' + fieldName};
+                filterString += ')';
+                
+                var origItem = _.findWhere(filterItems, {filter: filterName});
+                if (typeof(origItem) !== 'undefined') {
+                    origItem.filterString = origItem.filterString.replace(')','') + ' OR ' + filterString + ')';
+                } else {
+                    filterItems.unshift({filter: filterName, filterString: excludeString + filterString});
                 }
 
                 if (opts.geo.filter) {
                     req.facet[field].mincount = 0;
                 }
-
+               
+                var fields = getUserAssocFields(field);
                 if (!excludeActive) {
+                    for (var j = 0; j < fields.length; j++) {
+                        req.facet[fields[j]].domain = {excludeTags: 't_' + filterName};
+                    }
                     excludeActive = true;
-                    continue;
-                }
-                
-                if (excludeActive) {
-                    req.facet[field].mincount = 0;
+                } else {
+                    for (var j = 0; j < fields.length; j++) {
+                        req.facet[fields[j]].mincount = 0;
+                    }
                 }
             }
+        }
+        
+        for (var i = 0; i < filterItems.length; i++) {
+            req.filter.push(filterItems[i].filterString);
         }
     }
     
@@ -166,6 +201,17 @@ function createFacetReq(opts, userId) {
     return req;
 }
 
+function getDiscFilterField(fieldName) {
+    return fieldName;
+}
+
+function getDiscAssocFields(field) {
+    switch(field) {
+        default:
+            return [field];
+    }
+}
+
 function createDiscReq(opts, userId, reqId, includeTag) {
     var req = {
         filter: [],
@@ -190,7 +236,8 @@ function createDiscReq(opts, userId, reqId, includeTag) {
             qf:"q_brand q_name q_type q_material q_color weight q_tag^0.2",
                 lowercaseOperators:"true",
                 stopwords:"true",
-                defType:"edismax"
+                defType:"edismax",
+                tie:1
             },
         limit: typeof opts.limit !== 'undefined' ? opts.limit : 20,
         offset: opts.start || 0
@@ -202,7 +249,7 @@ function createDiscReq(opts, userId, reqId, includeTag) {
     
     if (opts.sort) {
         if (opts.sort == 'rel') {
-            req.sort = 'score asc,createDate desc'
+            req.sort = 'score desc,createDate desc'
         } else if (opts.sort == 'createDate') {
             req.sort = 'createDate desc';
         } else if (opts.sort == 'alpha') {
@@ -257,6 +304,8 @@ function createDiscReq(opts, userId, reqId, includeTag) {
         req.facet.tag = {type:"terms", field: 'tag', mincount: 1, limit: 50, numBuckets: true};
     }
     
+    var filterItems = [];
+    
     if (opts.filter) {
         var excludeActive = false;
         for (var i = opts.filter.length - 1; i >= 0; i--) {
@@ -264,32 +313,41 @@ function createDiscReq(opts, userId, reqId, includeTag) {
              
             if (req.facet[field] && opts.filter[i].fields.length) {
                 var fieldName = req.facet[field].field;
-                var filterString = '{!tag=t_' + fieldName  + '}';
+                
+                var filterName = getDiscFilterField(fieldName);
+                var excludeString = '{!tag=t_' + filterName  + '}';
+                var filterString = '(';
                 for (var j = 0; j < opts.filter[i].fields.length; j++) {
                     var value = opts.filter[i].fields[j];
                     value = /^\[.*\]$/.test(value) ? value : '"' + value + '"';
 
                     filterString = filterString + (j > 0 ? ' OR ': '') + fieldName + ':' + value;
                 }
-                req.filter.unshift(filterString);
-
-                if (!excludeActive) {
-                    req.facet[field].domain = {excludeTags: 't_' + fieldName};
-                }
-
-                if (marketActive) {
-                    req.facet[field].mincount = 0;
-                }
-
-                if (!excludeActive) {
-                    excludeActive = true;
-                    continue;
-                }
+                filterString += ')';
                 
-                if (excludeActive) {
-                    req.facet[field].mincount = 0;
+                var origItem = _.findWhere(filterItems, {filter: filterName});
+                if (typeof(origItem) !== 'undefined') {
+                    origItem.filterString = origItem.filterString.replace(')','') + ' OR ' + filterString + ')';
+                } else {
+                    filterItems.unshift({filter: filterName, filterString: excludeString + filterString});
+                }
+               
+                var fields = getDiscAssocFields(field);
+                if (!excludeActive) {
+                    for (var j = 0; j < fields.length; j++) {
+                        req.facet[fields[j]].domain = {excludeTags: 't_' + filterName};
+                    }
+                    excludeActive = true;
+                } else {
+                    for (var j = 0; j < fields.length; j++) {
+                        req.facet[fields[j]].mincount = 0;
+                    }
                 }
             }
+        }
+        
+        for (var i = 0; i < filterItems.length; i++) {
+            req.filter.push(filterItems[i].filterString);
         }
     }
     

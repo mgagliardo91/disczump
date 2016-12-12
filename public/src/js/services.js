@@ -744,19 +744,19 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	
 	function getLocation(callback) {
 		if (typeof(curLocation) !== 'undefined') {
-			callback(true, curLocation);
+			return callback(true, curLocation);
 		}
 		
 		if (!isGeoAvailable()) {
-			callback(false, {message: 'Geolocation is not available.', type: 'Geolocation Unavailable'})
+			return callback(false, {message: 'Geolocation is not available.', type: 'Geolocation Unavailable'})
 		}
 		
 		navigator.geolocation.getCurrentPosition(function(position) {
 			console.log(position);
 			curLocation = position.coords;
-		  	callback(true, curLocation);
+		  	return callback(true, curLocation);
 		},function(error) {
-			callback(false, error);
+			return callback(false, error);
 		});
 	}
 	
@@ -770,7 +770,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 }])
 
 .factory('QueryUserService', ['_', 'APIService', function(_, APIService) {
-	var validSort = ['rel', 'proximity'];
+	var validSort = ['rel', 'proximity', 'alpha'];
 	var validTypes = ['distance','pdga', 'facebook'];
 	var propText = {
 		pdga: 'PDGA',
@@ -1902,7 +1902,11 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 	
 	function bumpDisc(discId, callback) {
-		return APIService.Put('/discs/' + discId + '/bump', {}, discMiddleWare(callback));
+		return APIService.Put('/discs/' + discId + '/bump', {}, callback);
+	}
+	
+	function getBumpRemaining(discId, callback) {
+		return APIService.Get('/discs/' + discId + '/bump', callback);
 	}
 	
 	function createDisc(disc, callback) {
@@ -1937,6 +1941,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	return {
 		editDisc: editDisc,
 		bumpDisc: bumpDisc,
+		getBumpRemaining: getBumpRemaining,
 		createDisc: createDisc,
 		deleteDisc: deleteDisc,
 		deleteDiscs: deleteDiscs

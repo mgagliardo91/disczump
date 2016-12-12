@@ -1,4 +1,4 @@
-<dz-header></dz-header>
+<dz-header modal-opts="globalModalOpts"></dz-header>
 <dz-status-bar class="header-color-2" home-url="statusHome" hide-on="loading" show-count="resultList.length" total-count="pagination.total" breadcrumbs="breadcrumbs"></dz-status-bar>
 <img class="explore-icon-fixed" src="/static/img/dz_profile_fade.png" />
 <div class="scrollable main-body has-profile" id="explore">
@@ -93,7 +93,7 @@
                             <div class="filter-item-count handle-overflow" ng-if="filter.count">({{filter.count}})</div>
                             <div class="clearfix"></div>
                         </div>
-                        <div class="filter-show-more hover-underline" ng-if="facet.filters.length > facet.limit" ng-click="facet.limit = facet.filters.length">Show More...</div>
+                        <div class="filter-show-more hover-underline" ng-if="facet.filters.length > facet.limit" ng-click="facet.limit = Math.min(facet.filters.length, facet.limit + 15)">Show More...</div>
                     </div>
                 </div>
             </div>
@@ -107,7 +107,8 @@
                     <div id="result-sort">
                         <select class="form-control" ng-model="sortParam" ng-change="updateSort()" ng-init="sortParam = sortParam || 'rel'">
                           <option value="rel">Sort by Relevance</option>
-                          <option value="proximity" ng-disabled="!$def(curLocation)">Sort by Proximity</option>
+                          <option value="alpha">Sort by Username</option>
+                          <option value="proximity" ng-show="geo.distance || (geo.latitude && geo.longitude)">Sort by Proximity</option>
                         </select>
                     </div>
                 </div>
@@ -132,9 +133,14 @@
                     <div class="no-results-title"><i class="fa fa-exclamation-triangle dz-blue"></i> No Results</div>
                     <div class="no-results-msg">Please revise your search terms and try again.</div>
                 </div>
-                <user-item profile-modal="globalModalOpts" ng-repeat="user in resultList" ng-repeat-finish="onLastUser()" user="user" current-user="curUser"></disc-item>
-                <div class="grid-item load-item" ng-show="loading || loadingMore">
-                    <div><i class="fa fa-spinner fa-spin"></i></div>
+                <user-item profile-modal="globalModalOpts" ng-repeat="user in resultList" ng-repeat-finish="onLastUser()" user="user" current-user="curUser"></user-item>
+                <div class="grid-item load-item">
+                    <div class="load-text-container handle-valign" ng-show="!loading && !loadingMore && resultList.length < pagination.total">
+                        <div class="load-text">Scroll to load more results.</div>
+                    </div>
+                    <div class="load-spinner-container handle-valign" ng-show="loading || loadingMore">
+                        <div style="text-align: center;"><i class="fa fa-spinner fa-spin"></i></div>
+                    </div>
                 </div>
                 <div class="clearfix"></div>
             </div>
@@ -142,4 +148,3 @@
         </div>
     </div>
 </div>
-<dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>

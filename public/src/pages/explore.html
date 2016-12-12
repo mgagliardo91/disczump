@@ -1,4 +1,4 @@
-<dz-header></dz-header>
+<dz-header modal-opts="globalModalOpts"></dz-header>
 <dz-profile user-id="{{trunk.userId}}" modal-opts="globalModalOpts" class="header-color-1" ng-if="$def(trunk.userId)" current-user="curUser._id"></dz-profile>
 <dz-status-bar class="header-color-2" hide-on="loading" show-count="resultList.length" total-count="pagination.total" breadcrumbs="breadcrumbs" home-url="statusHome"></dz-status-bar>
 <img class="explore-icon-fixed" src="/static/img/dz_disc_fade.png" />
@@ -16,7 +16,7 @@
                         <div class="sidebar-title-icon"><i class="fa fa-minus-square" ng-show="mFacet.open"></i></div>
                         <div class="sidebar-title">Marketplace</div>
                     </div>
-                    <div class="sidebar-item-container" ng-show="mFacet.open">
+                    <div class="sidebar-item-container fancy-scroll" ng-show="mFacet.open">
                         <div ng-repeat="facet in resultFilters.statFilters">
                             <div class="sidebar-item hover-underline no-select" ng-repeat="filter in statFilterOpts = (facet.filters | filter:{'val': true})" ng-click="toggleMarketplaceMode(facet.prop);">
                                 <span class="sidebar-item-icon">
@@ -54,7 +54,7 @@
                         <div class="sidebar-title-icon"><i class="fa fa-minus-square" ng-show="facet.open"></i></div>
                         <div class="sidebar-title">{{facet.text}} <span class="filter-clear hover-underline" ng-show="hasActiveFilters(facet)" ng-click="clearActiveFilters(facet); $event.stopPropagation();">[Clear]</span></div>
                     </div>
-                    <div class="sidebar-item-container" ng-show="facet.open">
+                    <div class="sidebar-item-container fancy-scroll" ng-show="facet.open">
                         <div class="sidebar-item hover-underline no-select" ng-repeat="filter in facet.filters" ng-class="{inactive: facet.custom.enable || filter.count == 0}" ng-click="filter.count && toggleFilter(facet, filter);">
                             <span class="sidebar-item-icon">
                                 <i class="fa fa-square-o" ng-show="!isFilterActive(facet, filter)"></i>
@@ -83,7 +83,7 @@
                         <div class="sidebar-title-icon"><i class="fa fa-minus-square" ng-show="facet.open"></i></div>
                         <div class="sidebar-title">{{facet.text}} <span class="filter-clear hover-underline" ng-show="hasActiveFilters(facet)" ng-click="clearActiveFilters(facet); $event.stopPropagation();">[Clear]</span></div>
                     </div>
-                    <div class="sidebar-item-container" ng-show="facet.open">
+                    <div class="sidebar-item-container fancy-scroll" ng-show="facet.open">
                         <div class="sidebar-item hover-underline no-select" ng-repeat="filter in facet.filters | orderBy:resultOrder | limitTo: facet.limit" ng-click="toggleFilter(facet, filter);">
                             <span class="sidebar-item-icon">
                                 <i class="fa fa-square-o" ng-show="!isFilterActive(facet, filter)"></i>
@@ -93,7 +93,7 @@
                             <div class="filter-item-count handle-overflow" ng-if="filter.count">({{filter.count}})</div>
                             <div class="clearfix"></div>
                         </div>
-                        <div class="filter-show-more hover-underline" ng-if="facet.filters.length > facet.limit" ng-click="facet.limit = facet.filters.length">Show More...</div>
+                        <div class="filter-show-more hover-underline" ng-if="facet.filters.length > facet.limit" ng-click="facet.limit = Math.min(facet.filters.length, facet.limit + 15)">Show More...</div>
                     </div>
                 </div>
             </div>
@@ -142,8 +142,13 @@
                     <div class="no-results-msg">Please revise your search terms and try again.</div>
                 </div>
                 <disc-item ng-repeat="disc in resultList" ng-repeat-finish="onLastDisc()" disc="disc" current-user="curUser" lb-opts="lbOpts" ms-opts="msOpts"></disc-item>
-                <div class="grid-item load-item" ng-show="loading || loadingMore">
-                    <div><i class="fa fa-spinner fa-spin"></i></div>
+                <div class="grid-item load-item">
+                    <div class="load-text-container handle-valign" ng-show="!loading && !loadingMore && resultList.length < pagination.total">
+                        <div class="load-text">Scroll to load more results.</div>
+                    </div>
+                    <div class="load-spinner-container handle-valign" ng-show="loading || loadingMore">
+                        <div style="text-align: center;"><i class="fa fa-spinner fa-spin"></i></div>
+                    </div>
                 </div>
                 <div class="clearfix"></div>
             </div>
@@ -160,7 +165,8 @@
         <div class="ms-tb-info" ng-click="msOpts.showMsHelp()"><i class="fa fa-question-circle"></i></div>
         <div class="ms-tb-close" ng-click="msOpts.toggleMS()"><i class="fa fa-times"></i></div>
         <div class="ms-tb-title">Multi-select Toolbox</div>
-        <div class="ms-count dz-blue">{{msOpts.count}}</div>
+        <div class="ms-count dz-blue" ng-show="!msOpts.loading">{{msOpts.count}}</div>
+        <div class="ms-count" ng-show="msOpts.loading"><i class="fa fa-spinner fa-spin"></i></div>
         <div class="ms-feedback">
             <div ng-show="msOpts.showNoCount">Must select at least 1 disc.</div>
             <div ng-show="msOpts.showIneligible">Account type ineligible.</div>
@@ -182,4 +188,3 @@
     </div>
 </div>
 <lightbox disc-id="lbOpts.discId" trigger="lbOpts.show" scroll-lock="pgSettings.scrollLock"></lightbox>
-<dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>

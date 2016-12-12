@@ -1,0 +1,31 @@
+<div class="explore-category">
+    <div class="explore-cat-label dz-label">
+        Explore | <span class="dz-blue">{{fvalue}}</span><span class="dz-blue hover-underline" style="float: right; cursor: pointer"><a ng-href="{{getLink()}}">See More...</a></span>
+    </div>
+    <div class="explore-cat-list" fade-time="100" fade-scroll="true">
+        <div class="explore-item no-results" ng-show="!exploreList.length">
+            <div>
+                No Results
+            </div>
+        </div>
+        <div class="explore-item" ng-repeat="disc in exploreList | startFrom:start | limitTo:dispCount">
+            <a ng-href="/d/{{disc._id}}">
+                <div class="explore-item-icon top-left" ng-show="(disc['marketplace.forSale'] || disc['marketplace.forTrade']) && disc.value"><span class="explore-item-text">${{disc.value | currency:"":2}}</span></div>
+                <div class="explore-item-icon top-right">
+                    <i class="fa fa-usd market-icon" ng-class="{'for-sale':disc['marketplace.forSale']}"></i>
+                    <i class="fa fa-exchange market-icon" ng-class="{'for-trade':disc['marketplace.forTrade']}"></i>
+                </div>
+                <img img-src="{{getSolrPrimaryImage(disc)}}" img-load />
+                <div class="explore-item-title handle-overflow">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></div>
+            </a>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="explore-nav" ng-show="$def(navArr) && navArr.length > 1" ng-init="page = 0">
+        <span>
+            <i class="fa fa-angle-double-left nav-list-arrow" ng-click="pageBack()" ng-class="{inactive: page == 0}"></i>
+            <i class="fa" ng-repeat="i in navArr track by $index" ng-click="navIndex($index)" ng-class="{active: start == $index * dispCount, 'fa-circle': start == $index * dispCount, 'fa-circle-thin': start != $index * dispCount}"></i>
+            <i class="fa fa-angle-double-right nav-list-arrow" ng-click="pageNext()" ng-class="{inactive: page == navArr.length - 1}"></i>
+        </span>
+    </div>
+</div>

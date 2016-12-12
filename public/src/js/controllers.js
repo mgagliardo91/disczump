@@ -1104,43 +1104,46 @@ angular.module('disczump.controllers', ['disczump.services'])
     return {
         restrict: 'E',
         replace: true,
-		scope: true,
-        template: '<div class="dz-navbar min-window-width" ng-class="{\'fixed\':fixed}" ng-style="{\'background-color\':\'rgba(74,74,74,\' + (alphaValue/ 100) +\')\'}">' +
-                        '<div class="dz-navbar-btn-container float-left">' +
-                            '<div class="dz-navbar-btn-list">' +
-                                '<a href="/" ng-style="{\'opacity\': alphaValue}"><img src="/static/logo/logo_text.png" class="dz-navbar-logo"></a>' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="dz-navbar-btn-container float-right">' +
-                            '<div class="dz-navbar-btn-list">' + 
-                                '<div class="dz-navbar-item dz-navbar-dropdown" ng-if="user" ng-click="toggleDropdown()">' +
-									'<div class="default-bg-image" img-load="/static/img/dz_profile.png" img-src="{{getAccountImage()}}" bg-image="true"></div>' +
-									'<i class="fa fa-angle-double-down fa-lg" style="line-height:40px;"></i>' +
-                                '</div>' +
-                                '<div class="backdrop" ng-show="showOptions" ng-click="toggleDropdown(false)" ng-if="user"></div>' +
-                                '<ul class="dz-dropdown-menu" ng-show="showOptions" ng-if="user">' +
-                                    '<li><a href="/account"><span><i class="fa fa-tools fa-user"></i></span>My Account</a></li>' +
-									'<li class="menu-sep"></li>' +
-                                    '<li><a ng-click="showFeedbackModal()" id="menu-feedback"><span><i class="fa fa-comment fa-tools"></i></span>Feedback</a></li>' +
-                                    '<li><a href="/faq"><span><i class="fa fa-tools fa-question-circle"></i></span>FAQ</a></li>' +
-                                    '<li><a href="/about"><span><i class="fa fa-tools fa-info-circle"></i></span>About</a></li>' +
-									'<li class="menu-sep"></li>' +
-                                    '<li><a href="/logout" data-ajax="false"><span><i class="fa fa-sign-out fa-tools"></i></span>Logout</a></li>' +
-                                '</ul>' +
-                                '<div class="dz-navbar-links">' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" href="/explore" ng-class="{\'active\':isItemActive(\'explore\')}">Explore</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" href="/trunks" ng-class="{\'active\':isItemActive(\'trunks\')}">Trunks</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="!user" href="/about" ng-class="{\'active\':isItemActive(\'about\')}">About</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/t/{{user.username}}" ng-class="{\'active\':isItemActive(\'t/{{user.username}}\')}">My Trunk</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/inbox" ng-class="{\'active\':isItemActive(\'inbox\')}">Inbox<span ng-show="unreadCount > 0" style="color: #ffa840;"> ({{unreadCount}})</span></a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" href="/login" ng-if="!user" ng-class="{\'active\':isItemActive(\'login\')}">Sign In</a>' +
-                                    '<a class="dz-navbar-item dz-navbar-btn" href="/signup" ng-if="!user" ng-class="{\'active\':isItemActive(\'signup\')}">Sign Up</a>' +
-                                '</div>' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="clearfix"></div>' +
-						'<dz-modal modal-opts="globalModalOpts" scroll-lock="pgSettings.scrollLock"></dz-modal>' +
-                    '</div>',
+		scope: {
+			globalModalOpts: '=modalOpts'
+		},
+        template: '<div class="dz-navbar min-window-width" ng-class="{\'fixed\':fixed}" ng-style="{\'background-color\':\'rgba(74,74,74,\' + (alphaValue/100) +\')\'}">' +
+					'<div class="dz-navbar-btn-container float-left">' +
+						'<div class="dz-navbar-btn-list">' +
+							'<a href="/" ng-style="{\'opacity\': alphaValue}"><img src="/static/logo/logo_text.png" class="dz-navbar-logo"></a>' +
+						'</div>' +
+					'</div>' +
+					'<div class="dz-navbar-btn-container float-right">' +
+						'<div class="dz-navbar-btn-list">' +
+							'<div class="dz-navbar-item dz-navbar-dropdown" ng-if="user" ng-click="toggleDropdown()">' +
+								'<div class="default-bg-image" img-load="/static/img/dz_profile.png" img-src="{{getAccountImage()}}" bg-image="true"></div>' +
+								'<i class="fa fa-angle-double-down fa-lg" style="line-height:40px;"></i>' +
+							'</div>' +
+							'<div class="backdrop" ng-show="showOptions" ng-click="toggleDropdown(false)" ng-if="user"></div>' +
+							'<ul class="dz-dropdown-menu" ng-show="showOptions" ng-if="user">' +
+								'<li><a href="/d/create/templates"><span><i class="fa fa-tools fa-plus-circle"></i></span>Add Disc</a></li>' +
+								'<li class="menu-sep"></li>' +
+								'<li><a ng-click="showFeedbackModal()" id="menu-feedback" class="hover-pointer"><span><i class="fa fa-comment fa-tools"></i></span>Feedback</a></li>' +
+								'<li><a href="/faq"><span><i class="fa fa-tools fa-question-circle"></i></span>FAQ</a></li>' +
+								'<li><a href="/about"><span><i class="fa fa-tools fa-info-circle"></i></span>About</a></li>' +
+								'<li class="menu-sep"></li>' +
+								'<li><a href="/account"><span><i class="fa fa-tools fa-user"></i></span>My Account</a></li>' +
+								'<li><a href="/logout" data-ajax="false"><span><i class="fa fa-sign-out fa-tools"></i></span>Logout</a></li>' +
+							'</ul>' +
+							'<div class="dz-navbar-links">' +
+								'<a class="dz-navbar-item dz-navbar-btn" href="/explore" ng-class="{\'active\':isItemActive(\'explore\')}">Explore</a>' +
+								'<a class="dz-navbar-item dz-navbar-btn" href="/trunks" ng-class="{\'active\':isItemActive(\'trunks\')}">Trunks</a>' +
+								'<a class="dz-navbar-item dz-navbar-btn" ng-if="!user" href="/about" ng-class="{\'active\':isItemActive(\'about\')}">About</a>' +
+								'<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/t/{{user.username}}" ng-class="{\'active\':isItemActive(\'t/{{user.username}}\')}">My Trunk</a>' +
+								'<a class="dz-navbar-item dz-navbar-btn" ng-if="user" ng-href="/inbox" ng-class="{\'active\':isItemActive(\'inbox\')}">Inbox<span ng-show="unreadCount > 0" style="color: #ffa840;"> ({{unreadCount}})</span></a>' +
+								'<a class="dz-navbar-item dz-navbar-btn" href="/login" ng-if="!user" ng-class="{\'active\':isItemActive(\'login\')}">Sign In</a>' +
+								'<a class="dz-navbar-item dz-navbar-btn" href="/signup" ng-if="!user" ng-class="{\'active\':isItemActive(\'signup\')}">Sign Up</a>' +
+							'</div>' +
+						'</div>' +
+					'</div>' +
+					'<div class="clearfix"></div>' +
+					'<dz-modal modal-opts="globalModalOpts"></dz-modal>' +
+				'</div>',
         link: function(scope, element, attrs) {
 			var alert = new Audio('/static/audio/whoosh.wav');
 			scope.globalModalOpts = {};
@@ -1229,46 +1232,44 @@ angular.module('disczump.controllers', ['disczump.services'])
     return {
         restrict: 'E',
         replace: true,
-        template: '<div class="footer-bar" id="footer-bar" ng-init="pgSettings.hasFooter=true;" ng-show="footerReady">' + 
-                    '<div>' + 
-                        '<span class="footer-copyright">' + 
-                            '<span class="cr-main">' + 
-                            'Copyright <i class="fa fa-copyright"></i> disc|zump, LLC' + 
-                            '</span>' + 
-                            '<span class="cr-links">' + 
-                            '<a href="mailto:support@disczump.com">Contact Us</a>' + 
-                            '<a href="/faq">FAQ</a>' + 
-                            '<a href="/privacy">Privacy Policy</a>' + 
-                            '<a href="/terms">Terms and Conditions</a>' + 
-                            '</span>' + 
-                        '</span>' + 
-                        '<span class="footer-links">' + 
-                          '<a href="https://www.facebook.com/disczump/" target="_blank">' + 
-                            '<span class="fa-stack fa-lg">' + 
-                              '<i class="fa fa-circle fa-stack-2x"></i>' + 
-                              '<i class="fa fa-facebook fa-stack-1x fa-inverse"></i>' + 
-                            '</span>' + 
-                          '</a>' + 
-                          '<a href="https://twitter.com/disczump" target="_blank">' + 
-                            '<span class="fa-stack fa-lg">' + 
-                              '<i class="fa fa-circle fa-stack-2x"></i>' + 
-                              '<i class="fa fa-twitter fa-stack-1x fa-inverse"></i>' + 
-                            '</span>' + 
-                          '</a>' + 
-                          '<a href="https://instagram.com/disczump/" target="_blank">' + 
-                            '<span class="fa-stack fa-lg">' + 
-                              '<i class="fa fa-circle fa-stack-2x"></i>' + 
-                              '<i class="fa fa-instagram fa-stack-1x fa-inverse"></i>' + 
-                            '</span>' + 
-                          '</a>' + 
-                        '</span>' + 
-                        '<div class="clearfix"></div>' + 
-                    '</div>' + 
-              '</div>',
+        template: '<div class="footer-bar" id="footer-bar" ng-show="footerReady">' +
+					'<div>' +
+						'<span class="footer-copyright">' +
+							'<span class="cr-main">Copyright <i class="fa fa-copyright"></i> disc|zump, LLC</span>' +
+							'<span class="cr-links">' +
+								'<a href="mailto:support@disczump.com">Contact Us</a>' +
+								'<a href="/faq">FAQ</a>' +
+								'<a href="/privacy">Privacy Policy</a>' +
+								'<a href="/terms">Terms and Conditions</a>' +
+							'</span>' +
+						'</span>' +
+						'<span class="footer-links">' +
+						  '<a href="https://www.facebook.com/disczump/" target="_blank">' +
+							'<span class="fa-stack fa-lg">' +
+							  '<i class="fa fa-circle fa-stack-2x"></i>' +
+							  '<i class="fa fa-facebook fa-stack-1x fa-inverse"></i>' +
+							'</span>' +
+						  '</a>' +
+						  '<a href="https://twitter.com/disczump" target="_blank">' +
+							'<span class="fa-stack fa-lg">' +
+							  '<i class="fa fa-circle fa-stack-2x"></i>' +
+							  '<i class="fa fa-twitter fa-stack-1x fa-inverse"></i>' +
+							'</span>' +
+						  '</a>' +
+						  '<a href="https://instagram.com/disczump/" target="_blank">' +
+							'<span class="fa-stack fa-lg">' +
+							  '<i class="fa fa-circle fa-stack-2x"></i>' +
+							  '<i class="fa fa-instagram fa-stack-1x fa-inverse"></i>' +
+							'</span>' +
+						  '</a>' +
+						'</span>' +
+						'<div class="clearfix"></div>' +
+					'</div>' +
+				'</div>',
         link: function(scope, element, attrs) {
             $timeout(function() {
 				scope.footerReady = true;
-			});
+			},50);
         }
     }
 }])
@@ -1287,7 +1288,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 						'<div id="card-remain" style="display: inline-block">' +
 							'<div class="profile-card p-info">' +
 								'<div class="p-info-img">' +
-									'<div class="default-bg-image" img-load="/static/img/dz_profile.png" directive-on="loaded" directive-set="{\'img-src\':\'{{getAccountImage()}\}\'}" bg-image="true" ng-class="{\'has-img\':ready}"></div>' +
+									'<div class="default-bg-image" img-load="/static/img/dz_profile.png" directive-on="loaded" directive-set="{\'img-src\':\'{{getAccountImage()}}\'}" bg-image="true" ng-class="{\'has-img\':ready}"></div>' +
 								'</div>' +
 								'<div class="p-info-content p-container">' +
 									'<div class="p-info-icon">' +
@@ -1301,9 +1302,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 										'<div class="p-name handle-overflow">{{user.firstName}} {{user.lastName}}</div>' +
 									'</div>' +
 									'<div class="p-info-bio fancy-scroll" ng-class="{\'has-ph\':!user.bio}">' +
-										'<span class="placeholder" ng-if="!user.bio">Hello, welcome to my trunk...</span>' + 
+										'<span class="placeholder" ng-if="!user.bio">Hello, welcome to my trunk...</span>' +
 										'<div parse-text="user.bio" parse-url parse-disc id="user-bio">' +
-                  						'</div>' + 
+										'</div>' +
 									'</div>' +
 								'</div>' +
 							'</div>' +
@@ -1331,127 +1332,127 @@ angular.module('disczump.controllers', ['disczump.services'])
 								'</div>' +
 							'</div>' +
 						'</div>' +
-						'<div ng-style="contStyle" class="card-list" id="card-list" ng-show="cardLoaded">' + 
+						'<div ng-style="contStyle" class="card-list" id="card-list" ng-show="cardLoaded">' +
 						'</div>' +
 					'</div>' +
-					'<div class="explore-nav" ng-show="navArr.length > 1" ng-init="start = 0">' + 
-						'<span>' + 
-							'<i class="fa fa-angle-double-left nav-list-arrow" ng-click="pageBack()" ng-class="{inactive: start == 0}"></i>' + 
-							'<i class="fa" ng-repeat="i in navArr track by $index" ng-click="navIndex($index)" ng-class="{active: start == $index, \'fa-circle\': start == $index, \'fa-circle-thin\': start != $index}"></i>' + 
-							'<i class="fa fa-angle-double-right nav-list-arrow" ng-click="pageNext()" ng-class="{inactive: start == navArr.length - 1}"></i>' + 
-						'</span>' + 
+					'<div class="explore-nav" ng-show="navArr.length > 1" ng-init="start = 0">' +
+						'<span>' +
+							'<i class="fa fa-angle-double-left nav-list-arrow" ng-click="pageBack()" ng-class="{inactive: start == 0}"></i>' +
+							'<i class="fa" ng-repeat="i in navArr track by $index" ng-click="navIndex($index)" ng-class="{active: start == $index, \'fa-circle\': start == $index, \'fa-circle-thin\': start != $index}"></i>' +
+							'<i class="fa fa-angle-double-right nav-list-arrow" ng-click="pageNext()" ng-class="{inactive: start == navArr.length - 1}"></i>' +
+						'</span>' +
 					'</div>' +
 				'</div>',
         link: function(scope, element, attrs) {
-					var loadTimer;
-					
-					scope.init = false;
-					scope.showCount = 0;
-					scope.cards = [];
-					scope.navArr = new Array(0);
-					scope.start = 0;
-					scope.contStyle = {};
-					
-					scope.navIndex = function(index) {
-						scope.start = index;
-					}
-					
-					scope.pageBack = function() {
-						scope.start = Math.max(scope.start - 1, 0);
-					}
-					
-					scope.pageNext = function() {
-						scope.start = Math.min(scope.start + 1, scope.navArr.length - 1);
-					}
+			var loadTimer;
 
-					scope.getAccountImage = function() {
-						return scope.user ? scope.user.image : '/static/img/dz_profile.png';
-					}
-					
-					var accountUpdate = function(msg) {
-						if (msg === 'AccountUpdated') {
-							if (AccountService.compareTo(scope.user._id)) {
-								scope.user = AccountService.getAccount();
-							}
-						}
-					}
+			scope.init = false;
+			scope.showCount = 0;
+			scope.cards = [];
+			scope.navArr = new Array(0);
+			scope.start = 0;
+			scope.contStyle = {};
 
-					var resizeProfile = function() {
-						$timeout(function(){
-							var remainContainer = angular.element(document.getElementById('card-remain'));
-							scope.showCount = Math.floor((element[0].clientWidth - remainContainer[0].clientWidth) / 220);
-							scope.navArr = new Array(Math.ceil(scope.cards.length / scope.showCount));
-							
-							if (scope.navArr.length > 1) {
-           						element.addClass('with-nav');
-							} else {
-           						element.removeClass('with-nav');
-							}
-							scope.contStyle = { 'maxWidth': (scope.showCount * 220) + 'px' };
-							scope.cardLoaded = true;
-							scope.$apply();
-						});
-					}
-					
-					function setCards() {
-						scope.cards.push({type: 'dz-map-card'});
-						if (scope.user.verifications.pdga) scope.cards.push({type: 'dz-pdga-card'});
-						if (scope.user.verifications.facebook) scope.cards.push({type: 'dz-facebook-card'});
-						scope.cards.push({type: 'dz-disc-card'});
-						scope.cards.push({type: 'dz-date-card'});
-						
-						var list = document.getElementById('card-list');
-						if (list) {
-							scope.cards.forEach(function(card, index) {
-								var card = angular.element('<div ' + card.type + ' user="user" init="init" ng-show="start < ' + (index + 1) + ' && (showCount + start) >= ' + (index + 1) + '"></div>');
-								list.appendChild(card[0]);
-								$compile(card)(scope);
-							});
-						}
-					}
-					
-					if (typeof(scope.userId) !== 'undefined') {
-						CacheService.reloadUser(scope.userId, function(success, user) {
-							if (success) {
-								
-								if (AccountService.compareTo(user._id)) {
-									AccountService.addListener(accountUpdate);
-								}
-								
-								$timeout(function() {
-									scope.user = user;
-									
-									var bio = document.getElementById('user-bio');
-									if (bio) {
-										$compile(bio)(scope);
-									}
-											
-									scope.loaded = true;
-									$timeout(function() {
-										scope.ready = true;
-									});
-									
-									$timeout(function() {
-										setCards();
-										var remainContainer = angular.element(document.getElementById('card-remain'));
-										scope.$watch(function() { return remainContainer[0].clientWidth;}, function(val) {
-											if (typeof(val) !== 'undefined' && val > 0) {
-												resizeProfile();
-												scope.init = true;
-											}
-										});
-									}, 1000);
-								});
-							}
-						});
-					}
-					
-					angular.element($window).bind('resize', resizeProfile);
+			scope.navIndex = function(index) {
+				scope.start = index;
+			}
 
-					scope.$on('$destroy', function() {
-						angular.element($window).unbind('resize', resizeProfile);
-						AccountService.removeListener(accountUpdate);
+			scope.pageBack = function() {
+				scope.start = Math.max(scope.start - 1, 0);
+			}
+
+			scope.pageNext = function() {
+				scope.start = Math.min(scope.start + 1, scope.navArr.length - 1);
+			}
+
+			scope.getAccountImage = function() {
+				return scope.user ? scope.user.image : '/static/img/dz_profile.png';
+			}
+
+			var accountUpdate = function(msg) {
+				if (msg === 'AccountUpdated') {
+					if (AccountService.compareTo(scope.user._id)) {
+						scope.user = AccountService.getAccount();
+					}
+				}
+			}
+
+			var resizeProfile = function() {
+				$timeout(function(){
+					var remainContainer = angular.element(document.getElementById('card-remain'));
+					scope.showCount = Math.floor((element[0].clientWidth - remainContainer[0].clientWidth) / 220);
+					scope.navArr = new Array(Math.ceil(scope.cards.length / scope.showCount));
+
+					if (scope.navArr.length > 1) {
+						element.addClass('with-nav');
+					} else {
+						element.removeClass('with-nav');
+					}
+					scope.contStyle = { 'maxWidth': (scope.showCount * 220) + 'px' };
+					scope.cardLoaded = true;
+					scope.$apply();
+				});
+			}
+
+			function setCards() {
+				scope.cards.push({type: 'dz-map-card'});
+				if (scope.user.verifications.pdga) scope.cards.push({type: 'dz-pdga-card'});
+				if (scope.user.verifications.facebook) scope.cards.push({type: 'dz-facebook-card'});
+				scope.cards.push({type: 'dz-disc-card'});
+				scope.cards.push({type: 'dz-date-card'});
+
+				var list = document.getElementById('card-list');
+				if (list) {
+					scope.cards.forEach(function(card, index) {
+						var card = angular.element('<div ' + card.type + ' user="user" init="init" ng-show="start < ' + (index + 1) + ' && (showCount + start) >= ' + (index + 1) + '"></div>');
+						list.appendChild(card[0]);
+						$compile(card)(scope);
 					});
+				}
+			}
+
+			if (typeof(scope.userId) !== 'undefined') {
+				CacheService.reloadUser(scope.userId, function(success, user) {
+					if (success) {
+
+						if (AccountService.compareTo(user._id)) {
+							AccountService.addListener(accountUpdate);
+						}
+
+						$timeout(function() {
+							scope.user = user;
+
+							var bio = document.getElementById('user-bio');
+							if (bio) {
+								$compile(bio)(scope);
+							}
+
+							scope.loaded = true;
+							$timeout(function() {
+								scope.ready = true;
+							});
+
+							$timeout(function() {
+								setCards();
+								var remainContainer = angular.element(document.getElementById('card-remain'));
+								scope.$watch(function() { return remainContainer[0].clientWidth;}, function(val) {
+									if (typeof(val) !== 'undefined' && val > 0) {
+										resizeProfile();
+										scope.init = true;
+									}
+								});
+							}, 1000);
+						});
+					}
+				});
+			}
+
+			angular.element($window).bind('resize', resizeProfile);
+
+			scope.$on('$destroy', function() {
+				angular.element($window).unbind('resize', resizeProfile);
+				AccountService.removeListener(accountUpdate);
+			});
         }
     }
 }])
@@ -1657,22 +1658,22 @@ angular.module('disczump.controllers', ['disczump.services'])
 			homeUrl: '='
         },
         template: '<div class="breadcrumb-container">' +
-                    '<div class="pagination-container" title="Showing {{showCount}} of {{totalCount}} results" ng-show="$def(showCount)">' +
-                        '{{showCount}} | <span class="dz-blue">{{totalCount}}</span>' +
-                    '</div>' +
-                    '<div class="breadcrumb-trail" ng-show="!hideOn">' +
-                        '<span class="hover-underline" title="Explore Home"><a ng-href="/{{homeUrl}}"><i class="fa fa-home" style="font-size: 1.1em; color: #008edd"></i></a></span>' +
-                        '<span class="breadcrumb-item-container" ng-repeat="item in breadcrumbs">' +
+					'<div class="pagination-container" title="Showing {{showCount}} of {{totalCount}} results" ng-show="$def(showCount)">' +
+						'{{showCount}} | <span class="dz-blue">{{totalCount}}</span>' +
+					'</div>' +
+					'<div class="breadcrumb-trail" ng-show="!hideOn">' +
+						'<span class="hover-underline" title="Explore Home"><a ng-href="/{{homeUrl}}"><i class="fa fa-home" style="font-size: 1.1em; color: #008edd"></i></a></span>' +
+						'<span class="breadcrumb-item-container" ng-repeat="item in breadcrumbs">' +
 							'<span><i class="fa fa-chevron-right"></i><span ng-if="item.title" style="margin-left: 5px">{{item.title}}:</span></span>' +
 							'<span class="breadcrumb-item" ng-repeat="link in item.links track by $index">' +
-                                '<span ng-if="$index > 0">|</span>' +
-                                '<a class="dz-blue hover-underline" ng-if="link.href" ng-href="{{link.href}}">{{link.text}}</a>' +
-                                '<span class="dz-italic" ng-if="!link.href" ng-href="link.href">{{link.text}}</span>' +
-                            '</span>' +
-                        '</span>' +
-                    '</div>' +
-                    '<div class="clearfix"></div>' +
-                '</div>',
+								'<span ng-if="$index > 0">|</span>' +
+								'<a class="dz-blue hover-underline" ng-if="link.href" ng-href="{{link.href}}">{{link.text}}</a>' +
+								'<span class="dz-italic" ng-if="!link.href" ng-href="link.href">{{link.text}}</span>' +
+							'</span>' +
+						'</span>' +
+					'</div>' +
+					'<div class="clearfix"></div>' +
+				'</div>',
         link: function(scope, element, attrs) {
 			if (typeof(scope.homeUrl) === 'undefined') {
 				scope.homeUrl = 'explore';
@@ -1692,24 +1693,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         scope: {
             template: '='
         },
-        template: '<div class="grid-item">' +
-                    '<div class="grid-img-container">' +
-                        '<div class="grid-img-inner">' +
-                            '<div class="grid-img-content">' + 
-                                '<div>' + 
-                                    '<a class="grid-item-nav"></a>' +
-                                    '<img ng-src="{{getPrimaryImage(disc)}}">' +
-                                '</div>' +
-                            '</div>' + 
-                        '</div>' + 
-                    '</div>' +
-                    '<div class="grid-item-info">' +
-                        '<div class="grid-item-label handle-overflow">' +
-                            '<a class="hover-underline" ng-href="/d/{{disc._id}}">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></a>' +
-                        '</div>' +
-                        '<div class="clearfix"></div>' +
-                    '</div>' +
-                '</div>',
+        templateUrl: '/static/src/pages/partials/templateItem.html',
     }
 })
 
@@ -1723,82 +1707,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			msOpts: '=',
 			lbOpts: '='
         },
-        template: '<div class="grid-item" ng-class="{private:!disc.visible}">' +
-                    '<div class="grid-item-icon top-left" ng-show="(disc[\'marketplace.forSale\'] || disc[\'marketplace.forTrade\']) && disc.value && !flip">' +
-						'<span class="grid-item-text" ng-if="disc.value">${{disc.value | currency:"":2}}</span>' +
-                    '</div>' +
-                    '<div class="grid-item-icon top-right" ng-show="!flip">' +
-                        '<i class="fa fa-usd market-icon" ng-class="{\'for-sale\':disc[\'marketplace.forSale\']}" ng-attr-title="{{\'This item is \' + (!disc[\'marketplace.forSale\'] ? \'not \' : \'\') + \'for sale.\'}}"></i>' +
-                        '<i class="fa fa-exchange market-icon" ng-class="{\'for-trade\':disc[\'marketplace.forTrade\']}" ng-attr-title="{{\'This item is \' + (!disc[\'marketplace.forTrade\'] ? \'not \' : \'\') + \'for trade.\'}}"></i>' +
-                    '</div>' +
-                    '<div class="grid-img-container flip" ng-mouseenter="displayHoverIcon=true;" ng-mouseleave="displayHoverIcon=false;">' +
-                        '<div class="grid-img-inner">' +
-							'<div class="grid-hover-icon grid-lb-icon" ng-show="displayHoverIcon" ng-click="disc.primaryImage && setLbOpts()" ng-class="{\'show\': displayHoverIcon && !flip, \'disabled\': !disc.primaryImage}" title="Zoom">' + 
-                                '<span class="fa-stack">' +
-                                  '<i class="fa fa-circle fa-stack-2x"></i>' +
-                                  '<i class="fa fa-search-plus fa-stack-1x fa-inverse"></i>' +
-                                '</span>' +
-                            '</div>' + 
-							'<a ng-href="/d/{{disc._id}}/edit" class="grid-hover-icon grid-edit-icon" ng-show="displayHoverIcon" ng-class="{\'show\': displayHoverIcon && !flip}" ng-if="currentUser && currentUser._id == disc.userId" title="Edit Disc">' + 
-                                '<span class="fa-stack">' +
-                                  '<i class="fa fa-circle fa-stack-2x"></i>' +
-                                  '<i class="fa fa-pencil fa-stack-1x fa-inverse"></i>' +
-                                '</span>' +
-                            '</a>' +
-                            '<div class="grid-hover-icon grid-info-icon" ng-show="displayHoverIcon" ng-click="flip=!flip;" ng-class="{\'show\': displayHoverIcon, \'remain\': flip}" title="More Info">' + 
-                                '<span class="fa-stack">' +
-                                  '<i class="fa fa-circle fa-stack-2x"></i>' +
-                                  '<i class="fa fa-info fa-stack-1x fa-inverse"></i>' +
-                                '</span>' +
-                            '</div>' + 
-                            '<div class="grid-img-content flip-card" ng-class="{\'flipped\':flip}">' + 
-                                '<div class="flip-face flip-front">' + 
-                                    '<a class="grid-item-nav" ng-href="/d/{{disc._id}}"></a>' +
-                                    '<img ng-src="{{getSolrPrimaryImage(disc)}}">' +
-                                '</div>' +
-                                '<div class="grid-quick-info flip-face flip-back">' +
-                                    '<div class="qi-content fancy-scroll">' + 
-                                        '<div class="qi-title">Disc Info</div>' + 
-                                        '<div class="qi-item"><div>Brand:</div><div class="handle-overflow">{{disc.brand}}</div></div>' + 
-                                        '<div class="qi-item"><div>Name:</div><div class="handle-overflow">{{disc.name}}</div></div>' + 
-                                        '<div class="qi-item" ng-if="isDef(disc.type)"><div>Type:</div><div class="handle-overflow">{{disc.type}}</div></div>' + 
-                                        '<div class="qi-item" ng-if="isDef(disc.material)"><div>Material:</div><div class="handle-overflow">{{disc.material}}</div></div>' + 
-                                        '<div class="qi-item" ng-if="isDef(disc.color)"><div>Color:</div><div class="handle-overflow">{{disc.color}}</div></div>' + 
-                                        '<div class="qi-item" ng-if="isDef(disc.weight)"><div>Weight:</div><div class="handle-overflow">{{disc.weight}}g</div></div>' + 
-                                        '<div class="qi-item" ng-if="isDef(disc.condition)"><div>Condition:</div><div class="handle-overflow">{{disc.condition}}/10</div></div>' + 
-                                        '<div class="qi-item" ng-if="isDef(disc.speed)"><div>Speed:</div><div class="handle-overflow">{{disc.speed}}</div></div>' + 
-                                        '<div class="qi-item" ng-if="isDef(disc.glide)"><div>Glide:</div><div class="handle-overflow">{{disc.glide}}</div></div>' + 
-                                        '<div class="qi-item" ng-if="isDef(disc.turn)"><div>Turn:</div><div class="handle-overflow">{{disc.turn}}</div></div>' + 
-                                        '<div class="qi-item" ng-if="isDef(disc.fade)"><div>Fade:</div><div class="handle-overflow">{{disc.fade}}</div></div>' + 
-                                        '<div class="qi-item" ng-if="isDef(disc.value)"><div>Value:</div><div class="handle-overflow">${{disc.value | currency:"":2}}</div></div>' + 
-                                    '</div>' +
-                                '</div>' +
-                            '</div>' + 
-                        '</div>' + 
-                    '</div>' +
-                    '<div class="grid-item-info">' +
-						'<div class="private-icon" ng-if="!disc.visible"><i class="fa fa-eye-slash"></i></div>' +
-                        '<div class="grid-item-label handle-overflow">' +
-                            '<a class="hover-underline" ng-href="/d/{{disc._id}}">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></a>' +
-                        '</div>' +
-                        '<div class="grid-item-text float-left hover-underline" ng-show="!disc.user">' +
-                            '{{disc.userId}}' +
-                        '</div>' +
-                        '<div class="grid-item-text float-left hover-underline" ng-show="disc.user">' +
-                            '<a ng-href="/t/{{disc.user.username}}">{{disc.user.username}}</a>' +
-                        '</div>' +
-                        '<div class="grid-item-text float-right" ng-if="disc.weight">' +
-                            '{{disc.weight}}g' +
-                        '</div>' +
-                        '<div class="clearfix"></div>' +
-                    '</div>' +
-					'<div class="overlay-container" ng-show="msOpts.active">' +
-                        '<div class="overlay" ng-class="{\'selected\': disc.selected}" ng-click="msOpts.toggleSelected(disc)" ng-init="disc.selected = false">' +
-                            '<i class="fa fa-check-circle-o no-animate" ng-show="!disc.selected"></i>' +
-                            '<i class="fa fa-check-circle no-animate selected" ng-show="disc.selected"></i>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>',
+        templateUrl: '/static/src/pages/partials/discItem.html',
         link: function(scope, element, attrs) {
             scope.getSolrPrimaryImage = function(disc) {
                 return QueryService.getSolrPrimaryImage(disc);
@@ -1824,40 +1733,7 @@ angular.module('disczump.controllers', ['disczump.services'])
             user: '=',
 			profileModal: '='
         },
-        template: '<div class="grid-item">' +
-                    '<div class="grid-item-icon top-left location handle-overflow" ng-show="location" ng-attr-title="{{location}}">' +
-						'<span><i class="fa fa-street-view"></i>{{location}}</span>' +
-                    '</div>' +
-                    '<div class="grid-item-icon top-right cert-icon" ng-if="(user[\'account.verifications.pdga\'] || user[\'account.verifications.facebook\'])" title="Verified User">' +
-                        '<span class="fa-stack"><i class="fa fa-certificate fa-stack-2x"></i><i class="fa fa-check fa-stack-1x"></i></span>' + 
-                    '</div>' +
-                    '<div class="grid-img-container" ng-mouseenter="displayHoverIcon=true;" ng-mouseleave="displayHoverIcon=false;">' +
-						'<div class="grid-img-inner">' +
-							'<div modal-trigger="dz-profile-modal" data="{\'userId\':\'user._id\'}" modal-opts="profileModal" class="grid-hover-icon grid-info-icon" ng-show="displayHoverIcon" ng-class="{\'show\': displayHoverIcon}" title="More Info">' + 
-								'<span class="fa-stack">' +
-								  '<i class="fa fa-circle fa-stack-2x"></i>' +
-								  '<i class="fa fa-info fa-stack-1x fa-inverse"></i>' +
-								'</span>' +
-							'</div>' + 
-							'<div class="default-bg-image" style="width:100%;height:100%;" img-load="/static/img/dz_profile.png" directive-on="init" directive-set="{\'img-src\':\'{{user.image}\}\'}" bg-image="true">' + 
-								'<a class="grid-item-nav" ng-href="/t/{{user[\'local.username\']}}"></a>' +
-							'</div>' +
-						'</div>' + 
-					'</div>' +
-                    '<div class="grid-item-info">' +
-						'<div class="grid-item-text float-right" ng-attr-title="{{user.discCount}} public disc(s)">{{user.discCount}} <span><i class="fa fa-database" ng-style="discStyle"></i></span></div>' +
-                        '<div class="grid-item-label handle-overflow text-left">' +
-                            '<a class="hover-underline" ng-href="/t/{{user[\'local.username\']}}">{{user[\'local.username\']}}</a>' +
-                        '</div>' +
-                        '<div class="grid-item-text float-left">' +
-                            '{{user[\'local.firstName\']}}<span ng-if="user[\'local.firstName\']"> </span>{{user[\'local.lastName\']}}' +
-                        '</div>' +
-                        '<a class="grid-item-text float-right hover-underline" ng-if="user[\'local.pdgaNumber\']" target="_blank" ng-href="http://www.pdga.com/player/{{user[\'local.pdgaNumber\']}}">' +
-                            '#{{user[\'local.pdgaNumber\']}}' +
-                        '</a>' +
-                        '<div class="clearfix"></div>' +
-                    '</div>' +
-                '</div>',
+        templateUrl: '/static/src/pages/partials/userItem.html',
         link: function(scope, element, attrs) {
 			CacheService.getUser(scope.user._id, function(success, user) {
 				if (success) {
@@ -1879,30 +1755,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 			scope: {
 				discId: '=',
 				curImg: '=',
-				trigger: '=',
-				scrollLock: '='
+				trigger: '='
 			},
-			template:   '<div class="full-screen-backdrop no-select" ng-show="showLightbox" ng-click="backdropExit($event);">' +
-							'<div class="lb-container">' +
-								'<div id="lb-content" class="lb-image-block no-focus" tabindex="0" ng-show="isReady">' +
-									'<dz-alert class="full-width" alert-data="lbAlert"></dz-alert>' +
-									'<div ng-show="loading"><i class="fa fa-spinner fa-spin fa-6x"></i></div>' +
-									'<div ng-show="!loading">' +
-										'<div id="lb-image-list" class="lb-image-list float-left fancy-scroll lite">' +
-											'<img class="image-preview" ng-src="/files/{{img.thumbnailId}}" ng-repeat="img in disc.imageList track by $index" ng-class="{active: index == $index}" ng-click="setImage($index)">' +
-										'</div>' +
-										'<div id="lb-image" class="lb-image">' +
-											'<div style="display:table-cell; vertical-align:middle;">' +
-												'<img class="fit-parent" img-load img-src="/files/{{disc.imageList[index].fileId}}">' +
-											'</div>' +
-										'</div>' +
-									'</div>' +
-								'</div>' +
-							'</div>' +
-							'<div class="lb-x absolute-top-right">' +
-								'<p class="lb-close" ng-click="trigger=false">×</p>' +
-							'</div>' +
-						'</div>',
+			templateUrl: '/static/src/pages/partials/lightbox.html',
 			link: function(scope, element, attrs) {
 				var lb = document.getElementById('lb-content');
 				var lbContent, lbImageList, lbImage;
@@ -1920,6 +1775,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 					if (evt.target == element[0]) {
 						scope.trigger = false;
 					}
+				}
+				
+				var scrollLock = function(lock) {
+					if (lock) document.body.classList.add('scroll-lock');
+					else document.body.classList.remove('scroll-lock');
 				}
 				
 				var preloadImages = function() {
@@ -1987,8 +1847,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 				scope.$watch('trigger', function(val) {
 					if (val === true) {
 						scope.loading = true;
-						scope.scrollLock = true;
+						scrollLock(val);
 						scope.showLightbox = true;
+						element[0].classList.remove('dz-cloak');
 						
 						CacheService.getDisc(scope.discId, function(success, data) {
 							if (!success) {
@@ -2012,7 +1873,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 						
 					} else if (val === false) {
 						scope.showLightbox = false;
-						scope.scrollLock = false;
+						scrollLock(val);
 						scope.disc = {};
 					}
 				})
@@ -2069,8 +1930,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         return {
             restrict: 'E',
             scope: {
-                cropperOptions: '=',
-				scrollLock: '='
+                cropperOptions: '='
             },
             template: '<div class="backdrop backdrop-dark photo-crop" ng-show="show" ng-style="{\'top\':topMarg + \'px\'}">' + 
                             '<div class="crop-container" ng-style="{\'top\':topInnerMarg + \'px\', \'left\':leftInnerMarg + \'px\'}">' + 
@@ -2093,6 +1953,11 @@ angular.module('disczump.controllers', ['disczump.services'])
                 var cropper, imageName, imageSrc;
                 
                 scope.show = false;
+				
+				var scrollLock = function(lock) {
+					if (lock) document.body.classList.add('scroll-lock');
+					else document.body.classList.remove('scroll-lock');
+				}
                 
                 var resizeCropper = function() {
                     var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
@@ -2134,7 +1999,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                     imageSrc = src;
                     scope.safeApply(function() {
                         scope.show = true;
-						scope.scrollLock = true;
+						scrollLock(true);
                     });
                     var parent = document.getElementById('image-parent');
                     parent.innerHTML = '<img src="' + src + '" id="test-crop"' + 
@@ -2146,7 +2011,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                     e.preventDefault();
                     $timeout(function() {
                         scope.show = false;
-						scope.scrollLock = false;
+						scrollLock(false);
 						scope.cropperOptions.onFinish();
                     cropper.destroy();
                     });
@@ -2157,7 +2022,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                     $timeout(function() {
                         scope.cropperOptions.cropperLoading = true;
                         scope.show = false;
-						scope.scrollLock = false;
+						scrollLock(false);
                     });
                     $timeout(function() {
                         var blob = cropper.getCroppedCanvas().toDataURL();
@@ -2249,29 +2114,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			dock: '@'
         },
         replace: true,
-        template: '<div class="message-alert" ng-class="{\'dock\':dock, \'dock-top\': dock == \'top\', \'dock-bottom\': dock == \'bottom\'}">' +
-                    '<div class="alert alert-success" ng-show="alertData.success.show" ng-class="{\'slide-down\': dock == \'top\', \'slide-top\': dock == \'bottom\'}">' +
-                        '<button type="button" class="close" aria-label="Close" ng-click="alertData.success.show=false;" ng-if="!alertData.success.hideClose"><span aria-hidden="true">×</span></button>' +
-                        '<div class="alert-body">' +
-                            '<strong ng-if="alertData.success.title">{{alertData.success.title}}! </strong>' +
-                            '<span smart-msg="alertData.success.message"></span>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="alert alert-info" ng-show="alertData.info.show" ng-class="{\'slide-down\': dock == \'top\', \'slide-top\': dock == \'bottom\'}">' +
-                        '<button type="button" class="close" aria-label="Close" ng-click="alertData.info.show=false;" ng-if="!alertData.info.hideClose"><span aria-hidden="true">×</span></button>' +
-                        '<div class="alert-body">' +
-                            '<strong ng-if="alertData.info.title">{{alertData.info.title}}! </strong>' +
-                            '<span smart-msg="alertData.info.message"></span>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="alert alert-danger" ng-show="alertData.error.show" ng-class="{\'slide-down\': dock == \'top\', \'slide-top\': dock == \'bottom\'}">' +
-                        '<button type="button" class="close" aria-label="Close" ng-click="alertData.error.show=false;" ng-if="!alertData.error.hideClose"><span aria-hidden="true">×</span></button>' +
-                        '<div class="alert-body">' +
-                            '<strong ng-if="alertData.error.title">{{alertData.error.title}}! </strong>' +
-                            '<span smart-msg="alertData.error.message"></span>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>',
+        templateUrl: '/static/src/pages/partials/dzAlert.html',
         link: function(scope, element, attrs) {
 			var timer;
 			
@@ -2285,6 +2128,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 
 			var handleChange = function(val) {
+				if (val.show) element[0].classList.remove('dz-cloak');
+				
 				if (val.show === true && typeof (val.timeout) !== 'undefined') {
 					startTimer(val.timeout);
 				} else {
@@ -2384,17 +2229,21 @@ angular.module('disczump.controllers', ['disczump.services'])
     return {
         restrict: 'A',
         link: function(scope, element, attrs) {
-            var offset = attrs.offset ? parseInt(attrs.offset) | 0 : 0;
+            var offset = attrs.offset ? parseInt(attrs.offset) || 0 : 0;
+			var timer;
             
             var resize = function() {
-				$timeout(function() {
+				if (timer) {
+					$timeout.cancel(timer);
+				}
+				cancel = $timeout(function() {
 					var child = element[0].children[0];
 					if (child.clientHeight <= $window.innerHeight) {
 						angular.element(element).css('height', ($window.innerHeight + offset) + 'px');
 					} else {
 						angular.element(element).css('height', 'auto');
 					}
-				});
+				},10);
             }
             
             
@@ -2652,37 +2501,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         return {
             restrict: 'E',
             scope: true,
-            template: '<div class="explore-category">' + 
-                        '<div class="explore-cat-label dz-label">' + 
-                            'Explore | <span class="dz-blue">{{fvalue}}</span><span class="dz-blue hover-underline" style="float: right; cursor: pointer"><a ng-href="{{getLink()}}">See More...</a></span>' + 
-                        '</div>' + 
-                        '<div class="explore-cat-list" fade-time="100" fade-scroll="true">' + 
-							'<div class="explore-item no-results" ng-show="!exploreList.length">' +
-								'<div>' + 
-									'No Results' + 
-								'</div>' + 
-                            '</div>' + 
-                            '<div class="explore-item" ng-repeat="disc in exploreList | startFrom:start | limitTo:dispCount">' +
-								'<a ng-href="/d/{{disc._id}}">' + 
-									'<div class="explore-item-icon top-left" ng-show="(disc[\'marketplace.forSale\'] || disc[\'marketplace.forTrade\']) && disc.value"><span class="explore-item-text">${{disc.value | currency:"":2}}</span></div>' +
-									'<div class="explore-item-icon top-right">' +
-										'<i class="fa fa-usd market-icon" ng-class="{\'for-sale\':disc[\'marketplace.forSale\']}"></i>' +
-										'<i class="fa fa-exchange market-icon" ng-class="{\'for-trade\':disc[\'marketplace.forTrade\']}"></i>' +
-									'</div>' +
-									'<img img-src="{{getSolrPrimaryImage(disc)}}" img-load />' + 
-									'<div class="explore-item-title handle-overflow">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></div>' + 
-								'</a>' + 
-                            '</div>' + 
-                            '<div class="clearfix"></div>' + 
-                        '</div>' + 
-                        '<div class="explore-nav" ng-show="$def(navArr) && navArr.length > 1" ng-init="page = 0">' + 
-                            '<span>' + 
-                                '<i class="fa fa-angle-double-left nav-list-arrow" ng-click="pageBack()" ng-class="{inactive: page == 0}"></i>' + 
-                                '<i class="fa" ng-repeat="i in navArr track by $index" ng-click="navIndex($index)" ng-class="{active: start == $index * dispCount, \'fa-circle\': start == $index * dispCount, \'fa-circle-thin\': start != $index * dispCount}"></i>' + 
-                                '<i class="fa fa-angle-double-right nav-list-arrow" ng-click="pageNext()" ng-class="{inactive: page == navArr.length - 1}"></i>' + 
-                            '</span>' + 
-                        '</div>' +
-                    '</div>',
+            templateUrl: '/static/src/pages/partials/exploreCategory.html',
             replace: true,
             link: function(scope, element, attrs) {
 				var isRecent = attrs.recent === 'true';
@@ -2810,7 +2629,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 	return {
 		restrict: 'E',
 		scope: {
-			scrollLock: '=',
 			modalOpts: '='
 		},
 		replace: true,
@@ -2826,6 +2644,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 				doOnClose: false
 			};
 			
+			var scrollLock = function(lock) {
+				if (lock) document.body.classList.add('scroll-lock');
+				else document.body.classList.remove('scroll-lock');
+			}
+			
 			scope.resize = function(){
 				var modal = document.getElementById('dz-modal');
 				
@@ -2835,7 +2658,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			scope.$on('$locationChangeStart', function(e) {
-				scope.scrollLock = false;
+				scrollLock(false);
 			});
 			
 			scope.$watch('modalOpts.show', function(newVal) {
@@ -2846,7 +2669,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				inner.innerHTML = '';
 				
 				if (!newVal) {
-					scope.scrollLock = false;
+					scrollLock(newVal);
 					scope.showModal = false;
 					if (typeof(scope.modalOpts.data) !== 'undefined' && typeof(scope.modalOpts.data.onClose) !== 'undefined') {
 						scope.modalOpts.data.onClose(scope.childOpts.doOnClose);
@@ -2854,10 +2677,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 					return;
 				}
 				
-				var newModal = angular.element('<' + scope.modalOpts.type + ' data="modalOpts.data" show="modalOpts.show" lock="childOpts.lock" do-on-close="childOpts.doOnClose"></' + scope.modalOpts.type + '>');
+				var newModal = angular.element('<' + scope.modalOpts.type + ' data="modalOpts.data" show="modalOpts.show" lock="childOpts.lock" do-on-close="childOpts.doOnClose" ' + (scope.modalOpts.partial ? 'partial="' + scope.modalOpts.partial + '"' : '') + '></' + scope.modalOpts.type + '>');
 				inner.appendChild(newModal[0]);
 				$compile(newModal)(scope);
-				scope.scrollLock = true;
+				scrollLock(newVal);
 				$timeout(function() {
 					scope.showModal = true;
 				});
@@ -2882,19 +2705,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			show: '='
 		},
 		replace: true,
-		template: '<div>' +
-					'<div class="dz-modal-content">' +
-						'<div class="dz-modal-title-sm left">disc|zump Feedback</div>' +
-						'<div class="dz-modal-text">We would love to hear from you!  Use the form below to submit questions, suggestions, or comments and we will address them as soon as possible.</div>' +
-						'<dz-alert class="full-width" alert-data="feedbackAlert"></dz-alert>' +
-						'<textarea class="dz-feedback no-focus" ng-attr-placeholder="Enter feedback here..." placeholder="Enter feedback here..." ng-model="feedback"></textarea>' +
-					'</div>' +
-					'<div class="dz-modal-btn-container">' +
-						'<div class="dz-modal-triangle"></div>' +
-						'<div class="dz-modal-btn cancel" ng-click="show = false">Close</div>' +
-						'<div class="dz-modal-btn btn-blue" ng-click="feedback.length && submit()" ng-class="{disabled:!feedback.length}">Submit</div>' +
-					'</div>' +
-				'</div>',
+		templateUrl: '/static/src/pages/partials/dzFeedbackModal.html',
 		link: function(scope, elem, attrs) {
 			scope.feedback = '';
 			scope.feedbackAlert = {};
@@ -2920,7 +2731,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 	}
 }])
 
-.directive('dzInfoModal', ['$window', '$timeout', function($window, $timeout) {
+.directive('dzInfoModal', ['$window', '$timeout', '$templateRequest', '$compile', function($window, $timeout, $templateRequest, $compile) {
 	return {
 		restrict: 'E',
 		scope: {
@@ -2929,20 +2740,24 @@ angular.module('disczump.controllers', ['disczump.services'])
 		},
 		replace: true,
 		template: '<div>' +
-					'<div class="dz-modal-content">' +
-						'<div class="dz-modal-title-info" id="modal-title"><i class="fa fa-question-circle fa-tools"></i></div>' +
-						'<div id="modal-body" style="overflow:auto;"></div>' +
-					'</div>' +
-					'<div class="dz-modal-btn-container">' +
-						'<div class="dz-modal-triangle"></div>' +
-						'<div class="dz-modal-btn cancel" ng-click="show = false">Close</div>' +
-					'</div>' +
-				'</div>',
+						'<div class="dz-modal-content">' +
+							'<div class="dz-modal-title-info" id="modal-title"><i class="fa fa-question-circle fa-tools"></i></div>' +
+							'<div id="modal-body" style="overflow:auto;"></div>' +
+						'</div>' +
+						'<div class="dz-modal-btn-container">' +
+							'<div class="dz-modal-triangle"></div>' +
+							'<div class="dz-modal-btn cancel" ng-click="show = false">Close</div>' +
+						'</div>' +
+					'</div>',
 		link: function(scope, elem, attrs) {
-			document.getElementById('modal-title').innerHTML += scope.data.title;
 			var body = document.getElementById('modal-body');
+			document.getElementById('modal-title').innerHTML += scope.data.title;
 			
-			body.innerHTML = scope.data.body;
+			$templateRequest('/static/src/pages/partials/' + attrs.partial, true).then(function(partial){
+				var node = angular.element(partial);
+				body.appendChild(node[0]);
+                $compile(node)(scope);
+            });
 			
 			scope.resize = function(){
 				$timeout(function() {
@@ -2971,26 +2786,12 @@ angular.module('disczump.controllers', ['disczump.services'])
 			doOnClose: '='
 		},
 		replace: true,
-		template: '<div>' +
-					'<div class="dz-modal-content">' +
-						'<div class="dz-modal-title-sm left">Bump Discs</div>' +
-						'<div class="dz-modal-text">The table below shows each bump status of the selected discs. Clicking "Bump" will automatically bump all available discs in the table below.</div>' +
-						'<dz-alert class="full-width" alert-data="modalAlert"></dz-alert>' +
-						'<dz-modal-table table-opts="tableOpts"></dz-modal-table>' +
-					'</div>' +
-					'<div class="dz-modal-btn-container">' +
-						'<div class="dz-modal-triangle"></div>' +
-						'<div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
-						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>' +
-						'<div class="dz-modal-btn btn-blue" ng-click="confirm()" ng-show="!opts.loading && !opts.hideBump">Bump</div>' +
-					'</div>' +
-				'</div>',
+		templateUrl: '/static/src/pages/partials/dzBumpModal.html',
 		link: function(scope, elem, attrs) {
 			scope.tableOpts = {
 				isCounter: true,
 				isDisc: true,
 				headerText: 'Disc',
-				successText: 'Bumped',
 				defaultText: 'Bump Ready',
 				items: scope.data.discs
 			};
@@ -2998,15 +2799,17 @@ angular.module('disczump.controllers', ['disczump.services'])
 			scope.modalAlert = {};
 			
 			scope.confirm = function() {
-				_.each(scope.data.discs, function(disc) {
+				var tableContent = document.getElementById('modal-table-content');
+				tableContent.scrollTop = 0;
+				
+				var updateDiscs = function(discs, i, finish) {
+					var disc = discs[i];
+					
 					if (typeof(disc.countdown) !== 'undefined' && disc.countdown.bumpReady) {
-						scope.opts.loading = true;
-						scope.doOnClose = true;
-						scope.lock = true;
-
 						DiscService.bumpDisc(disc._id, function(success, data) {
 							if (success) {
-								disc.success = true;
+								disc.countdown.bumpRemaining = data.bumpRemaining;
+								disc.countdown.bumpReady = false;
 							} else {
 								scope.modalAlert.error = {
 									title: data.type,
@@ -3014,11 +2817,27 @@ angular.module('disczump.controllers', ['disczump.services'])
 									show: true
 								}
 							}
-							scope.opts.loading = false;
-							scope.opts.hideBump = true;
-							scope.lock = false;
+							
+							if (i > 4)
+								tableContent.scrollTop += 30;
+
+							if (i < discs.length - 1) {
+								updateDiscs(discs, i+1, finish);
+							} else {
+								finish();
+							}
 						});
 					}
+				}
+				
+				scope.opts.loading = true;
+				scope.doOnClose = true;
+				scope.lock = true;
+				
+				updateDiscs(scope.data.discs, 0, function() {
+					scope.opts.loading = false;
+					scope.opts.disableBump = true;
+					scope.lock = false;
 				});
 			}
 		}
@@ -3035,45 +2854,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			doOnClose: '='
 		},
 		replace: true,
-		template: '<div>' +
-					'<div class="dz-modal-content">' +
-						'<div class="dz-modal-title-sm left">Multi-select Tag Manager</div>' +
-						'<div class="dz-modal-text">Tags shown below are common to all selected discs. Use this window to add and remove tags to/from multiple discs at once. When saved, all tags in this list will be added to the discs below.</div>' +
-						'<dz-alert class="full-width" alert-data="tagAlert"></dz-alert>' +
-						'<div ng-show="opts.loading" style="line-height:105px;"><i class="fa fa-spinner fa-spin fa-3x"></i></div>' +
-						'<div ng-show="!opts.loading">' +
-							'<div class="input-group" style="position:relative;height:20px;margin:5px;">' +
-								'<input type="text" class="dz-modal-tag-input" placeholder="Enter tag..." ng-model="tempTag" ng-model-options="{\'updateOn\':\'default blur\',\'debounce\':{\'default\':500,\'blur\':0}}" ng-model-enter="pushTempTag();" directive-on="opts.isShowing" directive-set="{\'dz-auto-complete\':\'tag\'}" user-id="data.user" dz-multi="true" >' +
-								'<span class="tag-input-addon hover-pointer">' +
-									'<div ng-click="pushTempTag();" ng-class="{\'btn-pulse\':tempTag.length}">' +
-										'<i class="fa fa-plus" aria-hidden="true"></i>' +
-									'</div>' +
-								 '</span>' +
-							'</div>' +
-							'<div class="dz-modal-tag-container">' +
-								'<div class="watermark">Current Tags</div>' +
-								'<li class="tag-item" ng-repeat="tag in newTags">' +
-									'<div>{{tag}}<span class="tag-item-remove" ng-click="removeNewTag($index)"><i class="fa fa-times"></i></span></div>' +
-								'</li>' +
-							'</div>' +
-							'<div style="text-align:left;">' +
-								'<span style="margin-right:5px;">' +
-									'<i class="fa fa-square-o hover-pointer" ng-show="!opts.overwrite" aria-hidden="true" ng-click="opts.overwrite = !opts.overwrite"></i>' +
-									'<i class="fa fa-check-square-o hover-pointer" ng-show="opts.overwrite" aria-hidden="true" ng-click="opts.overwrite = !opts.overwrite"></i>' +
-								'</span>' +
-								'<span class="hover-pointer" ng-click="opts.overwrite = !opts.overwrite">Overwrite Tags</span>' +
-							'</div>' +
-						'</div>' +
-						'<dz-alert class="full-width" alert-data="overwriteAlert" style="text-align:left;"></dz-alert>' +
-						'<dz-modal-table table-opts="tableOpts"></dz-modal-table>' +
-					'</div>' +
-					'<div class="dz-modal-btn-container">' +
-						'<div class="dz-modal-triangle"></div>' +
-						'<div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
-						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>' +
-						'<div class="dz-modal-btn btn-blue" ng-click="opts.allowSave && confirm()" ng-show="!opts.loading" ng-class="{disabled:!opts.allowSave}">Save</div>' +
-					'</div>' +
-				'</div>',
+		templateUrl: '/static/src/pages/partials/dzTagModal.html',
 		link: function(scope, elem, attrs) {
 			var tempCommon = _.intersection.apply(_, (_.pluck(scope.data.discs, 'tag')));
 			scope.newTags = tempCommon.slice();
@@ -3113,6 +2894,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			scope.confirm = function() {
+				var tableContent = document.getElementById('modal-table-content');
+				tableContent.scrollTop = 0;
+				
 				var removeArray = _.difference(tempCommon, scope.newTags);
 				
 				var updateDiscs = function(discs, i, finish) {
@@ -3134,6 +2918,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 						} else {
 							disc.error = true;
 						}
+						
+						if (i > 4)
+							tableContent.scrollTop += 30;
 						
 						if (i < discs.length - 1) {
 							updateDiscs(discs, i+1, finish);
@@ -3208,39 +2995,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			lock: '='
 		},
 		replace: true,
-		template: '<div>' +
-					'<div class="dz-modal-content">' +
-						'<dz-alert class="full-width" alert-data="modalAlert"></dz-alert>' +
-						'<div ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
-						'<div ng-show="userInit && !opts.loading">' +
-							'<div class="dz-modal-profile-table" id="profile-table">' +
-								'<div class="dz-modal-profile-cell right">' +
-									'<div class="handle-overflow" style="font-weight:bold;font-size:20px;">{{user.username}}</div>' +
-									'<div class="handle-overflow">{{user.firstName}} {{user.lastName}}</div>' +
-									'<div class="handle-overflow">{{user.shortLocation}}</div>' +
-								'</div>' +
-								'<div class="dz-modal-profile-cell">' +
-									'<div class="dz-modal-profile-img default-bg-image" img-load="/static/img/dz_profile.png" img-src="{{getUserImage()}}" bg-image="true"></div>' +
-								'</div>' +
-								'<div class="dz-modal-profile-cell left">' +
-									'<div class="handle-overflow">{{getAccountName()}}</div>' +
-									'<div class="handle-overflow">{{user.discCount}} Public Discs</div>' +
-									'<div class="handle-overflow">Member since {{user.dateJoined | dateLocal | date:\'MM/dd/yyyy\'}}</div>' +
-									'<div class="handle-overflow"><i style="width:14px;" class="fa fa-check fa-tools" aria-hidden="true" ng-class="{\'fa-success\':user.pdgaNumber,\'fa-gray\':!user.pdgaNumber}"></i>PDGA Verified</div>' +
-									'<div class="handle-overflow"><i style="width:14px;" class="fa fa-check fa-tools" aria-hidden="true" ng-class="{\'fa-success\':user.fbId,\'fa-gray\':!user.fbId}"></i>Facebook Verified</div>' +
-								'</div>' +
-							'</div>' +
-							'<div class="dz-modal-bio" id="modal-bio" parse-text="user.bio" parse-url parse-disc ng-if="user.bio">{{user.bio}}</div>' +
-						'</div>' +
-					'</div>' +
-					'<div class="dz-modal-btn-container">' +
-						'<div class="dz-modal-triangle"></div>' +
-						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>' +
-						'<div class="dz-modal-btn btn-blue" ng-if="!isOwner" ng-show="!opts.loading" ng-click="initMessage()">Message</div>' +
-						'<div class="dz-modal-btn trunk" ng-if="!isTrunk" ng-show="!opts.loading" ng-click="viewTrunk()">View Trunk</div>' +
-						'<div class="dz-modal-btn btn-blue" ng-if="isOwner" ng-show="!opts.loading" ng-click="viewAccount()">My Account</div>' +
-					'</div>' +
-				'</div>',
+		templateUrl: '/static/src/pages/partials/dzProfileModal.html',
 		link: function(scope, elem, attrs) {
 			var bio = document.getElementById('modal-bio');
 			var profileTable = document.getElementById('profile-table');
@@ -3258,15 +3013,15 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			scope.initMessage = function() {
-				$location.path('/inbox').search('userId', scope.user._id);
+				$location.path('/inbox').search('userId', scope.user._id).search({});;
 			}
 			
 			scope.viewTrunk = function() {
-				$location.path('/t/' + scope.user.username);
+				$location.path('/t/' + scope.user.username).search({});;
 			}
 			
 			scope.viewAccount = function() {
-				$location.path('/account');
+				$location.path('/account').search({});;
 			}
 			
 			scope.resize = function(){
@@ -3328,23 +3083,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			lock: '='
 		},
 		replace: true,
-		template: '<div>' +
-					'<div class="dz-modal-content">' +
-						'<div class="dz-modal-title-sm left"><img class="dz-modal-title-img" ng-src="{{getAccountImage()}}" />Delete Account - {{data.account.username}}</div>' +
-						'<dz-alert class="full-width" alert-data="modalAlert"></dz-alert>' +
-						'<i class="fa fa-5x fa-exclamation-triangle" style="color:#e85947"></i>' +
-						'<div class="dz-modal-title-lg">Warning!</div>' +
-						'<div class="dz-modal-text">Are you sure you want to permanently delete your disc|zump account?</div>' +
-						'<br>' +
-						'<div class="dz-modal-text">Upon clicking delete, a confirmation email will be sent to your disc|zump account email address. Click the link in this email to complete the deletion process.</div>' +
-					'</div>' +
-					'<div class="dz-modal-btn-container">' +
-						'<div class="dz-modal-triangle"></div>' +
-						'<div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
-						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>' +
-						'<div class="dz-modal-btn" ng-show="!opts.loading && !opts.confirmed" ng-click="!opts.loading && confirm()" style="background-color: #e85947">Delete</div>' +
-					'</div>' +
-				'</div>',
+		templateUrl: '/static/src/pages/partials/dzDeleteAccountModal.html',
 		link: function(scope, elem, attrs) {
 			scope.opts = {};
 			scope.modalAlert = {};
@@ -3391,24 +3130,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			doOnClose: '='
 		},
 		replace: true,
-		template: '<div>' +
-					'<div class="dz-modal-content">' +
-						'<i class="fa fa-5x fa-exclamation-triangle" style="color:#e85947"></i>' +
-						'<div class="dz-modal-title-lg">Warning!</div>' +
-						'<div class="dz-modal-message">Are you sure you want to permanently delete the selected discs?</div>' +
-						'<dz-alert class="full-width" alert-data="modalAlert"></dz-alert>' +
-						'<dz-modal-table table-opts="tableOpts"></dz-modal-table>' +
-					'</div>' +
-					'<div class="dz-modal-btn-container">' +
-						'<div class="dz-modal-triangle"></div>' +
-						'<div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
-						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">' +
-							'<span ng-show="!doOnClose">Cancel</span>' +
-							'<span ng-show="doOnClose">Close</span>' +
-						'</div>' +
-						'<div class="dz-modal-btn" ng-show="!opts.loading && !doOnClose" ng-click="!opts.loading && confirm()" style="background-color: #e85947">Delete</div>' +
-					'</div>' +
-				'</div>',
+		templateUrl: '/static/src/pages/partials/dzDeleteDiscModal.html',
 		link: function(scope, elem, attrs) {
 			scope.opts = {};
 			scope.modalAlert = {};
@@ -3421,6 +3143,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 			};
 			
 			scope.confirm = function() {
+				var tableContent = document.getElementById('modal-table-content');
+				tableContent.scrollTop = 0;
+				
 				var deleteDiscs = function(discs, i, finish) {
 					var disc = discs[i];
 					
@@ -3430,6 +3155,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 						} else {
 							disc.error = true;
 						}
+						
+						if (i > 4)
+							tableContent.scrollTop += 30;
 						
 						if (i < discs.length - 1) {
 							deleteDiscs(discs, i+1, finish);
@@ -3468,30 +3196,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			doOnClose: '='
 		},
 		replace: true,
-		template: '<div>' +
-					'<div class="dz-modal-content">' +
-						'<div class="dz-modal-title-sm left">Multi-select Visibility Manager</div>' +
-						'<div class="dz-modal-text">Change the visibility setting for all discs selected below.</div>' +
-						'<div class="page-info error" ng-show="!makePublic">Warning! Making discs private will automatically remove them from the marketplace.</div>' +
-						'<div>' +
-							'<div class="dz-modal-action sm hover-pointer" ng-click="makePublic = true;" ng-class="{active: makePublic}">' +
-								'<div><i class="fa fa-eye" aria-hidden="true" style="font-size:4em;"></i></div>' +
-								'<div class="dz-modal-action-text">Public</div>' +
-							'</div>' +
-							'<div class="dz-modal-action sm hover-pointer" ng-click="makePublic = false;" ng-class="{active: !makePublic}">' +
-								'<div><i class="fa fa-eye-slash" aria-hidden="true" style="font-size:4em;"></i></div>' +
-								'<div style="font-weight:bold;font-size:20px;">Private</div>' +
-							'</div>' +
-						'</div>' +
-						'<dz-modal-table table-opts="tableOpts"></dz-modal-table>' +
-					'</div>' +
-					'<div class="dz-modal-btn-container">' +
-						'<div class="dz-modal-triangle"></div>' +
-						'<div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
-						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>' +
-						'<div class="dz-modal-btn btn-blue" ng-click="!opts.loading && confirm()" ng-show="!opts.loading">Save</div>' +
-					'</div>' +
-				'</div>',
+		templateUrl: '/static/src/pages/partials/dzVisibilityModal.html',
 		link: function(scope, elem, attrs) {
 			scope.opts = {};
 			scope.modalAlert = {};
@@ -3504,6 +3209,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 			scope.makePublic = true;
 			
 			scope.confirm = function() {
+				var tableContent = document.getElementById('modal-table-content');
+				tableContent.scrollTop = 0;
+				
 				var updateDiscs = function(discs, i, finish) {
 					var disc = discs[i];
 					
@@ -3522,6 +3230,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 						} else {
 							disc.error = true;
 						}
+						
+						if (i > 4)
+							tableContent.scrollTop += 30;
 						
 						if (i < discs.length - 1) {
 							updateDiscs(discs, i+1, finish);
@@ -3554,39 +3265,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			doOnClose: '='
 		},
 		replace: true,
-		template: '<div>' +
-					'<div class="dz-modal-content">' +
-						'<div class="dz-modal-title-sm left">Multi-select Marketplace Manager</div>' +
-						'<div class="dz-modal-text">Change the marketplace settings for all discs selected below. Upon saving, all marketplace settings will be overwritten for selected discs.</div>' +
-						'<dz-alert class="full-width" alert-data="modalAlert"></dz-alert>' +
-						'<div style="border-bottom:1px solid #BEBEBE;height:30px;">' +
-							'<div class="dz-modal-market-info handle-overflow"><span>Account Type: </span>{{data.marketData.accountName}}</div>' +
-							'<div class="dz-modal-market-info handle-overflow" ng-show="data.marketData.marketCap != -1"><span>Cap: </span>{{data.marketData.marketCap}}</div>' +
-							'<div class="dz-modal-market-info handle-overflow" ng-show="data.marketData.marketCap == -1"><span>Cap: </span>Unlimited</div>' +
-							'<div class="dz-modal-market-info handle-overflow" ng-show="data.marketData.marketCap != -1"><span>Remaining: </span>{{data.marketData.marketAvailable}}</div>' +
-							'<div class="dz-modal-market-info handle-overflow" ng-show="data.marketData.marketCap == -1"><span>Remaining: </span>Unlimited</div>' +
-						'</div>' +
-						'<div class="page-info error center full-width" style="margin:5px auto" ng-show="data.marketData.marketCap > 0 && (tempMarketplace.forSale || tempMarketplace.forTrade)">' +
-							'<span class="page-info-title inline">Warning!</span>  You have a limited marketplace cap. Discs will update sequentially until this cap is reached.' +
-						'</div>' +
-						'<div class="page-info error center full-width" style="margin:5px auto" ng-show="data.isIneligible">Marketplace eligibility requires each disc to be public and have at least one image.</div>' +
-						'<div>' +
-							'<div style="display:inline-block;width:50%;line-height:50px;">' +
-								'<div>For Sale: <switch class="marketplace-switch ms-modal sale-switch" type="checkbox" ng-model="tempMarketplace.forSale"></switch></div>' +
-							'</div>' +
-							'<div style="display:inline-block;width:50%;line-height:50px;">' +
-								'<div>For Trade: <switch class="marketplace-switch ms-modal trade-switch" type="checkbox" ng-model="tempMarketplace.forTrade"></switch></div>' +
-							'</div>' +
-						'</div>' +
-						'<dz-modal-table table-opts="tableOpts" class="no-margin"></dz-modal-table>' +
-					'</div>' +
-					'<div class="dz-modal-btn-container">' +
-						'<div class="dz-modal-triangle"></div>' +
-						'<div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>' +
-						'<div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>' +
-						'<div class="dz-modal-btn btn-blue" ng-click="!opts.loading && confirm()" ng-show="!opts.loading">Save</div>' +
-					'</div>' +
-				'</div>',
+		templateUrl: '/static/src/pages/partials/dzMarketplaceModal.html',
 		link: function(scope, elem, attrs) {
 			scope.opts = {};
 			scope.modalAlert = {};
@@ -3602,6 +3281,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 			};
 			
 			scope.confirm = function() {
+				var tableContent = document.getElementById('modal-table-content');
+				tableContent.scrollTop = 0;
 				
 				var updateDiscs = function(discs, i, finish) {
 					var disc = discs[i];
@@ -3627,6 +3308,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 				}
 				
 				var next = function(discs, i, finish) {
+					if (i > 4)
+						tableContent.scrollTop += 30;
+					
 					if (i < discs.length - 1) {
 						return updateDiscs(discs, i+1, finish);
 					} else {
@@ -3666,39 +3350,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			lock: '='
 		},
 		replace: true,
-		template: '<div>' +
-					'<div class="dz-modal-content">' +
-						'<div class="dz-modal-title-sm left" ng-if="isDisc"><img class="dz-modal-title-img" img-load img-src="{{getDiscImage(data.disc)}}" />Share {{data.disc.brand}} {{data.disc.name}}</div>' +
-						'<div class="dz-modal-title-sm left" ng-if="isTrunk"><img class="dz-modal-title-img" img-load="/static/img/dz_profile.png" img-src="{{getAccountImage()}}" />Share Trunk - {{data.user.username}}</div>' +
-						'<div class="dz-modal-text" ng-show="!linkOpts.linkSelected">Share this {{typeText}} directly to Facebook, or send the public link to any internet enabled device. Click an icon below to continue.</div>' +
-						'<div class="dz-modal-text" ng-show="linkOpts.linkSelected">Copy the public link below and share it with the world!</div>' +
-						'<dz-alert class="full-width" alert-data="modalAlert"></dz-alert>' +
-						'<div ng-show="!linkOpts.linkSelected">' +
-							'<dz-alert class="full-width" alert-data="fbModalAlert"></dz-alert>' +
-							'<div class="dz-modal-action hover-pointer" ng-click="!loading.fb && facebookInit && shareFB()" ng-class="{disabled: !facebookInit}">' +
-								'<div ng-show="loading.fb"><i class="fa fa-spin fa-spinner" aria-hidden="true" style="font-size:7em;"></i></div>' +
-								'<div ng-show="!loading.fb"><i class="fa fa-facebook-square fb-color" aria-hidden="true" style="font-size:7em;"></i></div>' +
-								'<div class="dz-modal-action-text" ng-class="{disabled: !facebookInit}">Facebook</div>' +
-							'</div>' +
-							'<div class="dz-modal-action hover-pointer" ng-click="showLink()">' +
-								'<div><i class="fa fa-link link-color" aria-hidden="true" style="font-size:7em;"></i></div>' +
-								'<div style="font-weight:bold;font-size:20px;">Public Link</div>' +
-							'</div>' +
-						'</div>' +
-						'<div ng-show="linkOpts.linkSelected">' +
-							'<form name="linkForm" class="dz-modal-link-form" ng-if="isTrunk">' +
-								'<div class="dz-modal-link-form-row"><label class="dz-blue-hover"><input type="radio" ng-model="formData.linkType" value="full"><span>Share current view (maintaining filter, search, and sort settings).</span></label></div>' +
-								'<div class="dz-modal-link-form-row"><label class="dz-blue-hover"><input type="radio" ng-model="formData.linkType" value="base"><span>Share <span ng-if="isOwner">your</span><span ng-if="!isOwner">this</span> entire trunk.</span></label></div>' +
-							'</form>' +
-							'<input id="input-link" class="no-focus no-border" style="width:100%;padding:5px;" type="text" ng-model="linkOpts.link"></input>' +
-						'</div>' +
-					'</div>' +
-					'<div class="dz-modal-btn-container">' +
-						'<div class="dz-modal-triangle"></div>' +
-						'<div class="dz-modal-btn cancel" ng-click="linkOpts.linkSelected = !linkOpts.linkSelected" ng-show="linkOpts.linkSelected"><span>Back</span></div>' +
-						'<div class="dz-modal-btn cancel" ng-click="show = false"><span>Close</span></div>' +
-					'</div>' +
-				'</div>',
+		templateUrl: '/static/src/pages/partials/dzShareModal.html',
 		link: function(scope, elem, attrs) {
 			scope.linkOpts = {};
 			scope.modalAlert = {};
@@ -3830,20 +3482,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			doOnClose: '='
 		},
 		replace: true,
-		template: '<div>' +
-					'<div class="dz-modal-content">' +
-						'<i class="fa fa-5x fa-exclamation-triangle" style="color:#008EDD"></i>' +
-						'<div class="dz-modal-title-lg">Warning!</div>' +
-						'<div class="dz-modal-message" id="modal-message-1" ng-show="data.message1"></div>' +
-						'<br>' +
-						'<div class="dz-modal-message" id="modal-message-2" ng-show="data.message2"></div>' +
-					'</div>' +
-					'<div class="dz-modal-btn-container">' +
-						'<div class="dz-modal-triangle"></div>' +
-						'<div class="dz-modal-btn cancel" ng-click="show = false">Cancel</div>' +
-						'<div class="dz-modal-btn" ng-click="confirm()" style="background-color: #008EDD">OK</div>' +
-					'</div>' +
-				'</div>',
+		templateUrl: '/static/src/pages/partials/dzAcknowledgementModal.html',
 		link: function(scope, elem, attrs) {
 			if (typeof(scope.data.message1) !== 'undefined') {
 				document.getElementById('modal-message-1').innerHTML = scope.data.message1;
@@ -3860,7 +3499,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 	}
 }])
 
-.directive('dzModalTable', ['_', 'QueryService', 'CacheService', function(_, QueryService, CacheService) {
+.directive('dzModalTable', ['_', 'QueryService', 'DiscService', function(_, QueryService, DiscService) {
 	return {
 		restrict: 'E',
 		scope: {
@@ -3869,51 +3508,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			tableOpts: '='
 		},
 		replace: true,
-		template: '<div class="dz-modal-table">' +
-					'<div class="dz-modal-row header">' +
-						'<div class="dz-modal-row-item">{{tableOpts.headerText}}</div>' +
-						'<div class="dz-modal-row-item">Status</div>' +
-						'<div class="clearfix"></div>' +
-					'</div>' +
-					'<div class="dz-modal-row" ng-repeat="item in tableOpts.items">' +
-						'<div class="dz-modal-row-item left handle-overflow" ng-if="tableOpts.isDisc">' +
-							'<img ng-src="{{getImage(item)}}" />' +
-							'{{item.brand}} {{item.name}}' +
-						'</div>' +
-						'<div class="dz-modal-row-item handle-overflow">' +
-							'<span ng-if="tableOpts.isCounter && !tableOpts.isVisibility && !tableOpts.isMarketplace" directive-on="item.countdown.init" directive-set="{countdown:\'\'}" sec-left="item.countdown.bumpRemaining" counts="item.countdown.counts" done="item.countdown.bumpReady" show="item.countdown.show">' +
-								'<span ng-show="item.countdown.show && !item.countdown.bumpReady"><span ng-bind="item.countdown.counts.hours"></span> : <span ng-bind="item.countdown.counts.minutes"></span> : <span ng-bind="item.countdown.counts.seconds"></span></span>' +
-								'<span ng-show="item.countdown.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></span>' +
-								'<span ng-show="item.countdown.bumpReady && !item.success" style="font-weight:bold;">{{tableOpts.defaultText}}</span>' +
-								'<span ng-show="!item[\'marketplace.forSale\'] && !item[\'marketplace.forTrade\']" style="font-style:italic;">Not In Marketplace</span>' +
-							'</span>' +
-							'<span ng-if="!tableOpts.isCounter && tableOpts.isVisibility && !tableOpts.isMarketplace">' +
-								'<span ng-show="!item.success && !item.error" ng-class="{private: !item.visible}">{{item.visible ? \'Public\' : \'Private\'}}</span>' +
-								'<span ng-show="item.success" ng-class="{private: !item.visible}"><i style="color:#4FC74F;" class="fa fa-check fa-tools" aria-hidden="true"></i>{{item.visible ? \'Public\' : \'Private\'}}</span>' +
-								'<span ng-show="item.error"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>Error</span>' +
-							'</span>' +
-							'<span ng-if="!tableOpts.isCounter && !tableOpts.isVisibility && tableOpts.isMarketplace">' +
-								'<span ng-show="!item.success && !item.error && !item.ineligible">' +
-									'<i class="fa fa-usd market-icon" ng-class="{\'for-sale\':item[\'marketplace.forSale\']}"></i>' +
-									'<i class="fa fa-exchange market-icon" ng-class="{\'for-trade\':item[\'marketplace.forTrade\']}"></i>' +
-								'</span>' +
-								'<span ng-show="item.success">' +
-									'<i style="color:#4FC74F;" class="fa fa-check fa-tools" aria-hidden="true"></i>' +
-									'<i class="fa fa-usd market-icon" ng-class="{\'for-sale\':item[\'marketplace.forSale\']}"></i>' +
-									'<i class="fa fa-exchange market-icon" ng-class="{\'for-trade\':item[\'marketplace.forTrade\']}"></i>' +
-								'</span>' +
-								'<span ng-show="item.error"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>Marketplace Cap Reached</span>' +
-								'<span ng-show="item.ineligible"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>Ineligible For Marketplace</span>' +
-							'</span>' +
-							'<span ng-if="!tableOpts.isCounter && !tableOpts.isVisibility && !tableOpts.isMarketplace">' +
-								'<span ng-show="!item.success && !item.error">{{tableOpts.defaultText}}</span>' +
-								'<span ng-show="item.success"><i style="color:#4FC74F;" class="fa fa-check fa-tools" aria-hidden="true"></i>{{tableOpts.successText}}</span>' +
-								'<span ng-show="item.error"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>Error</span>' +
-							'</span>' +
-						'</div>' +
-						'<div class="clearfix"></div>' +
-					'</div>' +
-				'</div>',
+		templateUrl: '/static/src/pages/partials/dzModalTable.html',
 		link: function(scope, elem, attrs) {
 			
 			var getSolrPrimaryImage = function(disc) {
@@ -3943,11 +3538,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 						if (disc['marketplace.forSale'] || disc['marketplace.forTrade']) {
 							disc.countdown = {};
 							disc.countdown.loading = true;
-							CacheService.getDisc(disc._id, function(success, data) {
+							DiscService.getBumpRemaining(disc._id, function(success, data) {
 								if (!success) {
 									disc.error = true;
 								} else {
-									disc.countdown.bumpRemaining = data.marketplace.bumpRemaining;
+									disc.countdown.bumpRemaining = data.bumpRemaining;
 									disc.countdown.init = true;
 								}
 								disc.countdown.loading = false;
@@ -4019,11 +3614,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 *******************************************************************************/
 .controller('MainController', ['$rootScope', '$scope', '$location', 'AccountService', '_', 'APIService', 'QueryService', 'SocketUtils', 'DiscService',
     function($rootScope, $scope, $location, AccountService, _, APIService, QueryService, SocketUtils, DiscService) {
-        $scope.pgSettings = {
-			hasFooter: false,
-			scrollLock: false
-        };
-        
+        $scope.Math = window.Math;
         $scope.nav = function(url, replace) {
             $location.path('/' + (url ? url : '')).search({});
             
@@ -4148,13 +3739,12 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.activeFilters = [];
 		$scope.breadcrumbs = [];
         $scope.resultList = [];
-        $scope.resultFilters = [];
+        $scope.resultFilters = {};
 		$scope.location = {
 			results: [],
 			loading: false,
 			locSet: false
 		};
-		$scope.globalModalOpts = {};
         $scope.pagination = { start: 0, total: 0 };
 		$scope.units = 'miles';
 		$scope.statusHome = 'trunks';
@@ -4281,6 +3871,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 		
 		$scope.startSearch = function() {
 			$scope.activeFilters = [];
+			$scope.geo = undefined;
+			$scope.sortParam = undefined;
 			$scope.updateUrl();
 		}
 		
@@ -4331,6 +3923,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 		}
 		
 		$scope.hasVerificationsActive = function() {
+			if (typeof($scope.resultFilters.statFilters) === 'undefined') return false;
 			var verifications = _.filter($scope.activeFilters, function(filter) {
 				return typeof($scope.resultFilters.statFilters[filter.name] !== 'undefined');
 			});
@@ -4478,7 +4071,7 @@ angular.module('disczump.controllers', ['disczump.services'])
             });
         });
 		
-		$scope.getLocation = function(distance) {
+		$scope.getLocation = function(distance, callback) {
 			var d = distance;
 			if (typeof(distance) === 'undefined') {
 				if ($scope.geo && $scope.geo.distance) {
@@ -4497,11 +4090,36 @@ angular.module('disczump.controllers', ['disczump.services'])
 				} else {
 					$scope.geo = {};
 					$scope.location.locSet = false;
-					$scope.sortParam = 'rel';
 				}
 				
-				$scope.performSearch();
+				if (callback) callback();
+				else $scope.performSearch();
 			});
+		}
+		
+		var setParams = function(ret) {
+			if (!ret) ret = {};
+			var distanceSet = $scope.geo && typeof($scope.geo.distance) !== 'undefined';
+			var latSet = $scope.geo && typeof($scope.geo.latitude) !== 'undefined' && typeof($scope.geo.longitude) !== 'undefined';
+			
+			if (ret.sort) {
+					switch (ret.sort) {
+						case 'proximity': {
+							$scope.sortParam = (distanceSet || latSet) ? ret.sort : 'rel';
+							break;
+						}
+						default: 
+							$scope.sortParam = ret.sort;
+					}
+                } else if (ret.search.length) {
+                    $scope.sortParam = 'rel';
+                } else if (distanceSet || latSet) {
+					$scope.sortParam = 'proximity';
+				} else {
+					$scope.sortParam = 'rel';
+				}
+			
+			$scope.performSearch();
 		}
 		
         $scope.$watch(function () { return $location.url(); }, function (url) {
@@ -4520,16 +4138,6 @@ angular.module('disczump.controllers', ['disczump.services'])
                 
                 $scope.activeFilters = ret.filters;
                 $scope.searchParam = ret.search;
-                
-                if (ret.sort) {
-                    $scope.sortParam = ret.sort;
-                } else if (ret.search.length) {
-                    $scope.sortParam = 'rel';
-                } else if (distanceSet || latSet) {
-					$scope.sortParam = 'proximity';
-				} else {
-					$scope.sortParam = 'rel';
-				}
 				
 				if (ret.geo) {
 					if (ret.geo.latitude && ret.geo.longitude) {
@@ -4539,12 +4147,16 @@ angular.module('disczump.controllers', ['disczump.services'])
 							distance: ret.geo.distance
 						}
 						$scope.location.locSet = true;
-						$scope.performSearch();
+						setParams(ret);
 					} else if (distanceSet) {
-						$scope.getLocation(ret.geo.distance);
+						$scope.getLocation(ret.geo.distance, function() {
+							setParams(ret);
+						});
 					}
 				} else {
-					$scope.getLocation(undefined);
+					$scope.getLocation(undefined, function() {
+						setParams(ret);
+					});
 				}
             }
         });
@@ -4580,7 +4192,6 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.resultList = [];
         $scope.resultFilters = [];
         $scope.trunk = {};
-		$scope.globalModalOpts = {};
 		$scope.lbOpts = {};
 		$scope.alertOpts = {};
 		
@@ -4602,6 +4213,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 		$scope.msOpts = {
 			active: false,
 			count: 0,
+			loading: false,
 			showIneligible: false,
 			showNoCount: false
 		};
@@ -4628,54 +4240,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 				type: 'dz-info-modal',
 				show: true,
 				data: {
-					title: 'Multi-select Toolbox Help',
-					body: '<div class="dz-info-table">' +
-							'<table>' +
-								'<tbody>' +
-									'<tr class="header-row">' +
-										'<th>Icon</th>' +
-										'<th>Feature</th>' +
-										'<th>Description</th>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="ms-help-icon"><i class="fa fa-lg fa-eye"></i></td>' +
-										'<td class="ms-help-label">Visibility</td>' +
-										'<td class="ms-help-text">Use the visibility function to simultaneously set the visibility parameter of all selected discs.</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="ms-help-icon"><i class="fa fa-lg fa-trash"></i></td>' +
-										'<td class="ms-help-label">Delete</td>' +
-										'<td class="ms-help-text">Use the delete function to quickly delete all selected discs.</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="ms-help-icon"><i class="fa fa-lg fa-usd"></i></td>' +
-										'<td class="ms-help-label">Marketplace</td>' +
-										'<td class="ms-help-text">Use the marketplace function to manage the for sale/trade status of all selected discs.<br><br><span>*Requires Entrepreneur <a href="/account/membership/" class="dz-blue hover-underline">account</a> or higher.</span></td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="ms-help-icon"><i class="fa fa-lg fa-tags"></i></td>' +
-										'<td class="ms-help-label">Tags</td>' +
-										'<td class="ms-help-text">Use the tag function to conveniently manage shared tags across all selected discs.<br><br><span>*Requires Entrepreneur <a href="/account/membership/" class="dz-blue hover-underline">account</a> or higher.</span></td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="ms-help-icon"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></td>' +
-										'<td class="ms-help-label">Bump</td>' +
-										'<td class="ms-help-text">Use the bump function to quickly bump all available discs within your selection.<br><br><span>*Requires Chief Executive <a href="/account/membership/" class="dz-blue hover-underline">account</a>.</span></td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="ms-help-icon"><i class="fa fa-lg fa-object-group"></i></td>' +
-										'<td class="ms-help-label">Select All</td>' +
-										'<td class="ms-help-text">Use the select all function to load and select all discs within the current filter settings.<br><br><span>*Requires Chief Executive <a href="/account/membership/" class="dz-blue hover-underline">account</a>.</span></td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="ms-help-icon"><i class="fa fa-lg fa-object-ungroup"></i></td>' +
-										'<td class="ms-help-label">Deselect All</td>' +
-										'<td class="ms-help-text">Use the deselect all function clear all selected discs from the multi-select tool.<br><br><span>*Requires Chief Executive <a href="/account/membership/" class="dz-blue hover-underline">account</a>.</span></td>' +
-									'</tr>' +
-								'</tbody>' +
-							'</table>' +
-						'</div>'
-				}
+					title: 'Multi-select Toolbox Help'
+				},
+				partial: 'dzMsInfo.html'
 			}
 		}
 		
@@ -4685,7 +4252,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 		}
 		
-		$scope.msOpts.selectAll = function() {
+		var doSelectAll = function() {
+			$scope.msOpts.loading = true;
 			$scope.msOpts.count = 0;
 			
 			loadAllDiscs(function() {
@@ -4694,8 +4262,29 @@ angular.module('disczump.controllers', ['disczump.services'])
 						result.selected = true;
 						$scope.msOpts.count += 1;
 					});
+					$scope.msOpts.loading = false;
 				});
 			});
+		}
+		
+		$scope.msOpts.selectAll = function() {
+			var remaining = $scope.pagination.total - $scope.resultList.length;
+			
+			if (remaining > 40) {
+				$scope.globalModalOpts = {
+					type: 'dz-acknowledgement-modal',
+					show: true,
+					data: {
+						message1: 'You are attempting to load and select ' + remaining + ' more discs.  Please be patient if you wish to proceed.',
+						message2: 'Do you wish to proceed?',
+						onClose: function(confirmed) {
+							if (confirmed) doSelectAll();
+						}
+					}
+				}
+			} else {
+				doSelectAll();
+			}
 		}
 		
 		$scope.msOpts.deselectAll = function() {
@@ -4756,43 +4345,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 		
 		$scope.msOpts.bumpDiscs = function() {
 			var results = _.where($scope.resultList, {selected: true});
-			// call reloadDisc to get curent bump remaining
-			
-// 			if (results.length) {
-// 				var promises = [];
-
-// 				var updateDisc = function(disc) {
-// 					var deferred = $q.defer();
-
-// 					CacheService.reloadDisc(disc._id, function(success, data) {
-// 						if (success) {
-// 							//overwrite disc in results array
-// 							deferred.resolve();
-// 						} else {
-// 							deferred.reject();
-// 						}
-// 						return deferred.promise;
-// 					});
-// 				}
-
-// 				_.each(results, function(res) {
-// 					promises.push(updateDisc(res));
-// 				});
-
-// 				$q.all(promises).then(
-// 					$scope.globalModalOpts = {
-// 						type: 'dz-bump-modal',
-// 						show: true,
-// 						data: {
-// 							discs: results,
-// 							onClose: function(reload) {
-// 								if (reload) $scope.handleUrl();
-// 							}
-// 						}
-// 					}
-// 				);
-// 			}
-			
 			
 			if (results.length) {
 				$scope.globalModalOpts = {
@@ -4970,6 +4522,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 		
 		$scope.startSearch = function() {
 			$scope.activeFilters = [];
+			$scope.sortParam = undefined;
 			$scope.updateUrl();
 		}
         
@@ -5088,7 +4641,6 @@ angular.module('disczump.controllers', ['disczump.services'])
                             }
                             
                             $scope.resultFilters = response.facets;
-							loadMoreActive = false;
                             console.log($scope.resultFilters);
                         }
                         $scope.getUsers();
@@ -5096,6 +4648,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					if (callback) callback();
                     $scope.loading = false;
                     $scope.loadingMore = false;
+					loadMoreActive = false;
                 });
         }
         
@@ -5323,14 +4876,16 @@ angular.module('disczump.controllers', ['disczump.services'])
                 $scope.trunk.user = user;
 				$scope.statusHome = 't/' + user.username;
 				
-				AccountService.getAccountMarket(function(success, data) {
-					if (!success) {
-						return RedirectService.setRedirect('explore');
-					}
-					$scope.marketData = data;
-					$scope.marketData.accountName = MembershipService.getAccountName($scope.curUser.accountType);
-				});
-								
+				if ($scope.isOwnedTrunk) {
+					AccountService.getAccountMarket(function(success, data) {
+						if (!success) {
+							return RedirectService.setRedirect('explore');
+						}
+						$scope.marketData = data;
+						$scope.marketData.accountName = MembershipService.getAccountName($scope.curUser.accountType);
+					});
+				}
+							
                 init = false;
 				startWatch();
             });
@@ -5377,7 +4932,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 		$scope.tempMarketplace = {};
 		$scope.discAlert = {};
 		$scope.marketAlert = {};
-		$scope.globalModalOpts = {};
 		
 		var initUser = function() {
 			$scope.breadcrumbs = [
@@ -5441,8 +4995,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 		$scope.bumpDisc = function() {
 			DiscService.bumpDisc($scope.disc._id, function(success, data) {
 				if (success) {
-					$scope.disc = data;
-					updateTempMarket(data);
+					$scope.disc.marketplace.bumpRemaining = data.bumpRemaining;
 					$scope.bumpReady = false;
 				} else {
 					$scope.marketAlert.error = {
@@ -5683,49 +5236,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 				type: 'dz-info-modal',
 				show: true,
 				data: {
-					title: 'Modify Disc Help - General',
-					body: '<div class="dz-info-table">' +
-							'<table>' +
-								'<tbody>' +
-									'<tr class="header-row">' +
-										'<th>Field</th>' +
-										'<th>Description</th>' +
-										'<th>Example</th>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Brand</td>' +
-										'<td class="help-text">Enter the brand of the disc. (This field is required)</td>' +
-										'<td class="help-ex">Innova</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Name</td>' +
-										'<td class="help-text">Enter the name/mold of the disc. (This field is required)</td>' +
-										'<td class="help-ex">Destroyer</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Type</td>' +
-										'<td class="help-text">Select the type of the disc.</td>' +
-										'<td class="help-ex">Distance Driver</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Material</td>' +
-										'<td class="help-text">Enter the material of the disc. Most brands have at least 3 distinct material types.</td>' +
-										'<td class="help-ex">Champion</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Weight</td>' +
-										'<td class="help-text">Enter the weight of the disc in grams. The weight is frequently printed or written on the underside of the flight plate.<br><b>NOTE: </b>This field only accepts positive integers with up to 3 digits, and weights typically range from 150 to 180.</td>' +
-										'<td class="help-ex">172</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Color</td>' +
-										'<td class="help-text">Enter the color of the disc.</td>' +
-										'<td class="help-ex">Orange</td>' +
-									'</tr>' +
-								'</tbody>' +
-							'</table>' +
-						'</div>'
-				}
+					title: 'Modify Disc Help - General'
+				},
+				partial: 'dzGeneralInfo.html'
 			}
 		}
 		
@@ -5734,64 +5247,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 				type: 'dz-info-modal',
 				show: true,
 				data: {
-					title: 'Modify Disc Help - Advanced',
-					body: '<div class="dz-info-table">' +
-							'<table>' +
-								'<tbody>' +
-									'<tr class="header-row">' +
-										'<th>Field</th>' +
-										'<th>Description</th>' +
-										'<th>Example</th>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Speed</td>' +
-										'<td class="help-text">Enter the speed of the disc. Speed is the first of four flight numbers, and it relates to the speed at which the disc must be thrown to achieve the designed flight path.<br><b>NOTE: </b>This field only accepts positive numbers with up to 2 digits and 1 decimal place. Speed values typically range from 1 to 15.</td>' +
-										'<td class="help-ex">12</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Glide</td>' +
-										'<td class="help-text">Enter the glide of the disc. Glide is the second of four flight numbers, and it relates to the disc\'s ability to stay afloat during it\'s flight.<br><b>NOTE: </b>This field only accepts positive numbers with up to 2 digits and 1 decimal place. Glide values typically range from 1 to 7.</td>' +
-										'<td class="help-ex">5</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Turn</td>' +
-										'<td class="help-text">Enter the turn of the disc. Turn is the third of four flight numbers, and it relates to the disc\'s resistance to turning during the high speed portion of it\'s flight.<br><b>NOTE: </b>This field only accepts positive and negative numbers with up to 2 digits and 1 decimal place. Turn values typically range from -5 to 1.</td>' +
-										'<td class="help-ex">-1</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Fade</td>' +
-										'<td class="help-text">Enter the fade of the disc. Fade is the fourth of four flight numbers, and it relates to the disc\'s resistance to turning during the low speed portion of it\'s flight.<br><b>NOTE: </b>This field only accepts positive and negative numbers with up to 2 digits and 1 decimal place. Fade values typically range from 0 to 6.</td>' +
-										'<td class="help-ex">3</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Tags</td>' +
-										'<td class="help-text">Enter tags that you associate with this disc. Use tags to group discs outside of inherent traits such as brand, material, color, etc. Tags are great ways to associate discs with specific collections, bags, or tournaments. They are completely customizable, and examples include "Thrower", "CFR", "Glow", "xxx Collection", "xxx Bag", etc.<br><b>NOTE: </b>A disc can have multiple tags, and a tag can be associated with multiple discs.</td>' +
-										'<td class="help-ex">Thrower<br>Glow Bag<br>Zone Collection</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Notes</td>' +
-										'<td class="help-text">Use the notes area to store detailed comments related to this disc only. Notes are completely customizable and examples may include "Found on hole 7 at...", "Won at...", "2008 World Championship stamp", "Only 1000 made", "Price includes shipping", etc.</td>' +
-										'<td class="help-ex"></td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Public</td>' +
-										'<td class="help-text">Toggle the visibility setting to allow or prevent other users from viewing your disc. If public mode is turned on, then your disc is visible to the public and can be shared via Facebook or public URL. If public mode is turned off, then your disc is only privately viewable by the creator and shareable links will not work.<br><b>NOTE: </b>Visibility is saved for each disc independently and it can be toggled directly from the disc page by clicking on the eyeball icon. Each disc must be marked \'Public\' before adding it to the marketplace.</td>' +
-										'<td class="help-ex"></td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Condition</td>' +
-										'<td class="help-text">Enter the condition of the disc based on the sleepy scale.<br><b>NOTE: </b>This field only accepts integers from 0 to 10.</td>' +
-										'<td class="help-ex">9</td>' +
-									'</tr>' +
-									'<tr>' +
-										'<td class="help-label">Value</td>' +
-										'<td class="help-text">Enter the value of the disc in USD ($).<br><b>NOTE: </b>This field only accepts numbers from 0 to 9,999.99.</td>' +
-										'<td class="help-ex">$12.50</td>' +
-									'</tr>' +
-								'</tbody>' +
-							'</table>' +
-						'</div>'
-				}
+					title: 'Modify Disc Help - Advanced'
+				},
+				partial: 'dzAdvancedInfo.html'
 			}
 		}
 		
@@ -6664,7 +6122,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 		$scope.tempAccount = {};
 		$scope.location = {};
 		$scope.notifications = {};
-		$scope.globalModalOpts = {};
 		$scope.breadcrumbs = [
 			{links: [{text: 'My Account'}]}
 		];
@@ -7532,7 +6989,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 		}
 		
 		$scope.loading = false;
-		$scope.signup = {};
+		$scope.signup = {
+			user: {}
+		};
 		$scope.signupAlert = {};
 		$scope.location = {
 			results: [],
@@ -7600,7 +7059,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 				geo: {}
 			};
 			$scope.facebook = undefined;
-			$scope.signup.user = undefined;
+			$scope.signup.user = {};
 			$scope.signup.form.$setPristine();
 		}
 		
@@ -7681,7 +7140,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 		
 		AccountService.doAccountConfirm($routeParams.authorizationId, function(success, err) {
 			if (success) {
-				return $location.path('/explore').replace();
+				return $location.path('/t/' + AccountService.getAccount().username).replace();
 			}
 			
 			$scope.loading = false;

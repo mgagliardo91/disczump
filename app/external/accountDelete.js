@@ -1,12 +1,17 @@
 var async = require('async');
 
+var EventController = require('../controllers/event');
+var UserController = require('../controllers/user');
+var DiscController = require('../controllers/disc');
+var MessageController = require('../controllers/message');
 var CancelAttemptController = require('../controllers/cancelAttempt.js');
 
+var error = require('../utils/error');
 var PayPal = require('../utils/paypal');
 var Membership = require('../utils/membership');
 var logger = require('../utils/logger.js');
 
-var externalDelete = function(user) {
+var membershipDelete = function(user) {
     if (user.account.profile.profileId && user.account.profile.active) {
         async.series([
             function(cb) {
@@ -34,6 +39,29 @@ var externalDelete = function(user) {
     return;
 }
 
+var executeDelete = function(userId, gfs, callback) {
+    UserController.getActiveUser(userId, function(err, user) {
+                if (err)
+	                return callback(err);
+	                
+	            async.series([
+                    function(cb) {
+                        MessageController.deleteUserThreads(user._id, cb);
+                    },
+                    function(cb) {
+                        DiscController.deleteUserDiscs(user._id, gfs, cb);
+                    },
+                    function(cb) {
+                        UserController.deleteUser(user._id, gfs, cb);
+                    }
+                ], function(err, results) {
+                    membershipDelete(user);
+                    return callback(null, user);
+                });
+            });
+}
+
 module.exports = {
-    externalDelete: externalDelete
+    membershipDelete: membershipDelete,
+    executeDelete: executeDelete
 }

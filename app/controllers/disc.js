@@ -696,10 +696,13 @@ function deleteUserDiscs(userId, gfs, callback) {
         
         async.each(discs, function(disc, cb) {
             deleteDiscImages(userId, disc._id, gfs, function(err, discImages) {
-                ArchiveController.archiveDisc(disc);
-                disc.remove(function (err, disc) {
-                    return cb();
-                });
+				disc.remove(function (err, disc) {
+					if (err)
+						return cb();
+
+					ArchiveController.archiveDisc(disc);
+					return cb();
+				});
             });
         }, function(err) {
             callback();

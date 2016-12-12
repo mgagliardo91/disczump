@@ -5,12 +5,14 @@ var app = express();
 var fs = require('fs');
 var mongoose = require('mongoose');
 var passport = require('passport');
-var flash = require('connect-flash');
+var flash = require('connect-flash'); // May need to delete
 var morgan       = require('morgan');
-var cookieParser = require('cookie-parser');
+var cookieParser = require('cookie-parser'); // May need to delete
 var bodyParser   = require('body-parser');
 var device       = require('express-device');
-var session      = require('express-session');
+var session      = require('express-session'); // May need to delete
+var Grid = require('gridfs-stream');
+
 var config = require('./config/config.js');
 var oauth2 = require('./app/auth/oauth2.js');
 var socketCache = require('./app/objects/socketCache.js');
@@ -18,7 +20,6 @@ var logger = require('./app/utils/logger.js');
 var localServer = require('./config/localConfig.js');
 var handleConfig = require('./app/utils/handleConfig.js');
 var Error = require('./app/utils/error.js');
-var Grid = require('gridfs-stream');
 
 // configuration ===============================================================
 var release = true; // replace release with release
@@ -27,6 +28,7 @@ var httpPort = process.env.PORT || 80;
 
 var privateKey = fs.readFileSync('./private/disczump-key.pem', 'utf8');
 var certificate = fs.readFileSync('./private/site-certificate.crt', 'utf8');
+var ca = fs.readFileSync('./private/ca.crt', 'utf8');
 
 require('./app/utils/mailer.js');
 
@@ -45,7 +47,7 @@ app.use(bodyParser.urlencoded());
 app.use('/static', express.static(__dirname + '/public'));
 app.use(device.capture());
 
-// required for passport
+// required for passport - May need to delete
 app.use(session({ secret: config.secret}));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -85,9 +87,9 @@ var oauthRouter = express.Router();
 require('./app/routes/oauthRoutes.js')(oauthRouter, oauth2, passport, socketCache);
 app.use('/oauth', oauthRouter);
 
-var testRouter = express.Router();
-require('./app/routes/files.js')(testRouter, gridFs);
-app.use('/files', testRouter);
+var fileRouter = express.Router();
+require('./app/routes/files.js')(fileRouter, gridFs);
+app.use('/files', fileRouter);
 
 var mainRouter = express.Router();
 require('./app/routes/routes.js')(mainRouter, passport, gridFs);
@@ -132,7 +134,35 @@ app.use(function(err, req, res, next) {
 var server;
 
 if (release) {
-  server = require('https').createServer({key: privateKey, cert: certificate}, app);
+  server = require('https').createServer({
+      key: privateKey, 
+      cert: certificate,
+      ca: ca,
+      ciphers: [
+ 		'ECDHE-RSA-AES128-GCM-SHA256',
+ 		'ECDHE-ECDSA-AES128-GCM-SHA256',
+ 		'ECDHE-RSA-AES256-GCM-SHA384',
+ 		'ECDHE-ECDSA-AES256-GCM-SHA384',
+ 		'DHE-RSA-AES128-GCM-SHA256',
+ 		'ECDHE-RSA-AES128-SHA256',
+ 		'DHE-RSA-AES128-SHA256',
+ 		'ECDHE-RSA-AES256-SHA384',
+ 		'DHE-RSA-AES256-SHA384',
+ 		'ECDHE-RSA-AES256-SHA256',
+ 		'DHE-RSA-AES256-SHA256',
+ 		'HIGH',
+ 		'!aNULL',
+ 		'!eNULL',
+ 		'!EXPORT',
+ 		'!DES',
+ 		'!RC4',
+ 		'!MD5',
+ 		'!PSK',
+ 		'!SRP',
+ 		'!CAMELLIA'
+	].join(':'),
+	honorCipherOrder: true
+  }, app);
   require('http').createServer(function (req, res) {
       res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
       res.end();

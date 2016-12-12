@@ -16,6 +16,10 @@ body {
 	overflow: hidden;
 }
 
+.dz-cloak {
+	display: none !important;
+}
+
 .wrapper {
     position: relative;
     padding-bottom:60px;
@@ -68,7 +72,6 @@ input.validation.ng-valid:not(.ng-pristine), select.validation.ng-valid:not(.ng-
 	background-color: transparent !important;
 }
 
-
 .col-marg-repl {
     padding: 0 !important;
     margin-left: 15px !important;
@@ -79,6 +82,15 @@ input.validation.ng-valid:not(.ng-pristine), select.validation.ng-valid:not(.ng-
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.handle-valign {
+	display: table;
+}
+
+.handle-valign > div {
+	display: table-cell;
+	vertical-align: middle;
 }
 
 .table-cell, .align-vmid {
@@ -385,6 +397,11 @@ a.btn-primary {
 img.fit-parent {
     max-width: 100%;
     max-height: 100%;
+}
+
+.full-width-table {
+	display: table;
+	width: 100%;
 }
 
 .default-bg-image {
@@ -2633,7 +2650,10 @@ i.dz-modal-close:hover {
 
 .dz-modal-table {
 	margin-top:15px;
-	max-height: 250px;
+}
+
+#modal-table-content {
+	max-height: 240px;
 	overflow: auto;
 }
 
@@ -2644,6 +2664,7 @@ i.dz-modal-close:hover {
 .dz-modal-row {
 	border-bottom: 1px solid #DADADA;
 	line-height: 30px;
+	height: 30px;
 }
 
 .dz-modal-row:last-child {
@@ -2744,7 +2765,6 @@ i.dz-modal-close:hover {
 	height: 175px;
 	width: 50%;
 	padding: 20px 10px;
-    border-right: 1px solid #BEBEBE;
 }
 
 .dz-modal-action.sm {
@@ -2769,10 +2789,6 @@ i.dz-modal-close:hover {
 
 .dz-modal-action:hover {
 	background-color: #DADADA;
-}
-
-.dz-modal-action:last-child {
-	border: none;
 }
 
 .dz-modal-action-text {
@@ -3104,19 +3120,29 @@ input.search-bar {
 
 .grid-item.load-item {
     height: 194px;
-    display: table;
+	max-height: 194px;
+	overflow: hidden;
     border: none;
-    background-color: #FFF;
+    background: transparent;
 }
 
-.grid-item.load-item > div {
-    display: table-cell;
-    vertical-align: middle;
+.grid-item.load-item .load-text-container {
+    text-align: center;
+	font-size: 1.2em;
+	color: #4a4a4a;
+    font-style: italic;
+	height: 194px;
+    width: 100%;
+}
+
+.grid-item.load-item .load-spinner-container {
     text-align: center;
     font-size: 5em;
+	height: 194px;
+    width: 100%;
 }
 
-.grid-item:hover {
+.grid-item:not(.load-item):hover {
     border: 1px solid #008EDD;
 }
 
@@ -3594,6 +3620,9 @@ ul.grid-item-list li {
     font-size: 1em;
     padding-left: 10px;
     border-left: 10px solid #008edd;
+	max-height: 300px;
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 
 .sidebar-item-container.reverse {

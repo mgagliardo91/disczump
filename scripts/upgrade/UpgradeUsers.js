@@ -4,7 +4,9 @@ var MongoClient = mongodb.MongoClient;
 var configDB = require('../../config/config.js');
 
 var url = 'mongodb://' + configDB.database.host + ':' + 
-    configDB.database.port + '/bak';
+    configDB.database.port + '/' + configDB.database.db;
+// var url = 'mongodb://' + configDB.database.host + ':' + 
+//     configDB.database.port + '/testdb';
 
 MongoClient.connect(url, function (err, db) {
   if (err) {
@@ -28,7 +30,7 @@ MongoClient.connect(url, function (err, db) {
           
           if (e.local.location) {
               var location = e.local.location;
-              e.local.location = {
+              var newLocation = {
                     geo: location.lat + ',' + location.lng,
                     geoLat: location.lat,
                     geoLng: location.lng,
@@ -39,6 +41,7 @@ MongoClient.connect(url, function (err, db) {
                     country: location.country,
                     countryCode: location.countryCode
               };
+              e.local.location = newLocation;
           }
           
           var prefs = e.preferences;

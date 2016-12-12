@@ -1,0 +1,47 @@
+<div class="dz-modal-table">
+    <div class="dz-modal-row header">
+        <div class="dz-modal-row-item">{{tableOpts.headerText}}</div>
+        <div class="dz-modal-row-item">Status</div>
+        <div class="clearfix"></div>
+    </div>
+    <div id="modal-table-content">
+        <div class="dz-modal-row" ng-repeat="item in tableOpts.items">
+            <div class="dz-modal-row-item left handle-overflow" ng-if="tableOpts.isDisc">
+                <img ng-src="{{getImage(item)}}" />
+                {{item.brand}} {{item.name}}
+            </div>
+            <div class="dz-modal-row-item handle-overflow">
+                <span ng-if="tableOpts.isCounter && !tableOpts.isVisibility && !tableOpts.isMarketplace" directive-on="item.countdown.init" directive-set="{countdown:''}" sec-left="item.countdown.bumpRemaining" counts="item.countdown.counts" done="item.countdown.bumpReady" show="item.countdown.show">
+                    <span ng-show="item.countdown.show && !item.countdown.bumpReady"><span ng-bind="item.countdown.counts.hours"></span> : <span ng-bind="item.countdown.counts.minutes"></span> : <span ng-bind="item.countdown.counts.seconds"></span></span>
+                    <span ng-show="item.countdown.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></span>
+                    <span ng-show="item.countdown.bumpReady && !item.success" style="font-weight:bold;">{{tableOpts.defaultText}}</span>
+                    <span ng-show="!item['marketplace.forSale'] && !item['marketplace.forTrade']" style="font-style:italic;">Not In Marketplace</span>
+                </span>
+                <span ng-if="!tableOpts.isCounter && tableOpts.isVisibility && !tableOpts.isMarketplace">
+                    <span ng-show="!item.success && !item.error" ng-class="{private: !item.visible}">{{item.visible ? 'Public' : 'Private'}}</span>
+                    <span ng-show="item.success" ng-class="{private: !item.visible}"><i style="color:#4FC74F;" class="fa fa-check fa-tools" aria-hidden="true"></i>{{item.visible ? 'Public' : 'Private'}}</span>
+                    <span ng-show="item.error"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>Error</span>
+                </span>
+                <span ng-if="!tableOpts.isCounter && !tableOpts.isVisibility && tableOpts.isMarketplace">
+                    <span ng-show="!item.success && !item.error && !item.ineligible">
+                        <i class="fa fa-usd market-icon" ng-class="{'for-sale':item['marketplace.forSale']}"></i>
+                        <i class="fa fa-exchange market-icon" ng-class="{'for-trade':item['marketplace.forTrade']}"></i>
+                    </span>
+                    <span ng-show="item.success">
+                        <i style="color:#4FC74F;" class="fa fa-check fa-tools" aria-hidden="true"></i>
+                        <i class="fa fa-usd market-icon" ng-class="{'for-sale':item['marketplace.forSale']}"></i>
+                        <i class="fa fa-exchange market-icon" ng-class="{'for-trade':item['marketplace.forTrade']}"></i>
+                    </span>
+                    <span ng-show="item.error"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>Marketplace Cap Reached</span>
+                    <span ng-show="item.ineligible"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>Ineligible For Marketplace</span>
+                </span>
+                <span ng-if="!tableOpts.isCounter && !tableOpts.isVisibility && !tableOpts.isMarketplace">
+                    <span ng-show="!item.success && !item.error">{{tableOpts.defaultText}}</span>
+                    <span ng-show="item.success"><i style="color:#4FC74F;" class="fa fa-check fa-tools" aria-hidden="true"></i>{{tableOpts.successText}}</span>
+                    <span ng-show="item.error"><i style="color:#E85947;" class="fa fa-times fa-tools" aria-hidden="true"></i>Error</span>
+                </span>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>

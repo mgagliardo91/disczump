@@ -8,6 +8,7 @@ var DiscController = require('../controllers/disc');
 var MessageController = require('../controllers/message');
 var localConfig = require('../../config/localConfig');
 var Error = require('../utils/error');
+var AccountDelete = require('../external/accountDelete');
 
 module.exports = {
     initializeConfirmAccount: initializeConfirmAccount,
@@ -98,26 +99,13 @@ function confirmDelete(authorizationId, gfs, callback) {
             if (!confirm)
                 return callback(Error.createError('The delete request does not exist.', Error.objectNotFoundError));
             
-            UserController.getActiveUser(confirm.userId, function(err, user) {
-                if (err)
-	                return callback(err);
-	                
-	            async.series([
-                    function(cb) {
-                        MessageController.deleteUserThreads(user._id, cb);
-                    },
-                    function(cb) {
-                        DiscController.deleteUserDiscs(user._id, gfs, cb);
-                    },
-                    function(cb) {
-                        UserController.deleteUser(user._id, gfs, cb);
-                    }
-                ], function(err, results) {
-                    
-                    confirm.remove();
-                    return callback(null, user);
-                });
-            });
+			AccountDelete.executeDelete(confirm.userId, gfs, function(err, user) {
+				if (err)
+					return callback(err);
+				
+				confirm.remove();
+				return callback(null, user);
+			});
         });
     }
 

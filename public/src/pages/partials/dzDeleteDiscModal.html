@@ -1,0 +1,18 @@
+<div>
+    <div class="dz-modal-content">
+        <i class="fa fa-5x fa-exclamation-triangle" style="color:#e85947"></i>
+        <div class="dz-modal-title-lg">Warning!</div>
+        <div class="dz-modal-message">Are you sure you want to permanently delete the selected discs?</div>
+        <dz-alert class="full-width" alert-data="modalAlert"></dz-alert>
+        <dz-modal-table table-opts="tableOpts"></dz-modal-table>
+    </div>
+    <div class="dz-modal-btn-container">
+        <div class="dz-modal-triangle"></div>
+        <div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>
+        <div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">
+            <span ng-show="!doOnClose">Cancel</span>
+            <span ng-show="doOnClose">Close</span>
+        </div>
+        <div class="dz-modal-btn" ng-show="!opts.loading && !doOnClose" ng-click="!opts.loading && confirm()" style="background-color: #e85947">Delete</div>
+    </div>
+</div>

@@ -87,7 +87,7 @@
                       <img img-load img-src="{{account.image}}"/>
                     </a>
                     <a class="message-user" directive-on="activeThread.userInit" directive-set="{'ng-href':'/t/{{activeThread.user.username}\}'}" title="View User Trunk" ng-if="message.userId != account._id">
-                      <img img-load directive-on="activeThread.imgInit" directive-set="{'img-src':'{{activeThread.image}\}'}"/>
+                      <img img-load="/static/img/dz_profile.png" directive-on="activeThread.imgInit" directive-set="{'img-src':'{{activeThread.image}\}'}"/>
                     </a>
                     <div class="message-content">
                       <div class="message-date">

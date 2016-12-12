@@ -7,6 +7,9 @@ var async = require('async');
 mongoose.connect('mongodb://' + configDB.database.host + ':' + 
     configDB.database.port + '/' + configDB.database.db);
 
+// mongoose.connect('mongodb://' + configDB.database.host + ':' + 
+//     configDB.database.port + '/testdb');
+
 User.find(function(err, users) {
     
     async.each(users, function(user, callback) {
@@ -24,7 +27,7 @@ User.find(function(err, users) {
         
         intUser.save(function(err) {
             if (!err) {
-                delete user.internal;
+                user.internal = undefined;
                 user.save(function(err) {
                     if (err)
                         console.log('Error saving user after internal was created. ' + err);
