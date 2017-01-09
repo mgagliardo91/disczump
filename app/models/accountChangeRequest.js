@@ -43,6 +43,9 @@ var accountChangeRequestSchema = mongoose.Schema({
 	immediateCharge: {
 		type: Number
 	},
+	promo: {
+		type: mongoose.Schema.Types.Mixed
+	},
 	failed: {
 		type: Boolean,
 		default: false
@@ -56,7 +59,7 @@ var accountChangeRequestSchema = mongoose.Schema({
 accountChangeRequestSchema.methods.success = function(immedCharge, callback) {
 	this.completed = true;
 	
-	if (immedCharge) {
+	if (typeof(immedCharge) !== 'undefined') {
 		this.immediateCharge = immedCharge;
 	}
 	

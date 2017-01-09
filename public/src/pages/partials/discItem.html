@@ -46,6 +46,11 @@
                         <div class="qi-item" ng-if="isDef(disc.turn)"><div>Turn:</div><div class="handle-overflow">{{disc.turn}}</div></div>
                         <div class="qi-item" ng-if="isDef(disc.fade)"><div>Fade:</div><div class="handle-overflow">{{disc.fade}}</div></div>
                         <div class="qi-item" ng-if="isDef(disc.value)"><div>Value:</div><div class="handle-overflow">${{disc.value | currency:"":2}}</div></div>
+                        <div class="qi-item" ng-if="isDef(disc.tag[0])">
+                            <div class="tag-item no-select" ng-repeat="tag in disc.tag">
+                                <span class="tag-item-text">{{tag}}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -542,7 +542,7 @@ module.exports = function(app, gridFs) {
 		});
 
 	app.route('/query/users')
-		.post(Access.clientAccess, function(req, res) {
+		.post(Access.clientAccess, function(req, res, next) {
 			var requestString = Solr.createUserReq(req.body);
 			var options = {
 				url: localConfig.solrURL + ':8983/solr/users/query',

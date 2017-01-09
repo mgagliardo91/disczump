@@ -1449,10 +1449,11 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		return '';
 	}
 	
-	var createHostedPage = function(type, billing, callback) {
+	var createHostedPage = function(type, billing, promo, callback) {
 		APIService.PostExt('/membership', '/create', {
 			type: type,
-			billing: billing
+			billing: billing,
+			promoCode: promo
 		}, callback);
 	}
 	
@@ -1462,9 +1463,10 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		}, callback);
 	}
 	
-	var modifyExisting = function(type, callback) {
+	var modifyExisting = function(type, promo, callback) {
 		APIService.PostExt('/membership', '/modify', {
-			type: type
+			type: type,
+			promoCode: promo
 		}, callback);
 	}
 	
@@ -1472,9 +1474,10 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		APIService.PostExt('/membership', '/cancel', {}, callback);
 	}
 	
-	var reactivate = function(type, callback) {
+	var reactivate = function(type, promo, callback) {
 		APIService.PostExt('/membership', '/activate', {
-			type: type
+			type: type,
+			promoCode: promo
 		}, callback);
 	}
 	
@@ -1492,7 +1495,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 }])
 
 .factory('AccountService', ['$rootScope', '$q', '_', '$crypt', 'APIService', 'CacheService', 'LocalStorage', function($rootScope, $q, _, $crypt, APIService, CacheService, LocalStorage) {
-    var account, accountId, accountMarket;
+  var account, accountId, accountMarket;
 	var authToken;
 	var registry = [];
 	
@@ -1519,6 +1522,14 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	
 	var getUA = function() {
 		return (navigator.userAgent.split(' ')[0]);
+	}
+    
+  var getAccount = function(reloadCallback) {
+		if (reloadCallback && isLoggedIn()) {
+			APIService.Get('/account', saveMiddleWare(reloadCallback));
+		} else {
+			return account;
+		}
 	}
 	
 	var clearToken = function() {
@@ -1699,14 +1710,26 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
     var isLoggedIn = function() {
         return typeof(account) !== 'undefined';
     }
-    
-    var getAccount = function(reloadCallback) {
-		if (reloadCallback && isLoggedIn()) {
-			APIService.Get('/account', saveMiddleWare(reloadCallback));
-		} else {
-			return account;
-		}
-    }
+	
+	var activatePromo = function(promo, callback) {
+		APIService.PostExt('/membership', '/promo', {promoCode: promo}, function(success, request) {
+			if (!success)
+				return callback(success, request);
+			
+			getAccount(function(success, newAccount) {
+				if (!success)
+					return callback(false, {
+						promo: request.promo,
+						account: account
+					});
+				
+				return callback(true, {
+					promo: request.promo,
+					account: newAccount
+				})
+			});
+		});
+	}
     
 	var getAccountId = function() {
 		return account ? account._id : undefined;
@@ -1752,40 +1775,41 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
     
     return {
-        isLoggedIn: isLoggedIn,
-        hasAccountId: hasAccountId,
-		putAccount: putAccount,
-		putAccountImage:putAccountImage,
-		getNotifications: getNotifications,
-		putNotifications: putNotifications,
-		putVerifications: putVerifications,
-		resetPDGA: resetPDGA,
-		verifyPDGA: verifyPDGA,
-		deleteAccountImage: deleteAccountImage,
-        getAccount: getAccount,
-        getAccountId: getAccountId,
-		getAccountMarket: getAccountMarket,
-		getAccountImage: getAccountImage,
-		initAccount: initAccount,
-		updateAccount: updateAccount,
-		doLogin: doLogin,
-		doAccountConfirm: doAccountConfirm,
-		doAccountDeleteConfirm: doAccountDeleteConfirm,
-		doAccountDelete: doAccountDelete,
-		doFacebookLogin: doFacebookLogin,
-		doFacebookLink: doFacebookLink,
-		doFacebookUnlink: doFacebookUnlink,
-		doLogout: doLogout,
-		compareTo: compareTo,
-		getToken: getToken,
-		addListener: addListener,
-		removeListener: removeListener
+			isLoggedIn: isLoggedIn,
+			hasAccountId: hasAccountId,
+			putAccount: putAccount,
+			putAccountImage:putAccountImage,
+			getNotifications: getNotifications,
+			putNotifications: putNotifications,
+			putVerifications: putVerifications,
+			resetPDGA: resetPDGA,
+			verifyPDGA: verifyPDGA,
+			deleteAccountImage: deleteAccountImage,
+			getAccount: getAccount,
+			getAccountId: getAccountId,
+			getAccountMarket: getAccountMarket,
+			getAccountImage: getAccountImage,
+			initAccount: initAccount,
+			updateAccount: updateAccount,
+			doLogin: doLogin,
+			activatePromo: activatePromo,
+			doAccountConfirm: doAccountConfirm,
+			doAccountDeleteConfirm: doAccountDeleteConfirm,
+			doAccountDelete: doAccountDelete,
+			doFacebookLogin: doFacebookLogin,
+			doFacebookLink: doFacebookLink,
+			doFacebookUnlink: doFacebookUnlink,
+			doLogout: doLogout,
+			compareTo: compareTo,
+			getToken: getToken,
+			addListener: addListener,
+			removeListener: removeListener
     }
     
 }])
 
 .factory('CacheService', ['_', 'APIService', function(_, APIService){
-    var userCache = [];
+  var userCache = [];
 	var discCache = [];
 	
 	function pushDisc(disc) {
@@ -1873,7 +1897,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
     
     return {
-        getUser: getUser,
+    getUser: getUser,
 		reloadUser: reloadUser,
 		reloadDisc: reloadDisc,
 		getUserByUsername: getUserByUsername,

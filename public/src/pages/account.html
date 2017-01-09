@@ -144,7 +144,7 @@
                             </div>
                         </div>
                         <div class="account-page-btns">
-                            <a class="btn btn-primary pull-right" ng-disabled="!page.personalForm.$valid" ng-click="page.personalForm.$valid && updateAccount()">Save</a>
+                            <a class="btn btn-primary pull-right" ng-disabled="page.personalForm.$invalid" ng-click="page.personalForm.$valid && updateAccount()">Save</a>
                             <a class="btn btn-default" style="margin-right: 10px" ng-click="cloneAccount()">Reset</a>
                         </div>
                     </div>
@@ -183,7 +183,7 @@
                         </div>
                     </div>
                     <div class="account-page" ng-show="page.active == 'membership'">
-                        <div class="form-horizontal form-small" ng-form name="page.personalForm">
+                        <div class="form-horizontal form-small">
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Active Tier
                                 </label>
@@ -213,6 +213,37 @@
                                 </label>
                                 <div class="col-sm-9">
                                     <div class="form-label">{{account.profile.nextBillDate | dateLocal | date:'MM/dd/yyyy'}}</div>
+                                </div>
+                            </div>
+                            <div ng-form name="page.promoForm">
+                                <div class="form-group">
+                                    <label for="account-first-name" class="col-sm-3 control-label">Promo
+                                    </label>
+                                    <div class="col-sm-6">
+                                        <input type="text" class="form-control validation" name="promoCode" placeholder="Enter promo code" ng-model="promo.code" required ng-model-enter="page.promoForm.$valid && activatePromo()">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <a class="btn btn-default pull-right" ng-disabled="page.promoForm.$invalid" ng-click="page.promoForm.$valid && activatePromo()">{{promo.loading ? 'Activating...' : 'Activate'}}</a>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-sm-9 col-sm-offset-3">
+                                        <div class="promo-container" ng-show="promo.activation">
+                                            <div class="alert-area">
+                                                <div class="promo-message" ng-show="promo.activation && promo.activation.retPromo">
+                                                    <span style="display: block"><b>Code:</b> {{promo.activation.retPromo.code}}</span>
+                                                    <span style="display: block"><b>Description:</b> {{promo.activation.retPromo.description}}</span>
+                                                </div>
+                                                <div class="promo-error" ng-show="promo.activation && !promo.activation.success"><b>Error:</b> {{promo.activation.error.message}}</div>
+                                                <div class="promo-success" ng-show="promo.activation && promo.activation.success"><b>Success:</b> Promo activated successfully!</div>
+                                            </div>
+                                            <div class="close-area">
+                                                <div ng-click="promo.activation = undefined;">
+                                                    <i class="fa fa-close fa-lg"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-group" ng-if="account.profile.nextBillDate">

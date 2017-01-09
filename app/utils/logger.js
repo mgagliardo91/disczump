@@ -9,20 +9,20 @@ module.exports = new (winston.Logger)({
             colorize: true, 
             prettyPrint: true,
             level: 'debug'
+        }),
+        new winston.transports.DailyRotateFile({
+          name: 'info-file', 
+          json: false,
+          datePattern: '_yyyy-MM-dd-HH-mm.log',
+          filename: path.join(__dirname, '../../logs/info', 'server'),
+          level: 'info'
+        }),
+        new winston.transports.DailyRotateFile({
+          name: 'error-file',
+          json: false,
+          datePattern: '_yyyy-MM-dd-HH-mm.log',
+          filename: path.join(__dirname, '../../logs/error', 'server'),
+          level: 'error'
         })
-//         new winston.transports.DailyRotateFile({
-//           name: 'info-file', 
-//           json: false,
-//           datePattern: '_yyyy-MM-dd-HH-mm.log',
-//           filename: path.join(__dirname, '../../logs/info', 'server'),
-//           level: 'info'
-//         }),
-//         new winston.transports.DailyRotateFile({
-//           name: 'error-file',
-//           json: false,
-//           datePattern: '_yyyy-MM-dd-HH-mm.log',
-//           filename: path.join(__dirname, '../../logs/error', 'server'),
-//           level: 'error'
-//         })
     ]
 });

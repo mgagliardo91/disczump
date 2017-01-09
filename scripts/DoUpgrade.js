@@ -35,8 +35,8 @@ var scripts = [
     'UpgradeImageCaches',
     'UpgradeRefreshTokens',
     'UpgradeTemporaryLinks',
-    'SyncUserEvents'
-//     'UpdateThumbnailSize'
+    'UpgradeUserEvents',
+    'UpdateThumbnailSize'
 ];
 
 console.log('Execution started');

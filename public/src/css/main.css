@@ -12,6 +12,10 @@ body {
     min-height: 100% !important;
 }
 
+.fclear {
+	clear: both;
+}
+
 .scroll-lock {
 	overflow: hidden;
 }
@@ -870,6 +874,50 @@ img.fit-parent {
 	color: #bebebe;
 }
 
+.promo-container {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+	position:relative;
+}
+
+.promo-container .alert-area {
+	padding-right: 40px;
+}
+
+.promo-container .close-area {
+	position: absolute;
+    width: 40px;
+    top: 0;
+    bottom: 0;
+    right: 0;
+}
+
+.promo-container .close-area > div {
+	text-align: center;
+    padding-top: 10px;
+	cursor: pointer;
+    color: #ccc;
+}
+
+.promo-container .close-area > div:hover {
+	color: #008edd;
+}
+
+.promo-container .promo-error {
+	color: red;
+}
+
+.promo-container .promo-success {
+	color: green;
+}
+
+.promo-container .promo-message {
+	margin-bottom: 10px;
+    font-size: 0.8em;
+}
+
 /*-----------------------------------*/
 /*------------- FAQ CSS -------------*/
 /*-----------------------------------*/
@@ -1128,6 +1176,14 @@ img.fit-parent {
 	position: relative;
 }
 
+.about-section .title {
+	text-align: center;
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #fff;
+    font-family: 'Titillium Web', sans-serif;
+}
+
 .course-img {
 	background: url(../../img/disc_course_compressed.jpg) 0 0 no-repeat fixed;
     background-size: 100% auto;    
@@ -1167,6 +1223,95 @@ img.fit-parent {
     padding-right: 10%;
 }
 
+.member-container {
+    margin: 60px auto;
+	width: 100%;
+	display: block;
+	max-width: 800px;
+}
+
+.member-image-container {
+	margin-bottom: 20px;
+}
+
+.member-image {
+	width: 200px;
+	height: 200px;
+	margin: auto;
+}
+
+#member-mike {
+    background-image: url(/static/img/members/mike.jpg);
+    border-radius: 50%;
+    background-repeat: no-repeat;
+    background-position: 71% 88%;
+    background-size: 215%;
+	opacity: 0.9;
+}
+
+#member-mike:hover {        
+	background-position: 67% 45%;
+    background-size: 378%;
+	opacity: 1;
+}
+
+#member-ben {
+    background-image: url(/static/img/members/ben.jpg);
+    border-radius: 50%;
+    background-repeat: no-repeat;
+    background-position: 74% 6%;
+    background-size: 99%;
+	opacity: 0.9;
+}
+
+#member-ben:hover {    
+	background-position: 60% 0%;
+    background-size: 138%;
+	opacity: 1;
+}
+
+.member-description {    
+	margin: auto;
+	padding-left: 0px;
+	text-align: center;
+	display: block;
+    width: 100%;
+    font-family: 'Titillium Web', sans-serif;
+    color: #ececec;
+	font-size: 1.2em;
+}
+
+.member-description.hide-small {
+    display: none;
+}
+
+.member-description.show-small {
+    display: block;
+}
+
+.m-name {
+	font-weight: bold;
+    font-size: 1.2em;
+    padding-bottom: 5px;
+}
+
+.m-name .m-title {
+	font-style: italic;
+    font-weight: normal;
+    font-size: 0.9em;
+    padding-left: 3px;
+}
+
+.m-label {
+	font-weight: bold;
+    padding-bottom: 5px;
+}
+
+.m-label .m-value {
+	font-weight: normal;
+    padding-left: 3px;
+}
+
 .membership-container {
 	margin: 0px auto;
 	padding: 20px;
@@ -1181,10 +1326,45 @@ img.fit-parent {
 	padding: 5px;
 }
 
-
 @media (min-width: 1000px) {
 	.membership-tile {
 		width: 33.33%;
+	}
+	
+	.member-container {
+        display: table;
+	}
+	
+	.member-image-container {
+        float: left;
+		margin-bottom: 0px;
+	}
+    .member-image-container.right {
+        float: right;
+    }
+	
+	.member-image {
+		margin: auto;
+	}
+	
+	.member-description {
+        padding-left: 80px;
+		text-align: left;
+    	display: table-cell;
+    	vertical-align: middle;
+	}
+	
+	.member-description.left {
+		padding-left: 0px;
+		padding-right: 80px;
+	}
+	
+	.member-description.show-small {
+		display: none;
+	}
+
+	.member-description.hide-small {
+		display: table-cell;
 	}
 }
 
@@ -1405,6 +1585,16 @@ img.fit-parent {
 	text-align: center;
 	font-size: 4em;
 	padding: 20px 0px;
+}
+
+.promo-override {
+	text-decoration: line-through;
+}
+
+.promo-value {
+	margin-left: 10px;
+	color: red;
+	font-weight: bold;
 }
 
 /*-----------------------------------*/
@@ -2271,6 +2461,7 @@ img.fit-parent {
     width: 100%;
     left: 0;
     bottom: 0;
+    height: 60px;
 }
 
 .footer-bar > div {
@@ -3551,8 +3742,8 @@ ul.grid-item-list li {
 }
 
 .filter-item-count {
-    width: 45px;
-    max-width: 45px;
+    width: 55px;
+    max-width: 55px;
     text-align: left;
     float: left;
     padding-left: 5px;
@@ -3560,7 +3751,7 @@ ul.grid-item-list li {
 
 .filter-item-val {
     float: left;
-    max-width: 125px;
+    max-width: 115px;
 }
 
 
@@ -3936,7 +4127,7 @@ ul.grid-item-list li {
     background-color: #EEEEEE;
 }
 
-#dv-content .info-table td:not(.dv-table-cell) {
+#dv-content .info-table td:not(.dv-table-cell):not(.dv-profile-td) {
     padding: 5px;
 }
 
@@ -4045,6 +4236,7 @@ ul.grid-item-list li {
 .dv-profile-preview {
     padding: 10px;
     background-color: #EEEEEE;
+		position: relative;
 }
 
 .dv-profile-preview-image {
@@ -4058,28 +4250,22 @@ ul.grid-item-list li {
 }
 
 .dv-profile-preview-btn-container {
-	color: #EEEEEE;
+	  color: #BEBEBE;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    padding: 5px;
+		width: 40px;
 }
 
-.dv-profile-preview-btn {
-	display: block;
-    width: 125px;
-    background-color: #777777;
-    border-radius: 5px;
-    line-height: 30px;
-    font-size: 12px;
-    text-align: center;
-    margin: 4px 0px;
-	cursor: pointer;
-}
-
-.dv-profile-preview-btn i {
-    padding-right: 5px;
+.dv-profile-preview-btn.info:hover {
+		color: #777777;
 }
 
 .dv-profile-preview-info {
     margin-left: 85px;
-    margin-right: 135px;
+    margin-right: 40px;
 }
 
 .dv-profile-preview-text-lg {

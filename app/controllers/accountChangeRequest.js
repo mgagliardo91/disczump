@@ -4,9 +4,7 @@ var Error = require('../utils/error');
 var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
 module.exports = {
-    createRequest: createRequest,
     createFullRequest: createFullRequest,
-    createPaymentChangeRequest: createPaymentChangeRequest,
     getRequest: getRequest,
     completeRequest: completeRequest,
     failRequest: failRequest
@@ -21,21 +19,22 @@ function generateId() {
     return id;
 }
 
-function createFullRequest(userId, email, fromAccount, toAccount, immedCharge, callback, paymentChange) {
+function createFullRequest(userId, params, callback) {
     AccountChangeRequest.remove({userId: userId, completed: false}, function(err) {
         if (err)
             return callback(Error.createError(err, Error.internalError));
         
        var req = new AccountChangeRequest({
            userId: userId,
-           userEmail: email,
-           fromAccount: fromAccount,
-           toAccount: toAccount,
-           immediateCharge: immedCharge,
+           userEmail: params.email,
+           fromAccount: params.fromAccount,
+           toAccount: params.toAccount,
+           immediateCharge: params.immedCharge || 0.0,
+           promo: params.promo,
            sessionId: generateId()
        });
         
-        if (paymentChange) {
+        if (params.paymentChange) {
             req.paymentChange = true;
         }
         
@@ -46,14 +45,6 @@ function createFullRequest(userId, email, fromAccount, toAccount, immedCharge, c
             return callback(null, req);
         })
     });
-}
-
-function createRequest(userId, email, fromAccount, toAccount, callback) {
-    return createFullRequest(userId, email, fromAccount, toAccount, 0.0, callback);
-}
-
-function createPaymentChangeRequest(userId, email, fromAccount, toAccount, callback) {
-    return createFullRequest(userId, email, fromAccount, toAccount, 0.0, callback, true);
 }
 
 function getRequest(sessionId, callback) {

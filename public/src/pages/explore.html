@@ -139,12 +139,13 @@
             <div class="explore-container" id="results-list" infinite-scroll="loadMore()">
                 <div class="no-results" ng-show="!(loading || loadingMore) && !resultList.length">
                     <div class="no-results-title"><i class="fa fa-exclamation-triangle dz-blue"></i> No Results</div>
-                    <div class="no-results-msg">Please revise your search terms and try again.</div>
+                    <div class="no-results-msg" ng-show="!isMarketplaceModeActive('all');">There are not any discs marked for the marketplace. <span ng-click="toggleMarketplaceMode('all');" class="dz-blue hover-underline">Show All Public Discs</span></div>
+                    <div class="no-results-msg" ng-show="isMarketplaceModeActive('all');">Please revise your search terms and/or filters and try again. <span ng-click="clearAllFilters()" class="dz-blue hover-underline" ng-show="activeFilters.length">Clear Filters</span></div>
                 </div>
                 <disc-item ng-repeat="disc in resultList" ng-repeat-finish="onLastDisc()" disc="disc" current-user="curUser" lb-opts="lbOpts" ms-opts="msOpts"></disc-item>
                 <div class="grid-item load-item">
                     <div class="load-text-container handle-valign" ng-show="!loading && !loadingMore && resultList.length < pagination.total">
-                        <div class="load-text">Scroll to load more results.</div>
+                        <div class="load-text">Scroll to <span class="hover-underline" ng-click="loadMore();">load more results.</span></div>
                     </div>
                     <div class="load-spinner-container handle-valign" ng-show="loading || loadingMore">
                         <div style="text-align: center;"><i class="fa fa-spinner fa-spin"></i></div>

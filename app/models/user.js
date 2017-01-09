@@ -65,8 +65,10 @@ var userSchema = mongoose.Schema({
 			acct: {type: String},
 			expDate: {type: String},
 			pendingReset: {type: Boolean, default: false},
-			active: {type: Boolean, default: false}
+			active: {type: Boolean, default: false},
+			promoCodes: [{type: String}]
 		},
+		assocProfiles: [{type: String}],
         notifications: {
             newMessage: {type: Boolean, default: true },
 			siteUpdates: {type: Boolean, default: true }
@@ -75,10 +77,7 @@ var userSchema = mongoose.Schema({
 			facebook: {type: Boolean, default: false},
 			pdga: {type: Boolean, default: false}
 		}
-	},
-    internal: {
-        eventLog: [mongoose.Schema.Types.Mixed]
-    }
+	}
 });
 
 userSchema.pre('save', function(next) {
@@ -89,6 +88,11 @@ userSchema.pre('save', function(next) {
 	
     next();
 });
+
+userSchema.methods.promoUsed = function(promoId) {
+    this.account.profile.promoCodes.push(promoId);
+	this.save();
+}
 
 userSchema.methods.pref = function(preference) {
     return this.preferences[preference];
@@ -113,6 +117,7 @@ userSchema.methods.accountToString = function() {
     var account = {};
     
     account._id = this._id;
+		account.accountType = this.account.type;
     account.dateJoined = this.local.dateJoined;
     account.username = this.local.username;
     account.linked = typeof(this.facebook.id) !== 'undefined';

@@ -12,11 +12,22 @@ mongoose.connect('mongodb://' + configDB.database.host + ':' +
 
 User.find(function(err, users) {
     
-    async.each(users, function(user, callback) {
+    async.each(users, function(modUser, callback) {
         
-        var events = user.internal.eventLog;
+        if (typeof(modUser.internal) === 'undefined') {
+            console.log('No internal for user: ' + modUser._id);
+            console.log(modUser);
+            callback(err);
+        }
+        
+        if (typeof(modUser.internal.eventLog) === 'undefined') {
+            console.log('No eventLog for user: ' + modUser._id);
+            callback(err);
+        }
+        
+        var events = modUser.internal.eventLog;
         var intUser = new UserInternal({
-            userId: user._id
+            userId: modUser._id
         });
         
         intUser.eventLog = [];
@@ -27,15 +38,15 @@ User.find(function(err, users) {
         
         intUser.save(function(err) {
             if (!err) {
-                user.internal = undefined;
-                user.save(function(err) {
+                modUser.internal = undefined;
+                modUser.save(function(err) {
                     if (err)
                         console.log('Error saving user after internal was created. ' + err);
                     
                     callback();
                 });
             } else {
-                console.log('Error saving internal user for id: ' + user._id + '. ' + err);
+                console.log('Error saving internal user for id: ' + modUser._id + '. ' + err);
                 callback();
             }
         });

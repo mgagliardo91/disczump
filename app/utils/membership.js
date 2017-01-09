@@ -1,7 +1,9 @@
 var XDate = require('xdate');
+var async = require('async');
 
 var UserController = require('../controllers/user');
 var AccountChangeRequestController = require('../controllers/accountChangeRequest');
+var PromoCodeController = require('../controllers/promoCode');
 
 var logger = require('./logger.js');
 var Error = require('./error.js');
@@ -10,6 +12,7 @@ var membershipConfig = require('../../config/config').membership;
 var MembershipTypes = require('./membershipTypes');
 
 module.exports = {
+    reqActivatePromoCode: reqActivatePromoCode,
     reqAccountCreate: reqAccountCreate,
     reqAccountModify: reqAccountModify,
     reqAccountCancel: reqAccountCancel,
@@ -18,6 +21,19 @@ module.exports = {
     confirmAccountCreate: confirmAccountCreate,
     confirmAccountModify: confirmAccountModify,
     confirmAccountCancel: confirmAccountCancel
+}
+
+var validatePromoCode = function(code, account, newAccount, callback) {
+    PromoCodeController.getPromoCode(code, function(err, promoCode) {
+        if (err)
+            return callback(err);
+        
+        var unauthError = promoCode.authorize(account, newAccount);
+        if (unauthError)
+            return callback(unauthError);
+        
+        return callback(null, promoCode);
+    });
 }
 
 var getProrateAmt = function(profile, curAccount, newAccount) {
@@ -93,7 +109,9 @@ function canCancel(user) {
         user.account.profile.type == membershipConfig.TypePro);
 }
 
-function reqAccountCreate(userId, type, callback) {
+function reqAccountCreate(userId, params, callback) {
+    var type = params.type;
+    
     if (typeof(type) === 'undefined')
         return callback(Error.createError('Invalid membership type.', Error.invalidDataError));
     
@@ -121,18 +139,83 @@ function reqAccountCreate(userId, type, callback) {
             amount: MembershipTypes.getTypeCost(accountType)
         }
         
-        var prorateAmt = getProrateAmt(user.account.profile, curAccount, newAccount);
+        var promo;
         
-        AccountChangeRequestController.createFullRequest(user._id, user.local.email, curAccount, newAccount, prorateAmt, function(err, request) {
+        async.series([
+            function(cb) {
+                if (params.promoCode) {
+                    validatePromoCode(params.promoCode, user.account, newAccount, function(err, promoCode) {
+                        if (err)
+                            return cb(err);
+                        
+                        promo = promoCode;
+                        return cb();
+                    });
+                } else {
+                    return cb();
+                }
+            }
+        ], function(err, results) {
             if (err)
                 return callback(err);
             
-            return callback(null, request);
+            var prorateAmt = getProrateAmt(user.account.profile, curAccount, newAccount);
+        
+            AccountChangeRequestController.createFullRequest(user._id, {
+                    email: user.local.email,
+                    fromAccount: curAccount,
+                    toAccount: newAccount,
+                    immedCharge: prorateAmt,
+                    promo: promo
+                },function(err, request) {
+                if (err)
+                    return callback(err);
+
+                return callback(null, request);
+            });
+        });
+        
+    });
+}
+
+function reqActivatePromoCode(userId, params, callback) {
+    var promo = params.promoCode;
+    
+    if (typeof(promo) == 'undefined')
+        return callback(Error.createError('This route requires a promo code.', Error.invalidDataError));
+    
+    UserController.getUser(userId, function(err, user) {
+        if (err)
+            return callback(err);
+        
+        var curAccount = {
+            type: user.account.type,
+            amount: MembershipTypes.getTypeCost(user.account.type)
+        }
+        
+        validatePromoCode(promo, user.account, undefined, function(err, promoCode) {
+            if (err)
+                return callback(err);
+            
+             AccountChangeRequestController.createFullRequest(user._id, {
+                    email: user.local.email,
+                    fromAccount: curAccount,
+                    promo: promoCode
+                }, function(err, request) {
+                if (err)
+                    return callback(err);
+
+                logger.debug('Created modify request.', request.toObject());
+
+                return callback(null, request, user.account.profile);
+            });
         });
     });
 }
 
-function reqAccountModify(userId, type, callback) {
+function reqAccountModify(userId, params, callback) {
+    var type = params.type;
+    
     if (typeof(type) === 'undefined')
         return callback(Error.createError('Invalid membership type.', Error.invalidDataError));
     
@@ -162,13 +245,18 @@ function reqAccountModify(userId, type, callback) {
         
         var prorateAmt = getProrateAmt(user.account.profile, curAccount, newAccount);
         
-        AccountChangeRequestController.createFullRequest(user._id, user.local.email, curAccount, newAccount, prorateAmt, function(err, request) {
+        AccountChangeRequestController.createFullRequest(user._id, {
+                email: user.local.email,
+                fromAccount: curAccount,
+                toAccount: newAccount,
+                immedCharge: prorateAmt
+            }, function(err, request) {
             if (err)
                 return callback(err);
             
             logger.debug('Created modify request.', request.toObject());
             
-            return callback(null, request, user.account.profile.profileId);
+            return callback(null, request, user.account.profile);
         });
     });
 }
@@ -191,13 +279,17 @@ function reqAccountCancel(userId, callback) {
             amount: membershipConfig.CostBasic
         }
         
-        AccountChangeRequestController.createRequest(user._id, user.local.email, curAccount, newAccount, function(err, request) {
+        AccountChangeRequestController.createFullRequest(user._id, {
+                email: user.local.email,
+                fromAccount: curAccount,
+                toAccount: newAccount
+            }, function(err, request) {
             if (err)
                 return callback(err);
             
             logger.debug('Created cancel request.', request.toObject());
             
-            return callback(null, request, user.account.profile.profileId);
+            return callback(null, request, user.account.profile);
         });
     });
 }
@@ -220,14 +312,19 @@ function reqAccountChangePayment(userId, callback) {
             amount: MembershipTypes.getTypeCost(user.account.profile.type)
         }
         
-        AccountChangeRequestController.createPaymentChangeRequest(user._id, user.local.email, curAccount, newAccount, function(err, request) {
+        AccountChangeRequestController.createFullRequest(user._id, {
+                email: user.local.email,
+                fromAccount: curAccount,
+                toAccount: newAccount,
+                paymentChange: true
+            }, function(err, request) {
             if (err)
                 return callback(err);
             
             logger.debug('Created payment change request.', request.toObject());
             
             return callback(null, request);
-        }, true);
+        });
     });
 }
 
@@ -243,35 +340,53 @@ function getAccountChangeReq(sessionId, callback) {
     });
 }
 
-function confirmAccountCreate(req, profile, immedCharge, callback) {
-    logger.debug('Creating account with profile', profile);
-    UserController.setAccountProfile(req.userId, req, profile, function(err, user) {
+function confirmAccountCreate(req, params, callback) {
+    logger.debug('Creating account with profile', params.profile);
+    
+    UserController.setAccountProfile(req.userId, req, params.profile, function(err, user) {
         if (err)
             return callback(err);
         
-        req.success(immedCharge, function(err) {
+        if (params.promo) {
+            PromoCodeController.setPromoUsed(params.promo);
+            user.promoUsed(params.promo);
+        }
+        
+        req.success(params.immedCharge ? params.immedCharge.amount : 0.0, function(err) {
             return callback(null, req);
         });
     });
 }
 
-function confirmAccountModify(req, profileUpdate, immedCharge, callback) {
-    logger.debug('Modifying account with profile updates', profileUpdate);
-    UserController.setAccountProfile(req.userId, req, profileUpdate, function(err, user) {
+function confirmAccountModify(req, params, callback) {
+    logger.debug('Modifying account with profile updates', params.profile);
+    
+    UserController.setAccountProfile(req.userId, req, params.profile, function(err, user) {
         if (err)
             return callback(err);
         
-        req.success(immedCharge, function(err) {
+        if (params.promo) {
+            PromoCodeController.setPromoUsed(params.promo);
+            user.promoUsed(params.promo);
+        }
+        
+        req.success(params.immedCharge ? params.immedCharge.amount : 0.0, function(err) {
             return callback(null, req);
         });
     });
 }
 
-function confirmAccountCancel(req, profileUpdate, callback) {
-    logger.debug('Cancelling account with profile updates', profileUpdate);
-    UserController.setAccountProfile(req.userId, req, profileUpdate, function(err, user) {
+function confirmAccountCancel(req, params, callback) {
+    logger.debug('Cancelling account with profile updates', params.profile);
+    
+    UserController.setAccountProfile(req.userId, req, params.profile, function(err, user) {
         if (err)
             return callback(err);
+        
+        if (params.promo) {
+            PromoCodeController.setPromoUsed(params.promo);
+            user.promoUsed(params.promo);
+        }
         
         req.success(0.0, function(err) {
             return callback(null, req);

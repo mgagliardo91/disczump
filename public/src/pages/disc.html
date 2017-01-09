@@ -7,28 +7,33 @@
     <div class="scrollable main-body">
         <div class="page-content full-width">
             <div class="title-row">
-                <span class="title-btn-size float-right" ng-show="!discInit"><i class="fa fa-spin fa-spinner"></i></span>
-                <div class="title-btn-container float-right" ng-show="discInit">
-                    <div class="fixed-wrapper title-btn-size" ng-show="disc.visible">
-                        <div ng-click="shareDisc()">
-                            <i class="fa fa-share-square-o dz-blue-hover hover-pointer" title="Share Disc"></i>
+                <span class="title-btn-size float-right" ng-show="!userInit"><i class="fa fa-spin fa-spinner"></i></span>
+                <div class="title-btn-container float-right" ng-show="userInit">
+                    <div class="fixed-wrapper title-btn-size" directive-on="userInit" directive-set="{'ng-if':'isOwner'}">
+                        <div ng-click="deleteDisc()">
+                            <i class="fa fa-trash hover-delete-color hover-pointer" title="Delete Disc"></i>
                         </div>
                     </div>
-                    <div class="fixed-wrapper title-btn-size" directive-on="discInit" directive-set="{'ng-if':'givePermission()'}">
+                    <div class="fixed-wrapper title-btn-size" directive-on="userInit" directive-set="{'ng-if':'isOwner'}">
+                        <div>
+                            <a ng-href="/d/{{disc._id}}/edit"><i class="fa fa-pencil hover-edit-color hover-pointer" title="Edit Disc"></i></a>
+                        </div>
+                    </div>
+                    <div class="fixed-wrapper title-btn-size" directive-on="userInit" directive-set="{'ng-if':'isOwner'}">
                         <div>
                             <i class="fa fa-spinner fa-spin" ng-show="loading.privacy"></i>
                             <i class="fa fa-eye-slash dz-blue-hover hover-pointer" ng-show="!loading.privacy && !disc.visible" ng-click="togglePrivacy()" title="Make Public"></i>
                             <i class="fa fa-eye dz-blue-hover hover-pointer" ng-show="!loading.privacy && disc.visible" ng-click="warnPrivacy()" title="Make Private"></i>
                         </div>
                     </div>
-                    <div class="fixed-wrapper title-btn-size" directive-on="discInit" directive-set="{'ng-if':'givePermission()'}">
-                        <div>
-                            <a ng-href="/d/{{disc._id}}/edit"><i class="fa fa-pencil hover-edit-color hover-pointer" title="Edit Disc"></i></a>
+                    <div class="fixed-wrapper title-btn-size" directive-on="userInit" directive-set="{'ng-if':'!isOwner'}">
+                        <div ng-click="initMessage()">
+                            <i class="fa fa-envelope dz-blue-hover hover-pointer" title="Send Message"></i>
                         </div>
                     </div>
-                    <div class="fixed-wrapper title-btn-size" directive-on="discInit" directive-set="{'ng-if':'givePermission()'}">
-                        <div ng-click="deleteDisc()">
-                            <i class="fa fa-trash hover-delete-color hover-pointer" title="Delete Disc"></i>
+                    <div class="fixed-wrapper title-btn-size" ng-show="disc.visible">
+                        <div ng-click="shareDisc()">
+                            <i class="fa fa-share-square-o dz-blue-hover hover-pointer" title="Share Disc" style="line-height:40px;"></i>
                         </div>
                     </div>
                     <div class="clearfix"></div>
@@ -131,14 +136,13 @@
                                     <div class="dv-profile-preview-image float-left">
                                         <div directive-on="userInit" directive-set="{'img-src':'{{user.image}\}'}" class="default-bg-image" img-load="/static/img/dz_profile_nobg.png" ng-class="{'bg-white': !user.image}" bg-image="true"></div>
                                     </div>
-                                    <div class="dv-profile-preview-btn-container float-right">
-                                        <a class="dv-profile-preview-btn" ng-href="/t/{{user.username}}">
-                                            <i class="fa fa-reply"></i> Trunk
-                                        </a>
-                                        <a class="dv-profile-preview-btn" ng-if="disc && !givePermission()" ng-click="initMessage()">
-                                            <i class="fa fa-envelope"></i> Message
-                                        </a>
-                                        <div class="clearfix"></div>
+                                    <div class="dv-profile-preview-btn-container">
+                                        <div class="hover-pointer dv-profile-preview-btn info" directive-on="userInit" directive-set="{'modal-trigger':'dz-profile-modal'}" data="{'userId':'user._id'}" modal-opts="globalModalOpts" title="More Info"> 
+                                            <span class="fa-stack">
+                                              <i class="fa fa-circle fa-stack-2x"></i>
+                                              <i class="fa fa-info fa-stack-1x fa-inverse"></i>
+                                            </span>
+                                        </div>
                                     </div>
                                     <div class="dv-profile-preview-info">
                                         <overflow-wrapper>
@@ -292,7 +296,7 @@
                                 <div ng-if="disc.tagList.length">
                                     <div class="tag-item hover-underline no-select" ng-repeat="tag in disc.tagList">
                                         <span class="tag-item-text">
-                                            <a filter-dropdown="{prop:'tag',val:'{{tag}}',text:'Tag'}" user="user" class="hover-underline">{{tag}}</a>
+                                            <a filter-dropdown="{prop:'tag',val:'{{tag}}',text:'Tag'}" trunk-only="true" user="user" class="hover-underline">{{tag}}</a>
                                         </span>
                                     </div>
                                 </div>

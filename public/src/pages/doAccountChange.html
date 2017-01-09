@@ -6,8 +6,8 @@
         <div class="portal-title cont-sm" style="margin: 20px auto">
             <img src="/static/logo/logo_portal.png" />
         </div>
-        <dz-alert class="small" alertData="upgradeAlert"></dz-alert>
-        <div ng-show="form.showConfirm">
+        <dz-alert class="small" alert-data="upgradeAlert" force-scroll="true"></dz-alert>
+        <div ng-show="form.showConfirm" id="confirm-container"> 
             <div class="upgrade-container">
                 <div class="upgrade-container-title">
                     Summary of Changes
@@ -466,6 +466,14 @@
                             </select>
                         </div>
                     </div>
+                    <div class="form-group" ng-show="account.accountType === 'Basic'">
+                        <label for="billing-city" class="col-sm-4 control-label">
+                            Promo Code
+                        </label>
+                        <div class="col-sm-7">
+                            <input type="text" class="form-control validation" id="billing-promo" name="promo" placeholder="Promo" ng-model="promo.code">
+                        </div>
+                    </div>
                     <div class="clearfix"> </div>
                 </div>
                 <div class="page-info attention light" ng-if="accountMethod == 'no-profile'">
@@ -484,7 +492,7 @@
             </div>
             <div class="upgrade-btn-container">
                 <div class="notify-button pull-right" ng-if="accountMethod == 'no-profile'"><a class="btn btn-default" style="background-color: #ffba00;" ng-disabled="billingForm.$invalid" ng-click="!billingForm.$invalid && showPayment()">Continue to Payment</a></div>
-                <div class="notify-button pull-left"><a class="btn btn-default" href="/account/membership">Cancel</a></div>
+                <div class="notify-button pull-left"><a class="btn btn-default" ng-click="navBack()">Back to Confirm</a></div>
                 <div class="clearfix">
                 </div>
             </div>
@@ -513,8 +521,16 @@
                             </dl>
                             <dl class="dl-horizontal">
                               <dt>Cost Today:</dt>
-                              <dd>${{request.immediateCharge | number: 2}}</dd>
+                              <dd><span ng-class="{'promo-override':hasPromoValue(request)}">${{request.immediateCharge | number: 2}}</span><span class="promo-value" ng-show="hasPromoValue(request)">${{getPromoValue(request) | number: 2}}</span></dd>
                             </dl>
+                           <dl class="dl-horizontal" ng-show="request.promo">
+                               <dt>Promo Code:</dt>
+                               <dd style="color: red;">{{request.promo.code}}</dd>
+                           </dl>
+                           <dl class="dl-horizontal" ng-show="request.promo.description">
+                               <dt>Promo Description:</dt>
+                               <dd style="color: red;">{{request.promo.description}}</dd>
+                           </dl>
                             <dl class="dl-horizontal">
                               <dt>Recurring Charge:</dt>
                               <dd>${{request.toAccount.amount | number: 2}} /month</dd>
@@ -535,6 +551,11 @@
                         <i class="fa fa-spin fa-spinner"></i>
                     </div>
                     <dyn-iframe config="paypalConfig"></dyn-iframe>
+                </div>
+            </div>
+            <div class="upgrade-btn-container">
+                <div class="notify-button pull-left"><a class="btn btn-default" ng-click="navBack()">Back to Billing</a></div>
+                <div class="clearfix">
                 </div>
             </div>
         </div>

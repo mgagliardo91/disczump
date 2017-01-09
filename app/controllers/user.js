@@ -386,8 +386,10 @@ function mergeProfile(profile, updates) {
 
 function setAccountProfileImmed(userId, profile, callback) {
 	getUser(userId, function(err, user) {
+		var promos = user.account.profile.promoCodes.length ? user.account.profile.promoCodes.slice(0) : undefined;
 		
 		user.account.profile = profile;
+		user.account.profile.promoCodes = promos;
 		user.account.type = profile.type;
 		user.save(function(err) {
 			if (err)
@@ -405,13 +407,15 @@ function setAccountProfile(userId, changeRequest, profile, callback) {
 			logger.error('Error occurred in locating user with id [' + userId + ']', err);
 			return callback(err);
 		}
-		var newType;
 		
-		try {
+		var newType;
+		var lastId = user.account.profile.profileId;
+		
+		if (changeRequest.toAccount.type) {
 			newType = changeRequest.toAccount.type;
-		} catch (e) {
+		} else {
 			newType = user.account.type;
-			// Alert that change request has invalid data, but continue with update
+			changeRequest.toAccount = changeRequest.fromAccount;
 		}
 		
 		switch (user.account.type) {
@@ -481,6 +485,10 @@ function setAccountProfile(userId, changeRequest, profile, callback) {
 				}
 				break;
 			}
+		}
+		
+		if (typeof(user.account.profile.profileId) !== 'undefined' && lastId !== user.account.profile.profileId) {
+			user.account.assocProfiles.push(user.account.profile.profileId);
 		}
 		
 		user.save(function(err) {
@@ -800,12 +808,12 @@ function unlinkFacebook(user, callback) {
 function generateAccountChangedEmail(user, changeRequest) {
 	changeRequest.fromAccount = {
 		type: MembershipTypes.getTypeName(changeRequest.fromAccount.type),
-		amount: changeRequest.fromAccount.amount.toFixed(2)
+		amount: parseFloat(changeRequest.fromAccount.amount).toFixed(2)
 	}
 	
 	changeRequest.toAccount = {
-		type: MembershipTypes.getTypeName(changeRequest.toAccount.type),
-		amount: changeRequest.toAccount.amount.toFixed(2)
+		type: MembershipTypes.getTypeName(changeRequest.toAccount ? changeRequest.toAccount.type : changeRequest.fromAccount.type),
+		amount: changeRequest.toAccount ? parseFloat(changeRequest.toAccount.amount).toFixed(2) : parseFloat(changeRequest.fromAccount.amount).toFixed(2)
 	}
 	
 	changeRequest.immediateCharge = changeRequest.immediateCharge.toFixed(2);

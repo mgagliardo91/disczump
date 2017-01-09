@@ -14,13 +14,13 @@ var Error = require('../utils/error.js');
 module.exports = function(app) {
     app.route('/create')
         .post(Access.hasAccess, function(req, res, next) {
-            Membership.reqAccountCreate(req.user._id, req.body.type, function(err, upgradeReq) {
+            Membership.reqAccountCreate(req.user._id, req.body, function(err, upgradeReq) {
                 if (err)
                     return next(err);
                 
                 logger.debug('Created upgrade request.', upgradeReq.toObject());
                 
-                PayPal.createHostedPage(upgradeReq.sessionId, req.body.billing, function(err, transaction) {
+                PayPal.createHostedPage(req.user._id, upgradeReq.sessionId, req.body.billing, function(err, transaction) {
                     if (err)
                         return next(err);
                     
@@ -28,6 +28,31 @@ module.exports = function(app) {
                 });
             });
         });
+	
+	app.route('/promo')
+		.post(Access.hasAccess, function(req, res, next) {
+			Membership.reqActivatePromoCode(req.user._id, req.body, function(err, promoReq, userProfile) {
+				if (err)
+					return next(err);
+				
+				logger.debug('Create promo request.', promoReq.toObject());
+				PayPal.modifyRecurringTrx(userProfile, promoReq, function(err, params) {
+					if (err)
+						return next(err);
+					
+					if (params.immedCharge && !params.immedCharge.success) {
+						logger.error('Unable to charge user [' + promoReq.userId + '] for immediate amount [' + params.immedCharge.amount + '].');
+					}
+					
+					Membership.confirmAccountModify(promoReq, params, function(err, modifyReq) {
+						if (err)
+							return next(err);
+						
+						return res.json(modifyReq);
+					});
+                });
+			});
+		});
 	
 	app.route('/changePayment')
 		.post(Access.hasAccess, function(req, res, next) {
@@ -37,7 +62,7 @@ module.exports = function(app) {
                 
                 logger.debug('Created payment change request.', changeReq.toObject());
 				
-				PayPal.createHostedPage(changeReq.sessionId, req.body.billing, function(err, transaction) {
+				PayPal.createHostedPage(req.user._id, changeReq.sessionId, req.body.billing, function(err, transaction) {
                     if (err)
                         return next(err);
                     
@@ -54,21 +79,21 @@ module.exports = function(app) {
 			if (req.user.account.profile.active)
 				return next(Error.createError('The membership profile is already active.', Error.unauthorizedError));
 		
-			Membership.reqAccountCreate(req.user._id, req.body.type, function(err, upgradeReq) {
+			Membership.reqAccountCreate(req.user._id, req.body, function(err, upgradeReq) {
                 if (err)
                     return next(err);
                 
                 logger.debug('Created upgrade request.', upgradeReq.toObject());
                 
-				PayPal.activateRecurringTrx(req.user.account.profile, upgradeReq.toAccount.amount, upgradeReq.immediateCharge, function(err, profile, immedCharge) {
+				PayPal.activateRecurringTrx(req.user.account.profile, upgradeReq, function(err, params) {
 					if (err)
 						return next(err);
 					
-					if (immedCharge && !immedCharge.success) {
-						logger.error('Unable to charge user [' + upgradeReq.userId + '] for immediate amount [' + immedCharge.amount + '].');
+					if (params.immedCharge && !params.immedCharge.success) {
+						logger.error('Unable to charge user [' + upgradeReq.userId + '] for immediate amount [' + params.immedCharge.amount + '].');
 					}
 					
-					Membership.confirmAccountModify(upgradeReq, profile, immedCharge ? immedCharge.amount : 0, function(err, modifyReq) {
+					Membership.confirmAccountModify(upgradeReq, params, function(err, modifyReq) {
 						if (err)
 							return next(err);
 						
@@ -98,19 +123,19 @@ module.exports = function(app) {
     
     app.route('/modify')
         .post(Access.hasAccess, function(req, res, next) {
-            Membership.reqAccountModify(req.user._id, req.body.type, function(err, modifyReq, profileId) {
+            Membership.reqAccountModify(req.user._id, req.body, function(err, modifyReq, userProfile) {
                 if (err)
                     return next(err);
                 
-                PayPal.modifyRecurringTrx(profileId, modifyReq.toAccount.amount, modifyReq.immediateCharge, function(err, profile, immedCharge) {
+                PayPal.modifyRecurringTrx(userProfile, modifyReq, function(err, params) {
 					if (err)
 						return next(err);
 					
-					if (immedCharge && !immedCharge.success) {
-						logger.error('Unable to charge user [' + modifyReq.userId + '] for immediate amount [' + immedCharge.amount + '].');
+					if (params.immedCharge && !params.immedCharge.success) {
+						logger.error('Unable to charge user [' + modifyReq.userId + '] for immediate amount [' + params.immedCharge.amount + '].');
 					}
 					
-					Membership.confirmAccountModify(modifyReq, profile, immedCharge ? immedCharge.amount : 0, function(err, modifyReq) {
+					Membership.confirmAccountModify(modifyReq, params, function(err, modifyReq) {
 						if (err)
 							return next(err);
 						
@@ -122,15 +147,15 @@ module.exports = function(app) {
 	
 	app.route('/cancel')
 		.post(Access.hasAccess, function(req, res, next) {
-			Membership.reqAccountCancel(req.user._id, function(err, cancelReq, profileId) {
+			Membership.reqAccountCancel(req.user._id, function(err, cancelReq, userProfile) {
 				if (err)
 					return next(err);
 				
-				PayPal.cancelRecurringTrx(profileId, function(err, profile) {
+				PayPal.cancelRecurringTrx(userProfile.profileId, function(err, params) {
 					if (err)
 						return next(err);
 					
-					Membership.confirmAccountCancel(cancelReq, profile, function(Err, cancelReq) {
+					Membership.confirmAccountCancel(cancelReq, params, function(err, cancelReq) {
 						if (err)
 							return next(err);
 						
@@ -161,22 +186,21 @@ module.exports = function(app) {
                 }
                 
                 logger.debug('Retrieved upgrade request.', request.toObject());
-                var trxProfile, immediateCharge;
+				var createParams;
                 async.series([
                     function(cb) {
-                        PayPal.createRecurringTrx(request.toAccount.amount, request.userEmail, req.body, request.immediateCharge, function(err, profile, immedCharge) {
+                        PayPal.createRecurringTrx(request, req.body, function(err, params) {
                             if (err) {
                                 logger.debug('Error creating recurring trx.', err);
                                 return cb(err);
                             }
 		
-							if (immedCharge && !immedCharge.success) {
-								logger.error('Unable to charge user [' + request.userId + '] for immediate amount [' + immedCharge.amount + '].');
+							if (params.immedCharge && !params.immedCharge.success) {
+								logger.error('Unable to charge user [' + request.userId + '] for immediate amount [' + params.immedCharge.amount + '].');
 							}
                             
                             logger.debug('Created recurring trx profile.');
-                            trxProfile = profile;
-							immediateCharge = immedCharge;
+							createParams = params;
                             return cb();
                         });
                     },
@@ -191,7 +215,7 @@ module.exports = function(app) {
 								if (!user.account.profile.profileId)
 									return cb();
 								
-								PayPal.cancelRecurringTrx(user.account.profile.profileId, function(err, profile) {
+								PayPal.cancelRecurringTrx(user.account.profile.profileId, function(err, params) {
 									if (err) {
 										logger.error('Error deactivating previous recurring profile', err);
 									}
@@ -202,7 +226,7 @@ module.exports = function(app) {
 						} else return cb();
 					},
                     function(cb) {
-                        Membership.confirmAccountCreate(request, trxProfile, immediateCharge ? immediateCharge.amount : 0, function(err, request) {
+                        Membership.confirmAccountCreate(request, createParams, function(err, request) {
                             if (err) {
                                 logger.debug('Error confirming account upgrade.', err);
                                 return cb(err);

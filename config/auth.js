@@ -25,7 +25,8 @@ module.exports = {
         'password': 'dd34x7912Id'
     },
     'paypal' : {
-        'url': 'https://pilot-payflowpro.paypal.com',
+        'url': 'https://payflowpro.paypal.com',
+        'dev-url': 'https://pilot-payflowpro.paypal.com',
         'partner': 'PayPal',
         'vendor': 'zumpadmin',
         'user': 'mgagliardo',
