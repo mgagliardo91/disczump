@@ -3,7 +3,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 .filter('startFrom', [function() {
     return function(input, start) {
         if(input) {
-            start = +start; //parse to int
+            start = +start;
             return input.slice(start);
         }
         return [];

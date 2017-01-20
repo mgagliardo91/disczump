@@ -745,7 +745,7 @@ function unsubscribe(hashId, notification, callback) {
 }
 
 function FBConnect(user, token, callback, fbID) {
-	fbGraph.get('me?fields=email,first_name,last_name,picture.width(400)&access_token=' + token, function(err, data) {
+	fbGraph.get('me?fields=email,first_name,last_name&access_token=' + token, function(err, data) {
 		if (err)
 			return callback(Error.createError('Unable to access facebook with the provided access_token.', Error.unauthorizedError));
 		
@@ -755,7 +755,7 @@ function FBConnect(user, token, callback, fbID) {
 			};
 		}
 		
-		user.facebook.image = data.picture.data.url;
+		user.facebook.image = '//graph.facebook.com/' + fbID + '/picture?type=large';
 		user.facebook.name = data.first_name + ' ' + data.last_name;
 		user.facebook.email = data.email;
 

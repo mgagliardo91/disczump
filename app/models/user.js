@@ -141,8 +141,8 @@ userSchema.methods.accountToString = function() {
 	
 	if (typeof(this.local.image) !== 'undefined') {
 		account.image = '/files/' + this.local.image;
-	} else if (typeof(this.facebook.image !== 'undefined')) {
-	    account.image = this.facebook.image;
+	} else if (typeof(this.facebook.image) !== 'undefined') {
+		account.image = this.facebook.image;
 	}
 	
 	if (typeof(this.local.location.postalCode) !== 'undefined') {
