@@ -1,0 +1,23 @@
+<div class="message-alert dz-cloak" ng-class="{'dock':dock, 'dock-top': dock == 'top', 'dock-bottom': dock == 'bottom'}">
+    <div class="alert alert-success" ng-show="alertData.success.show" ng-class="{'slide-down': dock == 'top', 'slide-top': dock == 'bottom'}">
+        <button type="button" class="close" aria-label="Close" ng-click="alertData.success.show=false;" ng-if="!alertData.success.hideClose"><span aria-hidden="true">×</span></button>
+        <div class="alert-body">
+            <strong ng-if="alertData.success.title">{{alertData.success.title}}! </strong>
+            <span smart-msg="alertData.success.message"></span>
+        </div>
+    </div>
+    <div class="alert alert-info" ng-show="alertData.info.show" ng-class="{'slide-down': dock == 'top', 'slide-top': dock == 'bottom'}">
+        <button type="button" class="close" aria-label="Close" ng-click="alertData.info.show=false;" ng-if="!alertData.info.hideClose"><span aria-hidden="true">×</span></button>
+        <div class="alert-body">
+            <strong ng-if="alertData.info.title">{{alertData.info.title}}! </strong>
+            <span smart-msg="alertData.info.message"></span>
+        </div>
+    </div>
+    <div class="alert alert-danger" ng-show="alertData.error.show" ng-class="{'slide-down': dock == 'top', 'slide-top': dock == 'bottom'}">
+        <button type="button" class="close" aria-label="Close" ng-click="alertData.error.show=false;" ng-if="!alertData.error.hideClose"><span aria-hidden="true">×</span></button>
+        <div class="alert-body">
+            <strong ng-if="alertData.error.title">{{alertData.error.title}}! </strong>
+            <span smart-msg="alertData.error.message"></span>
+        </div>
+    </div>
+</div>

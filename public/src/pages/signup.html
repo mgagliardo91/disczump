@@ -1,0 +1,131 @@
+<div dz-wrapper>
+    <dz-header></dz-header>
+    <div class="scrollable main-body">
+        <div class="page-content" fit-page offset="-110">
+            <div center-align style="height: 100%">
+                <div class="portal-title cont-sm">
+                    <img src="/static/logo/logo_portal.png">
+                </div>
+                 <dz-alert alert-data="signupAlert" class="form-small" force-scroll="true"></dz-alert>
+                <div class="notify-button" style="text-align: center; margin: 20px 0px" ng-show="signupComplete"><a class="btn btn-default" href="/" style="font-size: 1.2em; background-color: #ffba00;">Go Home</a></div>
+                <div class="form-small" style="text-align: center; margin-bottom: 20px;">
+                    <a class="btn btn-primary" ng-click="!signupComplete && getFBAccount()" ng-show="!signupComplete && !facebook">Sign Up with Facebook</a>
+                    <div class="page-info input-note" ng-show="!signupComplete && facebook">
+                        The following information was pulled from your Facebook account. Please complete the form to continue. 
+                        <span ng-click="clearForm()" class="dz-blue hover-underline">Reset Form</span>
+                    </div>
+
+                </div>
+                <div class="form-horizontal form-small" ng-show="!signupComplete" name="signup.form" ng-form  ng-enter="!signupComplete && signup.form.$valid && doSignUp();">
+                    <div class="form-group">
+                        <label for="account-first-name" class="col-sm-3 control-label">
+                            First Name
+                        </label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control validation" id="account-first-name" name="firstName" placeholder="First name" ng-model="signup.user.firstName" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="account-last-name" class="col-sm-3 control-label">
+                            Last Name
+                        </label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control validation" id="account-last-name" name="lastName" placeholder="Last name" ng-model="signup.user.lastName" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="account-postal-code" class="col-sm-3 control-label">
+                            Postal Code
+                        </label>
+                        <div class="col-sm-5 col-marg-repl" style="position: relative">
+                            <input type="text" class="form-control validation" valid-if="location.curLocation"  name="location" id="account-postal-code" placeholder="Postal Code" ng-model="location.search" ng-model-options="{updateOn: 'default blur',debounce:{'default': 500,'blur': 0 }}" location-search="locSelected" />
+                        </div>
+                        <div class="col-sm-9 col-sm-offset-3">
+                            <div class="page-info input-note round" ng-class="{'error':!location.curLocation}">
+                                <span class="pull-right" style="cursor: pointer;" title="Clear Selection" ng-click="location.curLocation = undefined;" ng-show="location.curLocation"><i class="fa fa-close"></i></span>
+                                <span ng-show="location.curLocation"><b>Selected location: </b>{{location.curLocation}}</span>
+                                <span ng-show="!location.curLocation"><i class="fa fa-map-marker" style="margin-right: 5px;"></i>Enter a zip code above and select a location.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="account-email" class="col-sm-3 control-label">
+                            Email
+                        </label>
+                        <div class="col-sm-9">
+                            <input type="email" class="form-control validation" id="account-email" name="email" placeholder="Email" ng-model="signup.user.email" ng-focus="emailActive = true;" ng-blur="emailActive = false;" required>
+                        </div>
+                        <div class="col-sm-9 col-sm-offset-3" ng-show="emailActive">
+                            <div class="page-info input-note round">
+                                <div class="title">
+                                    Note:
+                                </div>
+                                <div class="body">
+                                    Your email will never be public and will only be used for account confirmation and subscribed notifications.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="account-username" class="col-sm-3 control-label">
+                            Username
+                        </label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control validation" id="account-username" placeholder="Username" ng-model="signup.user.username" ng-focus="usernameActive = true;" ng-blur="usernameActive = false;" required pattern-set="^[a-zA-Z0-9\_]{6,15}$">
+                        </div>
+                        <div class="col-sm-9 col-sm-offset-3" ng-show="usernameActive">
+                            <div class="page-info input-note round">
+                                <div class="title">
+                                    Required Format:
+                                </div>
+                                <div class="body">
+                                    <div class="format-item" ng-class="{'active': matchFormat('username', 'userLength')}">
+                                        <span><i class="fa fa-check"></i></span>Between 6 and 15 characters
+                                    </div>
+                                    <div class="format-item" ng-class="{'active': matchFormat('username', 'userChars')}">
+                                        <span><i class="fa fa-check"></i></span>Must be only letters, numbers and underscores
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="account-password" class="col-sm-3 control-label">
+                            Password
+                        </label>
+                        <div class="col-sm-5">
+                            <input type="password" class="form-control validation" id="account-username" placeholder="Password" ng-model="signup.user.password" ng-focus="pwActive = true;" ng-blur="pwActive = false;" required ng-pattern="/^.{6,}$/">
+                        </div>
+                        <div class="col-sm-9 col-sm-offset-3" ng-show="pwActive">
+                            <div class="page-info input-note round">
+                                <div class="title">
+                                    Required Format:
+                                </div>
+                                <div class="body">
+                                    <div class="format-item" ng-class="{'active': matchFormat('password', 'pwLength')}">
+                                        <span><i class="fa fa-check"></i></span>Minumum 6 characters
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="account-vpassword" class="col-sm-3 control-label">
+                            Verify Password
+                        </label>
+                        <div class="col-sm-5">
+                            <input type="password" class="form-control validation" id="account-vpassword" placeholder="Retype password" ng-model="signup.user.vpassword" required must-match="signup.user.password">
+                        </div>
+                    </div>
+                    <div class="legal-note"><i class="fa fa-info-circle"></i>By clicking <b>Sign Up</b>, I agree to the <a class="dz-blue hover-underline" href="#">Terms and Condtions</a> and <a class="dz-blue hover-underline" href="#">Privacy Policy</a>.</div>
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                            <button class="btn btn-primary pull-right" ng-disabled="signupComplete || signup.form.$invalid || !location.curLocation" ng-click="!signupComplete && signup.form.$valid && doSignUp();">{{loading ? 'Registering...' : 'Sign Up'}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <dz-footer></dz-footer>
+</div>

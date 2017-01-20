@@ -1,44 +1,82 @@
 var _ = require('underscore');
 var async = require('async');
+var fs = require('fs');
 var crypto = require('crypto');
 var geolib = require('geolib');
+var fbGraph = require('fbgraph');
 var Error = require('../utils/error');
 var User = require('../models/user');
+var UserInternal = require('../models/userInternal');
+var ImageController = require('./imageCache.js');
 var ArchiveController = require('./archive.js');
-var GeoConfig = require('../../config/auth.js').geocode;
-var UserConfig = require('../../config/config.js').user.preferences;
+var EventController = require('./event.js');
 var CryptoConfig = require('../../config/auth.js').crypto;
+var MemberConfig = require('../../config/config.js').membership;
 var FileUtil = require('../utils/file.js');
-var Socket = require('../../config/socket.js');
+var Socket = require('../utils/socket.js');
+var logger = require('../utils/logger.js');
+var MembershipTypes = require('../utils/membershipTypes.js');
+var Geo = require('../utils/geo.js');
 
-var geocoder = require("node-geocoder")('google', 'https', {apiKey : GeoConfig.apiKey, formatter: null});
+var LocalConfig = require('../../config/localConfig.js');
+var Mailer = require('../utils/mailer.js');
+var handleConfig = require('../utils/handleConfig.js');
+
 
 module.exports = {
 	query: query,
-	queryUsers: queryUsers,
-	createUserInternal: createUserInternal,
+	createActiveUser: createActiveUser,
 	createUser: createUser,
 	getUser: getUser,
+	getUserInternal: getUserInternal,
+	getUserByUsername: getUserByUsername,
 	getUserByEmail: getUserByEmail,
 	getUserByFacebook: getUserByFacebook,
 	getActiveUser: getActiveUser,
     checkPassword: checkPassword,
     checkUsername: checkUsername,
     getAccount: getAccount,
-    getPreferences: getPreferences,
+	getMarketCap: getMarketCap,
     updateAccount: updateAccount,
-    restorePreferences: restorePreferences,
-    updatePreferences: updatePreferences,
+	setAccountProfile: setAccountProfile,
+	setAccountProfileImmed: setAccountProfileImmed,
+	getAccountNotifications: getAccountNotifications,
+	setAccountNotifications: setAccountNotifications,
+	setAccountVerifications: setAccountVerifications,
+	setPDGA: setPDGA,
+	resetPDGA: resetPDGA,
     resetPassword: resetPassword,
     tryResetPassword: tryResetPassword,
     deleteUser: deleteUser,
     deleteUserImage: deleteUserImage,
     postUserImage: postUserImage,
     getUserFromHash: getUserFromHash,
+	unsubscribe: unsubscribe,
+	linkFacebook: linkFacebook,
+	unlinkFacebook: unlinkFacebook,
+	addUserEvent: addUserEvent,
+	
+	FBConnect: FBConnect,
     
     /* Admin Functions */
-    getAllUsers: getAllUsers,
-    getUsersByArea: getUsersByArea
+    getAllUsers: getAllUsers
+}
+
+function isDef(x) {
+	return typeof x !== 'undefined';
+}
+
+/* Private Functions */
+function checkPassword(password) {
+	return password.length >= 6;
+}
+
+function checkUsername(username) {
+	return /^[a-zA-Z0-9_]{6,15}$/.test(username);
+}
+
+function checkName(val) {
+	return val.trim().length > 0 && val.indexOf('"') == -1;
 }
 
 function query(field, q, callback) {
@@ -51,137 +89,28 @@ function query(field, q, callback) {
 	})
 }
 
-function queryUsers(query, callback) {
-	var origQuery = query;
-	query = query.trim().replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-	if (!query.length) return callback(null, {query: query, results: []});
+function addUserEvent(userId, type, message) {
 	
-	var regExp = new RegExp(query, 'i');
-	
-	if (query.indexOf(' ') >= 0) { // name query
-		var nameQuery = query.split(' ');
-		
-		if (nameQuery.length == 2) {
-			User.find({ $and : [ 
-							{$or: [
-								{$and : [
-									{'local.firstName': new RegExp(nameQuery[0], 'i')}, 
-									{'local.lastName': new RegExp(nameQuery[1], 'i')},
-								]},
-								{'local.firstName': regExp},
-								{'local.lastName': regExp}
-							]},
-						{'local.active': true}]}).limit(50).exec(
-				function(err, users) {
-					if (err) 
-						return callback(Error.createError(err, Error.internalError));
-					
-					var userInfoArr = [];
-					_.each(users, function(user) {
-						userInfoArr.push(user.accountToString());
-					});
-					
-					userInfoArr.sort(function(x,y) {
-						return x.firstName.toLowerCase() > y.firstName.toLowerCase();
-					});
-					
-					return callback(null, {query: origQuery, results: userInfoArr});
-				});
-		} else if (nameQuery.length == 3) {
-			User.find({ $and : [ {$or : [
-									{$and : [
-											{'local.firstName': new RegExp(nameQuery[0], 'i')},
-											{'local.lastName': new RegExp(nameQuery[1] + ' ' + nameQuery[2], 'i')}
-										]},
-									{$and : [
-											{'local.firstName': new RegExp(nameQuery[0] + ' ' + nameQuery[1], 'i')},
-											{'local.lastName': new RegExp( nameQuery[2], 'i')}
-										]}
-								]},
-						{'local.active': true}]}).limit(50).exec(
-				function(err, users) {
-					if (err) 
-						return callback(Error.createError(err, Error.internalError));
-					
-					var userInfoArr = [];
-					_.each(users, function(user) {
-						userInfoArr.push(user.accountToString());
-					});
-					
-					userInfoArr.sort(function(x,y) {
-						return x.firstName.toLowerCase() > y.firstName.toLowerCase();
-					});
-					
-					return callback(null, {query: origQuery, results: userInfoArr});
-				});
-		} else if (nameQuery.length == 4) {
-			User.find({ $and : [ {$and : [
-									{'local.firstName': new RegExp(nameQuery[0] + ' ' + nameQuery[1], 'i')},
-									{'local.lastName': new RegExp(nameQuery[2] + ' ' + nameQuery[3], 'i')}
-								]},
-						{'local.active': true}]}).limit(50).exec(
-				function(err, users) {
-					if (err) 
-						return callback(Error.createError(err, Error.internalError));
-					
-					var userInfoArr = [];
-					_.each(users, function(user) {
-						userInfoArr.push(user.accountToString());
-					});
-					
-					userInfoArr.sort(function(x,y) {
-						return x.firstName.toLowerCase() > y.firstName.toLowerCase();
-					});
-					
-					return callback(null, {query: origQuery, results: userInfoArr});
-				});
+	UserInternal.findOne({userId: userId}, function(err, intUser) {
+		if (err) return cb(err);
+
+		if (intUser) {
+			intUser.addEvent(type, message);
 		} else {
-			return callback(null, {query: origQuery, results: []});
+			var user = new UserInternal({
+				userId: userId,
+			});
+			
+			user.save(function(err) {
+				if (!err) {
+					user.addEvent(type, message);
+				}
+			});
 		}
-	} else {
-		User.find({$and: [{'local.active': true},
-					{$or:[ {'local.username': regExp}, 
-						{'local.firstName': regExp}, 
-						{'local.lastName': regExp} ]}
-					]}).limit(50).exec( 
-			function(err, users) {
-				if (err) 
-					return callback(Error.createError(err, Error.internalError));
-				
-				var userInfoArr = [];
-				_.each(users, function(user) {
-					userInfoArr.push(user.accountToString());
-				});
-				
-				userInfoArr.sort(function(x,y) {
-					var xVal = '';
-					var yVal = '';
-					
-					if (regExp.test(x.username)) {
-						xVal = 'a:' + x.username.toLowerCase();
-					} else if  (regExp.test(x.firstName)) {
-						xVal = 'b:' + x.firstName.toLowerCase();
-					} else if  (regExp.test(x.lastName)) {
-						xVal = 'c:' + x.lastName.toLowerCase();
-					}
-					
-					if (regExp.test(y.username)) {
-						yVal = 'a:' + y.username.toLowerCase();
-					} else if  (regExp.test(y.firstName)) {
-						yVal = 'b:' + y.firstName.toLowerCase();
-					} else if  (regExp.test(y.lastName)) {
-						yVal = 'c:' + y.lastName.toLowerCase();
-					}
-					
-					return xVal > yVal;
-				});
-				
-				return callback(null, {query: origQuery, results: userInfoArr});
-		});
-	}
+	});
 }
 
-function createUserInternal(info, callback) {
+function createActiveUser(info, callback) {
 	createUser(info, function(err, user) {
 		if (err)
 			return callback(err);
@@ -197,31 +126,31 @@ function createUserInternal(info, callback) {
 }
 
 function createUser(info, callback) {
-	if (!info.email)
+	if (!isDef(info.email))
 		return callback(Error.createError('A valid email is required to create an account.', Error.invalidDataError));
 	
-	if (!info.username || !checkUsername(info.username))
+	if (!isDef(info.username) || !checkUsername(info.username))
 		return callback(Error.createError('A valid username is required to create an account.', Error.invalidDataError));
 		
-	if (!checkPassword(info.password)) 
+	if (!isDef(info.password) || !checkPassword(info.password))
 		return callback(Error.createError('A valid password is required to create an account.', Error.invalidDataError));
 		
-	if (info.firstName && !checkName(info.firstName))
-		return callback(Error.createError('First name cannot contain more than one space.', Error.invalidDataError));
+	if (!isDef(info.firstName) || !checkName(info.firstName))
+		return callback(Error.createError('A valid first name is required to create an account.', Error.invalidDataError));
+	
+	if (!isDef(info.lastName) || !checkName(info.lastName))
+		return callback(Error.createError('A valid last name is required to create an account.', Error.invalidDataError));
 		
-	if (info.lastName && !checkName(info.lastName))
-		return callback(Error.createError('Last name cannot contain more than one space.', Error.invalidDataError));
-		
-	if (!info.locLat && !info.locLng)
-		return callback(Error.createError('Valid latitude and longitude is required to create and account.', Error.invalidDataError));
+	if (!isDef(info.geoLat) || !isDef(info.geoLng))
+		return callback(Error.createError('Geocoordinates (lat/lng) are required to create an account.', Error.invalidDataError));
 	
 	async.series([
 		function(cb) {
-			query('local.email', info.email, function(err, users) {
+			getUserByEmail(info.email, function(err, user) {
 				if (err)
 					return cb(Error.createError(err, Error.internalError));
 				
-				if (users && users.length) {
+				if (user) {
 					return cb(Error.createError('A user with that email already exists.', Error.invalidDataError));
 				}
 				
@@ -229,11 +158,11 @@ function createUser(info, callback) {
 			});
 		},
 		function(cb) {
-			query('local.username', info.username, function(err, users) {
+			getUserByUsername(info.username, function(err, user) {
 				if (err)
 					return cb(Error.createError(err, Error.internalError));
 				
-				if (users && users.length) {
+				if (user) {
 					return cb(Error.createError('A user with that username already exists.', Error.invalidDataError));
 				}
 				
@@ -241,27 +170,17 @@ function createUser(info, callback) {
 			});
 		},
 		function(cb) {
-			geocoder.reverse({lat:info.locLat, lon:info.locLng}, function(err, res) {
+			Geo.getReverse(info.geoLat, info.geoLng, function(err, loc) {
 				if (err)
-					return cb(Error.createError(err, Error.internalError));
+					return cb(err);
 				
-				if (!res || !res.length)
-					return cb(Error.createError('Unable to locate postal code.', Error.invalidDataError));
+				if (!loc)
+					return cb(Error.createError('Unknown location.', Error.internalError));
 				
-				var loc = res[0];
-				info.location = {
-					lat : loc.latitude,
-				    lng : loc.longitude,
-				    city : loc.city,
-				    state : loc.administrativeLevels.level1long,
-				    stateAcr : loc.administrativeLevels.level1short,
-				    country : loc.country,
-				    countryCode : loc.countryCode,
-				    zipcode: loc.zipcode
-				};
-			    
+				info.location = loc;
+				
 				return cb();
-			});
+			}, ['postal_code']);
 		}
 	], function(err, results) {
 		if (err)
@@ -274,7 +193,6 @@ function createUser(info, callback) {
 				username: info.username,
 				firstName: info.firstName,
 				lastName: info.lastName,
-				pdgaNumber: info.pdgaNumber,
 				passcode: info.passcode,
 				location: info.location
 			}
@@ -286,9 +204,27 @@ function createUser(info, callback) {
 			if (err)
 				return callback(Error.createError(err, Error.internalError));
 			
-			return callback(null, user);
+			if (info.facebook && info.facebook.userID && info.facebook.accessToken) {
+				linkFacebook(info.facebook.userID, info.facebook.accessToken, user, function(err, user) {
+					if (err)
+						return callback(err);
+					
+					return callback(null, user);
+				});
+			} else {
+				return callback(null, user);
+			}
 		});
 	})
+}
+
+function getUserInternal(userId, callback) {
+	User.findOne({_id: userId}, function(err, user) {
+       if (err) 
+			return callback(Error.createError(err, Error.internalError));
+		
+		return callback(null, user);	
+	});
 }
 
 function getUser(userId, callback) {
@@ -297,6 +233,15 @@ function getUser(userId, callback) {
 			return callback(Error.createError(err, Error.internalError));
 			
 		if (!user) return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
+		
+		return callback(null, user);	
+	});
+}
+
+function getUserByUsername(username, callback) {
+	User.findOne({'local.username': username}, function(err, user) {
+       if (err) 
+			return callback(Error.createError(err, Error.internalError));
 		
 		return callback(null, user);	
 	});
@@ -315,6 +260,7 @@ function getUserByFacebook(facebookId, callback) {
 	User.findOne({'facebook.id': facebookId}, function(err, user) {
        if (err) 
 			return callback(Error.createError(err, Error.internalError));
+		
 		
 		return callback(null, user);	
 	});
@@ -337,82 +283,16 @@ function getAccount(userId, callback) {
        if (err) 
 			return callback(err);
 		
-		return callback(null, user.accountToString());
+		return callback(null, user);
     });
 }
 
-function getPreferences(userId, callback) {
+function getMarketCap(userId, callback) {
 	getActiveUser(userId, function(err, user) {
        if (err) 
 			return callback(err);
 		
-		return callback(null, user.preferences);
-    });
-}
-
-function restorePreferences(userId, callback) {
-	getActiveUser(userId, function(err, user) {
-       if (err) 
-			return callback(err);
-		
-	   	user.preferences = UserConfig;
-	   	
-	   	user.save(function(err) {
-		    if (err)
-    			return callback(Error.createError(err, Error.internalError));
-    		else
-    			return callback(null, user.preferences);
-		});
-    });
-}
-
-function updatePreferences(userId, prefs, callback) {
-	getActiveUser(userId, function(err, user) {
-       if (err) 
-			return callback(err);
-		
-		if (typeof prefs.notifications !== 'undefined') {
-			var notifications = prefs.notifications;
-			
-			if (typeof notifications.newMessage !== 'undefined' && validatePreference('notifications.newMessage', notifications.newMessage)) {
-				user.preferences.notifications.newMessage = notifications.newMessage;
-			}
-		}
-		
-		if (typeof prefs.colorize !== 'undefined' && validatePreference('colorize', prefs.colorize)) {
-		    user.preferences.colorize = prefs.colorize;
-		}
-		
-		if (typeof prefs.colorizeVisibility !== 'undefined' && validatePreference('colorizeVisibility', prefs.colorizeVisibility)) {
-		    user.preferences.colorizeVisibility = prefs.colorizeVisibility;
-		} 
-		
-		if (typeof prefs.galleryCount !== 'undefined' && validatePreference('galleryCount', prefs.galleryCount)) {
-		    user.preferences.galleryCount = prefs.galleryCount;
-		}
-		
-		if (typeof prefs.defaultView !== 'undefined' && validatePreference('defaultView', prefs.defaultView)) {
-		    user.preferences.defaultView = prefs.defaultView;
-		}
-		
-		if (typeof prefs.defaultSort !== 'undefined' && validatePreference('defaultSort', prefs.defaultSort)) {
-		    user.preferences.defaultSort = prefs.defaultSort;
-		}
-		
-		if (typeof prefs.displayCount !== 'undefined' && validatePreference('displayCount', prefs.displayCount)) {
-		    user.preferences.displayCount = prefs.displayCount;
-		}
-		
-		if (typeof prefs.showTemplatePicker !== 'undefined' && validatePreference('showTemplatePicker', prefs.showTemplatePicker)) {
-		    user.preferences.showTemplatePicker = prefs.showTemplatePicker;
-		}
-		
-		user.save(function(err) {
-		    if (err)
-    			return callback(Error.createError(err, Error.internalError));
-    		else
-    			return callback(null, user.preferences);
-		});
+		return callback(null, user.account.marketCap);
     });
 }
 
@@ -421,28 +301,30 @@ function updateAccount(userId, account, callback) {
        if (err) 
 			return callback(err);
 		
-		if (typeof account.firstName !== 'undefined' && checkName(account.firstName)) {
+		if (isDef(account.firstName) && checkName(account.firstName)) {
 			user.local.firstName = account.firstName;
 		}
 		
-		if (typeof account.lastName !== 'undefined' && checkName(account.lastName)) {
+		if (isDef(account.lastName) && checkName(account.lastName)) {
 			user.local.lastName = account.lastName;
 		}
 		
-		if (typeof account.pdgaNumber !== 'undefined') {
-			user.local.pdgaNumber = account.pdgaNumber;
+		if (isDef(account.bio)) {
+			var bio = account.bio.trim();
+			user.local.bio = bio.substring(0, Math.min(bio.length, 600));
 		}
 		
 		async.series([
 			function(cb) {
-				if (typeof account.username !== 'undefined') {
+				if (isDef(account.username)) {
 					if (account.username == user.local.username) {
 						return cb();
 					}
+					
 					if (!checkUsername(account.username))
 						return cb(Error.createError('The username does not meet the required criteria.', Error.invalidDataError));
 					
-					query('local.username', account.username, function(err, users) {
+					getUserByUsername(account.username, function(err, users) {
 			            if (err || users.length > 0) {
 			                cb(Error.createError('The username already exists.', Error.invalidDataError));
 			            } else {
@@ -455,28 +337,22 @@ function updateAccount(userId, account, callback) {
 				}
 			},
 			function(cb) {
-				if (typeof account.locLat !== 'undefined' && typeof account.locLng !== 'undefined') {
-					geocoder.reverse({lat:account.locLat, lon:account.locLng}, function(err, res) {
+				logger.info('Checking to update location');
+				if (isDef(account.geoLat) && isDef(account.geoLng)) {
+					logger.info('Updating location');
+					Geo.getReverse(account.geoLat, account.geoLng, function(err, loc) {
 						if (err)
-							return cb(Error.createError(err, Error.internalError));
+							return cb(err);
+
+						if (!loc)
+							return cb(Error.createError('Unknown location.', Error.internalError));
 						
-						if (!res || !res.length)
-							return cb(Error.createError('Unable to locate postal code.', Error.invalidDataError));
-						
-						var loc = res[0];
-						user.local.location = {
-							zipcode: loc.zipcode,
-							lat : loc.latitude,
-						    lng : loc.longitude,
-						    city : loc.city,
-						    state : loc.administrativeLevels.level1long,
-						    stateAcr : loc.administrativeLevels.level1short,
-						    country : loc.country,
-						    countryCode : loc.countryCode
-						};
-					    
+						logger.info('Using location', loc);
+
+						user.local.location = loc;
+
 						return cb();
-					});
+					}, ['postal_code']);
 				} else return cb();
 			
 			}],
@@ -489,11 +365,237 @@ function updateAccount(userId, account, callback) {
 				    if (err) {
 		    			return callback(Error.createError(err, Error.internalError));
 				    } else {
-		    			return callback(null, user.accountToString());
+		    			return callback(null, user);
 				    }
 				});	
 			});
     });
+}
+
+function mergeProfile(profile, updates) {
+	if (!profile) {
+		profile = {};
+	}
+	
+	for (var key in updates) {
+		profile[key] = updates[key];
+	}
+	
+	profile.lastModified = new Date();
+}
+
+function setAccountProfileImmed(userId, profile, callback) {
+	getUser(userId, function(err, user) {
+		var promos = user.account.profile.promoCodes.length ? user.account.profile.promoCodes.slice(0) : undefined;
+		
+		user.account.profile = profile;
+		user.account.profile.promoCodes = promos;
+		user.account.type = profile.type;
+		user.save(function(err) {
+			if (err)
+				return callback(err);
+			
+			addUserEvent(user._id, EventController.Types.AccountReset, 'The user account profile was reset by the system.');
+			return callback(null, user);
+		});
+	});
+}
+
+function setAccountProfile(userId, changeRequest, profile, callback) {
+	getUser(userId, function(err, user) {
+		if (err) {
+			logger.error('Error occurred in locating user with id [' + userId + ']', err);
+			return callback(err);
+		}
+		
+		var newType;
+		var lastId = user.account.profile.profileId;
+		
+		if (changeRequest.toAccount.type) {
+			newType = changeRequest.toAccount.type;
+		} else {
+			newType = user.account.type;
+			changeRequest.toAccount = changeRequest.fromAccount;
+		}
+		
+		switch (user.account.type) {
+			case MemberConfig.TypeBasic: {
+				switch (newType) {
+					case MemberConfig.TypeBasic: {
+						mergeProfile(user.account.profile, profile);
+						user.account.profile.type = MemberConfig.TypeBasic;
+						break;
+					}
+					case MemberConfig.TypeEntry: {
+						user.account.type = MemberConfig.TypeEntry;
+						user.account.marketCap = MemberConfig.CapEntry;
+						mergeProfile(user.account.profile, profile);
+						user.account.profile.type = MemberConfig.TypeEntry;
+						break;
+					}
+					case MemberConfig.TypePro: {
+						user.account.type = MemberConfig.TypePro;
+						user.account.marketCap = MemberConfig.CapPro;
+						mergeProfile(user.account.profile, profile);
+						user.account.profile.type = MemberConfig.TypePro;
+						break;
+					}
+				}
+				break;
+			}
+			case MemberConfig.TypeEntry: {
+				switch (newType) {
+					case MemberConfig.TypeBasic: {
+						mergeProfile(user.account.profile, profile);
+						user.account.profile.type = MemberConfig.TypeBasic;
+						break;
+					}
+					case MemberConfig.TypeEntry: {
+						mergeProfile(user.account.profile, profile);
+						user.account.profile.type = MemberConfig.TypeEntry;
+						break;
+					}
+					case MemberConfig.TypePro: {
+						user.account.type = MemberConfig.TypePro;
+						user.account.marketCap = MemberConfig.CapPro;
+						mergeProfile(user.account.profile, profile);
+						user.account.profile.type = MemberConfig.TypePro;
+						break;
+					}
+				}
+				break;
+			}
+			case MemberConfig.TypePro: {
+				switch (newType) {
+					case MemberConfig.TypeBasic: {
+						mergeProfile(user.account.profile, profile);
+						user.account.profile.type = MemberConfig.TypeBasic;
+						break;
+					}
+					case MemberConfig.TypeEntry: {
+						mergeProfile(user.account.profile, profile);
+						user.account.profile.type = MemberConfig.TypeEntry;
+						break;
+					}
+					case MemberConfig.TypePro: {
+						mergeProfile(user.account.profile, profile);
+						user.account.profile.type = MemberConfig.TypePro;
+						break;
+					}
+				}
+				break;
+			}
+		}
+		
+		if (typeof(user.account.profile.profileId) !== 'undefined' && lastId !== user.account.profile.profileId) {
+			user.account.assocProfiles.push(user.account.profile.profileId);
+		}
+		
+		user.save(function(err) {
+			if (err) {
+				logger.error('Error occurred in saving user with id [' + userId + ']', err);
+				return callback(Error.createError(err, Error.internalError));
+			}
+			
+			var eventProf = user.account.profile.profileId ? 'with ID [' + user.account.profile.profileId + '] ' : ''; 
+			addUserEvent(user._id, EventController.Types.AccountTypeChange, 'The user account profile ' + eventProf + 'was altered by the user. From: [' + changeRequest.fromAccount.type + '] To: [' + changeRequest.toAccount.type + ']');
+			
+            var email = generateAccountChangedEmail(user, changeRequest.toObject());
+			logger.info('Sending email to notify account change to %s', user.local.email);
+			Mailer.sendMail(user.local.email, Mailer.TypeAccountChange, email);
+			return callback(null, user);
+		});
+	});
+}
+
+function getAccountNotifications(userId, callback) {
+	getUser(userId, function(err, user) {
+		if (err)
+			return callback(err);
+		
+		return callback(null, user.account.notifications);
+	});
+}
+
+function setAccountNotifications(userId, notifications, callback) {
+	getUser(userId, function(err, user) {
+		if (err)
+			return callback(err);
+		
+		for (var notName in notifications) {
+			if (user.account.notifications.hasOwnProperty(notName) && _.isBoolean(notifications[notName])) {
+				user.account.notifications[notName] = notifications[notName];
+			}
+		}
+		
+		user.save(function(err) {
+			if (err)
+				return callback(Error.createError(err, Error.internalError));
+			
+			return callback(null, user.account.notifications);
+		});
+	});
+}
+
+function setAccountVerifications(userId, verifications, callback) {
+	getUser(userId, function(err, user) {
+		if (err)
+			return callback(err);
+		
+		if (verifications.hasOwnProperty('facebook') && _.isBoolean(verifications.facebook)) {
+			user.account.verifications.facebook = user.facebook.id !== 'undefined' && verifications.facebook;
+		}
+		
+		user.save(function(err) {
+			if (err)
+				return callback(Error.createError(err, Error.internalError));
+			
+			return callback(null, user);
+		});
+	});
+}
+
+function setPDGA(userId, pdgaNumber, callback) {
+	getActiveUser(userId, function(err, user) {
+		 if (err) 
+			return callback(err);
+		
+		User.findOne({'local.pdgaNumber': pdgaNumber}, function(err, foundUser) {
+		   if (err) 
+				return callback(Error.createError(err, Error.internalError));
+			
+			if (foundUser && foundUser._id != userId)
+				return callback(Error.createError('The PDGA Number associated with the account (#' + pdgaNumber + ') is already in use.', Error.invalidDataError));
+
+			user.local.pdgaNumber = pdgaNumber;
+			user.account.verifications.pdga = true;
+			user.save(function(err) {
+				if (err)
+					return callback(err);
+
+				addUserEvent(user._id, EventController.Types.AccountPDGAClaim, 'The account has successfully claimed the PDGA number [' + pdgaNumber + '].');
+				
+				callback(null, user);
+			});
+		});
+	});
+}
+
+function resetPDGA(userId, callback) {
+	getActiveUser(userId, function(err, user) {
+		 if (err) 
+			return callback(err);
+		
+		user.local.pdgaNumber = undefined;
+		user.account.verifications.pdga = false;
+		user.save(function(err) {
+			if (err)
+                return callback(err);
+            
+			addUserEvent(user._id, EventController.Types.AccountPDGAReset, 'The account has successfully reset the PDGA verification.');
+            callback(null, user);
+		});
+	});
 }
 
 function resetPassword(userId, password, callback) {
@@ -501,18 +603,14 @@ function resetPassword(userId, password, callback) {
        if (err) 
 			return callback(err);
 		
-	   	 if (!password || !checkPassword(password)) {
-	        
-			return callback(Error.createError('Password must be 6 or more characters.',
-			    Error.invalidDataError));
+	   	 if (!isDef(password) || !checkPassword(password)) {
+			return callback(Error.createError('Password must be 6 or more characters.', Error.invalidDataError));
 	    }
 	    
 	    user.local.password = user.generateHash(password);
         user.save(function(err){
             if (err)
                 return callback(err);
-            
-            Socket.sendCallback(user._id, 'ResetPassword', 'Your password has been successfully changed.');
             
             callback(null, user);
         });
@@ -549,98 +647,63 @@ function deleteUser(userId, gfs, callback) {
 	});
 }
 
-function validatePreference(preference, value) {
-	var displayCount = ['20', '40', '60', '80', '100', 'All']
-	var colorKey = ['mini', 'distance', 'fairway', 'mid', 'putter'];
-	var sortProp = ['name', 'brand', 'tagList', 'type', 'material', 'weight', 'color', 'speed', 'glide', 'turn', 'fade', 'condition', 'createDate'];
-	var views = ['gallery', 'inventory', 'statistics'];
-	var enables = [true, false];
-	
-	if (preference == 'displayCount') {
-		return _.contains(displayCount, value);
-	}
-	
-	if (preference == 'colorize') {
-		var failed = _.find(_.keys(value), function(key) {
-			return 	!_.contains(colorKey, key) || !/^(rgb\(\d{1,3}, ?\d{1,3}, ?\d{1,3}\)|#\d{6})$/.test(value[key]);
-		});
-		
-		return (typeof failed === 'undefined');
-	}
-	
-	if (preference == 'notifications.newMessage') {
-		return _.contains(enables, value);
-	}
-	
-	if (preference == 'colorizeVisibility') {
-		return _.contains(enables, value);
-	}
-	
-	if (preference == 'showTemplatePicker') {
-		return _.contains(enables, value);
-	}
-	
-	if (preference == 'defaultSort') {
-		var failed = _.find(value, function(sort) {
-			return !_.contains(sortProp, sort.property) || !_.isBoolean(sort.sortAsc);
-		});
-		
-		return (value.length > 0 && typeof failed === 'undefined');
-	}
-	
-	if (preference == 'defaultView') {
-		return _.contains(views, value);
-	}
-	
-	if (preference == 'galleryCount') {
-		var count = parseInt(value);
-		if (!_.isNaN(count)) {
-			return count >= 2 && count <= 12;
-		}
-	}
-	
-	return false;
-}
-
 function deleteUserImage(userId, gfs, callback) {
 	getUser(userId, function(err, user) {
        if (err) 
 			return callback(err);
 		
-	   	if (typeof(user.local.image) !== 'undefined') {
+	   	if (isDef(user.local.image)) {
 	   		FileUtil.deleteImage(user.local.image, gfs, function() {
 	   			user.local.image = undefined;
 	   			user.save(function(err) {
 					if (err)
 						return callback(Error.createError(err, Error.internalError));
 					
-					callback(null, user.accountToString());
+					callback(null, user);
 	   			});
 	   		});
 	   	} else {
-	   		callback(null, user.accountToString());
+	   		callback(null, user);
 	   	}
     });
 }
 
-function postUserImage(userId, fileId, gfs, callback) {
+function postUserImage(userId, imageId, gfs, callback) {
 	getActiveUser(userId, function(err, user) {
        if (err) 
 			return callback(err);
 		
+		var newImage;
 	   	async.series([
+			function(cb) {
+				ImageController.getImageCache(imageId, function(err, imageObj) {
+					if (err) {
+						return cb(err);
+					}
+					
+					if (!imageObj) {
+						return cb(Error.createError('Invalid image file identifier.', Error.objectNotFoundError));
+					}
+
+					newImage = imageObj;
+					return cb();
+				});
+			},
 	   		function(cb) {
-	   			if (typeof(user.local.image) !== 'undefined') {
+	   			if (isDef(user.local.image)) {
 			   		FileUtil.deleteImage(user.local.image, gfs, cb);
 			   	} else cb();
 	   		}
 	   	], function(err, results) {
-	   		user.local.image = fileId;
+			if (err)
+				return callback(err);
+			
+	   		user.local.image = newImage.fileId;
 		   	user.save(function(err) {
 				if (err)
 					return callback(Error.createError(err, Error.internalError));
 					
-				return callback(null, user.accountToString());
+				return callback(null, user);
 		   	});
 	   	});
     });
@@ -659,6 +722,108 @@ function getUserFromHash(hashId, callback) {
 		return callback(null, user);
 	});
 }
+
+function unsubscribe(hashId, notification, callback) {
+	getUserFromHash(hashId, function(err, user) {
+		if (err)
+			return callback(err);
+		
+		if (user.account.hasOwnProperty(notification)) {
+			user.account[notification] = false;
+			
+			user.save(function(err) {
+				if (err)
+					return callback(err);
+				
+				callback(null, user);
+			});
+			
+		} else {
+			return callback(null, user);
+		}
+	});
+}
+
+function FBConnect(user, token, callback, fbID) {
+	fbGraph.get('me?fields=email,first_name,last_name,picture.width(400)&access_token=' + token, function(err, data) {
+		if (err)
+			return callback(Error.createError('Unable to access facebook with the provided access_token.', Error.unauthorizedError));
+		
+		if (!user.facebook.fbID) {
+			user.facebook = {
+				id: fbID
+			};
+		}
+		
+		user.facebook.image = data.picture.data.url;
+		user.facebook.name = data.first_name + ' ' + data.last_name;
+		user.facebook.email = data.email;
+
+		user.save(function(err) {
+		   if (err)
+				return callback(Error.createError(err, Error.internalError));
+
+			callback(null, user);
+		});
+	});
+}
+
+function linkFacebook(fbID, token, user, callback) {
+	if (!fbID)
+		return callback(Error.createError('A valid facebook user ID is required to access this route.', Error.unauthorizedError));
+         
+	getUserByFacebook(fbID, function(err, qUser) {
+		if (err)
+			return callback(err);
+
+		if (qUser && qUser._id != user._id) 
+			return callback(Error.createError('The Facebook account is already linked by another user.', Error.unauthorizedError));
+		
+		FBConnect(user, token, function(err, user) {
+			if (err)
+				return callback(err);
+			
+			addUserEvent(user._id, EventController.Types.AccountLink, 'The account has been successfully linked to Facebook.');
+			callback(null, user);
+		}, fbID);
+	});
+}
+
+function unlinkFacebook(user, callback) {
+	if (!user.local.active)
+		return callback(Error.createError('Account not activated.', Error.inactiveError));
+
+	user.facebook.id = undefined;
+	user.account.verifications.facebook = false;
+	user.save(function(err) {
+		if (err)
+			return callback(Error.createError(err, Error.internalError));
+
+		addUserEvent(user._id, EventController.Types.AccountUnlink, 'The account has been successfully unlinked from Facebook.');
+		return callback(null, user);
+	});
+}
+
+/* Private Functions */
+function generateAccountChangedEmail(user, changeRequest) {
+	changeRequest.fromAccount = {
+		type: MembershipTypes.getTypeName(changeRequest.fromAccount.type),
+		amount: parseFloat(changeRequest.fromAccount.amount).toFixed(2)
+	}
+	
+	changeRequest.toAccount = {
+		type: MembershipTypes.getTypeName(changeRequest.toAccount ? changeRequest.toAccount.type : changeRequest.fromAccount.type),
+		amount: changeRequest.toAccount ? parseFloat(changeRequest.toAccount.amount).toFixed(2) : parseFloat(changeRequest.fromAccount.amount).toFixed(2)
+	}
+	
+	changeRequest.immediateCharge = changeRequest.immediateCharge.toFixed(2);
+	var activeAccount = MembershipTypes.getTypeName(user.account.type);
+	
+	var html = fs.readFileSync('./private/html/accountChanged.handlebars', 'utf8');
+	var template = handleConfig.getMainHandle().compile(html);
+	return template({user: user, request: changeRequest, activeAccount: activeAccount,serverURL: LocalConfig.serverURL});
+}
+
 
 /* Admin Functions */
 function getUsers(callback) {
@@ -713,75 +878,4 @@ function getAllUsers(params, callback) {
         });
     });
 
-}
-
-function getUsersByArea(zipcode, radius, callback) {
-	var center = {};
-	var userList = [];
-	var radiusMeters = radius * 1609.34;
-	
-	async.series([
-		function(cb) {
-			geocoder.geocode(zipcode, function(err, res) {
-				if (err)
-					return cb(Error.createError(err, Error.internalError));
-				
-				if (!res || !res.length)
-					return cb(Error.createError('Unable to locate postal code.', Error.invalidDataError));
-				
-				var loc = res[0];
-				
-				center.latitude = loc.latitude;
-				center.longitude = loc.longitude;
-			    
-				return cb();
-			});
-		},
-		function(cb) {
-			getUsers(function(err, users) {
-				if (err)
-					return cb(err);
-				
-				async.each(users, function(user, userCb) {
-					var loc = user.local.location;
-					
-					if (!loc.lat || !loc.lng) {
-						return userCb();
-					}
-					
-					var result = geolib.isPointInCircle(
-					    {latitude: loc.lat, longitude: loc.lng},
-					    center,
-					    radiusMeters
-					);
-					
-					if (result) {
-						userList.push(user);
-					}
-					
-					return userCb();
-				}, function(err) {
-					cb();
-				});
-			});
-		}
-	], function(err, results) {
-		if (err)
-			return callback(err);
-		
-		return callback(null, userList);
-	});
-}
-
-/* Private Functions */
-function checkPassword(password) {
-	return password.length >= 6;
-}
-
-function checkUsername(username) {
-	return /^[a-zA-Z0-9\_]{6,15}$/.test(username);
-}
-
-function checkName(val) {
-	return val.split(' ').length <= 2;
 }

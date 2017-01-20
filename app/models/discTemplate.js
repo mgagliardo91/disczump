@@ -7,15 +7,18 @@ var discTemplateSchema = mongoose.Schema({
 	    unique: true,
 	    default: shortId.generate
 	},
+	textSearch: String,
     brand: String,
     name: String,
     type: String,
     material: String,
-    speed: String,
-    glide: String,
-    turn: String,
-    fade: String
+    speed: Number,
+    glide: Number,
+    turn: Number,
+    fade: Number
     
 });
+
+discTemplateSchema.index({ textSearch: 1 });
 
 module.exports = mongoose.model('DiscTemplate', discTemplateSchema);

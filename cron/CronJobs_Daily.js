@@ -5,6 +5,8 @@ var Grid = require('gridfs-stream');
 var winston = require('winston');
 var path = require('path');
 
+var Membership = require('../scripts/automated/membership.js');
+
 var logger = new (winston.Logger)({
     transports: [
       new (winston.transports.File)({

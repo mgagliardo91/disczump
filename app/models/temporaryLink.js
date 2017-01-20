@@ -18,10 +18,17 @@ var temporaryLinkSchema = mongoose.Schema({
     },
     created: {
         type: Date,
-        default: Date.now,
         expires: TTL
     }
     
+});
+
+temporaryLinkSchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.created = new Date();
+    }
+	
+    next();
 });
 
 module.exports = mongoose.model('TemporaryLink', temporaryLinkSchema);

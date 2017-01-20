@@ -16,8 +16,16 @@ var discArchiveSchema = mongoose.Schema({
     material: String,
     color: String,
     createDate: Date,
-    archiveDate: {type: Date, default: Date.now}
+    archiveDate: {type: Date}
     
+});
+
+discArchiveSchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.archiveDate = new Date();
+    }
+	
+    next();
 });
 
 module.exports = mongoose.model('DiscArchive', discArchiveSchema);

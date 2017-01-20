@@ -62,7 +62,7 @@ describe('Routing', function() {
                 },
                 function(cb) {
                     logger.info('Creating test user for use in requests.');
-                    UserController.createUserInternal(testConfig.User.Create, function(err, newUser) {
+                    UserController.createActiveUser(testConfig.User.Create, function(err, newUser) {
                         if (err)
                             throw err;
                         
@@ -72,7 +72,7 @@ describe('Routing', function() {
                 },
                 function(cb) {
                     logger.info('Creating test user for use in requests.');
-                    UserController.createUserInternal(testConfig.User2.Create, function(err, newUser) {
+                    UserController.createActiveUser(testConfig.User2.Create, function(err, newUser) {
                         if (err)
                             throw err;
                         

@@ -1,0 +1,33 @@
+<div>
+    <div class="dz-modal-content">
+        <div class="dz-modal-title-sm left">Multi-select Marketplace Manager</div>
+        <div class="dz-modal-text">Change the marketplace settings for all discs selected below. Upon saving, all marketplace settings will be overwritten for selected discs.</div>
+        <dz-alert class="full-width" alert-data="modalAlert"></dz-alert>
+        <div class="full-width-table" style="border-bottom:1px solid #BEBEBE;height:30px;">
+            <div class="dz-modal-market-info handle-overflow"><span>Account Type: </span>{{data.marketData.accountName}}</div>
+            <div class="dz-modal-market-info handle-overflow" ng-show="data.marketData.marketCap != -1"><span>Cap: </span>{{data.marketData.marketCap}}</div>
+            <div class="dz-modal-market-info handle-overflow" ng-show="data.marketData.marketCap == -1"><span>Cap: </span>Unlimited</div>
+            <div class="dz-modal-market-info handle-overflow" ng-show="data.marketData.marketCap != -1"><span>Remaining: </span>{{data.marketData.marketAvailable}}</div>
+            <div class="dz-modal-market-info handle-overflow" ng-show="data.marketData.marketCap == -1"><span>Remaining: </span>Unlimited</div>
+        </div>
+        <div class="page-info error center full-width" style="margin:5px auto" ng-show="data.marketData.marketCap > 0 && (tempMarketplace.forSale || tempMarketplace.forTrade)">
+            <span class="page-info-title inline">Warning!</span>  You have a limited marketplace cap. Discs will update sequentially until this cap is reached.
+        </div>
+        <div class="page-info error center full-width" style="margin:5px auto" ng-show="data.isIneligible">Marketplace eligibility requires each disc to be public and have at least one image.</div>
+        <div class="full-width-table">
+            <div style="display:inline-block;width:50%;line-height:50px;">
+                <div>For Sale: <switch class="marketplace-switch ms-modal sale-switch" type="checkbox" ng-model="tempMarketplace.forSale"></switch></div>
+            </div>
+            <div style="display:inline-block;width:50%;line-height:50px;">
+                <div>For Trade: <switch class="marketplace-switch ms-modal trade-switch" type="checkbox" ng-model="tempMarketplace.forTrade"></switch></div>
+            </div>
+        </div>
+        <dz-modal-table table-opts="tableOpts" class="no-margin"></dz-modal-table>
+    </div>
+    <div class="dz-modal-btn-container">
+        <div class="dz-modal-triangle"></div>
+        <div class="dz-modal-btn loading" ng-show="opts.loading"><i class="fa fa-spinner fa-spin fa-lg"></i></div>
+        <div class="dz-modal-btn cancel" ng-show="!opts.loading" ng-click="show = false">Close</div>
+        <div class="dz-modal-btn btn-blue" ng-click="!opts.loading && confirm()" ng-show="!opts.loading">Save</div>
+    </div>
+</div>

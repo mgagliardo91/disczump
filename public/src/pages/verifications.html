@@ -1,0 +1,139 @@
+<div dz-wrapper>
+    <dz-header></dz-header>
+    <dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
+    <div class="scrollable main-body" id="disc-templates">
+        <div class="page-content full-width">
+            <div class="title-row">
+                <div class="page-title handle-overflow">Account | <span class="dz-blue">Verifications</span></div>
+                <hr>
+            </div>
+            <div>
+                <div class="dz-toggle no-select" ng-click="pdga.toggle = !pdga.toggle"  ng-class="{'active': account.pdgaNumber, 'open': pdga.toggle}">
+                    <span style="margin-right: 10px;"><i class="fa" ng-class="{'fa-square-o':!account.pdgaNumber,'fa-check-square-o': account.pdgaNumber}"></i></span>
+                    <span class="float-right arrow"><i class="fa" ng-class="{'fa-chevron-circle-right': !pdga.toggle, 'fa-chevron-circle-down': pdga.toggle}"></i></span>
+                    PDGA Verification<span ng-show="account.pdgaNumber">: <a class="hover-underline" target="_blank" ng-href="http://www.pdga.com/player/{{account.pdgaNumber}}">#{{account.pdgaNumber}}</a></span>
+                </div>
+                <div class="verify-container" ng-show="pdga.toggle" ng-class="{'open': pdga.toggle}">
+                    <div class="page-info" ng-show="account.pdgaNumber">
+                        Your PDGA Number is currently claimed. <span class="hover-underline dz-blue" ng-click="resetPDGA()">Remove Claim</span>
+                    </div>
+                    <div class="verify-img">
+                        <a href="http://pdga.com" target="_blank"><img src="http://www.pdga.com/sites/all/themes/pdga/logo.png" /></a>
+                    </div>
+                    <div class="verify-label">
+                        Verification Process
+                    </div>
+                    <div class="verify-text">
+                        In order to claim your official PDGA Number, disc|zump requires a one-time verification to ensure that you own the account. This process will require you to 
+                        log in using your PDGA.com account username and password. A successful login will provide us with your assigned PDGA Number and the verification will be complete. Your PDGA.com 
+                        account credentials will <b>not</b> be stored and the only information we will obtain is the PDGA Number on your account.
+                    </div>
+                    <div class="verify-label">
+                        Why Verify?
+                    </div>
+                    <div class="verify-text">
+                        While PDGA verification is completely optional, it will provide other members and disc|zump visitors with the knowledge that you are who you say you are. Trust is key in 
+                        successful transactions.
+                    </div>
+                    <div class="verify-body">
+                        <dz-alert class="full-width" alert-data="pdga.alert"></dz-alert>
+                         <div class="form-horizontal form-small" ng-form name="pdgaForm">
+                            <div class="form-group">
+                                <label for="pdga-username" class="col-sm-3 control-label">Username
+                                </label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control validation" id="pdga-username" placeholder="PDGA.com Username" ng-model="pdga.username" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="pdga-password" class="col-sm-3 control-label">Password
+                                </label>
+                                <div class="col-sm-9">
+                                    <input type="password" class="form-control validation" id="pdga-password" placeholder="Password" ng-model="pdga.password" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <button class="btn btn-success pull-right" ng-show="pdga.loading">Verifying...</button>
+                                    <button class="btn btn-primary pull-right" ng-disabled="pdgaForm.$invalid" ng-click="!pdga.loading && verifyPDGA()" ng-show="!pdga.loading">Verify</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="license-container" style="text-align: center;">
+                        The above logo and player data is owned and copyrighted © 2016 <a href="http://pdga.com" target="_blank">Professional Disc Golf Association</a>.
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="dz-toggle no-select" ng-click="fb.toggle = !fb.toggle"  ng-class="{'active': account.verifications.facebook, 'open': fb.toggle}">
+                    <span style="margin-right: 10px;"><i class="fa" ng-class="{'fa-square-o':!account.verifications.facebook,'fa-check-square-o': account.verifications.facebook}"></i></span>
+                    <span class="float-right arrow"><i class="fa" ng-class="{'fa-chevron-circle-right': !fb.toggle, 'fa-chevron-circle-down': fb.toggle}"></i></span>
+                    Facebook Verification<span ng-show="account.verifications.facebook">: <a class="hover-underline" target="_blank" ng-href="https://www.facebook.com/{{account.fbId}}">(View Profile)</a></span>
+                </div>
+                <div class="verify-container" ng-show="fb.toggle" ng-class="{'open': fb.toggle}">
+                    <div class="page-info" ng-if="account.verifications.facebook">
+                        Your Facebook account is currently public.
+                    </div>
+                    <div class="page-info error" ng-if="!account.linked">
+                        Your Facebook account is not currently linked. <a class="hover-underline dz-blue" href="/account">Link Now</a>
+                    </div>
+                    <div class="verify-img">
+                        <a href="https://facebook.com" target="_blank"><img src="/static/img/facebook_logo.png" /></a>
+                    </div>
+                    <div class="verify-label">
+                        Verification Process
+                    </div>
+                    <div class="verify-text">
+                        In order to verify your Facebook account, disc|zump requires that you have <i>linked</i> your account. The linking process will require you to log into Facebook and give disc|zump 
+                        permission to access basic information on your account (email, name, profile picture). disc|zump will <b>NEVER</b> post on your behalf without permission and you will 
+                        be able to <i>unlink</i> your account at any time.
+                        <br />
+                        <br />
+                        Once your Facebook account is linked, verification is as simple as enabling disc|zump to make your Facebook URL public.
+                    </div>
+                    <div class="verify-label">
+                        Why Verify?
+                    </div>
+                    <div class="verify-text">
+                        On any site that allows users to provide a service (i.e. sell and trade discs), trust is a key component. While providing potential customers with your Facebook profile does not explicitly 
+                        prove you are trustful, it does provide a sense of reassurance that you are a physical, relatable person.
+                    </div>
+                    <div class="verify-body">
+                        <dz-alert class="full-width" alert-data="fb.alert"></dz-alert>
+                        <div class="form-horizontal form-small" ng-form name="fbForm">
+                            <div class="form-group">
+                                <label for="fb-enable" class="col-sm-6 control-label">Your Account
+                                </label>
+                                <div class="col-sm-6">
+                                    <img class="verify-fb-img" img-load="/static/img/dz_profile.png" img-src="{{account.facebookImage}}" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="fb-enable" class="col-sm-6 control-label">Enable Verification
+                                </label>
+                                <div class="col-sm-6">
+                                    <switch id="fb-enable" type="checkbox" ng-model="fb.active" disabled="true" ng-model="fb.active" ng-if="!account.linked"></switch>
+                                    <switch id="fb-enable" type="checkbox" ng-model="fb.active" ng-if="account.linked"></switch>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <button class="btn btn-success pull-right" ng-show="fb.loading">Saving...</button>
+                                    <button class="btn btn-primary pull-right" ng-disabled="fb.loading || fb.pristine" ng-click="!fb.loading && setFBVerification()" ng-show="!fb.loading">Accept Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="license-container" style="text-align: center;">
+                        The above logo is owned and copyrighted © 2016 <a href="https://www.facebook.com" target="_blank">Facebook</a>.
+                    </div>
+                </div>
+            </div>
+            <div style="margin-bottom: 20px; text-align: right;">
+                <a class="btn btn-primary" href="/account">My Account</a>
+            </div>
+        </div>
+    </div>
+    <dz-footer></dz-footer>
+</div>

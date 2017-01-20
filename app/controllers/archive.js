@@ -1,5 +1,6 @@
 var DiscArchive = require('../models/discArchive');
 var UserArchive = require('../models/userArchive');
+var UserInternal = require('../models/userInternal');
 var Error = require('../utils/error');
 
 module.exports = {
@@ -24,35 +25,38 @@ function archiveDisc(disc) {
 }
 
 function archiveUser(user) {
-    var archive = new UserArchive({
-    	userId: user._id,
-        local: {
-            username: user.local.username,
-            firstName: user.local.firstName,
-            lastName: user.local.lastName,
-            email: user.local.email,
-            dateJoined: user.local.dateJoined,
-            lastAccess: user.local.lastAccess,
-            pdgaNumber: user.local.pdgaNumber,
-            location: {
-                zipcode: user.local.location.zipcode,
-                lat: user.local.location.lat,
-                lng: user.local.location.lng,
-                city: user.local.location.city,
-                state: user.local.location.state,
-                stateAcr: user.local.location.stateAcr,
-                country: user.local.location.country,
-                countryCode: user.local.location.countryCode,
+    UserInternal.find({userId: user._id}, function(err, intUser) {
+        var archive = new UserArchive({
+            userId: user._id,
+            local: {
+                username: user.local.username,
+                firstName: user.local.firstName,
+                lastName: user.local.lastName,
+                email: user.local.email,
+                dateJoined: user.local.dateJoined,
+                lastAccess: user.local.lastAccess,
+                pdgaNumber: user.local.pdgaNumber,
+                location: {
+                    geo: user.local.location.geo,
+                    geoLat : user.local.location.geoLat,
+                    geoLng : user.local.location.geoLng,
+                    city : user.local.location.city,
+                    administrationArea : user.local.location.administrationArea,
+                    administrationAreaShort : user.local.location.administrationAreaShort,
+                    country : user.local.location.country,
+                    countryCode : user.local.location.countryCode,
+                    postalCode: user.local.location.postalCode
+                },
+                accessCount: {
+                    desktop: user.local.accessCount.desktop,
+                    mobile: user.local.accessCount.mobile,
+                }
             },
-            accessCount: {
-                desktop: user.local.accessCount.desktop,
-                mobile: user.local.accessCount.mobile,
+            internal: {
+                eventLog: intUser? intUser.eventLog : []
             }
-        },
-        internal: {
-            eventLog: user.internal.eventLog
-        }
+        });
+
+        archive.save();
     });
-    
-    archive.save();
 }

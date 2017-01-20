@@ -1,0 +1,459 @@
+<link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
+<dz-header fixed="true"></dz-header>
+<div class="sidenav has-header">
+    <div class="sidenav-img">
+        <img src="/static/logo/logo_portal.png"/>
+    </div>
+    <div class="sidenav-title">
+        Frequently Asked Questions
+    </div>
+    <div class="sidenav-section">
+        General
+    </div>
+    <div class="sidenav-body">
+        <div class="sidenav-item hover-blue hover-underline" title="What is disc|zump?" ng-class="{'highlight':activeTarget === 'faq-about'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('about')">
+                What is disc|zump?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="What is a disc|zump trunk?" ng-class="{'highlight':activeTarget === 'faq-trunk'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('trunk')">
+                What is a disc|zump trunk?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="What is the disc|zump marketplace?" ng-class="{'highlight':activeTarget === 'faq-marketplace'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('marketplace')">
+                What is the disc|zump marketplace?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="What are your Terms and Conditions?" ng-class="{'highlight':activeTarget === 'faq-terms'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('terms')">
+                What are your Terms and Conditions?
+            </div>
+        </div>
+    </div>
+    <div class="sidenav-section">
+        Membership
+    </div>
+    <div class="sidenav-body">
+        <div class="sidenav-item hover-blue hover-underline" title="Do I need an account?" ng-class="{'highlight':activeTarget === 'faq-account'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('account')">
+                Do I need an account?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="Is it free to sign up?" ng-class="{'highlight':activeTarget === 'faq-signup'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('signup')">
+                Is it free to sign up?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="Are their different tiers of accounts?" ng-class="{'highlight':activeTarget === 'faq-tiers'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('tiers')">
+                Are their different tiers of accounts?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="How do I upgrade my account?" ng-class="{'highlight':activeTarget === 'faq-upgrade'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('upgrade')">
+                How do I upgrade my account?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="How do I link my account to Facebook?" ng-class="{'highlight':activeTarget === 'faq-link'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('link')">
+                How do I link my account to Facebook?
+            </div>
+        </div>
+    </div>
+    <div class="sidenav-section">
+        Platform Support
+    </div>
+    <div class="sidenav-body">
+        <div class="sidenav-item hover-blue hover-underline" title="What browsers are currently supported?" ng-class="{'highlight':activeTarget === 'faq-browsers'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('browsers')">
+                What browsers are currently supported?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="Will there be a mobile-friendly platform?" ng-class="{'highlight':activeTarget === 'faq-mobile'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('mobile')">
+                Will there be a mobile-friendly platform?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="Can I expect more features in the future?" ng-class="{'highlight':activeTarget === 'faq-features'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('features')">
+                Can I expect more features in the future?
+            </div>
+        </div>
+    </div>
+    <div class="sidenav-section">
+        Using the Platform
+    </div>
+    <div class="sidenav-body">
+        <div class="sidenav-item hover-blue hover-underline" title="How do I add a disc to my inventory?" ng-class="{'highlight':activeTarget === 'faq-addinventory'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('addinventory')">
+                How do I add a disc to my inventory?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="What is the difference between a public and private disc?" ng-class="{'highlight':activeTarget === 'faq-visibility'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('visibility')">
+                What is the difference between a public and private disc?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="How do I add a disc to the marketplace?" ng-class="{'highlight':activeTarget === 'faq-addmarket'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('addmarket')">
+                How do I add a disc to the marketplace?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="What is “bumping” a disc?" ng-class="{'highlight':activeTarget === 'faq-bump'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('bump')">
+                What is “bumping” a disc?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="How do I share a disc?" ng-class="{'highlight':activeTarget === 'faq-share'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('share')">
+                How do I share a disc?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="What is “bumping” a disc?" ng-class="{'highlight':activeTarget === 'faq-tags'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('tags')">
+                Why should I add tags to my disc collection?
+            </div>
+        </div>
+    </div>
+    <div class="sidenav-section">
+        Verifications
+    </div>
+    <div class="sidenav-body">
+        <div class="sidenav-item hover-blue hover-underline" title="What are verifications?" ng-class="{'highlight':activeTarget === 'faq-verifications'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('verifications')">
+                What are verifications?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="Will there be more verifications in the future?" ng-class="{'highlight':activeTarget === 'faq-fverifications'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('fverifications')">
+                Will there be more verifications in the future?
+            </div>
+        </div>
+    </div>
+    <div class="sidenav-section">
+        Help!
+    </div>
+    <div class="sidenav-body">
+        <div class="sidenav-item hover-blue hover-underline" title="I can't log in, what should I do?" ng-class="{'highlight':activeTarget === 'faq-login'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('login')">
+                I can't log in, what should I do?
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="Help! I can't access my account!" ng-class="{'highlight':activeTarget === 'faq-access'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('access')">
+                Help! I can't access my account!
+            </div>
+        </div>
+        <div class="sidenav-item hover-blue hover-underline" title="I've found an issue with the site, what should I do?" ng-class="{'highlight':activeTarget === 'faq-bug'}">
+            <span class="pull-right"><i class="fa fa-arrow-circle-o-right"></i></span>
+            <div class="handle-overflow" ng-click="updateUrl('bug')">
+                I've found an issue with the site, what should I do?
+            </div>
+        </div>
+    </div>
+</div>
+<div class="scrollable main-body sidenav-active has-fixed-header">
+    <div class="faq-container cont-section">
+        <div class="faq-item" id="faq-about" ng-class="{'highlight':activeTarget === 'faq-about'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>What is disc|zump?
+            </div>
+            <div class="faq-item-body">
+                disc|zump is a social disc golf inventory network enabling users to organize,
+                maintain and share collections across any internet-enabled device. Disc golfers
+                can use our site to build and store their collections online for seamless sharing
+                with others, whether it be to show off a recently obtained disc or to provide more
+                detail for a potential trade/sale. Outside of sharing, take advantage of viewing
+                other user's public inventories and don't be scared to shoot them a message when
+                you want to connect.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-trunk" ng-class="{'highlight':activeTarget === 'faq-trunk'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>What is a disc|zump trunk?
+            </div>
+            <div class="faq-item-body">
+                A trunk is a user’s inventory of discs. The trunk may be comprised of both private
+                (visible to only the user) and public discs, as well as discs that are on the global
+                marketplace. The trunk terminology derived from the method in which most disc golfers
+                store their discs - in a bag in the back of their car, ready to go at their earliest
+                convenience. Think of a disc|zump trunk as a user “popping their trunk” to show off
+                what they have and what they are ready to sell and trade.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-marketplace" ng-class="{'highlight':activeTarget === 'faq-marketplace'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>What is the disc|zump marketplace?
+            </div>
+            <div class="faq-item-body">
+                Our desire was to not only create a platform that people could use to maintain their
+                digital collection, but also to bring exposure to the individual user no matter where
+                they are located. The disc|zump marketplace does just that. Users can mark discs as
+                <b>For Sale</b> or <b>For Trade</b> and watch as they become available for the world to see.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-terms" ng-class="{'highlight':activeTarget === 'faq-terms'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>What are your Terms and Conditions?
+            </div>
+            <div class="faq-item-body">
+                Both our <a class="dz-blue hover-underline" href="/terms">Terms and Conditions</a>
+                and our <a class="dz-blue hover-underline" href="/privacy">Privacy Policy</a> are publicly available from the footer bar of our website.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-account" ng-class="{'highlight':activeTarget === 'faq-account'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>Do I need an account?
+            </div>
+            <div class="faq-item-body">
+                We have designed disc|zump to be open to the public. Anyone can browse our site without
+                signing up, whether it be to find discs on the marketplace or to check out a user’s
+                trunk. To take advantage of the full features that disc|zump has to offer - creating
+                an inventory, placing discs on the marketplace, messaging users - you will need an
+                account. Luckily, basic accounts are completely free!
+            </div>
+        </div>
+        <div class="faq-item" id="faq-signup" ng-class="{'highlight':activeTarget === 'faq-signup'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>Is it free to sign up?
+            </div>
+            <div class="faq-item-body">
+                Making a basic account is completely free. We require a valid email address to ensure
+                that you never lose access to your account as well as for system-level notifications
+                (configured in your preferences). Your email address will never be shared publicly.
+                To see more information on the data we collect, take a look at our 
+                <a class="dz-blue hover-underline" href="/privacy" target="_blank">Privacy Policy</a>.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-tiers" ng-class="{'highlight':activeTarget === 'faq-tiers'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>Are their different tiers of accounts?
+            </div>
+            <div class="faq-item-body">
+                disc|zump offers three tiers of accounts, each providing a different level of
+                functionality in connection with our global marketplace. Users will start out as
+                The Freelancer, which gives you full access to build your trunk, send messages to
+                other users and place up to 2 discs on the global marketplace simultaneously. Paid
+                accounts, namely The Entrepreneur and The Chief Executive, provide additional functionality
+                such as an increase in marketplace discs as well as access to marketplace tools
+                (bulk edits, bulk bumps, etc.). See our
+                <a class="dz-blue hover-underline" href="/about#membership">About</a> page for more information.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-upgrade" ng-class="{'highlight':activeTarget === 'faq-upgrade'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>How do I upgrade my account?
+            </div>
+            <div class="faq-item-body">
+                Account types (upgrades/downgrades) can be modified at your
+                <a class="dz-blue hover-underline" href="/account/membership">Membership</a> page.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-link" ng-class="{'highlight':activeTarget === 'faq-link'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>How do I link my account to Facebook?
+            </div>
+            <div class="faq-item-body">
+                You can link and unlink your disc|zump account to Facebook at any time by visiting the your
+                account page. Why should you link your account? Linking to Facebook provides you with the
+                ability to log in with a single click and never have to worry about that pesky password field.
+                It also gives you access to adding a Facebook verification (see <a class="dz-blue hover-underline" href="faq#verifications">verifications</a>). We will never
+                post or share on your behalf, so I guess the real answer is… why not?
+            </div>
+        </div>
+        <div class="faq-item" id="faq-browsers" ng-class="{'highlight':activeTarget === 'faq-browsers'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>What browsers are currently supported?
+            </div>
+            <div class="faq-item-body">
+                disc|zump implements many newer technologies to create an interface that is user-friendly
+                and feature-rich. Because of this, certain browsers as well as browser versions will work
+                better than others. As of November 1, 2016, we currently support most versions of Chrome,
+                Safari, and Firefox as well as newer versions of Opera and Internet Explorer. Please note
+                that Internet Explorer versions prior to v10 may have limited functionality. We suggest
+                using one of the other major browsers for the best results. Further support will come
+                in the near future, but other areas of development may take priority. See our section
+                on issue reporting for more information.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-mobile" ng-class="{'highlight':activeTarget === 'faq-mobile'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>Will there be a mobile-friendly platform?
+            </div>
+            <div class="faq-item-body">
+                Yes! We are working hard to bring disc|zump to multiple mobile platforms as a
+                fully-functional mobile app. As a new company, we vow to work quickly yet
+                thoroughly to bring our users the best service. Stay tuned for more updates on
+                mobile development progress and release dates.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-features" ng-class="{'highlight':activeTarget === 'faq-features'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>Can I expect more features in the future?
+            </div>
+            <div class="faq-item-body">
+                Yes! We have, what seems to be, an endless pile of ideas to sort out and introduce to the
+                disc|zump community. As these ideas gain momentum on our side, we will share our excitement
+                with you and keep you up-to-date on what is in the works. In the meantime, we would love
+                to hear from you, so if you have any suggestions, feel free to shoot us a <a class="dz-blue hover-underline" href="mailto:support@disczump.com" target="_blank">message</a>.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-addinventory" ng-class="{'highlight':activeTarget === 'faq-addinventory'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>How do I add a disc to my inventory?
+            </div>
+            <div class="faq-item-body">
+                You can add a disc at any point my visiting your trunk page and selecting the Add
+                Disc button in your profile. This will bring you to the <a class="dz-blue hover-underline" href="/d/create/templates">Create by Template</a> page,
+                giving you access to search and select the disc you are wanting to add, which will
+                autofill all manufacturer fields for you. If you would like to build the disc from
+                the ground up, you can opt to <a class="dz-blue hover-underline" href="/d/create">start from scratch</a>. Look out for <i class="fa fa-question-circle"></i> icon to get more
+                information about each field.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-visibility" ng-class="{'highlight':activeTarget === 'faq-visibility'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>What is the difference between a public and private disc?
+            </div>
+            <div class="faq-item-body">
+                We want to make it easy for you to decide when a disc is visible to the public eye.
+                Mark your disc as public and it can be shared with the world, whether you do so with
+                a link or by sharing directly to Facebook. Mark your disc as private and no one but
+                you can see it. Flexibility is a remarkable thing.
+                <div style="padding-left:30px"><i class="fa fa-eye" style="margin-right: 20px"></i>Disc is public</div>
+                <div style="padding-left:30px"><i class="fa fa-eye-slash" style="margin-right: 20px"></i>Disc is private</div>
+            </div>
+        </div>
+        <div class="faq-item" id="faq-addmarket" ng-class="{'highlight':activeTarget === 'faq-addmarket'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>How do I add a disc to the marketplace?
+            </div>
+            <div class="faq-item-body">
+                You can add a disc to the marketplace by indicating that the disc is For Sale or For Trade.
+                These tags will automatically place the disc amongst all other marked discs to be viewed,
+                filtered and searched upon in the disc|zump marketplace. Your account type determines how
+                many discs you can place on the marketplace at any given time. A disc must be public and
+                have at least one image to be placed on the marketplace. For more information on account
+                types, see our <a class="dz-blue hover-underline" href="/about">About</a> page.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-bump" ng-class="{'highlight':activeTarget === 'faq-bump'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>What is “bumping” a disc?
+            </div>
+            <div class="faq-item-body">
+                When you place a disc on the marketplace, it gets added to the pool of discs that other
+                users are attempting to publicize. The marketplace, by default, will sort marketable discs
+                by when they were added. A recently added disc will maintain its spot within the marketplace
+                for at least a three day period, regardless of modifications, allowing other discs to gain
+                exposure as they are added. After the three day period is up, you may choose to “bump” your
+                disc, resubmitting it to the top of the marketplace.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-share" ng-class="{'highlight':activeTarget === 'faq-share'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>How do I share a disc?
+            </div>
+            <div class="faq-item-body">
+                You can share any public disc by clicking the <i class="fa fa-share-square"></i> icon on the disc page. Then you can select one of the two options below:
+                <div style="padding-left:30px"><i class="fa fa-link" style="margin-right: 20px"></i>Copy the shareable link and send it to others.</div>
+                <div style="padding-left:30px"><i class="fa fa-facebook-square" style="margin-right: 20px"></i>Share the disc directly to Facebook on your wall, a friends wall, or even directly into a group.</div>
+            </div>
+        </div>
+        <div class="faq-item" id="faq-tags" ng-class="{'highlight':activeTarget === 'faq-tags'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>Why should I add tags to my disc collection?
+            </div>
+            <div class="faq-item-body">
+                As avid disc golf collectors, we wanted a way to manipulate and navigate our inventories in the most efficient way possible.
+                Use tags to make filtering your collection even easier. Mark a group of discs as "favorites" or "tournament-specific"
+                collectables so that you can quickly view them in the future. Create as many tags as you want, and reuse the same tag
+                to group similar discs together. A single disc can be included in unlimited tag groups. Be creative!
+                <br /><br />
+                Tag examples include <b>First Run</b>, <b>In The Bag</b>, <b>Halloween Collection</b>, <b>Zone Collection</b>, <b>Tournament Stamp</b>, <b>Glow Bag</b>, and many more...
+            </div>
+        </div>
+        <div class="faq-item" id="faq-verifications" ng-class="{'highlight':activeTarget === 'faq-verifications'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>What are verifications?
+            </div>
+            <div class="faq-item-body">
+                disc|zump is a platform for users to connect with each other and potentially set up deals to
+                buy/trade discs. A platform of this nature requires trust in order to work properly. Users
+                can establish trust by proving they are who they claim to be. At this point, we allow two types
+                of verifications, namely Facebook and PDGA. Users will be required to have access to their
+                accounts on each of these sites in order to claim their verification. Adding verifications
+                will expose the public links to these accounts on their trunk, thus allowing other users to
+                conclude if they are a person worth engaging with in a transaction. Check out your
+                <a class="dz-blue hover-underline" href="/account/verifications">current verifications</a>.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-fverifications" ng-class="{'highlight':activeTarget === 'faq-fverifications'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>Will there be more verifications in the future?
+            </div>
+            <div class="faq-item-body">
+                Most definitely. We will work to bring more verification platforms to our users in the future
+                as well as a review/feedback system to allow our users to prove they are worth trusting.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-login" ng-class="{'highlight':activeTarget === 'faq-login'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>I can't log in, what should I do?
+            </div>
+            <div class="faq-item-body">
+                If you are experiencing trouble logging into disc|zump, first try to recover your account by navigating to the <a class="dz-blue hover-underline" href="/recover">Recover</a> page.
+                If you are still having issues, please contact disc|zump Support at <a class="dz-blue hover-underline" href="mailto:support@disczump.com" target="_blank">support@disczump.com</a>.
+                We will do our best to respond as soon as possible.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-access" ng-class="{'highlight':activeTarget === 'faq-access'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>Help! I can't access my account!
+            </div>
+            <div class="faq-item-body">
+                You can reset your password by accessing the <a class="dz-blue hover-underline" href="/recover">Recover Password</a> page. Enter in the email
+                address associated with your account and we will shoot you an email with instructions.
+                Still unable to access your account? Shoot an email to
+                <a class="dz-blue hover-underline" href="mailto:support@disczump.com" target="_blank">disc|zump Support</a>
+                and we will see what we can do.
+            </div>
+        </div>
+        <div class="faq-item" id="faq-bug" ng-class="{'highlight':activeTarget === 'faq-bug'}">
+            <div class="faq-item-title">
+                <span><i class="fa fa-question-circle"></i></span>I've found an issue with the site, what should I do?
+            </div>
+            <div class="faq-item-body">
+                As a newly released web application, it is possible that you may come across an issue
+                ("bug") that we failed to discover during our testing period. We welcome your input
+                - please shoot us feedback by sending an email to disc|zump Support directly at
+                <a class="dz-blue hover-underline" href="mailto:support@disczump.com" target="_blank">support@disczump.com</a>.
+                We will do our best to respond as soon as possible.
+            </div>
+        </div>
+    </div>
+</div>

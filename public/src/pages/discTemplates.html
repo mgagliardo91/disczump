@@ -1,0 +1,50 @@
+<link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+<div dz-wrapper>
+    <dz-header></dz-header>
+    <div class="scrollable main-body" id="disc-templates">
+        <div class="page-content">
+            <div class="ts-container" ng-class="{'search-active':query.length}">
+                <div class="ts-label">I want to <span class="dz-blue">add</span> a<span ng-show="showVowel()">n</span></div>
+                <input class="ts-input" type="text" placeholder="Discraft Zone" ng-model="query" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }"/>
+                <div>...or start from <a class="dz-blue hover-underline" href="/d/create">scratch</a>.</div>
+            </div>
+            <div class="ts-results" id="results-container">
+                <div style="text-align: center; font-size: 5em;" ng-show="loading"><span><i class="fa fa-spinner fa-spin"></i></span></div>
+                <div id="results-list" ng-show="!loading">
+                    <div class="grid-item template" ng-repeat="model in templates" ng-class="{'open': model.isOpen}">
+                        <div class="grid-item-template-outer" ng-click="model.isOpen=!model.isOpen">
+                            <div class="grid-img-container">
+                                <div class="grid-img-inner">
+                                    <div class="grid-img-content"> 
+                                        <div> 
+                                            <a class="grid-item-nav"></a>
+                                            <img img-load img-src="static/img/templates/{{model.brand}}.png">
+                                        </div>
+                                    </div> 
+                                </div> 
+                            </div>
+                            <div class="grid-item-info">
+                                <div class="grid-item-label handle-overflow">
+                                    <div class="dz-blue">{{model.name}}</div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                        <div class="grid-item-template-inner">
+                            <div class="grid-item-list-label">
+                                Material
+                            </div>
+                            <ul class="grid-item-list">
+                                <li class="handle-overflow" ng-repeat="template in model.templates | orderBy:'material'">
+                                    <a class="hover-underline" ng-href="/d/create?templateId={{template._id}}"><span class="pull-right"><i class="fa fa-arrow-right"></i></span>{{template.material}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <dz-footer></dz-footer>
+</div>

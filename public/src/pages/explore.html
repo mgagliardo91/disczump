@@ -1,0 +1,191 @@
+<dz-header modal-opts="globalModalOpts"></dz-header>
+<dz-profile user-id="{{trunk.userId}}" modal-opts="globalModalOpts" class="header-color-1" ng-if="$def(trunk.userId)" current-user="curUser._id"></dz-profile>
+<dz-status-bar class="header-color-2" hide-on="loading" show-count="resultList.length" total-count="pagination.total" breadcrumbs="breadcrumbs" home-url="statusHome"></dz-status-bar>
+<img class="explore-icon-fixed" src="/static/img/dz_disc_fade.png" />
+<div class="scrollable main-body has-profile" id="explore">
+    <div class="page-content">
+        <dz-alert alert-data="alertOpts"></dz-alert>
+        <div class="left-container" ng-show="!fullscreen">
+            <div style="text-align: center;font-size: 2em;padding-top: 20px;" ng-show="loading">
+                <i class="fa fa-spinner fa-spin fa-lg"></i>
+            </div>
+            <div class="filter-container"  ng-show="!loading">
+                <div class="sidebar-section" ng-show="resultFilters.statFilters">
+                    <div class="sidebar-title-container no-select" ng-click="mFacet.open = !mFacet.open" ng-init="mFacet.open = true">
+                        <div class="sidebar-title-icon" style="color: #000"><i class="fa fa-plus-square" ng-show="!mFacet.open"></i></div>
+                        <div class="sidebar-title-icon"><i class="fa fa-minus-square" ng-show="mFacet.open"></i></div>
+                        <div class="sidebar-title">Marketplace</div>
+                    </div>
+                    <div class="sidebar-item-container fancy-scroll" ng-show="mFacet.open">
+                        <div ng-repeat="facet in resultFilters.statFilters">
+                            <div class="sidebar-item hover-underline no-select" ng-repeat="filter in statFilterOpts = (facet.filters | filter:{'val': true})" ng-click="toggleMarketplaceMode(facet.prop);">
+                                <span class="sidebar-item-icon">
+                                    <i class="fa fa-square-o" ng-show="!isMarketplaceModeActive(facet.prop);"></i>
+                                    <i class="fa fa-check-square-o" ng-show="isMarketplaceModeActive(facet.prop);"></i>
+                                </span>
+                                <div class="filter-item-val handle-overflow" ng-attr-title="{{facet.text}}">{{facet.text}}</div>
+                                <div class="filter-item-count handle-overflow">({{filter.count}})</div>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="sidebar-item inactive no-select" ng-show="!statFilterOpts.length">
+                                <span class="sidebar-item-icon">
+                                    <i class="fa fa-square-o" ng-show="!isMarketplaceModeActive(facet.prop);"></i>
+                                    <i class="fa fa-check-square-o" ng-show="isMarketplaceModeActive(facet.prop);"></i>
+                                </span>
+                                <div class="filter-item-val handle-overflow" ng-attr-title="{{facet.text}}">{{facet.text}}</div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="sidebar-item hover-underline no-select" ng-click="toggleMarketplaceMode('all');" ng-class="{'read-only':isMarketplaceModeActive('all')}">
+                                <span class="sidebar-item-icon">
+                                    <i class="fa fa-square-o" ng-show="!isMarketplaceModeActive('all');"></i>
+                                    <i class="fa fa-check-square-o" ng-show="isMarketplaceModeActive('all');"></i>
+                                </span>
+                                <div class="filter-item-val handle-overflow" title="All">All</div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar-section" ng-if="marketMode()" ng-repeat="facet in resultFilters.rangeFilters" ng-show="facet.filters.length" ng-init="facet.open = true">
+                    <div class="sidebar-title-container no-select" ng-click="facet.open = !facet.open">
+                        <div class="sidebar-title-icon" style="color: #000"><i class="fa fa-plus-square" ng-show="!facet.open"></i></div>
+                        <div class="sidebar-title-icon"><i class="fa fa-minus-square" ng-show="facet.open"></i></div>
+                        <div class="sidebar-title">{{facet.text}} <span class="filter-clear hover-underline" ng-show="hasActiveFilters(facet)" ng-click="clearActiveFilters(facet); $event.stopPropagation();">[Clear]</span></div>
+                    </div>
+                    <div class="sidebar-item-container fancy-scroll" ng-show="facet.open">
+                        <div class="sidebar-item hover-underline no-select" ng-repeat="filter in facet.filters" ng-class="{inactive: facet.custom.enable || filter.count == 0}" ng-click="filter.count && toggleFilter(facet, filter);">
+                            <span class="sidebar-item-icon">
+                                <i class="fa fa-square-o" ng-show="!isFilterActive(facet, filter)"></i>
+                                <i class="fa fa-check-square-o" ng-show="isFilterActive(facet, filter)"></i>
+                            </span>
+                            <div class="filter-item-val handle-overflow" ng-attr-title="{{filter.text}}">{{filter.text}}</div>
+                            <div class="filter-item-count handle-overflow" ng-if="filter.count">({{filter.count}})</div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="filter-show-more hover-underline" ng-show="!facet.custom.enable" ng-click="facet.custom.enable = true">Set Custom...</div>
+                        <div class="sidebar-item no-select custom-range" ng-show="facet.custom.enable" ng-form name="rangeForm">
+                            <span class="sidebar-item-icon">
+                                <i class="fa fa-times" ng-click="facet.custom.enable = false"></i>
+                            </span>
+                            <input ng-class="{'has-error' : rangeForm.lBound.$invalid}" name="lBound" class="hide-spinner" type="number" ng-model="facet.custom.lBound" pattern="^[0-9]{1,4}$" ng-required="true"/>
+                            <span class="custom-range-label">To</span>
+                            <input ng-class="{'has-error' : rangeForm.uBound.$invalid}" name="uBound"  class="hide-spinner" type="number" ng-model="facet.custom.uBound" pattern="^[0-9]{1,4}$" ng-required="true" min="{{facet.custom.lBound}}"/>
+                            <button class="btn btn-default" ng-disabled="rangeForm.$invalid" ng-click="clearActiveFilters(facet, true); toggleFilter(facet, {val: '[' + facet.custom.lBound + ' TO ' + facet.custom.uBound + ']'})">Set</button>
+                            <div class="clearfix"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar-section" ng-repeat="facet in resultFilters.dynFilters" ng-show="facet.filters.length">
+                    <div class="sidebar-title-container no-select" ng-click="facet.open = !facet.open">
+                        <div class="sidebar-title-icon" style="color: #000"><i class="fa fa-plus-square" ng-show="!facet.open"></i></div>
+                        <div class="sidebar-title-icon"><i class="fa fa-minus-square" ng-show="facet.open"></i></div>
+                        <div class="sidebar-title">{{facet.text}} <span class="filter-clear hover-underline" ng-show="hasActiveFilters(facet)" ng-click="clearActiveFilters(facet); $event.stopPropagation();">[Clear]</span></div>
+                    </div>
+                    <div class="sidebar-item-container fancy-scroll" ng-show="facet.open">
+                        <div class="sidebar-item hover-underline no-select" ng-repeat="filter in facet.filters | orderBy:resultOrder | limitTo: facet.limit" ng-click="toggleFilter(facet, filter);">
+                            <span class="sidebar-item-icon">
+                                <i class="fa fa-square-o" ng-show="!isFilterActive(facet, filter)"></i>
+                                <i class="fa fa-check-square-o" ng-show="isFilterActive(facet, filter)"></i>
+                            </span>
+                            <div class="filter-item-val handle-overflow" ng-attr-title="{{filter.val}}">{{filter.val}}</div>
+                            <div class="filter-item-count handle-overflow" ng-if="filter.count">({{filter.count}})</div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="filter-show-more hover-underline" ng-if="facet.filters.length > facet.limit" ng-click="facet.limit = Math.min(facet.filters.length, facet.limit + 15)">Show More...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="right-container" id="results-container" ng-class="{'fullscreen': fullscreen}">
+            <div class="result-header">
+                <div id="result-header-static" style="float:right;">
+                    <div class="menu-btn" ng-attr-title="{{fullscreen ? 'Minimize' : 'Maximize'}}">
+                        <span><i class="fa fa-arrows-alt" ng-click="fullscreen = !fullscreen;" ng-class="{'active':fullscreen}"></i></span>
+                    </div>
+                   <div class="menu-btn" ng-if="$def(trunk.userId) && trunk.userId == curUser._id">
+                        <span><i class="fa" ng-click="toggleVisibillty()" ng-class="{'fa-eye': !$def(view.visible) || view.visible, 'highlight': $def(view.visible), 'fa-eye-slash': $def(view.visible) && !view.visible}" ng-attr-title="{{getVisibleTitle()}}"></i></span>
+                    </div>
+                    <div class="menu-btn" ng-if="$def(trunk.userId) && trunk.userId == curUser._id">
+                        <span><i class="fa fa-check-square" ng-click="msOpts.toggleMS()" ng-class="{'active': msOpts.active}" title="Multi-select Mode"></i></span>
+                    </div>
+                    <div class="menu-btn" ng-if="$def(trunk.userId)">
+                        <span><i class="fa fa-share-square-o" ng-click="shareTrunk()" title="Share Trunk"></i></span>
+                    </div>
+                    <div id="result-sort">
+                        <select class="form-control" ng-model="sortParam" ng-change="updateSort()" ng-init="sortParam = sortParam || 'dAsc'">
+                          <option value="rel">Sort by Relevance</option>
+                          <option value="new" ng-hide="isMarketplaceModeActive('all');">Sort by Newly Available</option>
+                          <option value="alpha">Sort Alphabetically</option>
+                          <option value="createDate">Sort by Date Added</option>
+                          <option value="modDate" ng-if="isOwnedTrunk">Sort by Date Modified</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="result-header-fluid" class="search-container pad">
+                    <div class="search-btn round-left no-right float-left active">
+                        <i class="fa fa-database"></i>
+                    </div>
+                    <div class="search-btn round-right no-left float-right" ng-click="!loading && startSearch();">
+                        <i class="fa fa-search" ng-class="{'fa-search': !loading, 'fa-spin': loading, 'fa-spinner':loading}"></i>
+                    </div>
+                    <div class="search-bar-wrapper">
+                        <input id="search-explore" ng-model-enter="searchParam.length && startSearch();" ng-model="searchParam" class="search-bar" type="text" placeholder="Search discs..."></input>
+                        <div class="close-icon" ng-show="searchParam.length" ng-click="searchParam = ''; updateUrl();"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="explore-container" id="results-list" infinite-scroll="loadMore()">
+                <div class="no-results" ng-show="!(loading || loadingMore) && !resultList.length">
+                    <div class="no-results-title"><i class="fa fa-exclamation-triangle dz-blue"></i> No Results</div>
+                    <div class="no-results-msg" ng-show="!isMarketplaceModeActive('all');">There are not any discs marked for the marketplace. <span ng-click="toggleMarketplaceMode('all');" class="dz-blue hover-underline">Show All Public Discs</span></div>
+                    <div class="no-results-msg" ng-show="isMarketplaceModeActive('all');">Please revise your search terms and/or filters and try again. <span ng-click="clearAllFilters()" class="dz-blue hover-underline" ng-show="activeFilters.length">Clear Filters</span></div>
+                </div>
+                <disc-item ng-repeat="disc in resultList" ng-repeat-finish="onLastDisc()" disc="disc" current-user="curUser" lb-opts="lbOpts" ms-opts="msOpts"></disc-item>
+                <div class="grid-item load-item">
+                    <div class="load-text-container handle-valign" ng-show="!loading && !loadingMore && resultList.length < pagination.total">
+                        <div class="load-text">Scroll to <span class="hover-underline" ng-click="loadMore();">load more results.</span></div>
+                    </div>
+                    <div class="load-spinner-container handle-valign" ng-show="loading || loadingMore">
+                        <div style="text-align: center;"><i class="fa fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        <back-to-top></back-to-top>
+        </div>
+    </div>
+    <div class="ms-toolbox no-select" ng-show="msOpts.active">
+        <div class="ms-tool-container">
+            <div class="ms-tb-tool ineligible" title="Select All" ng-if="!hasMsPermission('msSelect')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-object-group"></i></div>
+            <div class="ms-tb-tool" title="Select All" ng-click="msOpts.selectAll()" ng-if="hasMsPermission('msSelect')"><i class="fa fa-lg fa-object-group"></i></div>
+            <div class="ms-tb-tool ineligible" title="Deselect All" ng-if="!hasMsPermission('msSelect')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-object-ungroup"></i></div>
+            <div class="ms-tb-tool" title="Deselect All" ng-click="msOpts.deselectAll()" ng-if="hasMsPermission('msSelect')"><i class="fa fa-lg fa-object-ungroup"></i></div>
+        </div>
+        <div class="ms-tb-info" ng-click="msOpts.showMsHelp()"><i class="fa fa-question-circle"></i></div>
+        <div class="ms-tb-close" ng-click="msOpts.toggleMS()"><i class="fa fa-times"></i></div>
+        <div class="ms-tb-title">Multi-select Toolbox</div>
+        <div class="ms-count dz-blue" ng-show="!msOpts.loading">{{msOpts.count}}</div>
+        <div class="ms-count" ng-show="msOpts.loading"><i class="fa fa-spinner fa-spin"></i></div>
+        <div class="ms-feedback">
+            <div ng-show="msOpts.showNoCount">Must select at least 1 disc.</div>
+            <div ng-show="msOpts.showIneligible">Account type ineligible.</div>
+        </div>
+        <div class="ms-btn-container">
+            <div class="ms-tb-btn ineligible" title="Visibility" ng-if="!hasMsPermission('msVisibility')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-eye"></i></div>
+            <div class="ms-tb-btn" title="Visibility" ng-click="msOpts.setVisibility()" ng-if="hasMsPermission('msVisibility')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-eye"></i></div>
+            <div class="ms-tb-btn ineligible" title="Marketplace" ng-if="!hasMsPermission('msMarketplace')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-usd"></i></div>
+            <div class="ms-tb-btn" title="Marketplace" ng-click="msOpts.setMarketplace()" ng-if="hasMsPermission('msMarketplace')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-usd"></i></div>
+            <div class="ms-tb-btn ineligible" title="Bump Discs" ng-if="!hasMsPermission('msBump')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></div>
+            <div class="ms-tb-btn" title="Bump Discs" ng-click="msOpts.bumpDiscs()" ng-if="hasMsPermission('msBump')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-sort-amount-desc fa-flip-vertical"></i></div>
+        </div>
+        <div class="ms-btn-container">
+            <div class="ms-tb-btn ineligible delete" title="Delete" ng-if="!hasMsPermission('msDelete')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-trash"></i></div>
+            <div class="ms-tb-btn delete" title="Delete" ng-click="msOpts.deleteDiscs()" ng-if="hasMsPermission('msDelete')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-trash"></i></div>
+            <div class="ms-tb-btn ineligible edit" title="Manage Tags" ng-if="!hasMsPermission('msTag')" ng-mouseenter="msOpts.showIneligible = true" ng-mouseleave="msOpts.showIneligible = false"><i class="fa fa-lg fa-tags"></i></div>
+            <div class="ms-tb-btn edit" title="Manage Tags" ng-click="msOpts.manageTags()" ng-if="hasMsPermission('msTag')" ng-class="{disabled:msOpts.count == 0}" ng-mouseenter="msOpts.showNoCount = msOpts.count == 0" ng-mouseleave="msOpts.showNoCount = false"><i class="fa fa-lg fa-tags"></i></div>
+        </div>
+    </div>
+</div>
+<lightbox disc-id="lbOpts.discId" trigger="lbOpts.show" scroll-lock="pgSettings.scrollLock"></lightbox>

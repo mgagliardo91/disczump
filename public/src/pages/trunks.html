@@ -1,0 +1,150 @@
+<dz-header modal-opts="globalModalOpts"></dz-header>
+<dz-status-bar class="header-color-2" home-url="statusHome" hide-on="loading" show-count="resultList.length" total-count="pagination.total" breadcrumbs="breadcrumbs"></dz-status-bar>
+<img class="explore-icon-fixed" src="/static/img/dz_profile_fade.png" />
+<div class="scrollable main-body has-profile" id="explore">
+    <div class="page-content">
+        <div class="left-container" ng-show="!fullscreen">
+            <div style="text-align: center;font-size: 2em;padding-top: 20px;" ng-show="loading">
+                <i class="fa fa-spinner fa-spin fa-lg"></i>
+            </div>
+            <div class="filter-container"  ng-show="!loading">
+                <div class="sidebar-section">
+                    <div class="location-container" ng-class="{'inactive':!location.editable}" >
+                        <div>
+                            <div class="location-icon" ng-attr-title="{{locationAllowed() ? (location.locSet ? 'Use Current Location' : '') : 'Location Not Allowed'}}" ng-class="{'active':locationAllowed() && location.locSet}" ng-click="locationAllowed() && location.locSet && getLocation()">
+                                <i class="fa fa-crosshairs"></i>
+                            </div>
+                            <div class="location-loading" ng-show="location.loading">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                            <div class="location-input" ng-show="location.editable" ng-class="{'loading': location.loading}">
+                                <input id="location-search" class="no-focus" type="text" placeholder="Enter location..." ng-model="location.search"  ng-model-options="{updateOn: 'default blur',debounce:{'default': 500,'blur': 0 }}" ng-blur="hideLocResults();" key-scroll-list="location.results" selection="location.selResult" on-select="itemSelected" trigger-focus="location.editable"/>
+                            </div>
+                            <div class="location-label handle-overflow" ng-show="!location.editable"  ng-click="location.editable = true;">
+                                <span ng-show="location.curLocation">{{location.curLocation}}</span>
+                                <span ng-show="!location.curLocation && !loading && !location.loading">Browser Location Blocked</span>
+                            </div>
+                        </div>
+                        <ul class="location-result-container" id="location-results" ng-show="location.results.length && location.editable">
+                            <li class="location-result handle-overflow" ng-repeat="result in location.results track by $index" ng-click="$event.stopPropagation(); setLocation(result);" ng-class="{'active':location.selResult == $index}" scroll-me="location.selResult == $index">{{result.address}}</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="sidebar-section" ng-show="resultFilters.geoFacets">
+                    <div class="sidebar-title-container no-select" ng-click="gFacet.open = !gFacet.open" ng-init="gFacet.open = true">
+                        <div class="sidebar-title-icon" style="color: #000"><i class="fa fa-plus-square" ng-show="!gFacet.open"></i></div>
+                        <div class="sidebar-title-icon reverse"><i class="fa fa-minus-square" ng-show="gFacet.open"></i></div>
+                        <div class="sidebar-title">Proximity <span class="filter-clear hover-underline" ng-show="isProximityActive()" ng-click="setProximity(); $event.stopPropagation();">[Clear]</span></div>
+                    </div>
+                    <div class="sidebar-item-container reverse" ng-show="gFacet.open">
+                        <div ng-repeat="facet in resultFilters.geoFacets">
+                            <div class="sidebar-item hover-underline no-select" ng-class="{'inactive':!$def(geo) || !facet.count}" ng-click="geo && facet.count && setProximity(facet);">
+                                <span class="sidebar-item-icon">
+                                    <i class="fa fa-circle-o" ng-show="!isProximityActive(facet);"></i>
+                                    <i class="fa fa-dot-circle-o" ng-show="isProximityActive(facet);"></i>
+                                </span>
+                                <div class="filter-item-val handle-overflow" ng-attr-title="{{facet.val}} {{units}}">{{facet.val}} {{units}}</div>
+                                <div class="filter-item-count handle-overflow" ng-if="facet.count">({{facet.count}})</div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar-section" ng-show="resultFilters.statFilters">
+                    <div class="sidebar-title-container no-select" ng-click="vFacet.open = !vFacet.open" ng-init="vFacet.open = true">
+                        <div class="sidebar-title-icon" style="color: #000"><i class="fa fa-plus-square" ng-show="!vFacet.open"></i></div>
+                        <div class="sidebar-title-icon reverse"><i class="fa fa-minus-square" ng-show="vFacet.open"></i></div>
+                        <div class="sidebar-title">Verifications <span class="filter-clear hover-underline" ng-show="hasVerificationsActive()" ng-click="clearActiveVerifications(); $event.stopPropagation();">[Clear]</span></div>
+                    </div>
+                    <div class="sidebar-item-container reverse" ng-show="vFacet.open">
+                        <div ng-repeat="facet in resultFilters.statFilters">
+                            <div class="sidebar-item hover-underline no-select" ng-repeat="filter in statFilterOpts = (facet.filters | filter:{'val': true})" ng-click="toggleVerification(facet);">
+                                <span class="sidebar-item-icon">
+                                    <i class="fa fa-square-o" ng-show="!isVerificationActive(facet);"></i>
+                                    <i class="fa fa-check-square-o" ng-show="isVerificationActive(facet);"></i>
+                                </span>
+                                <div class="filter-item-val handle-overflow" ng-attr-title="{{facet.text}}">{{facet.text}}</div>
+                                <div class="filter-item-count handle-overflow">({{filter.count}})</div>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="sidebar-item inactive no-select" ng-show="!statFilterOpts.length">
+                                <span class="sidebar-item-icon">
+                                    <i class="fa fa-square-o"></i>
+                                </span>
+                                <div class="filter-item-val handle-overflow">{{facet.text}}</div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar-section" ng-repeat="facet in resultFilters.dynFilters" ng-show="facet.filters.length">
+                    <div class="sidebar-title-container no-select" ng-click="facet.open = !facet.open">
+                        <div class="sidebar-title-icon" style="color: #000"><i class="fa fa-plus-square" ng-show="!facet.open"></i></div>
+                        <div class="sidebar-title-icon reverse"><i class="fa fa-minus-square" ng-show="facet.open"></i></div>
+                        <div class="sidebar-title">{{facet.text}} <span class="filter-clear hover-underline" ng-show="hasActiveFilters(facet)" ng-click="clearActiveFilters(facet); $event.stopPropagation();">[Clear]</span></div>
+                    </div>
+                    <div class="sidebar-item-container reverse" ng-show="facet.open">
+                        <div class="sidebar-item hover-underline no-select" ng-repeat="filter in facet.filters | orderBy:resultOrder | limitTo: facet.limit" ng-click="toggleFilter(facet, filter);">
+                            <span class="sidebar-item-icon">
+                                <i class="fa fa-square-o" ng-show="!isFilterActive(facet, filter)"></i>
+                                <i class="fa fa-check-square-o" ng-show="isFilterActive(facet, filter)"></i>
+                            </span>
+                            <div class="filter-item-val handle-overflow" ng-attr-title="{{filter.val}}">{{filter.val}}</div>
+                            <div class="filter-item-count handle-overflow" ng-if="filter.count">({{filter.count}})</div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="filter-show-more hover-underline" ng-if="facet.filters.length > facet.limit" ng-click="facet.limit = Math.min(facet.filters.length, facet.limit + 15)">Show More...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="right-container" id="results-container" ng-class="{'fullscreen': fullscreen}">
+            <div class="result-header">
+                <div id="result-header-static" style="float:right;">
+                    <div class="menu-btn" ng-attr-title="{{fullscreen ? 'Minimize' : 'Maximize'}}">
+                        <span><i class="fa fa-arrows-alt" ng-click="fullscreen = !fullscreen;" ng-class="{'active':fullscreen}"></i></span>
+                    </div>
+                    <div id="result-sort">
+                        <select class="form-control" ng-model="sortParam" ng-change="updateSort()" ng-init="sortParam = sortParam || 'rel'">
+                          <option value="rel">Sort by Relevance</option>
+                          <option value="alpha">Sort by Username</option>
+                          <option value="proximity" ng-show="geo.distance || (geo.latitude && geo.longitude)">Sort by Proximity</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="result-header-fluid" class="search-container pad">
+                    <div class="search-btn round-left no-right float-left active reverse">
+                        <i class="fa fa-user"></i>
+                    </div>
+                    <div class="search-btn round-right no-left float-right" ng-click="startSearch();"  ng-show="!loading">
+                        <i class="fa fa-search"></i>
+                    </div>
+                    <div class="search-btn round-right no-left float-right" ng-show="loading">
+                        <i class="fa fa-spinner fa-spin fa-lg"></i>
+                    </div>
+                    <div class="search-bar-wrapper">
+                        <input id="search-explore" ng-model-enter="startSearch();" ng-model="searchParam" class="search-bar" type="text" placeholder="Search users..."></input>
+                        <div class="close-icon" ng-show="searchParam.length" ng-click="searchParam = ''; updateUrl();"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="explore-container" id="results-list" infinite-scroll="loadMore()">
+                <div class="no-results" ng-show="!(loading || loadingMore) && !resultList.length">
+                    <div class="no-results-title"><i class="fa fa-exclamation-triangle dz-blue"></i> No Results</div>
+                    <div class="no-results-msg">Please revise your search terms and try again.</div>
+                </div>
+                <user-item profile-modal="globalModalOpts" ng-repeat="user in resultList" ng-repeat-finish="onLastUser()" user="user" current-user="curUser"></user-item>
+                <div class="grid-item load-item">
+                    <div class="load-text-container handle-valign" ng-show="!loading && !loadingMore && resultList.length < pagination.total">
+                        <div class="load-text">Scroll to load more results.</div>
+                    </div>
+                    <div class="load-spinner-container handle-valign" ng-show="loading || loadingMore">
+                        <div style="text-align: center;"><i class="fa fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <back-to-top></back-to-top>
+        </div>
+    </div>
+</div>

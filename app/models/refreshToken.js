@@ -21,10 +21,19 @@ var refreshTokenSchema = mongoose.Schema({
         required: true
     },
     created: {
-        type: Date,
-        default: Date.now
+        type: Date
     }
     
 });
+
+refreshTokenSchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.created = new Date();
+    }
+	
+    next();
+});
+
+refreshTokenSchema.index({ token: 1 });
 
 module.exports = mongoose.model('RefreshToken', refreshTokenSchema);

@@ -1,0 +1,123 @@
+<div dz-wrapper>
+    <dz-header></dz-header>
+    <dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
+    <div class="scrollable main-body" id="disc-templates">
+        <div class="page-content full-width">
+            <div class="title-row">
+              <div class="title-btn-container float-right" ng-show="activeThread">
+                  <dz-confirm icon="lock" label="Archive" action="archiveThread" ng-show="activeThread.active"></dz-confirm>
+                  <dz-confirm icon="unlock" label="Unarchive" action="unarchiveThread" ng-show="!activeThread.active"></dz-confirm>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="page-title handle-overflow">Account | <span class="dz-blue">Inbox</span></div>
+                <hr style="clear: both;">
+            </div>
+          <div class="inbox-container" id="inbox-area">
+            <div class="thread-list-container">
+                <div class="tab-container">
+                    <div class="tab" ng-class="{'active':!showArchive}" ng-click="showArchive=false;">Active</div>
+                    <div class="tab" ng-class="{'active':showArchive}" ng-click="showArchive=true;">Archived</div>
+                </div>
+                <div class="tab-label">
+                    Conversations
+                    <span class="pull-right" ng-show="!showArchive">({{messageThreads.length}})</span>
+                    <span class="pull-right" ng-show="showArchive && archivedThreads.length">({{archivedThreads.length}})</span>
+                    <span class="pull-right dz-blue-hover refresh-icon" title="Load archived conversations" ng-click="loadArchived()" ng-show="showArchive && !archivedThreads.length"><i class="fa fa-refresh"></i></span>
+                </div>
+               <ul class="thread-list fancy-scroll" ng-show="!showArchive">
+                <li class="inbox-alert" ng-show="!messageThreads.length">
+                  No conversations available.
+                </li>
+                <li class="thread-item" ng-repeat="thread in messageThreads | orderBy:'-modifiedDate' | limitTo:page.threadLimit" scroll-me="activeThread == thread" ng-class="{'unread': thread.currentMessageCount != thread.messageCount, 'active': activeThread == thread, 'first': $first}" ng-click="activeThread != thread && activateThread(thread)">
+                  <div class="thread-item-image default-bg-image" img-load="/static/img/dz_profile.png" directive-on="thread.imgInit" directive-set="{'img-src':'{{thread.image}\}'}" bg-image="true"></div>
+                  <div class="thread-item-icon">
+                    <div class="align-vmid">
+                      <span><i class="fa fa-comment" style="color: #008edd;" ng-show="thread.currentMessageCount != thread.messageCount"></i></span>
+                    </div>
+                  </div>
+                  <div class="thread-item-text-container">
+                    <div class="thread-item-text">
+                      <div class="align-vmid">
+                        <div class="thread-item-title handle-overflow" ng-class="{'removed':thread.removed}">{{thread.threadTag}}</div>
+                        <div class="thread-item-date handle-overflow">{{thread.modifiedDate | dateLocal | date:'MM/dd/yyyy hh:mm a'}}</div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li class="load-more" ng-show="messageThreads.length > page.threadLimit" ng-click="incThreadLimit()">
+                  Load More...
+                </li>
+                </ul>
+              <ul class="thread-list fancy-scroll" ng-show="showArchive">
+                <li class="thread-item" ng-repeat="thread in archivedThreads | orderBy:'-modifiedDate' | limitTo:page.aThreadLimit" scroll-me="activeThread == thread" ng-class="{'unread': thread.currentMessageCount != thread.messageCount, 'active': activeThread == thread, 'first': $first}" ng-click="activeThread != thread && activateThread(thread)">
+                  <div class="thread-item-image default-bg-image" img-load="/static/img/dz_profile.png" directive-on="thread.imgInit" directive-set="{'img-src':'{{thread.image}\}'}" bg-image="true"></div>
+                  <div class="thread-item-icon">
+                    <div class="align-vmid">
+                      <span><i class="fa fa-comment" style="color: #008edd;" ng-show="thread.currentMessageCount != thread.messageCount"></i></span>
+                    </div>
+                  </div>
+                  <div class="thread-item-text-container">
+                    <div class="thread-item-text">
+                      <div class="align-vmid">
+                        <div class="thread-item-title handle-overflow" ng-class="{'removed':thread.removed}">{{thread.threadTag}}</div>
+                        <div class="thread-item-date handle-overflow">{{thread.modifiedDate | dateLocal | date:'MM/dd/yyyy hh:mm a'}}</div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li class="load-more" ng-show="archivedThreads.length > page.aThreadLimit" ng-click="incAThreadLimit()">
+                  Load More...
+                </li>
+              </ul>
+            </div>
+            <div class="message-container">
+              <div class="inbox-alert" ng-show="!activeThread">
+                <span ng-show="messageThreads.length">Select a conversation to view messages...</span>
+                <span ng-show="!messageThreads.length">Start a conversation by messaging another user.</span>
+              </div>
+              <div class="inbox-alert" ng-show="activeThread && !activeThread.messages.length">
+                <span>Get started by sending your first message.</span>
+              </div>
+              <dz-alert alert-data="messageAlert" dock="top"></dz-alert>
+              <div class="message-list fancy-scroll" id="message-list">
+                <div class="load-more" ng-show="activeThread.currentMessageCount > activeThread.messages.length" ng-click="getMessages()">Load More...</div>
+                <div class="message-item" ng-repeat="message in activeThread.messages | orderBy:'+createDate'" ng-repeat-finish="scrollBottom()" ng-class="{'message-incoming': message.userId != account._id, 'message-outgoing':message.userId == account._id}">
+                  <div class="message-area">
+                    <a class="message-user" ng-href="/t/{{account.username}}" title="View My Trunk" ng-if="message.userId == account._id">
+                      <img img-load img-src="{{account.image}}"/>
+                    </a>
+                    <a class="message-user" directive-on="activeThread.userInit" directive-set="{'ng-href':'/t/{{activeThread.user.username}\}'}" title="View User Trunk" ng-if="message.userId != account._id">
+                      <img img-load="/static/img/dz_profile.png" directive-on="activeThread.imgInit" directive-set="{'img-src':'{{activeThread.image}\}'}"/>
+                    </a>
+                    <div class="message-content">
+                      <div class="message-date">
+                        {{message.createDate | dateLocal | date:'MM/dd/yyyy hh:mm a'}}
+                      </div>
+                      <div class="message-bubble" parse-text="message.body" parse-url parse-disc>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="clearfix"></div>
+                </div>
+              </div>
+            </div>
+            <div class="message-action-container">
+              <div class="send-container">
+                  <span class="send-container-inner">
+                      <div class="send-message-btn dz-blue-hover" ng-class="{'disabled': !activeThread || !activeThread.active || activeThread.removed || lockout}" ng-click="activeThread && activeThread.active && !activeThread.removed && !lockout && sendMessage()">Send <i class="fa fa-spinner fa-pulse" style="display: none;"></i></div>
+                  </span>
+              </div>
+              <div class="add-message-text">
+                  <textarea id="message-text-area" ng-class="{'disabled': !activeThread || !activeThread.active || activeThread.removed || lockout}" ng-disabled="!activeThread || !activeThread.active || activeThread.removed || lockout" ng-enter="sendOnEnter && activeThread && activeThread.active && !activeThread.removed && !lockout && sendMessage()" ng-enter-lock ng-model="userMessage" placeholder="Enter Message..."></textarea>
+              </div>
+              <div class="clearfix"></div>
+              <div class="create-message-option no-select"  ng-class="{'disabled': !activeThread || !activeThread.active || activeThread.removed || lockout}" >
+                <span class="no-select dz-blue-hover" style="cursor: pointer;" ng-click="activeThread && activeThread.active && !activeThread.removed && !lockout && toggleSend()"><i class="fa" ng-class="{'fa-check-square': sendOnEnter, 'fa-square-o': !sendOnEnter}"></i> Send Message on Enter</span>
+                <div class="clearfix"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+    <dz-footer></dz-footer>
+</div>

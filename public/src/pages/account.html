@@ -1,0 +1,297 @@
+<link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
+<div dz-wrapper>
+    <dz-header modal-opts="globalModalOpts"></dz-header>
+    <dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
+    <div class="scrollable main-body" id="disc-templates" ng-show="page.ready">
+        <div class="page-content full-width">
+            <div class="skip-animation">
+                <span class="hover-underline" ng-click="skip = true;" ng-show="!skip && !hideSkip">[Skip Animation]</span>
+            </div>
+            <div class="account-title" fade-time="500" fade-start="page.ready" fade-override="skip">
+                Welcome, <span class="dz-blue">{{account.username}}</span>!
+            </div>
+            <div class="account-preview">
+                <div class="preview-line preview-image default-bg-image" fade-time="1000" fade-start="page.ready" fade-override="skip" img-load="/static/img/dz_profile.png" img-src="{{account.image}}" bg-image="true"></div>
+                <div class="preview-label" fade-time="2000" fade-start="page.ready" fade-override="skip">
+                    - here's a little about you -
+                </div>
+                <div class="preview-line" fade-time="4000" fade-start="page.ready" fade-override="skip">
+                    You joined disc|zump <span class="dz-blue" ng-attr-title="{{account.dateJoined | dateLocal | date:'medium'}}" ng-attr-alt="{{account.dateJoined | dateLocal | date:'medium'}}">{{getJoinDays()}}</span> day(s) ago.
+                </div>
+                <div class="preview-line" fade-time="5000" fade-start="page.ready" fade-override="skip">
+                    You currently have <span class="dz-blue">{{count}}</span> discs.
+                </div>
+                <div class="preview-line" fade-time="6000" fade-start="page.ready" fade-override="skip">
+                    You have <a class="hover-underline dz-blue" ng-href="/account/verifications"><span>{{countVerifications()}}</span></a> account verification(s).
+                </div>
+                <div class="preview-line" fade-time="7000" fade-start="page.ready" fade-override="skip">
+                    Your public trunk can be accessed at <a class="hover-underline dz-blue" ng-href="/t/{{account.username}}"><span class="dz-blue">www.disczump.com/t/{{account.username}}</span></a>.
+                </div>
+            </div>
+            <div class="account-mod-container" fade-time="9000" fade-start="page.ready" fade-override="skip" fade-complete="hideSkip">
+                <div class="account-mod-select">
+                    <div class="mod-item" ng-class="{'active':page.active == 'account'}" ng-click="updateTarget('account')">
+                        Account
+                    </div>
+                    <div class="mod-item" ng-class="{'active':page.active == 'profile-pic'}" ng-click="updateTarget('profile-pic');">
+                        Profile Picture
+                    </div>
+                    <div class="mod-item" ng-class="{'active':page.active == 'membership'}" ng-click="updateTarget('membership')">
+                        Membership
+                    </div>
+                    <div class="mod-item" ng-class="{'active':page.active == 'notification'}" ng-click="updateTarget('notification')">
+                        Notification Settings
+                    </div>
+                </div>
+                <div class="account-mod-area">
+                    <div class="account-loader" ng-show="!page.dropzoneReady && page.active == 'profile-pic'">
+                        <div>
+                            <span><i class="fa fa-spin fa-spinner"></i></span>
+                        </div>
+                    </div>
+                    <div class="account-loader" ng-show="!page.notificationReady && page.active == 'notification'">
+                        <div>
+                            <span><i class="fa fa-spin fa-spinner"></i></span>
+                        </div>
+                    </div>
+                    <dz-alert alert-data="accountAlert" force-scroll="true"></dz-alert>
+                    <div class="account-page has-btns" ng-show="page.active == 'account'">
+                        <div class="form-horizontal form-small" ng-form name="page.personalForm">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Username
+                                </label>
+                                <div class="col-sm-9">
+                                    <div class="form-label">{{account.username}}
+                                    <a class="pull-right dz-blue hover-underline" ng-click="deleteAccount()">Delete Account</a></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Email
+                                </label>
+                                <div class="col-sm-9">
+                                    <div class="form-label">{{account.email}}</div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Password
+                                </label>
+                                <div class="col-sm-9">
+                                    <div class="form-label">********
+                                    <a class="pull-right dz-blue hover-underline" href="/account/reset">Change Password</a></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Date Joined
+                                </label>
+                                <div class="col-sm-9">
+                                    <div class="form-label">{{account.dateJoined | dateLocal | date:'MM/dd/yyyy'}}</div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Facebook Login
+                                </label>
+                                <div class="col-sm-9">
+                                    <div class="form-label">{{account.linked ? 'Enabled' : 'Disabled' }}
+                                    <a class="pull-right dz-blue hover-underline" ng-click="warnFbUnlink()" ng-show="account.linked">Unlink Account</a>
+                                    <a class="pull-right dz-blue hover-underline" ng-click="doFbLink()" ng-show="!account.linked">Link Account</a></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Verifications
+                                </label>
+                                <div class="col-sm-9">
+                                    <div class="form-label">
+                                        <span ng-show="!account.pdgaNumber && !account.fbId">None</span>
+                                        <a href="http://pdga.com" target="_blank"><img src="/static/img/pdga.png" class="logo-image" ng-show="account.verifications.pdga"/></a>
+                                        <a href="https://facebook.com" target="_blank"><img src="/static/img/facebook_logo.png" class="logo-image" ng-show="account.verifications.facebook"/></a>
+                                    <a class="pull-right dz-blue hover-underline" href="/account/verifications">Manage Verifications</a></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-first-name" class="col-sm-3 control-label">First Name
+                                </label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control validation" id="account-first-name" name="firstName" placeholder="First Name" ng-model="tempAccount.firstName" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-last-name" class="col-sm-3 control-label">Last Name
+                                </label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control validation" id="account-last-name" name="lastName" placeholder="Last Name" ng-model="tempAccount.lastName" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-postal-code" class="col-sm-3 control-label">
+                                    Location
+                                </label>
+                                <div class="col-sm-5 col-marg-repl" style="position: relative">
+                                    <input type="text" class="form-control" name="location" id="account-postal-code" placeholder="Enter Postal Code..." ng-model="location.search" ng-model-options="{updateOn: 'default blur',debounce:{'default': 500,'blur': 0 }}" location-search="locSelected" />
+                                </div>
+                                <div class="col-sm-9 col-sm-offset-3" ng-show="location.curLocation">
+                                    <div class="page-info input-note round">
+                                        <b>Selected location: </b>{{location.curLocation}}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-bio" class="col-sm-3 control-label">About Me
+                                </label>
+                                <div class="col-sm-9">
+                                    <textarea type="text" class="form-control" id="account-bio" rows="5" placeholder="I am a casual disc golfer..." ng-model="tempAccount.bio" dz-max-length="600"></textarea>
+                                    <div class="max-chars pull-right">Characters {{tempAccount.bio ? tempAccount.bio.length : '0'}}/600</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="account-page-btns">
+                            <a class="btn btn-primary pull-right" ng-disabled="page.personalForm.$invalid" ng-click="page.personalForm.$valid && updateAccount()">Save</a>
+                            <a class="btn btn-default" style="margin-right: 10px" ng-click="cloneAccount()">Reset</a>
+                        </div>
+                    </div>
+                    <div class="account-page" ng-show="page.active == 'profile-pic'">
+                        <div class="page-info">
+                            Upload your profile photo here. If you are linked with Facebook, 
+                            you can set your profile to remain up-to-date with your Facebook 
+                            profile picture.
+                        </div>
+                        <div ng-class="{'split-container':account.facebookImage}" ng-show="page.dropzoneReady">
+                            <div class="profile-img">
+                                <div class="profile-img-container no-select" directive-on="page.dropzoneReady" directive-set="{dropzone: 'dropzoneConfig'}" id="profile-img">
+                                    <div class="dz-trigger" id="profile-trigger" ng-show="!page.dropzoneImage"></div>
+                                    <div class="image-default" ng-show="!page.dropzoneImage">
+                                        <span>
+                                            <i class="fa fa-camera-retro fa-5x" aria-hidden="true"></i>
+                                            <br />
+                                            Click or drag image here
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="profile-img-buttons">
+                                    <a class="btn btn-default pull-left" ng-click="clearDropzone()">Clear</a>
+                                    <a class="btn btn-primary pull-right" ng-click="!(page.dropzoneProcessing || discImageCropper.cropperLoading) && triggerDropzone()">Submit <span ng-show="page.dropzoneProcessing || discImageCropper.cropperLoading"><i class="fa fa-spin fa-spinner"></i></span></a>
+                                    <div class="clearfix"></div>
+                                </div>
+                            </div>
+                            <div class="profile-img" ng-if="account.facebookImage">
+                                <div class="profile-img-container no-select">
+                                    <div class="default-bg-image" img-load="/static/img/dz_profile.png" img-src="{{account.facebookImage}}" bg-image="true"></div>
+                                </div>
+                                <div class="profile-img-buttons">
+                                    <a class="btn btn-primary" ng-click="deleteAccountImage()">Use Facebook Photo</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="account-page" ng-show="page.active == 'membership'">
+                        <div class="form-horizontal form-small">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Active Tier
+                                </label>
+                                <div class="col-sm-9">
+                                    <div class="form-label">{{account.accountType | memType}}
+                                    <a href="/account/membership" class="pull-right dz-blue hover-underline">Change Membership</a></div>
+                                </div>
+                            </div>
+                            <div class="form-group" ng-if="account.accountType != account.profile.type">
+                                <label class="col-sm-3 control-label">Pending Tier
+                                </label>
+                                <div class="col-sm-9">
+                                    <div class="form-label">{{account.profile.type | memType}}<span style="color: red;">*</span>
+                                    <span class="pull-right" style="color: red;">*This change will occur on next bill date</span></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Membership Rate
+                                </label>
+                                <div class="col-sm-9">
+                                    <div class="form-label">${{account.profile.draftAmount | number: 2}} /month<span style="color: red;" ng-if="account.accountType != account.profile.type">*</span>
+                                    <span class="pull-right" style="color: red;" ng-if="account.accountType != account.profile.type">*Rate shown is for pending tier</span></div>
+                                </div>
+                            </div>
+                            <div class="form-group" ng-if="account.profile.nextBillDate">
+                                <label class="col-sm-3 control-label">Next Bill Date
+                                </label>
+                                <div class="col-sm-9">
+                                    <div class="form-label">{{account.profile.nextBillDate | dateLocal | date:'MM/dd/yyyy'}}</div>
+                                </div>
+                            </div>
+                            <div ng-form name="page.promoForm">
+                                <div class="form-group">
+                                    <label for="account-first-name" class="col-sm-3 control-label">Promo
+                                    </label>
+                                    <div class="col-sm-6">
+                                        <input type="text" class="form-control validation" name="promoCode" placeholder="Enter promo code" ng-model="promo.code" required ng-model-enter="page.promoForm.$valid && activatePromo()">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <a class="btn btn-default pull-right" ng-disabled="page.promoForm.$invalid" ng-click="page.promoForm.$valid && activatePromo()">{{promo.loading ? 'Activating...' : 'Activate'}}</a>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-sm-9 col-sm-offset-3">
+                                        <div class="promo-container" ng-show="promo.activation">
+                                            <div class="alert-area">
+                                                <div class="promo-message" ng-show="promo.activation && promo.activation.retPromo">
+                                                    <span style="display: block"><b>Code:</b> {{promo.activation.retPromo.code}}</span>
+                                                    <span style="display: block"><b>Description:</b> {{promo.activation.retPromo.description}}</span>
+                                                </div>
+                                                <div class="promo-error" ng-show="promo.activation && !promo.activation.success"><b>Error:</b> {{promo.activation.error.message}}</div>
+                                                <div class="promo-success" ng-show="promo.activation && promo.activation.success"><b>Success:</b> Promo activated successfully!</div>
+                                            </div>
+                                            <div class="close-area">
+                                                <div ng-click="promo.activation = undefined;">
+                                                    <i class="fa fa-close fa-lg"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group" ng-if="account.profile.nextBillDate">
+                                <label class="col-sm-3 control-label">Payment Method
+                                </label>
+                                <div class="col-sm-9 form-label">
+                                    <a href="/account/adjust" class="pull-right dz-blue hover-underline">Change Payment Method</a>
+                                    <div class="payment-card">
+                                        <div class="card-name">
+                                            Payment Card
+                                        </div>
+                                        <div class="card-number">
+                                            {{account.profile.acct | cc}}
+                                        </div>
+                                        <div class="card-exp">
+                                            {{account.profile.expDate | exp}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="account-page has-btns" ng-show="page.active == 'notification' && page.notificationReady">
+                        <div class="cb-table">
+                            <div class="cb-header">
+                                <div class="cb-item">Enabled</div>
+                                <div class="cb-item">Notification Type</div>
+                            </div>
+                            <div class="cb-rows">
+                                <div class="cb-row">
+                                    <div class="cb-item"><input type="checkbox" ng-model="notifications.siteUpdates" /></div>
+                                    <div class="cb-item">disc|zump Updates</div>
+                                </div>
+                                <div class="cb-row">
+                                    <div class="cb-item"><input type="checkbox" ng-model="notifications.newMessage" /></div>
+                                    <div class="cb-item">New Message</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="account-page-btns">
+                            <a class="btn btn-primary pull-right" ng-click="setNotifications()">Save</a>
+                            <a class="btn btn-default" ng-click="getNotifications(true)">Reset</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <dz-footer></dz-footer>
+</div>
+<image-cropper cropper-options="discImageCropper"></image-cropper>

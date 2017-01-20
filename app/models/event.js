@@ -10,8 +10,15 @@ var eventSchema = mongoose.Schema({
     userId: {type: String},
     type: {type: String},
     message: {type: String},
-    createDate: {type: Date, default: Date.now}
-    
+    createDate: {type: Date}
+});
+
+eventSchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.createDate = new Date();
+    }
+	
+    next();
 });
 
 module.exports = mongoose.model('Event', eventSchema);

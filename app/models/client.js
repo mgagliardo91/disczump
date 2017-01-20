@@ -22,6 +22,9 @@ var clientSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    createDate: {
+		type: Date
+	},
     permissions: {
         createUsers: {type: Boolean, default: false},
         deleteUsers: {type: Boolean, default: false}
@@ -32,5 +35,15 @@ var clientSchema = mongoose.Schema({
 clientSchema.methods.generateHash = function(secret) {
     return bcrypt.hashSync(secret, bcrypt.genSaltSync(8), null);
 };
+
+clientSchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.createDate = new Date();
+    }
+	
+    next();
+});
+
+clientSchema.index({ clientId: 1 });
 
 module.exports = mongoose.model('Client', clientSchema);

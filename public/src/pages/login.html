@@ -1,0 +1,29 @@
+<div dz-wrapper>
+    <dz-header></dz-header>
+    <div class="scrollable main-body">
+        <div class="page-content" fit-page offset="-110">
+            <div center-align style="height: 100%">
+                <div class="portal-title no-pad cont-sm">
+                    <img src="/static/logo/logo_portal.png">
+                </div>
+                 <dz-alert alert-data="loginAlert" class="form-small" force-scroll="true"></dz-alert>
+                <div class="login-form-stacked form-xsmall" ng-form name="loginForm" ng-enter="loginForm.$valid && doLogin()">
+                    <div class="input-group" ng-class="{'has-error': !loginForm.username.$pristine && loginForm.username.$invalid, 'has-success': !loginForm.username.$pristine && loginForm.username.$valid}">
+                        <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
+                        <input class="form-control" type="email" placeholder="Email" ng-model="cred.username" name="username" required>
+                    </div>
+                    <div class="input-group" ng-class="{'has-error': !loginForm.password.$pristine && loginForm.password.$invalid, 'has-success': !loginForm.password.$pristine && loginForm.password.$valid}">
+                        <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                        <input class="form-control validation" type="password" placeholder="Password" ng-model="cred.password" name="password" required>
+                    </div>
+                    <button class="btn btn-submit btn-block" ng-click="loginForm.$valid && doLogin()" ng-disabled="loginForm.$invalid">{{loading ? 'Authenticating...' : 'Sign In'}}</button>
+                    <a id="auth-facebook" class="btn btn-primary btn-block" role="button" ng-click="doFbLogin()">Sign in with Facebook</a>
+                    <div style="text-align: center; margin-top: 10px;">
+                        <a href="/recover" class="dz-blue hover-underline">Forgot Password?</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <dz-footer></dz-footer>
+</div>

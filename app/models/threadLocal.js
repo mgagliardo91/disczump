@@ -12,10 +12,21 @@ var threadLocalSchema = mongoose.Schema({
     threadId: {type: String},
     messageCount: {type: Number, default: 0},
     threadTag: {type: String},
-    createDate: {type: Date, default: Date.now},
+    createDate: {type: Date},
     active: {type: Boolean, default: true},
     lastAlert: {type: Date}
     
 });
+
+threadLocalSchema.pre('save', function(next) {
+    if (this.isNew) {
+		this.createDate = new Date();
+    }
+	
+    next();
+});
+
+threadLocalSchema.index({ threadId: 1, userId: 1 });
+threadLocalSchema.index({ userId: 1, active: 1 });
 
 module.exports = mongoose.model('ThreadLocal', threadLocalSchema);

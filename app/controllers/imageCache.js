@@ -4,6 +4,7 @@ var ImageCache = require('../models/imageCache');
 var Error = require('../utils/error');
 var FileUtil = require('../utils/file.js');
 var config = require('../../config/config.js');
+var async = require('async');
 
 module.exports = {
     pushImageCache: pushImageCache,
@@ -12,12 +13,39 @@ module.exports = {
     clearUnusedImages: clearUnusedImages
 }
 
-function pushImageCache(gm, gfs, userId, fileId, callback) {
-    if (!userId || !fileId) {
+function pushImageCache(gm, gfs, fileId, callback, skipThumbnail) {
+    if (!fileId) {
     	return callback(Error.createError('Invalid disc image parameters.', Error.invalidDataError));
     }
     
     var imageObj = new ImageCache({fileId: fileId});
+	
+	async.series([
+		function(cb) {
+			if (skipThumbnail)
+				return cb();
+			
+			createThumbnail(gm, gfs, fileId, function(err, thumbnailId) {
+				if (err || !thumbnailId) {
+					console.log(err);
+					return cb(Error.createError('Unable to generate thumbnail for image.', Error.internalError));
+				}
+				
+				imageObj.thumbnailId = thumbnailId;
+				return cb();
+			});
+		}
+	], function(err, results) {
+		if (err)
+			return callback(err);
+		
+		imageObj.save(function(err, imageObj) {
+			if (err)
+				return callback(Error.createError(err, Error.internalError));
+
+			return callback(null, imageObj);
+		});
+	});
     
     createThumbnail(gm, gfs, fileId, function(err, thumbnailId) {
         if (!err && thumbnailId) {

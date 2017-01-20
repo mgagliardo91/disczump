@@ -1,0 +1,13 @@
+<div>
+    <div class="dz-modal-content">
+        <div class="dz-modal-title-sm left">disc|zump Feedback</div>
+        <div class="dz-modal-text">We would love to hear from you!  Use the form below to submit questions, suggestions, or comments and we will address them as soon as possible.</div>
+        <dz-alert class="full-width" alert-data="feedbackAlert"></dz-alert>
+        <textarea class="dz-feedback no-focus" ng-attr-placeholder="Enter feedback here..." placeholder="Enter feedback here..." ng-model="feedback"></textarea>
+    </div>
+    <div class="dz-modal-btn-container">
+        <div class="dz-modal-triangle"></div>
+        <div class="dz-modal-btn cancel" ng-click="show = false">Close</div>
+        <div class="dz-modal-btn btn-blue" ng-click="feedback.length && submit()" ng-class="{disabled:!feedback.length}">Submit</div>
+    </div>
+</div>

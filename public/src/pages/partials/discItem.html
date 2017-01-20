@@ -1,0 +1,81 @@
+<div class="grid-item" ng-class="{private:!disc.visible}">
+    <div class="grid-item-icon top-left" ng-show="(disc['marketplace.forSale'] || disc['marketplace.forTrade']) && disc.value && !flip">
+        <span class="grid-item-text" ng-if="disc.value">${{disc.value | currency:"":2}}</span>
+    </div>
+    <div class="grid-item-icon top-right" ng-show="!flip">
+        <i class="fa fa-usd market-icon" ng-class="{'for-sale':disc['marketplace.forSale']}" ng-attr-title="{{'This item is ' + (!disc['marketplace.forSale'] ? 'not ' : '') + 'for sale.'}}"></i>
+        <i class="fa fa-exchange market-icon" ng-class="{'for-trade':disc['marketplace.forTrade']}" ng-attr-title="{{'This item is ' + (!disc['marketplace.forTrade'] ? 'not ' : '') + 'for trade.'}}"></i>
+    </div>
+    <div class="grid-img-container flip" ng-mouseenter="displayHoverIcon=true;" ng-mouseleave="displayHoverIcon=false;">
+        <div class="grid-img-inner">
+            <div class="grid-hover-icon grid-lb-icon" ng-show="displayHoverIcon" ng-click="disc.primaryImage && setLbOpts()" ng-class="{'show': displayHoverIcon && !flip, 'disabled': !disc.primaryImage}" title="Zoom">
+                <span class="fa-stack">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-search-plus fa-stack-1x fa-inverse"></i>
+                </span>
+            </div>
+            <a ng-href="/d/{{disc._id}}/edit" class="grid-hover-icon grid-edit-icon" ng-show="displayHoverIcon" ng-class="{'show': displayHoverIcon && !flip}" ng-if="currentUser && currentUser._id == disc.userId" title="Edit Disc"> 
+                <span class="fa-stack">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-pencil fa-stack-1x fa-inverse"></i>
+                </span>
+            </a>
+            <div class="grid-hover-icon grid-info-icon" ng-show="displayHoverIcon" ng-click="flip=!flip;" ng-class="{'show': displayHoverIcon, 'remain': flip}" title="More Info">
+                <span class="fa-stack">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-info fa-stack-1x fa-inverse"></i>
+                </span>
+            </div>
+            <div class="grid-img-content flip-card" ng-class="{'flipped':flip}">
+                <div class="flip-face flip-front">
+                    <a class="grid-item-nav" ng-href="/d/{{disc._id}}"></a>
+                    <img ng-src="{{getSolrPrimaryImage(disc)}}">
+                </div>
+                <div class="grid-quick-info flip-face flip-back">
+                    <div class="qi-content fancy-scroll">
+                        <div class="qi-title">Disc Info</div>
+                        <div class="qi-item"><div>Brand:</div><div class="handle-overflow">{{disc.brand}}</div></div>
+                        <div class="qi-item"><div>Name:</div><div class="handle-overflow">{{disc.name}}</div></div>
+                        <div class="qi-item" ng-if="isDef(disc.type)"><div>Type:</div><div class="handle-overflow">{{disc.type}}</div></div>
+                        <div class="qi-item" ng-if="isDef(disc.material)"><div>Material:</div><div class="handle-overflow">{{disc.material}}</div></div>
+                        <div class="qi-item" ng-if="isDef(disc.color)"><div>Color:</div><div class="handle-overflow">{{disc.color}}</div></div>
+                        <div class="qi-item" ng-if="isDef(disc.weight)"><div>Weight:</div><div class="handle-overflow">{{disc.weight}}g</div></div>
+                        <div class="qi-item" ng-if="isDef(disc.condition)"><div>Condition:</div><div class="handle-overflow">{{disc.condition}}/10</div></div>
+                        <div class="qi-item" ng-if="isDef(disc.speed)"><div>Speed:</div><div class="handle-overflow">{{disc.speed}}</div></div>
+                        <div class="qi-item" ng-if="isDef(disc.glide)"><div>Glide:</div><div class="handle-overflow">{{disc.glide}}</div></div>
+                        <div class="qi-item" ng-if="isDef(disc.turn)"><div>Turn:</div><div class="handle-overflow">{{disc.turn}}</div></div>
+                        <div class="qi-item" ng-if="isDef(disc.fade)"><div>Fade:</div><div class="handle-overflow">{{disc.fade}}</div></div>
+                        <div class="qi-item" ng-if="isDef(disc.value)"><div>Value:</div><div class="handle-overflow">${{disc.value | currency:"":2}}</div></div>
+                        <div class="qi-item" ng-if="isDef(disc.tag[0])">
+                            <div class="tag-item no-select" ng-repeat="tag in disc.tag">
+                                <span class="tag-item-text">{{tag}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="grid-item-info">
+        <div class="private-icon" ng-if="!disc.visible"><i class="fa fa-eye-slash"></i></div>
+        <div class="grid-item-label handle-overflow">
+            <a class="hover-underline" ng-href="/d/{{disc._id}}">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></a>
+        </div>
+        <div class="grid-item-text float-left hover-underline" ng-show="!disc.user">
+            {{disc.userId}}
+        </div>
+        <div class="grid-item-text float-left hover-underline" ng-show="disc.user">
+            <a ng-href="/t/{{disc.user.username}}">{{disc.user.username}}</a>
+        </div>
+        <div class="grid-item-text float-right" ng-if="disc.weight">
+            {{disc.weight}}g
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="overlay-container" ng-show="msOpts.active">
+        <div class="overlay" ng-class="{'selected': disc.selected}" ng-click="msOpts.toggleSelected(disc)" ng-init="disc.selected = false">
+            <i class="fa fa-check-circle-o no-animate" ng-show="!disc.selected"></i>
+            <i class="fa fa-check-circle no-animate selected" ng-show="disc.selected"></i>
+        </div>
+    </div>
+</div>

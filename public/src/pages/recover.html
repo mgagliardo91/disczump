@@ -1,0 +1,22 @@
+<div dz-wrapper>
+    <dz-header></dz-header>
+    <div class="scrollable main-body">
+        <div class="page-content" fit-page center-align offset="-110">
+            <div center-align style="height: 100%">
+                 <dz-alert alert-data="recoverAlert" class="form-small"></dz-alert>
+                <div class="portal-title no-pad cont-sm">
+                    <img src="/static/logo/logo_portal.png">
+                </div>
+                <div class="page-info small"><div class="page-info-title">Recover Account</div><div class="page-info-body">Enter the email address associated with your account below. You will receive an email containing a link to reset your password.</div></div>
+                <div class="login-form-stacked form-xsmall" ng-form name="recoverForm" ng-enter="recoverForm.$valid && doRecover()">
+                     <div class="input-group" ng-class="{'has-error': !recoverForm.username.$pristine && recoverForm.username.$invalid, 'has-success': !recoverForm.username.$pristine && recoverForm.username.$valid}">
+                        <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
+                        <input class="form-control" type="email" placeholder="Email" ng-model="cred.username" name="username" required>
+                    </div>
+                    <button class="btn btn-submit btn-block" ng-click="recoverForm.$valid && doRecover()" ng-disabled="recoverForm.$invalid">{{loading ? 'Processing...' : 'Recover'}}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <dz-footer></dz-footer>
+</div>

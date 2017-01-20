@@ -1,0 +1,43 @@
+<div dz-wrapper>
+    <dz-header></dz-header>
+    <dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
+    <div class="scrollable main-body">
+        <div class="page-content" fit-page center-align offset="-135">
+            <div center-align style="height: 100%">
+                 <dz-alert alert-data="resetAlert" class="form-small"></dz-alert>
+                <div class="portal-title no-pad cont-sm">
+                    <img src="/static/logo/logo_portal.png">
+                </div>
+                <div class="page-info small"><div class="page-info-title">Reset Password</div><div class="page-info-body">Use the form below to reset your password.</div></div>
+                <div class="login-form-stacked form-xsmall" ng-form name="recoverForm" ng-enter="isValid && recoverForm.$valid && doReset()">
+                     <div class="input-group" ng-class="{'has-error': !recoverForm.curPassword.$pristine && recoverForm.curPassword.$invalid, 'has-success': !recoverForm.curPassword.$pristine && recoverForm.curPassword.$valid}" ng-if="isReset">
+                        <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                        <input class="form-control validation" type="password" placeholder="Current Password" ng-model="cred.cpassword" name="curPassword" required ng-pattern="/^.{6,}$/">
+                    </div>
+                     <div class="input-group" ng-class="{'has-error': !recoverForm.password.$pristine && recoverForm.password.$invalid, 'has-success': !recoverForm.password.$pristine && recoverForm.password.$valid}">
+                        <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                        <input class="form-control validation" type="password" placeholder="Password" ng-model="cred.password" name="password" required ng-pattern="/^.{6,}$/" ng-focus="pwActive = true;" ng-blur="pwActive = false;">
+                    </div>
+                    <div ng-show="pwActive" style="margin-bottom: 10px;">
+                        <div class="page-info input-note round">
+                            <div class="title">
+                                Required Format:
+                            </div>
+                            <div class="body">
+                                <div class="format-item" ng-class="{'active': matchLen(cred.password)}">
+                                    <span><i class="fa fa-check"></i></span>Minumum 6 characters
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group" ng-class="{'has-error': !recoverForm.vpassword.$pristine && recoverForm.vpassword.$invalid, 'has-success': !recoverForm.vpassword.$pristine && recoverForm.vpassword.$valid}">
+                        <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                        <input class="form-control validation" type="password" placeholder="Retype Password" ng-model="cred.vpassword" name="vpassword" required must-match="cred.password">
+                    </div>
+                    <button class="btn btn-submit btn-block" ng-click="isValid && recoverForm.$valid && doReset()" ng-disabled="!isValid || recoverForm.$invalid">{{validating ? 'Validating...' : (loading ? 'Processing...' : 'Reset')}}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <dz-footer></dz-footer>
+</div>

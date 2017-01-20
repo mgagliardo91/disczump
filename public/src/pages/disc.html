@@ -1,0 +1,320 @@
+<div dz-wrapper>
+    <dz-header modal-opts="globalModalOpts"></dz-header>
+    <dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
+    <div class="private-warning dz-blue-background" ng-show="!loading.disc && !disc.visible">
+        <span><i class="fa fa-eye-slash fa-lg"></i>This disc is private!<i class="fa fa-eye-slash fa-lg"></i></span>
+    </div>
+    <div class="scrollable main-body">
+        <div class="page-content full-width">
+            <div class="title-row">
+                <span class="title-btn-size float-right" ng-show="!userInit"><i class="fa fa-spin fa-spinner"></i></span>
+                <div class="title-btn-container float-right" ng-show="userInit">
+                    <div class="fixed-wrapper title-btn-size" directive-on="userInit" directive-set="{'ng-if':'isOwner'}">
+                        <div ng-click="deleteDisc()">
+                            <i class="fa fa-trash hover-delete-color hover-pointer" title="Delete Disc"></i>
+                        </div>
+                    </div>
+                    <div class="fixed-wrapper title-btn-size" directive-on="userInit" directive-set="{'ng-if':'isOwner'}">
+                        <div>
+                            <a ng-href="/d/{{disc._id}}/edit"><i class="fa fa-pencil hover-edit-color hover-pointer" title="Edit Disc"></i></a>
+                        </div>
+                    </div>
+                    <div class="fixed-wrapper title-btn-size" directive-on="userInit" directive-set="{'ng-if':'isOwner'}">
+                        <div>
+                            <i class="fa fa-spinner fa-spin" ng-show="loading.privacy"></i>
+                            <i class="fa fa-eye-slash dz-blue-hover hover-pointer" ng-show="!loading.privacy && !disc.visible" ng-click="togglePrivacy()" title="Make Public"></i>
+                            <i class="fa fa-eye dz-blue-hover hover-pointer" ng-show="!loading.privacy && disc.visible" ng-click="warnPrivacy()" title="Make Private"></i>
+                        </div>
+                    </div>
+                    <div class="fixed-wrapper title-btn-size" directive-on="userInit" directive-set="{'ng-if':'!isOwner'}">
+                        <div ng-click="initMessage()">
+                            <i class="fa fa-envelope dz-blue-hover hover-pointer" title="Send Message"></i>
+                        </div>
+                    </div>
+                    <div class="fixed-wrapper title-btn-size" ng-show="disc.visible">
+                        <div ng-click="shareDisc()">
+                            <i class="fa fa-share-square-o dz-blue-hover hover-pointer" title="Share Disc" style="line-height:40px;"></i>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="page-title handle-overflow" ng-show="!disc">Loading...</div>
+                <div class="page-title handle-overflow" ng-show="disc">{{disc.brand}} | <span class="dz-blue">{{disc.name}}</span></div>
+                <hr>
+            </div>
+            <dz-alert class="full-width" alert-data="discAlert"></dz-alert>
+            <div id="dv-content">
+                <div class="dv-container dv-image-container">
+                    <div match-width class="dv-image-block" style="font-size: 4em;" ng-show="loading.disc">
+                        <div class="table-cell">
+                            <i class="fa fa-spinner fa-spin fa-lg"></i>
+                        </div>
+                    </div>
+                    <div match-width class="dv-image-block dv-image-border" ng-show="!loading.disc">
+                        <div class="table-cell">
+                            <img directive-on="discInit" directive-set="{'img-src':'/files/{{imageBlock.fileId}\}'}" ng-show="imageBlock" class="fit-parent hover-pointer" ng-click="showLightbox = true;" img-load="/static/img/dz_disc_nobg.png">
+                            <img img-src="/static/img/dz_disc_nobg.png" ng-show="!imageBlock" class="fit-parent" img-load>
+                            <div class="dv-zoom hover-pointer" ng-show="imageBlock" ng-click="showLightbox = true;">
+                                <i class="fa fa-search-plus"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="image-list" ng-show="!loading.disc">
+                        <div class="image-list-container simple">
+                            <div class="image-list-table">
+                                <div class="image-item-container" ng-repeat="img in disc.imageList">
+                                    <div class="image-item">
+                                        <div class="image-preview" ng-class="{active: img._id == imageBlock._id}" ng-click="setImage(img)">
+                                            <img img-src="/files/{{img.thumbnailId}}" class="fit-parent" img-load>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dv-container float-right">
+                    <div class="dv-marketplace-container" remove-if="publicMode" ng-show="userInit">
+                        <div class="dv-marketplace-count" title="{{tempMarketplace.counts.marketCap == -1 && 'Unlimited Marketplace Discs' || tempMarketplace.counts.marketAvailable + 'Marketplace Discs Remaining'}}">
+                            <span ng-bind="tempMarketplace.counts.marketAvailable" ng-show="tempMarketplace.counts.marketCap >= 0"></span>
+                            <span ng-show="tempMarketplace.counts.marketCap == -1" style="font-size:28px;">&#8734;</span>
+                        </div>
+                        <div class="dv-marketplace-row dv-marketplace-title">Marketplace Options</div>
+                        <div style="padding:10px">
+                            <div ng-show="loading.disc" style="line-height:60px;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>
+                            <div ng-show="!loading.disc && isMarketInvalid()">
+                                <div class="page-info error" style="text-align:center;margin:10px auto" ng-if="!isMarket() && tempMarketplace.counts.marketAvailable === 0">
+                                    You have reached your marketplace cap. <a href="/account/membership/" class="dz-blue hover-underline">Upgrade membership.</a>
+                                </div>
+                                <div ng-show="!disc.visible || !disc.primaryImage">
+                                    <div>This disc must be made <b><u>public</u></b> and have at least <b><u>one image</u></b> before adding it to the marketplace.</div>
+                                    <div class="dv-market-req">
+                                        <i class="fa fa-check fa-tools fa-success" aria-hidden="true" ng-show="disc.visible"></i>
+                                        <i class="fa fa-times fa-tools fa-error" aria-hidden="true" ng-show="!disc.visible"></i>
+                                        Public
+                                    </div>
+                                    <div class="dv-market-req">
+                                        <i class="fa fa-check fa-tools fa-success" aria-hidden="true" ng-show="disc.primaryImage"></i>
+                                        <i class="fa fa-times fa-tools fa-error" aria-hidden="true" ng-show="!disc.primaryImage"></i>
+                                        Images
+                                    </div>
+                                </div>
+                            </div>
+                            <div ng-show="!loading.disc && !isMarketInvalid()">
+                                <dz-alert alert-data="marketAlert"></dz-alert>
+                                <form name="marketplaceForm" class="dv-marketplace-row" style="height:40px;">
+                                    <div class="width-33" style="display:inline-block;">
+                                        <div class="dv-marketplace-section-wrapper input-row">For Sale: <switch class="marketplace-switch sale-switch" type="checkbox" ng-model="tempMarketplace.forSale"></switch></div>
+                                    </div>
+                                    <div class="width-33" style="display:inline-block;">
+                                        <div class="dv-marketplace-section-wrapper input-row">For Trade: <switch class="marketplace-switch trade-switch" type="checkbox" ng-model="tempMarketplace.forTrade"></switch></div>
+                                    </div>
+                                </form>
+                                <div class="dv-marketplace-row" style="height:30px;">
+                                    <div class="dv-marketplace-section-wrapper btn-row">
+                                        <div class="dv-marketplace-btn" directive-on="discInit" directive-set="{'ng-class':'{disabled: !isDirty()}'}" ng-click="(isDirty() && !isSaving) && saveDisc()">
+                                            <span ng-show="!isSaving">Apply</span>
+                                            <span ng-show="isSaving"><i class="fa fa-spinner fa-spin fa-lg"></i></span>
+                                        </div>
+                                        <div class="dv-marketplace-btn" ng-click="bumpDisc()" ng-show="isMarket() && bumpReady">Bump</div>
+                                        <div class="dv-marketplace-btn disabled" ng-show="isMarket() && !bumpReady" directive-on="userInit && !publicMode" directive-set="{'countdown':''}" sec-left="disc.marketplace.bumpRemaining" counts="tempMarketplace.bump" done="bumpReady" show="showCountdown">
+                                            <span ng-show="showCountdown"><span ng-bind="tempMarketplace.bump.hours"></span> : <span ng-bind="tempMarketplace.bump.minutes"></span> : <span ng-bind="tempMarketplace.bump.seconds"></span></span>
+                                            <span ng-show="!showCountdown"><i class="fa fa-spinner fa-spin fa-lg"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="dv-marketplace-row" style="font-style:italic;color:#BEBEBE;" ng-show="isMarket() && disc.marketplace.postedDate">
+                                    Posted: {{disc.marketplace.postedDate | date : 'medium'}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <table class="info-table">
+                        <tr class="dv-profile-tr">
+                            <td colspan="5" class="dv-profile-td">
+                                <div class="dv-profile-preview">
+                                    <div class="dv-profile-preview-image float-left">
+                                        <div directive-on="userInit" directive-set="{'img-src':'{{user.image}\}'}" class="default-bg-image" img-load="/static/img/dz_profile_nobg.png" ng-class="{'bg-white': !user.image}" bg-image="true"></div>
+                                    </div>
+                                    <div class="dv-profile-preview-btn-container">
+                                        <div class="hover-pointer dv-profile-preview-btn info" directive-on="userInit" directive-set="{'modal-trigger':'dz-profile-modal'}" data="{'userId':'user._id'}" modal-opts="globalModalOpts" title="More Info"> 
+                                            <span class="fa-stack">
+                                              <i class="fa fa-circle fa-stack-2x"></i>
+                                              <i class="fa fa-info fa-stack-1x fa-inverse"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="dv-profile-preview-info">
+                                        <overflow-wrapper>
+                                            <div class="dv-profile-preview-text-lg handle-overflow">
+                                                <a ng-href="/t/{{user.username}}" class="hover-underline">{{user.username}}</a>
+                                            </div>
+                                        </overflow-wrapper>
+                                        <overflow-wrapper ng-if="user.shortLocation">
+                                            <div class="dv-profile-preview-text-sm handle-overflow">{{user.shortLocation}}</div>
+                                        </overflow-wrapper>
+                                        <overflow-wrapper ng-if="user.pdgaNumber">
+                                            <div class="dv-profile-preview-text-sm handle-overflow">
+                                                <a class="hover-underline" target="_blank" ng-href="http://www.pdga.com/player/{{user.pdgaNumber}}">PDGA #{{user.pdgaNumber}}</a>
+                                            </div>
+                                        </overflow-wrapper>
+                                        <overflow-wrapper ng-if="user.discCount">
+                                            <div class="dv-profile-preview-text-sm handle-overflow">{{user.discCount}} Public Discs</div>
+                                        </overflow-wrapper>
+                                    </div>
+                                    <div class="clearfix"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="width-33">Marketplace</td>
+                            <td colspan="2" class="dv-table-cell width-33">
+                                <p class="dv-table-cell-title">Price</p>
+                                <overflow-wrapper ng-if="disc.value">
+                                    <div class="dv-table-cell-value handle-overflow">
+                                        {{disc.value | currency:"$":2}}
+                                    </div>
+                                </overflow-wrapper>
+                                <p class="dv-table-cell-value" ng-if="!disc.value">-</p>
+                            </td>
+                            <td colspan="1" class="dv-table-cell width-16">
+                                <p class="dv-table-cell-title" ng-class="{inactive:!disc.marketplace.forSale}">For Sale</p>
+                                <p class="dv-table-cell-value for-sale" ng-if="disc.marketplace.forSale">
+                                    <i class="fa fa-usd"></i>
+                                </p>
+                                <p class="dv-table-cell-value inactive" ng-if="!disc.marketplace.forSale">
+                                    <i class="fa fa-ban"></i>
+                                </p>
+                            </td>
+                            <td colspan="1" class="dv-table-cell width-16">
+                                <p class="dv-table-cell-title" ng-class="{inactive:!disc.marketplace.forTrade}">For Trade</p>
+                                <p class="dv-table-cell-value for-trade" ng-if="disc.marketplace.forTrade">
+                                    <i class="fa fa-exchange"></i>
+                                </p>
+                                <p class="dv-table-cell-value inactive" ng-if="!disc.marketplace.forTrade">
+                                    <i class="fa fa-ban"></i>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="width-33">Type</td>
+                            <td colspan="4">
+                                <div ng-if="!disc.type">-</div>
+                                <overflow-wrapper ng-if="disc.type">
+                                    <div class="handle-overflow">
+                                        <a filter-dropdown="{prop:'type',val:'{{disc.type}}',text:'Type'}" user="user" class="hover-underline">{{disc.type}}</a>
+                                    </div>
+                                </overflow-wrapper>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="width-33">Material</td>
+                            <td colspan="4">
+                                <div ng-if="!disc.material">-</div>
+                                <overflow-wrapper ng-if="disc.material">
+                                    <div class="handle-overflow">
+                                        <a filter-dropdown="{prop:'material',val:'{{disc.material}}',text:'Material'}" user="user" class="hover-underline">{{disc.material}}</a>
+                                    </div>
+                                </overflow-wrapper>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="width-33">Color</td>
+                            <td colspan="4">
+                                <div ng-if="!disc.color">-</div>
+                                <overflow-wrapper ng-if="disc.color">
+                                    <div class="handle-overflow">
+                                        <a filter-dropdown="{prop:'color',val:'{{disc.color}}',text:'Color'}" user="user" class="hover-underline">{{disc.color}}</a>
+                                    </div>
+                                </overflow-wrapper>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="width-33">Weight</td>
+                            <td colspan="4">
+                                <div ng-if="!disc.weight">-</div>
+                                <overflow-wrapper ng-if="disc.weight">
+                                    <div class="handle-overflow">
+                                        <a filter-dropdown="{prop:'weight',val:'{{disc.weight}}',text:'Weight', suffix: 'g'}" user="user" class="hover-underline">{{disc.weight}}g</a>
+                                    </div>
+                                </overflow-wrapper>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="width-33">Condition</td>
+                            <td colspan="4">
+                                <div ng-if="!disc.condition">-</div>
+                                <overflow-wrapper ng-if="disc.condition">
+                                    <div class="handle-overflow">
+                                        <a filter-dropdown="{prop:'condition',val:'{{disc.condition}}',text:'Condition'}" user="user" class="hover-underline">{{disc.condition}}/10</a></div>
+                                    </div>
+                                </overflow-wrapper>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="width-33">Flight Numbers</td>
+                            <td class="dv-table-cell width-16">
+                                <p class="dv-table-cell-title">Speed</p>
+                                <div class="dv-table-cell-value" ng-if="!isDef(disc.speed)">-</div>
+                                <overflow-wrapper ng-if="isDef(disc.speed)">
+                                    <div class="dv-table-cell-value handle-overflow">
+                                        <a filter-dropdown="{prop:'speed',val:'{{disc.speed}}',text:'Speed'}" user="user" class="hover-underline">{{disc.speed}}</a>
+                                    </div>
+                                </overflow-wrapper>
+                            </td>
+                            <td class="dv-table-cell width-16">
+                                <p class="dv-table-cell-title">Glide</p>
+                                <div class="dv-table-cell-value" ng-if="!isDef(disc.glide)">-</div>
+                                <overflow-wrapper ng-if="isDef(disc.glide)">
+                                    <div class="dv-table-cell-value handle-overflow">
+                                        <a filter-dropdown="{prop:'glide',val:'{{disc.glide}}',text:'Glide'}" user="user" class="hover-underline">{{disc.glide}}</a>
+                                    </div>
+                                </overflow-wrapper>
+                            </td>
+                            <td class="dv-table-cell width-16">
+                                <p class="dv-table-cell-title">Turn</p>
+                                <div class="dv-table-cell-value" ng-if="!isDef(disc.turn)">-</div>
+                                <overflow-wrapper ng-if="isDef(disc.turn)">
+                                    <div class="dv-table-cell-value handle-overflow">
+                                        <a filter-dropdown="{prop:'turn',val:'{{disc.turn}}',text:'Turn'}" user="user" class="hover-underline">{{disc.turn}}</a>
+                                    </div>
+                                </overflow-wrapper>
+                            </td>
+                            <td class="dv-table-cell width-16">
+                                <p class="dv-table-cell-title handle-overflow">Fade</p>
+                                <div class="dv-table-cell-value" ng-if="!isDef(disc.fade)">-</div>
+                                <overflow-wrapper ng-if="isDef(disc.fade)">
+                                    <div class="dv-table-cell-value">
+                                        <a filter-dropdown="{prop:'fade',val:'{{disc.fade}}',text:'Fade'}" user="user" class="hover-underline">{{disc.fade}}</a>
+                                    </div>
+                                </overflow-wrapper>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="width-33">Tags</td>
+                            <td colspan="4">
+                                <div ng-if="disc.tagList.length">
+                                    <div class="tag-item hover-underline no-select" ng-repeat="tag in disc.tagList">
+                                        <span class="tag-item-text">
+                                            <a filter-dropdown="{prop:'tag',val:'{{tag}}',text:'Tag'}" trunk-only="true" user="user" class="hover-underline">{{tag}}</a>
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="width-33">Notes</td>
+                            <td colspan="4">
+                                <div ng-if="disc.notes" parse-text="disc.notes" parse-url parse-disc></div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+    <dz-footer></dz-footer>
+</div>
+<lightbox disc-id="disc._id" cur-img="imageBlock._id" trigger="showLightbox" scroll-lock="pgSettings.scrollLock"></lightbox>

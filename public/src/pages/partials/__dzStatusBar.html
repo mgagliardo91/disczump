@@ -1,0 +1,17 @@
+<div class="breadcrumb-container">
+    <div class="pagination-container" title="Showing {{showCount}} of {{totalCount}} results" ng-show="$def(showCount)">
+        {{showCount}} | <span class="dz-blue">{{totalCount}}</span>
+    </div>
+    <div class="breadcrumb-trail" ng-show="!hideOn">
+        <span class="hover-underline" title="Explore Home"><a ng-href="/{{homeUrl}}"><i class="fa fa-home" style="font-size: 1.1em; color: #008edd"></i></a></span>
+        <span class="breadcrumb-item-container" ng-repeat="item in breadcrumbs">
+            <span><i class="fa fa-chevron-right"></i><span ng-if="item.title" style="margin-left: 5px">{{item.title}}:</span></span>
+            <span class="breadcrumb-item" ng-repeat="link in item.links track by $index">
+                <span ng-if="$index > 0">|</span>
+                <a class="dz-blue hover-underline" ng-if="link.href" ng-href="{{link.href}}">{{link.text}}</a>
+                <span class="dz-italic" ng-if="!link.href" ng-href="link.href">{{link.text}}</span>
+            </span>
+        </span>
+    </div>
+    <div class="clearfix"></div>
+</div>

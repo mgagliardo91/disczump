@@ -6,7 +6,7 @@ var Error = require('../utils/error');
 var UserController = require('./user');
 var Message = require('../models/message');
 var Thread = require('../models/thread');
-var Socket = require('../../config/socket.js');
+var Socket = require('../utils/socket.js');
 var ThreadLocal = require('../models/threadLocal');
 var socketManager = require('../objects/socketCache.js');
 var MessageConfig = require('../../config/config.js').message;
@@ -16,6 +16,7 @@ var Handlebars = require('handlebars');
 
 module.exports = {
     getThreadState: getThreadState,
+    getTotalUnread: getTotalUnread,
     putThreadState: putThreadState,
     deactivateThread: deactivateThread,
     getMessages: getMessages,
@@ -37,6 +38,44 @@ function getThreadState(userId, threadId, callback) {
     });
 }
 
+function getTotalUnread(userId, callback) {
+    ThreadLocal.aggregate([
+        {
+            $match: {
+                userId: userId
+            }
+        },
+        {
+            $lookup: {
+                from: 'threads',
+                localField: 'threadId',
+                foreignField: '_id',
+                as: 'parentThread'
+            }
+        },
+        {
+             $match: { 'parentThread': { $ne: [] } }
+        },
+        {
+            $project: {
+                unreadMsgCount: { $subtract: [ {$arrayElemAt:['$parentThread.messageCount', 0]}, '$messageCount' ] }
+              }
+        },
+        {
+            $group : {
+               _id : null,
+               totalUnread: { $sum: '$unreadMsgCount' },
+            }
+        }
+    ], function (err, result) {
+        if (err) {
+            return callback(Error.createError(err, Error.internalError));
+        } else {
+           return callback(null, result.length ? result[0] : {totalUnread: 0});
+        }
+    });
+}
+
 function putThreadState(userId, threadId, threadState, callback) {
     var messageCount;
     
@@ -55,6 +94,10 @@ function putThreadState(userId, threadId, threadState, callback) {
             
             if (typeof(threadState.threadTag) !== 'undefined') {
                 localThread.threadTag = threadState.threadTag;
+            }
+          
+            if (typeof(threadState.active) !== 'undefined' && threadState.active) {
+                localThread.active = true;
             }
         
             if (typeof(messageCount) !== 'undefined' && messageCount > localThreadObj.messageCount && messageCount <= localThreadObj.currentMessageCount) {
@@ -193,7 +236,7 @@ function notifyUsers(message, userId) {
                         Socket.sendNotification(localThread.userId, Socket.TypeMsg, message);
                     } else {
                         UserController.getUser(localThread.userId, function(err, user) {
-                            if (!err && user && user.preferences.notifications.newMessage) {
+                            if (!err && user && user.account.notifications.newMessage) {
                                 if (localThread.lastAlert) {
                                     var lastAlert = new XDate(localThread.lastAlert);
                                     if (lastAlert.diffMinutes(new XDate()) < MessageConfig.alertThresholdMin) {
@@ -201,7 +244,7 @@ function notifyUsers(message, userId) {
                                     }   
                                 }
                                 
-                                localThread['lastAlert'] = Date.now();
+                                localThread['lastAlert'] = new Date();
                                 localThread.save();
                                 var alert = generateEmailNotification(user, origUser, message);
                                 Mailer.sendMail(user.local.email, 'disc|zump Message Alert', alert);
@@ -214,9 +257,9 @@ function notifyUsers(message, userId) {
     });  
 }
 
-function getPrivateThreads(userId, callback) {
+function getPrivateThreads(userId, archived, callback) {
     var retThreads = [];
-    ThreadLocal.find({userId: userId, active: true}, function(err, localThreads) {
+    ThreadLocal.find({userId: userId, active: !archived}, function(err, localThreads) {
         if (err) return Error.createError(err, Error.internalError);
         
         async.each(localThreads, function(localThread, cb) {

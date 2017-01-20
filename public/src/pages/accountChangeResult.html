@@ -1,0 +1,99 @@
+<link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
+<div dz-wrapper>
+    <dz-header></dz-header>
+    <dz-status-bar class="header-color-2" breadcrumbs="breadcrumbs"></dz-status-bar>
+    <div class="scrollable main-body">
+        <div class="portal-title cont-sm" style="margin: 20px auto">
+            <img src="/static/logo/logo_portal.png" />
+        </div>
+        <dz-alert class="small" alertData="upgradeAlert"></dz-alert>
+        <div>
+            <div class="upgrade-container">
+                <div class="upgrade-container-title">
+                    Account Change Results
+                </div>
+                <div style="font-size: 4em; text-align: center; padding: 40px 0px;" ng-show="loading">
+                    <i class="fa fa-spinner fa-spin"></i>
+                    <div style="font-size: 0.5em;">
+                        Loading
+                    </div>
+                </div>
+                <div style="padding: 20px 0px;" ng-show="!loading">
+                    <div class="membership-tile-simple" style="margin: auto; max-width: 325px;">
+                        <div class="membership-tile-area">
+                            <div class="membership-tile-title">
+                                The<br /><span class="dz-blue">{{accountType | memType}}</span>
+                            </div>
+                            <div class="membership-tile-amt" style="margin: 20px 0px 10px 0px;">
+                                <div class="price">
+                                    ${{accountType | memCost}}
+                                </div>
+                                <div class="unit">
+                                    /month
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="upgrade-preview-title">Current <span ng-if="pending">(Pending)</span></div>
+                </div>
+                <div class="page-info attention light" ng-if="request && request.failed == false" ng-show="!loading">
+                    <div class="page-info-title">
+                        Account Change {{pending ? 'Pending' : 'Successful'}}
+                    </div>
+                    <div ng-if="pending">
+                        <div class="page-info-body" style="color: red;">
+                            Your account change will take place at the end of the current billing cycle. Until then, you will be able to enjoy the benefits of your current paid profile.
+                        </div>
+                        <div class="page-info-sep"></div>
+                    </div>
+                    <div class="page-info-body">
+                        Your account change request has completed successfully. You will receive an email containing the details of this change.
+                        <div class="page-info-dl" ng-if="account.profile">
+                            <dl class="dl-horizontal">
+                              <dt>Active Membership:</dt>
+                              <dd>{{account.accountType | memType}}</dd>
+                            </dl>
+                            <dl class="dl-horizontal" ng-if="request.toAccount.type !== account.accountType">
+                              <dt>New Membership:</dt>
+                              <dd>{{request.toAccount.type | memType}}</dd>
+                            </dl>
+                            <dl class="dl-horizontal">
+                              <dt>Amount Charged:</dt>
+                              <dd>${{request.immediateCharge | number: 2}}</dd>
+                            </dl>
+                            <dl class="dl-horizontal">
+                              <dt>Recurring Payment:</dt>
+                              <dd>${{account.profile.draftAmount | number: 2}} /month</dd>
+                            </dl>
+                            <dl class="dl-horizontal" ng-if="account.profile.tender">
+                              <dt>Account:</dt>
+                              <dd ng-if="account.profile.tender == 'C'">{{account.profile.acct | cc}}</dd>
+                              <dd ng-if="account.profile.tender == 'P'">PayPal Account</dd>
+                            </dl>
+                            <dl class="dl-horizontal" ng-if="account.profile.tender == 'C'">
+                              <dt>Expiration:</dt>
+                              <dd>{{account.profile.expDate | exp}}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="page-info attention error" ng-if="!request || request.failed == true" ng-show="!loading">
+                    <div class="page-info-title">
+                        Account Change Failed
+                    </div>
+                    <div class="page-info-body">
+                        Your account change request has not completed successfully. No changes have been made to your account. Please try again or contact <a class="dz-blue hover-underline" href="mailto:support@disczump.com">disc|zump support</a> 
+                        for help with this issue.
+                        <br /><br /><b>{{error.type}}:</b> {{error.message}}
+                    </div>
+                </div>
+            </div>
+            <div class="upgrade-btn-container">
+                <div class="notify-button pull-right"><a class="btn btn-default" style="background-color: #ffba00;" href="/account#membership">My Account</a></div>
+                <div class="clearfix">
+                </div>
+            </div>
+        </div>
+    </div>
+    <dz-footer></dz-footer>
+</div>

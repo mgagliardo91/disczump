@@ -1,0 +1,21 @@
+<div dz-wrapper>
+    <dz-header></dz-header>
+    <div class="scrollable main-body">
+        <div fit-page center-align offset="-110">
+            <dz-alert class="small" alert-data="deleteAlert"></dz-alert>
+            <div class="portal-title cont-sm">
+                <img src="/static/logo/logo_portal.png">
+            </div>
+            <div class="notify-container">
+                <div class="notify-loader" ng-show="loading"><span><i class="fa fa-spinner fa-spin"></i></span></div>
+                <div class="notify-text">{{!loading ? (deleteSuccess ? 'Account Deleted!' : 'Account Not Deleted!') : 'Deleting Account...'}}</div>
+                <div class="notify-button" style="margin-top: 20px;" ng-show="!loading"><a class="btn btn-default" href="/">Return Home</a></div>
+            </div>
+            <div class="page-info small">
+                <div class="page-info-title">Thanks for using disc|zump!</div>
+                We hope you enjoyed your experience using disc|zump.
+            </div>
+        </div>
+    </div>
+    <dz-footer></dz-footer>
+</div>

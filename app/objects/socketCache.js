@@ -24,7 +24,7 @@ function requestSession(userId) {
         }
         socketTable.push(socketEntry);
     } else {
-        socketEntry.sessionId = sessionId;
+        return socketEntry.sessionId;
     }
     
     return sessionId;
@@ -32,7 +32,7 @@ function requestSession(userId) {
 
 function pushSocket(sessionId, socket) {
     var socketEntry = _.findWhere(socketTable, {sessionId: sessionId});
-    
+  
     if (typeof(socketEntry) !== 'undefined') {
         socketEntry.sockets.push({
             socketId: socket.id,

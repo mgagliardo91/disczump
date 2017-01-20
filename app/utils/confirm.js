@@ -8,6 +8,7 @@ var DiscController = require('../controllers/disc');
 var MessageController = require('../controllers/message');
 var localConfig = require('../../config/localConfig');
 var Error = require('../utils/error');
+var AccountDelete = require('../external/accountDelete');
 
 module.exports = {
     initializeConfirmAccount: initializeConfirmAccount,
@@ -80,7 +81,7 @@ function initializeConfirmDelete(userId, callback) {
                 if (err)
 			        return callback(Error.createError(err, Error.internalError));
                 
-                user.addEvent(EventController.Types.AccountDeleteInit, 'Account deletion request initialized [' + confirm._id + '].');
+				UserController.addUserEvent(user._id, EventController.Types.AccountDeleteInit, 'Account deletion request initialized [' + confirm._id + '].');
                 callback(null, user, confirmDeleteEmail(user, confirm));
             });
         });
@@ -88,33 +89,23 @@ function initializeConfirmDelete(userId, callback) {
 }
 
 function confirmDelete(authorizationId, gfs, callback) {
+		console.log('Finding authorization ID');
         TemporaryLink.findOne({_id: authorizationId, route: 'delete' }, function (err, confirm) {
+			console.log(err);
+			
             if (err)
 	            return callback(Error.createError(err, Error.internalError));
             
             if (!confirm)
-                return callback(Error.createError('The confirmation request does not exist.', Error.objectNotFoundError));
+                return callback(Error.createError('The delete request does not exist.', Error.objectNotFoundError));
             
-            UserController.getActiveUser(confirm.userId, function(err, user) {
-                if (err)
-	                return callback(err);
-	                
-	            async.series([
-                    function(cb) {
-                        MessageController.deleteUserThreads(user._id, cb);
-                    },
-                    function(cb) {
-                        DiscController.deleteUserDiscs(user._id, gfs, cb);
-                    },
-                    function(cb) {
-                        UserController.deleteUser(user._id, gfs, cb);
-                    }
-                ], function(err, results) {
-                    
-                    confirm.remove();
-                    return callback(null, user);
-                });
-            });
+			AccountDelete.executeDelete(confirm.userId, gfs, function(err, user) {
+				if (err)
+					return callback(err);
+				
+				confirm.remove();
+				return callback(null, user);
+			});
         });
     }
 

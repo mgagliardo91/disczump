@@ -1,0 +1,33 @@
+<div>
+    <div class="dz-modal-content">
+        <div class="dz-modal-title-sm left" ng-if="isDisc"><img class="dz-modal-title-img" img-load img-src="{{getDiscImage(data.disc)}}" />Share {{data.disc.brand}} {{data.disc.name}}</div>
+        <div class="dz-modal-title-sm left" ng-if="isTrunk"><img class="dz-modal-title-img" img-load="/static/img/dz_profile.png" img-src="{{getAccountImage()}}" />Share Trunk - {{data.user.username}}</div>
+        <div class="dz-modal-text" ng-show="!linkOpts.linkSelected">Share this {{typeText}} directly to Facebook, or send the public link to any internet enabled device. Click an icon below to continue.</div>
+        <div class="dz-modal-text" ng-show="linkOpts.linkSelected">Copy the public link below and share it with the world!</div>
+        <dz-alert class="full-width" alert-data="modalAlert"></dz-alert>
+        <div class="full-width-table" ng-show="!linkOpts.linkSelected">
+            <dz-alert class="full-width" alert-data="fbModalAlert"></dz-alert>
+            <div class="dz-modal-action hover-pointer" ng-click="!loading.fb && facebookInit && shareFB()" ng-class="{disabled: !facebookInit}">
+                <div ng-show="loading.fb"><i class="fa fa-spin fa-spinner" aria-hidden="true" style="font-size:7em;"></i></div>
+                <div ng-show="!loading.fb"><i class="fa fa-facebook-square fb-color" aria-hidden="true" style="font-size:7em;"></i></div>
+                <div class="dz-modal-action-text" ng-class="{disabled: !facebookInit}">Facebook</div>
+            </div>
+            <div class="dz-modal-action hover-pointer" ng-click="showLink()">
+                <div><i class="fa fa-link link-color" aria-hidden="true" style="font-size:7em;"></i></div>
+                <div style="font-weight:bold;font-size:20px;">Public Link</div>
+            </div>
+        </div>
+        <div ng-show="linkOpts.linkSelected">
+            <form name="linkForm" class="dz-modal-link-form" ng-if="isTrunk">
+                <div class="dz-modal-link-form-row"><label class="dz-blue-hover"><input type="radio" ng-model="formData.linkType" value="full"><span>Share current view (maintaining filter, search, and sort settings).</span></label></div>
+                <div class="dz-modal-link-form-row"><label class="dz-blue-hover"><input type="radio" ng-model="formData.linkType" value="base"><span>Share <span ng-if="isOwner">your</span><span ng-if="!isOwner">this</span> entire trunk.</span></label></div>
+            </form>
+            <input id="input-link" class="no-focus no-border" style="width:100%;padding:5px;" type="text" ng-model="linkOpts.link"></input>
+        </div>
+    </div>
+    <div class="dz-modal-btn-container">
+        <div class="dz-modal-triangle"></div>
+        <div class="dz-modal-btn cancel" ng-click="linkOpts.linkSelected = !linkOpts.linkSelected" ng-show="linkOpts.linkSelected"><span>Back</span></div>
+        <div class="dz-modal-btn cancel" ng-click="show = false"><span>Close</span></div>
+    </div>
+</div>
