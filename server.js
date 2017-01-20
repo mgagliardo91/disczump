@@ -91,6 +91,10 @@ var fileRouter = express.Router();
 require('./app/routes/files.js')(fileRouter, gridFs);
 app.use('/files', fileRouter);
 
+var diagnosticRouter = express.Router();
+require('./app/routes/diagnosticRoutes.js')(diagnosticRouter);
+app.use('/diagnostics', diagnosticRouter);
+
 var mainRouter = express.Router();
 require('./app/routes/routes.js')(mainRouter, passport, gridFs);
 app.use('/', mainRouter);

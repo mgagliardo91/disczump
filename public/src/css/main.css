@@ -3035,7 +3035,6 @@ i.dz-modal-close:hover {
     width: 25px;
     height: 35px;
     margin-left: 10px;
-    border-radius: 5px;
     text-align: center;
 }
 
@@ -3045,7 +3044,7 @@ i.dz-modal-close:hover {
 
 .menu-btn i {
     font-size: 20px;
-	line-height: 35px;
+		line-height: 35px;
     color: #BEBEBE;
 }
 
@@ -3221,14 +3220,11 @@ i.dz-modal-close:hover {
     width: 250px;
     line-height: 35px;
     height: 35px;
+		margin: 0px 10px;
 }
 
 .search-container {
     height: 35px;
-}
-
-.search-container.pad {
-    padding-right: 400px;
 }
 
 .search-btn {

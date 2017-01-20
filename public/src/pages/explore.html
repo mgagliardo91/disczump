@@ -131,7 +131,7 @@
                         <i class="fa fa-search" ng-class="{'fa-search': !loading, 'fa-spin': loading, 'fa-spinner':loading}"></i>
                     </div>
                     <div class="search-bar-wrapper">
-                        <input id="search-explore" ng-model-enter="startSearch();" ng-model="searchParam" class="search-bar" type="text" placeholder="Search discs..."></input>
+                        <input id="search-explore" ng-model-enter="searchParam.length && startSearch();" ng-model="searchParam" class="search-bar" type="text" placeholder="Search discs..."></input>
                         <div class="close-icon" ng-show="searchParam.length" ng-click="searchParam = ''; updateUrl();"></div>
                     </div>
                 </div>

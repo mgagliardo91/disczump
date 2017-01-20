@@ -14,7 +14,8 @@ fs.readdir(path.join(__dirname, "../public/src/js"), function(err, list) {
               input: 'public/src/js/' + file,
               output: 'public/src/js-dist/' + file.replace('.js', '.min.js'),
               options: {
-                  mangle: true
+                  mangle: true,
+                  drop_console: true
               },
               callback: function(err, min){
                 if (err)

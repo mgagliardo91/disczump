@@ -55,6 +55,25 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 }])
 
+.factory('PropService', function() {
+	var properties = {
+		ExploreReqSize: 40,
+		ExploreDefSort: 'createDate',
+		
+		TrunkReqSize: 40,
+		
+		MessageReqSize: 20
+	}
+	
+	var get = function(nameOfProp) {
+		return properties[nameOfProp];
+	}
+	
+	return {
+		get: get
+	}
+})
+
 .factory('TempStore', ['Random', function(Random) {
 	var store = {};
 	
@@ -206,7 +225,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		  method: 'share',
 		  href: window.serverURL + path,
 		}, function(response){
-			console.log(response);
 		});
 	}
 	
@@ -276,16 +294,12 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		} else {
 			registry[type] = [callback];
 		}
-		
-		console.log('Added listener for type [' + type + ']. Count: [' + registry[type].length + ']');
 	}
 	
 	var unregisterForNotification = function(type, callback) {
 		if (registry[type]) {
 			registry[type] = _.without(registry[type], callback);
 		}
-		
-		console.log('Removed listener for type [' + type + ']. Count: [' + registry[type].length + ']');
 	}
 	
   return { 
@@ -614,7 +628,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 			if (response.data && response.data.error) {
 				return response.data.error;
 			} else {
-				console.log('unknown error: ' + JSON.stringify(response));
 				return {
 					message: 'Failed to hit server with request.',
 					type: 'Internal Error'
@@ -692,7 +705,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 			url: geocodeUrl + '?latlng=' + encodeURI(lat + ',' + lng),
 			timeout: 5000
 		}).then(function(response) {
-			console.log(response);
 			var ret = parseResponse(response, ['postal_code']);
 			
 			if (ret.success) {
@@ -752,7 +764,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		}
 		
 		navigator.geolocation.getCurrentPosition(function(position) {
-			console.log(position);
 			curLocation = position.coords;
 		  	return callback(true, curLocation);
 		},function(error) {
@@ -904,8 +915,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
             reqParam.geo = opts.geo;
 			reqParam.geo.filter = typeof(opts.geo.distance) !== 'undefined';
         }
-		
-		console.log(JSON.stringify(reqParam.geo));
 			
 		return reqParam;
 	}
@@ -916,7 +925,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
         
         APIService.Post(urlString, reqParam, function(success, data) {
             if (success) {
-                console.log(data);
                 var response = parseResponse(data);
                 
                 if (response.error) {
@@ -1171,7 +1179,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
         
         APIService.Post(urlString, reqParam, function(success, data) {
             if (success) {
-                console.log(data);
                 var response = parseResponse(data);
                 
                 if (response.error) {
@@ -1203,7 +1210,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
         APIService.Post(urlString, reqParam, function(success, data) {
             if (success) {
                 var response = parseResponse(data);
-                console.log(data);
                 if (response.error) {
                     return callback(false, response.error);
                 }
@@ -1567,7 +1573,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		APIService.Post('/account/delete', {
 			authorizationId: authorizationId
 		}, function(success, data) {
-			console.log(data);
 			doLogout();
 			callback(success, data);
 		});
@@ -1577,8 +1582,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		APIService.PostExt('/oauth', '/confirm', {
 			authorizationId: authorizationId
 		}, function(success, data) {
-			console.log(data);
-			
 			if (success) {
 				setAuth(data);
 			}
@@ -1597,8 +1600,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	
 	var doFacebookLogin = function(auth, callback) {
 		APIService.PostExt('/oauth', '/facebook/login', auth, function(success, data) {
-			console.log(data);
-			
 			if (success) {
 				setAuth(data);
 			}
@@ -1658,8 +1659,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 			password: password,
 			grant_type: 'password'
 		}, function(success, data) {
-			console.log(data);
-			
 			if (success) {
 				setAuth(data);
 			}
@@ -2123,7 +2122,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
             $rootScope.$emit('DZUserPrefsUpdated');
             if (callback) callback(true);
         }, function(err) {
-            console.log(err);
             if (callback) callback(false, err);
         });
     }
@@ -3002,7 +3000,6 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
     };
 
     var drawImageIOSFix = function(o, ctx, img, sx, sy, sw, sh, dx, dy, dw, dh) {
-        // console.log('Just used orientation: ' + o);
         var vertSquashRatio, transX, transY;
         vertSquashRatio = detectVerticalSquash(img);
         dh = dh / vertSquashRatio;

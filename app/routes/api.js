@@ -556,8 +556,7 @@ module.exports = function(app, gridFs) {
 					return next(Error.createError('Error processing query request.', Error.internalError));
 				}
 
-				return res.json(body);
-// 				return res.json(Solr.stripBody(body));
+				return res.json(Solr.stripBody(body));
 			})
 		})
 	

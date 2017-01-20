@@ -1628,7 +1628,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 				unregisterInit();
 				var unregisterDisplay = scope.$watch(function() { return element[0].style.display; }, function(newVal) {
 					if (typeof(newVal) !== 'undefined' && newVal !== 'none') {
-						console.log('showing map');
 						unregisterDisplay();
 						$timeout(function() {
 							if (!init) {
@@ -3728,10 +3727,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Description:  Controller for user trunks functionality. 
 *******************************************************************************/
 
-.controller('TrunksController', ['$scope', '$location', '$routeParams', '$window', '_', '$timeout', 'smoothScroll', 'QueryUserService', 'CacheService', 'AccountService', 'LocationService', 'PageUtils', 'PageCache', 
-	function($scope, $location, $routeParams, $window, _, $timeout, smoothScroll, QueryUserService, CacheService, AccountService, LocationService, PageUtils, PageCache) {
+.controller('TrunksController', ['$scope', '$location', '$routeParams', '$window', '_', '$timeout', 'smoothScroll', 'QueryUserService', 'CacheService', 'AccountService', 'LocationService', 'PageUtils', 'PageCache', 'PropService',  
+	function($scope, $location, $routeParams, $window, _, $timeout, smoothScroll, QueryUserService, CacheService, AccountService, LocationService, PageUtils, PageCache, PropService) {
 		var init = true;
-        var reqSize = 20
+        var reqSize = PropService.get('TrunkReqSize');
 		var sortSet = false;
 		var cacheSettings;
 		var loadMoreActive = false;
@@ -3868,7 +3867,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 				$scope.location.loading = true;
 				LocationService.getGeoLocation(newLoc, function(success, results) {
 					if (success) {
-						console.log(results);
 						$scope.location.results = results;
 						$scope.location.selResult = -1;
 					} else {
@@ -4003,14 +4001,12 @@ angular.module('disczump.controllers', ['disczump.services'])
 						if (override) cacheSettings.loaded = true;
                         $scope.pagination.start = response.start;
                         $scope.pagination.total = response.total;
-                        console.log(response);
                         
                         if (appendOnly) {
                             Array.prototype.push.apply($scope.resultList, response.results);
                         } else {
                             $scope.resultList = response.results;
                             $scope.resultFilters = response.facets;
-                            console.log($scope.resultFilters);
                         }
                     }
 					$scope.updateLocation();
@@ -4191,11 +4187,11 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Description:  Controller for explore functionality. 
 *******************************************************************************/
 .controller('ExploreController', ['$scope', '$location', '$routeParams', '$window', '$q', '_', '$timeout', 'QueryService', 
-								  'CacheService', 'AccountService', 'DiscService', 'RedirectService', 'APIService', 'MembershipService', 'PageCache', 'PageUtils', 
-    function($scope, $location, $routeParams, $window, $q, _, $timeout, QueryService, CacheService, AccountService, DiscService, RedirectService, APIService, MembershipService, PageCache, PageUtils) {
+								  'CacheService', 'AccountService', 'DiscService', 'RedirectService', 'APIService', 'MembershipService', 'PageCache', 'PageUtils', 'PropService', 
+    function($scope, $location, $routeParams, $window, $q, _, $timeout, QueryService, CacheService, AccountService, DiscService, RedirectService, APIService, MembershipService, PageCache, PageUtils, PropService) {
         var init = true;
         var sortSet = false;
-        var reqSize = 20;
+        var reqSize = PropService.get('ExploreReqSize');
 		var cacheSettings;
 		var loadMoreActive = false;
 		$scope.view = {};
@@ -4218,7 +4214,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.pagination = { start: 0, total: 0 };
         
         $scope.searchParam = '';
-        $scope.sortParam = 'createDate';
+        $scope.sortParam = PropService.get('ExploreDefSort');
         
         $scope.loading = true;
         $scope.loadingMore = false;
@@ -4640,7 +4636,6 @@ angular.module('disczump.controllers', ['disczump.services'])
 						if (override) cacheSettings.loaded = true;
                         $scope.pagination.start = response.start;
                         $scope.pagination.total = response.total;
-                        console.log(response);
                         
                         if (appendOnly) {
                             Array.prototype.push.apply($scope.resultList, response.results);
@@ -4674,7 +4669,6 @@ angular.module('disczump.controllers', ['disczump.services'])
                             }
                             
                             $scope.resultFilters = response.facets;
-                            console.log($scope.resultFilters);
                         }
                         $scope.getUsers();
                     }
@@ -4720,13 +4714,13 @@ angular.module('disczump.controllers', ['disczump.services'])
         $scope.resizeRes = function(callback){
             var resCont = document.getElementById('results-container');
             var resList = document.getElementById('results-list');
-			var resHeaderStatic = document.getElementById('result-header-static');
-			var resHeaderFluid = document.getElementById('result-header-fluid');
+						var resHeaderStatic = document.getElementById('result-header-static');
+						var resHeaderFluid = document.getElementById('result-header-fluid');
 			
             $timeout(function() {
             	angular.element(resList).css('width', Math.floor(resCont.clientWidth / 207) * 207 + 'px');
-				angular.element(resHeaderFluid).css('padding-right', resHeaderStatic.clientWidth + 10 + 'px');
-				if (typeof(callback) === 'function') return callback();
+							angular.element(resHeaderFluid).css('padding-right', resHeaderStatic.clientWidth + 10 + 'px');
+							if (typeof(callback) === 'function') return callback();
             });
         }
         
@@ -4770,7 +4764,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                     offset: 2
 				}}, function(success, response) {
                     if (success) {
-                        console.log(response);
+                        //console.log(response);
                     }
                 });
         }
@@ -4912,8 +4906,8 @@ angular.module('disczump.controllers', ['disczump.services'])
                 }
                 $scope.trunk.userId = user._id;
                 $scope.trunk.user = user;
-				$scope.statusHome = 't/' + user.username;
-				
+								$scope.statusHome = 't/' + user.username;
+								$scope.resizeRes();
 				if ($scope.isOwnedTrunk) {
 					AccountService.getAccountMarket(function(success, data) {
 						if (!success) {
@@ -4922,9 +4916,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 						$scope.marketData = data;
 						$scope.marketData.accountName = MembershipService.getAccountName($scope.curUser.accountType);
 					});
-				}
-							
-                init = false;
+				}			
+    		init = false;
 				startWatch();
             });
         } else {
@@ -4932,8 +4925,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 			$scope.statusHome = 'explore';
 				startWatch();
         }
-		
-		$scope.resizeRes();
+			
+			$scope.resizeRes();
     }
 ])
 
@@ -5638,8 +5631,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Description:  Handles sending, receiving, and organizing messages. 
 *******************************************************************************/
 .controller('MessageController', ['$scope', '$location', '$timeout', '$q', '_', 'smoothScroll', 'APIService', 'AccountService', 
-								  'SocketUtils', 'PageUtils', 'CacheService', 'Random', 'MessageService',
-    function($scope, $location, $timeout, $q, _, smoothScroll, APIService, AccountService, SocketUtils, PageUtils, CacheService, Random, MessageService) {
+								  'SocketUtils', 'PageUtils', 'CacheService', 'Random', 'MessageService', 'PropService', 
+    function($scope, $location, $timeout, $q, _, smoothScroll, APIService, AccountService, SocketUtils, PageUtils, CacheService, Random, MessageService, PropService) {
 			if (!AccountService.isLoggedIn()) {
 				var curPath = $location.path();
 				return $location.path('/login').search('redirect', curPath);
@@ -5828,7 +5821,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			var buildMessageReq = function() {
-				return '?count=20' + ($scope.activeThread.refId ? '&refId=' + $scope.activeThread.refId : '');
+				return '?count=' + PropService.get('MessageReqSize') + ($scope.activeThread.refId ? '&refId=' + $scope.activeThread.refId : '');
 			}
 			
 			$scope.toggleSend = function() {
@@ -6782,11 +6775,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 			$scope.paypalLoading = true;
 			MembershipService.createHostedPage($scope.type, $scope.billing, $scope.promo.code, function(success, request) {
 				if (success) {
-					console.log(request);
 					$scope.request = request.request;
 					$scope.paypalConfig.params = {
 						src: 'https://payflowlink.paypal.com?SECURETOKENID=' + request.hostedPage.secureTokenId + '&SECURETOKEN=' + request.hostedPage.secureToken,
-// 						src: 'https://payflowlink.paypal.com?MODE=TEST&SECURETOKENID=' + request.hostedPage.secureTokenId + '&SECURETOKEN=' + request.hostedPage.secureToken,
 						width: '490',
 						height: '380',
 						border: '0',
