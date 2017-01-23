@@ -1596,9 +1596,14 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		}, function(success, data) {
 			if (success) {
 				setAuth(data);
+				initAccount().then(function(account) {
+					callback(true, account);
+				}, function() {
+					callback(false);
+				});
+			} else {
+				callback(success, data);
 			}
-			
-			callback(success, data);
 		});
 	}
 	

@@ -7268,22 +7268,16 @@ angular.module('disczump.controllers', ['disczump.services'])
 		
 		$scope.confirmAlert.error = {}
 		
-		AccountService.doAccountConfirm($routeParams.authorizationId, function(success, err) {
+		AccountService.doAccountConfirm($routeParams.authorizationId, function(success, retVal) {
 			if (success) {
-				AccountService.getAccount(function(success, account) {
-					if (success) {
-						return $location.path('/t/' + AccountService.getAccount().username).replace();
-					} else {
-						return $location.path('/explore');
-					}
-				});
+				return $location.path('/t/' + retVal.username).replace();
 			}
 			
 			$scope.loading = false;
-				if (err) {
+				if (retVal) {
 					$scope.confirmAlert.error = {
-						title: err.type,
-						message: err.message,
+						title: retVal.type,
+						message: retVal.message,
 						show: true
 					}
 				}
