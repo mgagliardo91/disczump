@@ -1648,7 +1648,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 			APIService.Get('/account', function(success, data) {
 				if (success) {
 					setAuth(token);
-					console.log('Using Token: ' + authToken.access_token);
+					//console.log('Using Token: ' + authToken.access_token);
 					account = data;
 					CacheService.pushUser(account);
 				} else {

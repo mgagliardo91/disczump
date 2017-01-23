@@ -913,13 +913,15 @@ angular.module('disczump.controllers', ['disczump.services'])
 				
 				$timeout(function() {
 					scope.active = false;
-				}, 100);
+				}, 200);
 			}
 			
 			var keyDownEvt = function(evt) {
 				var handle = (evt.keyCode == 13 && scope.activeIndex > -1) || (evt.keyCode == 9 && scope.activeIndex > -1);
 				if (handle) {
 					evt.preventDefault();
+					ngModel.disableEnter = true;
+					evt.stopImmediatePropagation();
 				}
 			}
 			
@@ -933,6 +935,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 					$timeout(function() {
 						scope.activeIndex = -1;
 						scope.active = false;
+						ngModel.disableEnter = false;
 					});
 					return;
 				}
@@ -3593,9 +3596,12 @@ angular.module('disczump.controllers', ['disczump.services'])
 		link: function (scope, element, attrs, ngModelCtrl) {
         	element.bind("keyup", function (event) {
             	if(event.which === 13 && !event.shiftKey) {
+					if (ngModelCtrl.disableEnter) {
+						return;
+					}
 					event.stopImmediatePropagation();
 					$timeout(function (){
-						ngModelCtrl.$commitViewValue()
+						ngModelCtrl.$commitViewValue();
 						scope.$eval(attrs.ngModelEnter);
 						event.preventDefault();
 					});
