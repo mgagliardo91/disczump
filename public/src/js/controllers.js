@@ -7270,7 +7270,13 @@ angular.module('disczump.controllers', ['disczump.services'])
 		
 		AccountService.doAccountConfirm($routeParams.authorizationId, function(success, err) {
 			if (success) {
-				return $location.path('/t/' + AccountService.getAccount().username).replace();
+				AccountService.getAccount(function(success, account) {
+					if (success) {
+						return $location.path('/t/' + AccountService.getAccount().username).replace();
+					} else {
+						return $location.path('/explore');
+					}
+				});
 			}
 			
 			$scope.loading = false;
