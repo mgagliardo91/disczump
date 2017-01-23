@@ -985,7 +985,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 	}
 }])
 
-.directive('parseText', ['$compile', function($compile) {
+.directive('parseText', ['$compile', 'PageCache', function($compile, PageCache) {
 	return {
 		restrict: 'A',
 		scope: {
@@ -1017,7 +1017,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			 }
 			 
 			if (typeof(attrs.parseDisc) !== 'undefined') {
-				var discRegex = /(?:https?:\/\/)?(?:www\.)?(?:ec2-54-218-32-190\.us-west-2\.compute\.amazonaws\.com)\/d\/[a-zA-Z0-9-_]+/g;
+				var discRegex = new RegExp('(?:https?:\/\/)?(?:www\.)?(?:' + PageCache.getUrlRegex() + '\\.com)\/d\/[a-zA-Z0-9-_]+', 'g');
 				var matches = getMatches(discRegex, inner);
 				for (var i = 0; i < matches.length; i++) {
 					var dElem = '<inline-disc disc-url="' +  matches[i] + '"></inline-disc>';
@@ -1063,18 +1063,18 @@ angular.module('disczump.controllers', ['disczump.services'])
 	}
 }])
 
-.directive('inlineDisc', ['_', '$timeout', 'CacheService', function(_, $timeout, CacheService) {
+.directive('inlineDisc', ['_', '$timeout', 'CacheService', 'PageCache', function(_, $timeout, CacheService, PageCache) {
 	return {
 		restrict: 'E',
 		replace: true,
 		scope: {
 			discUrl: '@'
 		},
-		template: '<a class="inline-disc hover-underline" ng-href="/d/{{discId}}">' +
+		template: '<a class="inline-disc hover-underline" ng-href="{{url}}">' +
 					'<img img-load directive-on="init" directive-set="{\'img-src\':\'{{image}\}\'}"/>{{title}}' +
 				'</a>',
 		link: function(scope, elem, attrs) {
-			var discRegex = /(?:https?:\/\/)?(?:www\.)?(?:ec2-54-218-32-190\.us-west-2\.compute\.amazonaws\.com)\/d\/([a-zA-Z0-9-_]+)/g;
+			var discRegex = new RegExp('(?:https?:\/\/)?(?:www\.)?(?:' + PageCache.getUrlRegex() + '\\.com)\/d\/([a-zA-Z0-9-_]+)', 'g');
 			var match = discRegex.exec(scope.discUrl);
 			if (match) {
 				scope.discId = match[match.length - 1];
@@ -1084,13 +1084,15 @@ angular.module('disczump.controllers', ['disczump.services'])
 							scope.image = disc.primaryImage ? '/files/' + _.findWhere(disc.imageList, {_id: disc.primaryImage}).fileId : undefined;
 							scope.init = typeof(scope.image) !== 'undefined';
 							scope.title = disc.brand + ' ' + disc.name;
+							scope.url = '/d/' + disc._id;
 						});
 					} else {
-						scope.title = 'Unknown';
+						scope.title = 'Private Disc';
+						scope.url = '#';
 					}
 				});
 			} else {
-				scope.title = 'Unknown';
+				scope.title = 'Unknown Disc';
 			}
 		}		
 	}
