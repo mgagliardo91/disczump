@@ -2,15 +2,6 @@
 
 // expose our config directly to our application using module.exports
 module.exports = {
-
-//     'facebookAuth' : {
-//         'clientID'      : '1433417853616595', // your App ID
-//         'clientSecret'  : '8f4bdccf243ed064d9446ef2f43f7054', // your App Secret
-//     },
-    'facebookAuth' : {
-        'clientID'      : '1456432391315141', // your App ID
-        'clientSecret'  : '8a9f8168cc5bb0b3c9f85ced5d8d7123', // your App Secret
-    },
     'gmailAuth' : {
         'user': 'support@disczump.com',
         'clientId': '327043434975-q4t3oekdq6nqidfpmepi93dtspl572j4.apps.googleusercontent.com',

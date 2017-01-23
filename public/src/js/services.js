@@ -126,7 +126,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 
 .factory('FacebookUtils', ['$window', '$q', '$ocLazyLoad', 'AccountService', function($window, $q, $ocLazyLoad, AccountService) {
 	var fbStatus;
-	var appId = '1456432391315141';
+	var appId = window.fbId;
 	
 	var initFacebook = function() {
 		var deffered = $q.defer();
@@ -309,10 +309,8 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 }])
 
-
-
 .factory('PageCache', ['$location', '$rootScope', function($location, $rootScope) {
-	var currentPath, backActive;
+	var currentPath, backActive, urlRegex;
 	var pageCache = [];
 	
 	function setCurrentPath(path) {
@@ -362,12 +360,26 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		});
 	}
 	
+	function getUrlRegex() {
+		if (typeof(urlRegex) === 'undefined') {
+			var baseUrl = window.serverURL.match('https://(.*).com')[1];
+			var baseUrlArr = baseUrl.split('.');
+			urlRegex = baseUrlArr[0];
+			
+			for (var i = 1; i < baseUrlArr.length; i++) {
+				urlRegex += '\\.' + baseUrlArr[i];
+			}
+		}
+		return urlRegex;
+	}
+	
 	return {
 		isNavBack: isNavBack,
 		setDataItem: setDataItem,
 		setData: setData,
 		init: init,
-		getPageData: getPageData
+		getPageData: getPageData,
+		getUrlRegex: getUrlRegex
 	}
 }])
 

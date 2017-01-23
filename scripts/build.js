@@ -1,9 +1,10 @@
+var DZ_HOME = process.env.DZ_HOME;
 var compressor = require('node-minify');
 var path = require('path');
 var fs = require('fs');
 var async = require('async');
 
-fs.readdir(path.join(__dirname, "../public/src/js"), function(err, list) {
+fs.readdir(path.join(DZ_HOME, "/public/src/js"), function(err, list) {
     if (err)
         return console.log(err);
     
@@ -93,7 +94,7 @@ fs.readdir(path.join(__dirname, "../public/src/js"), function(err, list) {
 // });
 
 
-fs.readdir(path.join(__dirname, "../public/src/css"), function(err, list) {
+fs.readdir(path.join(DZ_HOME, "/public/src/css"), function(err, list) {
     if (err)
         return console.log(err);
     
