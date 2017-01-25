@@ -3710,6 +3710,7 @@ input.search-bar {
     padding: 5px 0px;
     background-color: #008edd;
     color: #fff;
+		height: 35px;
 }
 
 ul.grid-item-list {
@@ -3722,6 +3723,7 @@ ul.grid-item-list {
     left: 0;
     right: 0;
     margin-bottom: 0px;
+		height: 195px;
 }
 
 ul.grid-item-list li {
