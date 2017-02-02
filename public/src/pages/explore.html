@@ -100,7 +100,7 @@
         </div>
         <div class="right-container" id="results-container" ng-class="{'fullscreen': fullscreen}">
             <div class="result-header">
-                <div id="result-header-static" style="float:right;">
+                <div id="result-header-static" style="float:right;" ng-show="isSHeaderReady">
                     <div class="menu-btn" ng-attr-title="{{fullscreen ? 'Minimize' : 'Maximize'}}">
                         <span><i class="fa fa-arrows-alt" ng-click="fullscreen = !fullscreen;" ng-class="{'active':fullscreen}"></i></span>
                     </div>
@@ -123,7 +123,7 @@
                         </select>
                     </div>
                 </div>
-                <div id="result-header-fluid" class="search-container pad">
+                <div id="result-header-fluid" class="search-container pad" ng-show="isFHeaderReady">
                     <div class="search-btn round-left no-right float-left active">
                         <i class="fa fa-database"></i>
                     </div>

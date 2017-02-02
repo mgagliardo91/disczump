@@ -3,8 +3,11 @@
   "main": "server.js",
   "scripts": {
     "test": "make test",
-    "build": "node ./scripts/build.js"
-  },
+    "build": "node ./scripts/build.js",
+    "start":"npm run build; ./node_modules/forever/bin/forever start server.js",
+    "restart":"npm run build; ./node_modules/forever/bin/forever restart server.js",
+    "start-dev":"npm run build; node server.js"  
+},
   "dependencies" : {
     "express" : "~4.0.0",
     "express-handlebars": "^1.1.0",
