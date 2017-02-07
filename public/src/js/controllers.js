@@ -4042,21 +4042,14 @@ angular.module('disczump.controllers', ['disczump.services'])
             var resCont = document.getElementById('results-container');
             var resList = document.getElementById('results-list');
 			var resHeaderStatic = document.getElementById('result-header-static');
+					var resHeaderFluid = document.getElementById('result-header-fluid');
 			
             $timeout(function() {
             	angular.element(resList).css('width', Math.floor(resCont.clientWidth / 207) * 207 + 'px');
 				angular.element(resHeaderFluid).css('padding-right', resHeaderStatic.clientWidth + 10 + 'px');
-							$scope.isSHeaderReady = true;
 				if (typeof(callback) === 'function') return callback();
             });
         }
-				
-				$scope.$watch(function() {return document.getElementById('result-header-static').clientWidth;}, function(newVal) {
-					var resHeaderFluid = document.getElementById('result-header-fluid');
-					
-					angular.element(resHeaderFluid).css('padding-right', newVal + 10 + 'px');
-					$scope.isFHeaderReady = true;
-				});
 		
 		$scope.$on('$locationChangeStart', function() {
 			PageCache.setData({
@@ -4730,20 +4723,14 @@ angular.module('disczump.controllers', ['disczump.services'])
             var resCont = document.getElementById('results-container');
             var resList = document.getElementById('results-list');
 						var resHeaderStatic = document.getElementById('result-header-static');
+						var resHeaderFluid = document.getElementById('result-header-fluid');
 			
             $timeout(function() {
             	angular.element(resList).css('width', Math.floor(resCont.clientWidth / 207) * 207 + 'px');
-							$scope.isSHeaderReady = true;
+							angular.element(resHeaderFluid).css('padding-right', resHeaderStatic.clientWidth + 10 + 'px');
 							if (typeof(callback) === 'function') return callback();
             });
         }
-				
-				$scope.$watch(function() {return document.getElementById('result-header-static').clientWidth;}, function(newVal) {
-					var resHeaderFluid = document.getElementById('result-header-fluid');
-					
-					angular.element(resHeaderFluid).css('padding-right', newVal + 10 + 'px');
-					$scope.isFHeaderReady = true;
-				});
         
         $scope.isFilterActive = function(facet, filter) {
             var prop = _.find($scope.activeFilters, {name: facet.prop});
