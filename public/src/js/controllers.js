@@ -1030,7 +1030,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			if (typeof(attrs.parseUrl) !== 'undefined') {
-				var urlRegex = /(?:https?:\/\/)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)/g;
+				var urlRegex = /(?:https?:\/\/)?(?:www\.)?(?:[-a-zA-Z0-9@:%_\+~#=]{1,256}\.)+(?:[a-z]{2,4}|\d*)(?:\:\d{1,5}\/?)?(?:\/[-a-zA-Z0-9@:%_\+.~#?&=]*)*/g;
+				//var urlRegex = /(?:https?:\/\/)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)/g;
 				var matches = getMatches(urlRegex, inner);
 				for (var i = 0; i < matches.length; i++) {
 					var url = /^https?:\/\//i.test(matches[i]) ? matches[i] : 'http://' + matches[i];
@@ -3567,15 +3568,18 @@ angular.module('disczump.controllers', ['disczump.services'])
 		restrict: 'A',
 		link: function (scope, element, attrs) {
 			
-			if (typeof(attrs.ngEnterLock) !== 'undefined') {
-				element.bind('keydown', function(event) {
-					if(event.which === 13 && !event.shiftKey) {
-						event.preventDefault();
-					};
-				})
-			}
+		if (typeof(attrs.ngEnterLock) !== 'undefined') {
+			element.bind('keydown', function(event) {
+				if (attrs.ngEnterLock.length && !scope.$eval(attrs.ngEnterLock))
+					return;
+
+				if(event.which === 13 && !event.shiftKey) {
+					event.preventDefault();
+				};
+			})
+		}
 			
-        	element.bind("keyup", function (event) {
+      element.bind("keyup", function (event) {
 				if(event.which === 13 && !event.shiftKey) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
