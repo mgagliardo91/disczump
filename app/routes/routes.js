@@ -16,7 +16,7 @@ module.exports = function(app, passport, gridFs) {
         DiscController.getDisc(undefined, req.params.discId, function(err, disc) {
 			res.render('portal', {
                layout: 'desktop',
-               isRelease: localConfig.release,
+               isRelease: localConfig.release && !req.devMode,
                serverURL : localConfig.serverURL,
 			   fbId: localConfig.facebookAuth.clientID,
                reqScroll: req.device.isMobile,
@@ -29,7 +29,7 @@ module.exports = function(app, passport, gridFs) {
         UserController.getUserByUsername(req.params.username, function(err, user) {
 			res.render('portal', {
                layout: 'desktop',
-               isRelease: localConfig.release,
+               isRelease: localConfig.release && !req.devMode,
                serverURL : localConfig.serverURL,
 			   fbId: localConfig.facebookAuth.clientID,
                reqScroll: req.device.isMobile,
@@ -45,7 +45,7 @@ module.exports = function(app, passport, gridFs) {
     app.get('/', function(req, res) {
        res.render('portal', {
            layout: 'desktop',
-           isRelease: localConfig.release,
+           isRelease: localConfig.release && !req.devMode,
            serverURL : localConfig.serverURL,
 		   fbId: localConfig.facebookAuth.clientID,
            reqScroll: req.device.isMobile,
@@ -56,7 +56,7 @@ module.exports = function(app, passport, gridFs) {
     app.all('/*', function(req, res) {
        res.render('portal', {
            layout: 'desktop',
-           isRelease: localConfig.release,
+           isRelease: localConfig.release && !req.devMode,
            serverURL : localConfig.serverURL,
 		   fbId: localConfig.facebookAuth.clientID,
            reqScroll: req.device.isMobile,
