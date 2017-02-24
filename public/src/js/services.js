@@ -124,7 +124,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 }])
 
-.factory('FacebookUtils', ['$window', '$q', '$ocLazyLoad', 'AccountService', function($window, $q, $ocLazyLoad, AccountService) {
+.factory('FacebookUtils', ['$http', '$window', '$q', '$ocLazyLoad', 'AccountService', function($http, $window, $q, $ocLazyLoad, AccountService) {
 	var fbStatus;
 	var appId = window.fbId;
 	
@@ -215,8 +215,14 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 	
 	var scrapePath = function(path, callback) {
-		FB.api('/?id=' + window.serverURL + path + '&scrape=true', 'post', {}, function(response) {
-			return callback(typeof(response.id) === 'undefined');
+		var url = encodeURIComponent(window.serverURL + path)
+		$http({
+			method:'POST',
+			url: 'https://graph.facebook.com/?id=' + url + '&scrape=true',
+			timeout: 5000
+		}).then(function(response) {
+			var error = !response.data || !response.data.id;
+			return callback(error);
 		});
 	}
 	

@@ -1030,7 +1030,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 			}
 			
 			if (typeof(attrs.parseUrl) !== 'undefined') {
-				var urlRegex = /(?:https?:\/\/)?(?:www\.)?(?:[-a-zA-Z0-9@:%_\+~#=]{1,256}\.)+(?:[a-z]{2,4}|\d*)(?:\:\d{1,5}\/?)?(?:\/[-a-zA-Z0-9@:%_\+.~#?&=]*)*/g;
+				var urlRegex = /(?:https?:\/\/)?(?:www\.)?(?:[-a-zA-Z0-9@:%_\+~#=]{1,256}\.)+[a-z]{2,4}(?:\:\d{1,5}\/?)?(?:\/[-a-zA-Z0-9@:%_\+.~#?&=]*)*/g;
 				//var urlRegex = /(?:https?:\/\/)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)/g;
 				var matches = getMatches(urlRegex, inner);
 				for (var i = 0; i < matches.length; i++) {
