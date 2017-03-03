@@ -89,6 +89,11 @@ userSchema.pre('save', function(next) {
     next();
 });
 
+userSchema.methods.updateActivity = function() {
+	this.local.lastAccess = new Date();
+	this.save();
+}
+
 userSchema.methods.promoUsed = function(promoId) {
     this.account.profile.promoCodes.push(promoId);
 	this.save();

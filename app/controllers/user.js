@@ -283,6 +283,8 @@ function getAccount(userId, callback) {
        if (err) 
 			return callback(err);
 		
+		user.updateActivity();
+
 		return callback(null, user);
     });
 }
