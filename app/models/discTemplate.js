@@ -1,24 +1,36 @@
 var mongoose = require('mongoose');
 var shortId = require('shortid');;
 
-var discTemplateSchema = mongoose.Schema({
+var discMoldSchema = mongoose.Schema({
     _id: {
 	    type: String,
 	    unique: true,
 	    default: shortId.generate
 	},
 	textSearch: String,
-    brand: String,
-    name: String,
-    type: String,
-    material: String,
-    speed: Number,
-    glide: Number,
-    turn: Number,
-    fade: Number
-    
+	brand: String,
+	name: String,
+	type: String,
+	speed: Number,
+	glide: Number,
+	turn: Number,
+	fade: Number
 });
 
-discTemplateSchema.index({ textSearch: 1 });
+var discMaterialSchema = mongoose.Schema({
+	_id: {
+	    type: String,
+	    unique: true,
+	    default: shortId.generate
+	},
+	brand: String,
+	material: [String]
+});
 
-module.exports = mongoose.model('DiscTemplate', discTemplateSchema);
+discMoldSchema.index({ textSearch: 1 });
+discMaterialSchema.index({ brand: 1 });
+
+module.exports = {
+	DiscMold: mongoose.model('DiscMold', discMoldSchema),
+	DiscMaterial: mongoose.model('DiscMaterial', discMaterialSchema)
+}

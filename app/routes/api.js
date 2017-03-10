@@ -580,6 +580,16 @@ module.exports = function(app, gridFs) {
 			});
 		});
 	
+	app.route('/templates/:templateId/materials')
+		.get(Access.clientAccess, function(req, res, next) {
+			DiscTemplateController.getMaterials(req.params.templateId, function(err, materials) {
+				if (err)
+					return next(err);
+				
+				return res.json(materials);
+			});
+		});
+	
 	app.route('/threads/messageCount')
 		.get(Access.hasAccess, function(req, res, next) {
 		MessageController.getTotalUnread(req.user._id, function(err, threads) {

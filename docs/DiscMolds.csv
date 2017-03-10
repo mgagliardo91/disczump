@@ -1,0 +1,432 @@
+BRAND,NAME,TYPE,SPEED,GLIDE,TURN,FADE
+Axiom,Fireball,Distance Driver,11,3,0,4
+Axiom,Defy,Distance Driver,12,5,-1,2
+Axiom,Insanity,Distance Driver,11,5,-2,2
+Axiom,Thrill,Distance Driver,11,4,0,3
+Axiom,Vanish,Distance Driver,12,5,-3,2
+Axiom,Virus,Distance Driver,11,5,-4,1
+Axiom,Wrath,Distance Driver,11,5,-1,2
+Axiom,Clash,Fairway Driver,7,5,-1,3
+Axiom,Crave,Fairway Driver,6,5,-1,1
+Axiom,Inspire,Fairway Driver,6,5,-3,1
+Axiom,Alias,Mid-range,5,5,-1,1
+Axiom,Theory,Mid-range,5,5,-2,1
+Axiom,Icon,Mini,,,,
+Axiom,Envy,Putt/Approach,2,3,0,2
+Axiom,Proxy,Putt/Approach,3,3,-1,1
+DGA,Hurricane,Distance Driver,12,5,-1,2
+DGA,Rogue,Distance Driver,11,4,-1,2
+DGA,Sail,Distance Driver,11,6,-3,1
+DGA,Torrent,Distance Driver,14,5,-1,2
+DGA,Tsunami,Distance Driver,10,3,0,4
+DGA,Undertow,Distance Driver,10,4,-1,1
+DGA,Flathead Cyclone,Fairway Driver,7,4,-1,3
+DGA,Hellfire,Fairway Driver,10,3,0,5
+DGA,Pipeline,Fairway Driver,8,5,0,2
+DGA,Squall,Mid-range,6,4,-1,1
+DGA,Aftershock,Mid-range,4,3,0,2
+DGA,Breaker,Putt/Approach,3,3,0,3
+DGA,Shockwave,Mid-range,4,2,0,3
+DGA,Blowfly I,Putt/Approach,2,2,-1,2
+DGA,Blowfly II,Putt/Approach,3,2,-1,1
+DGA,Blunt Gumbputt,Putt/Approach,2,2,0,2
+DGA,PowerDrive Gumbputt,Putt/Approach,2,2,-2,1
+DGA,Reef,Putt/Approach,2,2,-1,1
+DGA,Steady,Putt/Approach,2,3,0,1
+DGA,Titanic,Putt/Approach,2,2,0,2
+Discmania,CD,Distance Driver,10,5,-1,2
+Discmania,CD2,Distance Driver,9,5,-1,2
+Discmania,DD,Distance Driver,11,5,0,2
+Discmania,DD2,Distance Driver,13,5,-2,2
+Discmania,DDx,Distance Driver,12,6,-1,2
+Discmania,PD,Distance Driver,10,4,0,3
+Discmania,PD2,Distance Driver,12,4,0,4
+Discmania,TD,Distance Driver,10,5,-2,1
+Discmania,TD2,Distance Driver,10,5,-4,1
+Discmania,FD,Fairway Driver,7,6,-1,1
+Discmania,FD2,Fairway Driver,7,4,0,2
+Discmania,FD3,Fairway Driver,9,4,0,3
+Discmania,GM,Mid-range,5,4,0,2
+Discmania,MD,Mid-range,4,5,0,0
+Discmania,MD1,Mid-range,4,4,0,2
+Discmania,MD2,Mid-range,4,5,0,2
+Discmania,MD3,Mid-range,5,5,0,3
+Discmania,P1,Putt/Approach,2,3,0,0
+Discmania,P1x,Putt/Approach,2,3,0,1
+Discmania,P2,Putt/Approach,2,3,0,1
+Discmania,P3,Putt/Approach,3,2,0,3
+Discraft,Avenger,Distance Driver,10,5,0,3
+Discraft,Avenger SS,Distance Driver,10,5,-3,1
+Discraft,Crank,Distance Driver,12,5,-1,2
+Discraft,Crank SS,Distance Driver,12,4,-1,2
+Discraft,Crush,Distance Driver,11,5,0,4
+Discraft,Flash,Distance Driver,10,5,-2,3
+Discraft,Flick,Distance Driver,9,4,1,4
+Discraft,Force,Distance Driver,12,5,0,4
+Discraft,Heat,Distance Driver,9,5,-3,1
+Discraft,Mantis,Distance Driver,8,5,-1,2
+Discraft,Nuke,Distance Driver,13,5,-1,3
+Discraft,Nuke OS,Distance Driver,13,4,0,4
+Discraft,Nuke SS,Distance Driver,13,5,-3,3
+Discraft,Pulse,Distance Driver,11,4,0,3
+Discraft,Spectra,Distance Driver,12,5,-2,2
+Discraft,Surge,Distance Driver,11,5,-1,3
+Discraft,Surge SS,Distance Driver,11,5,-1,2
+Discraft,Thrasher,Distance Driver,12,5,-3,2
+Discraft,Undertaker,Distance Driver,9,5,-1,3
+Discraft,Wildcat,Distance Driver,11,5,-2,3
+Discraft,XL,Distance Driver,8,5,-1,2
+Discraft,XS,Distance Driver,8,5,-2,3
+Discraft,Archer,Fairway Driver,6,5,-3,1
+Discraft,Cyclone,Fairway Driver,7,4,-1,3
+Discraft,Eclipse,Fairway Driver,7,5,-2,2
+Discraft,Glide,Fairway Driver,6,5,-3,2
+Discraft,Impact,Fairway Driver,5,5,-2,2
+Discraft,Predator,Fairway Driver,9,4,0,4
+Discraft,Reaper,Fairway Driver,8,3,0,4
+Discraft,Stalker,Fairway Driver,8,5,-1,1
+Discraft,Stratus,Fairway Driver,5,5,-3,1
+Discraft,Talon,Fairway Driver,8,3,1,3
+Discraft,Tracker,Fairway Driver,8,5,-1,3
+Discraft,Xpress,Fairway Driver,8,5,-3,1
+Discraft,Zombee,Fairway Driver,6,5,-1,1
+Discraft,Buzzz,Mid-range,5,5,0,1
+Discraft,Buzzz GT,Mid-range,5,5,0,1
+Discraft,Buzzz OS,Mid-range,5,4,0,3
+Discraft,Buzzz SS,Mid-range,5,4,-2,1
+Discraft,Comet,Mid-range,4,5,-2,1
+Discraft,Drone,Mid-range,5,4,0,4
+Discraft,Hawk,Mid-range,4,5,-2,2
+Discraft,Hornet,Mid-range,5,5,0,4
+Discraft,Meteor,Mid-range,4,5,-3,1
+Discraft,Nebula,Mid-range,,,,
+Discraft,Wasp,Mid-range,5,5,0,3
+Discraft,APX,Putt/Approach,2,3,-1,1
+Discraft,Banger GT,Putt/Approach,2,3,0,1
+Discraft,Challenger,Putt/Approach,2,3,0,2
+Discraft,Focus,Putt/Approach,2,3,-1,2
+Discraft,Magnet,Putt/Approach,2,3,-1,2
+Discraft,Putt'r,Putt/Approach,2,3,-2,1
+Discraft,Rattler,Putt/Approach,2,3,-1,1
+Discraft,Ringer,Putt/Approach,3,4,0,2
+Discraft,Roach,Putt/Approach,2,4,-1,1
+Discraft,Zone,Putt/Approach,3,3,0,3
+Dynamic Discs,Defender,Distance Driver,13,5,0,3
+Dynamic Discs,Enforcer,Distance Driver,12,4,0.5,4
+Dynamic Discs,Freedom,Distance Driver,14,5,-2,3
+Dynamic Discs,Renegade,Distance Driver,11,5,-1.5,2.5
+Dynamic Discs,Sheriff,Distance Driver,13,5,-1,2
+Dynamic Discs,Trespass,Distance Driver,12,5,-0.5,3
+Dynamic Discs,Breakout,Fairway Driver,8,5,-1,1.5
+Dynamic Discs,Convict,Fairway Driver,9,4,-0.5,3
+Dynamic Discs,Escape,Fairway Driver,9,5,-0.5,2
+Dynamic Discs,Felon,Fairway Driver,9,3,0.5,4
+Dynamic Discs,Thief,Fairway Driver,8,5,0,2
+Dynamic Discs,Witness,Fairway Driver,8,6,-3,1
+Dynamic Discs,Evidence,Mid-range,5,5,-1,0
+Dynamic Discs,Fugitive,Mid-range,5,5,-0.5,1.5
+Dynamic Discs,Justice,Mid-range,5,1,0.5,4
+Dynamic Discs,Proof,Mid-range,5,6,-3,1
+Dynamic Discs,Suspect,Mid-range,4,3,0,3
+Dynamic Discs,EMAC Truth,Mid-range,5,5,0,2
+Dynamic Discs,Truth,Mid-range,5,5,-1,1
+Dynamic Discs,Verdict,Mid-range,5,4,0,3.5
+Dynamic Discs,Warrant,Mid-range,5,5,-2,0
+Dynamic Discs,Gavel,Putt/Approach,3,5,-2,0.5
+Dynamic Discs,Judge,Putt/Approach,2,4,0,0.5
+Dynamic Discs,Marshal,Putt/Approach,3,4,0,1
+Dynamic Discs,Warden,Putt/Approach,2,4,0,0.5
+Gateway,Diablo DT,Distance Driver,12,6,-1,3
+Gateway,Illusion,Distance Driver,11,5,-1,3
+Gateway,Ninja,Distance Driver,14,6,-1,2
+Gateway,Samurai,Distance Driver,13,5,-2,2
+Gateway,Slayer,Distance Driver,13,5,-2,2
+Gateway,Speed Demon,Distance Driver,12,3,0,4
+Gateway,Spirit,Distance Driver,11,5,1,5
+Gateway,Rage,Distance Driver,10,5,-1,4
+Gateway,Apache,Fairway Driver,9,4,-1,2
+Gateway,Assassin,Fairway Driver,9,6,-2,1
+Gateway,Hybrid,Fairway Driver,7,4,-1,3
+Gateway,Sabre,Fairway Driver,8,5,-1,1
+Gateway,Blaze,Mid-range,7,5,0,3
+Gateway,Demon,Mid-range,5,3,0,4
+Gateway,Element,Mid-range,5,5,-2,1
+Gateway,Karma,Mid-range,5,5,-1,3
+Gateway,Mystic,Mid-range,5,4,-2,1
+Gateway,Scout,Mid-range,6,5,-1,2
+Gateway,Warrior,Mid-range,5,4,-1,3
+Gateway,Chief,Putt/Approach,3,3,0,2
+Gateway,Chief OS,Putt/Approach,3,3,0,3
+Gateway,Devil Hawk,Putt/Approach,3,3,0,2
+Gateway,Magic,Putt/Approach,3,5,-1,0
+Gateway,Shaman,Putt/Approach,3,4,-1,2
+Gateway,Voodoo,Putt/Approach,3,4,0,1
+Gateway,War Spear,Putt/Approach,2,3,0,3
+Gateway,Warlock,Putt/Approach,3,5,-1,2
+Gateway,Wizard,Putt/Approach,3,5,0,2
+Hyzerbomb,Veteran,Fairway Driver,7,4,0,1
+Hyzerbomb,Moab,Fairway Driver,6,4,1,5
+Hyzerbomb,Mortar,Mid-range,5,4,0,3
+Hyzerbomb,Panzer,Putt/Approach,2,2,0,3
+Hyzerbomb,Tank,Putt/Approach,2,2,0,2
+Innova,Ape,Distance Driver,13,5,0,4
+Innova,Archon,Distance Driver,11,5,-2,2
+Innova,Beast,Distance Driver,10,5,-2,2
+Innova,Boss,Distance Driver,13,5,-1,3
+Innova,Daedalus,Distance Driver,13,6,-3,2
+Innova,Destroyer,Distance Driver,12,5,-1,3
+Innova,Dominator,Distance Driver,13,5,-1,2
+Innova,Firebird,Distance Driver,9,3,0,4
+Innova,FL,Distance Driver,9,3,0,2
+Innova,Groove,Distance Driver,13,6,-2,2
+Innova,Katana,Distance Driver,13,5,-3,3
+Innova,Krait,Distance Driver,11,5,-1,2
+Innova,Mamba,Distance Driver,11,6,-5,1
+Innova,Max,Distance Driver,11,3,0,5
+Innova,Monarch,Distance Driver,10,5,-4,1
+Innova,Monster,Distance Driver,10,3,0,5
+Innova,Orc,Distance Driver,10,4,-1,3
+Innova,Roadrunner,Distance Driver,9,5,-4,1
+Innova,Sidewinder,Distance Driver,9,5,-3,1
+Innova,SL,Distance Driver,10,5,-1,2
+Innova,Starfire,Distance Driver,10,4,0,3
+Innova,TeeDevil,Distance Driver,12,5,-1,2
+Innova,TeeRex,Distance Driver,11,4,0,4
+Innova,Tern,Distance Driver,12,6,-3,2
+Innova,Thunderbird,Distance Driver,9,5,0,2
+Innova,Valkyrie,Distance Driver,9,4,-2,2
+Innova,Viking,Distance Driver,9,4,-1,2
+Innova,Vulcan,Distance Driver,13,5,-4,2
+Innova,Wahoo,Distance Driver,12,6,-2,2
+Innova,Wraith,Distance Driver,11,5,-1,3
+Innova,XCaliber,Distance Driver,12,5,0,4
+Innova,Archangel,Fairway Driver,8,6,-4,1
+Innova,Banshee,Fairway Driver,7,3,0,3
+Innova,Cheetah,Fairway Driver,6,4,-2,2
+Innova,Dragon,Fairway Driver,8,5,-2,2
+Innova,Eagle,Fairway Driver,7,4,-1,3
+Innova,Gazelle,Fairway Driver,6,4,0,2
+Innova,Leopard,Fairway Driver,6,5,-2,1
+Innova,Leopard3,Fairway Driver,7,5,-2,1
+Innova,TeeBird,Fairway Driver,7,5,0,2
+Innova,TeeBird+,Fairway Driver,7,5,0,2
+Innova,TeeBird3,Fairway Driver,8,4,0,2
+Innova,TL,Fairway Driver,7,5,0,1
+Innova,TL3,Fairway Driver,8,4,0,1
+Innova,Viper,Fairway Driver,6,4,1,5
+Innova,Whippet,Fairway Driver,6,3,1,5
+Innova,Atlas,Mid-range,5,4,0,1
+Innova,Bulldog,Mid-range,4,3,0,2
+Innova,Cobra,Mid-range,4,5,-2,2
+Innova,Coyote,Mid-range,4,5,0,1
+Innova,Cro,Mid-range,5,3,0,2
+Innova,Foxbat,Mid-range,5,6,-1,0
+Innova,Gator,Mid-range,5,2,0,3
+Innova,King Cobra,Mid-range,4,5,0,2
+Innova,Kite,Mid-range,5,6,-3,1
+Innova,Lycan,Mid-range,4,5,0,1
+Innova,Mako,Mid-range,4,5,0,0
+Innova,Mako3,Mid-range,5,5,0,0
+Innova,Panther,Mid-range,5,4,-2,1
+Innova,Rancho Roc,Mid-range,4,4,0,3
+Innova,Roc,Mid-range,4,4,0,3
+Innova,Roc+,Mid-range,4,5,0,2
+Innova,Roc3,Mid-range,5,4,0,3
+Innova,San Marino Roc,Mid-range,4,4,0,3
+Innova,Shark,Mid-range,4,4,0,2
+Innova,Shark3,Mid-range,5,4,0,2
+Innova,Skeeter,Mid-range,5,5,-1,1
+Innova,Spider,Mid-range,5,3,0,1
+Innova,Stingray,Mid-range,4,5,-3,1
+Innova,Super Stingray,Mid-range,4,5,-1,1
+Innova,VCobra,Mid-range,5,5,-1,2
+Innova,VRoc,Mid-range,4,4,0,1
+Innova,Wolf,Mid-range,4,3,-4,1
+Innova,Wombat,Mid-range,5,6,-1,0
+Innova,Aero,Putt/Approach,3,6,0,0
+Innova,Aviar,Putt/Approach,2,3,0,1
+Innova,Aviar Driver,Putt/Approach,2,3,0,2
+Innova,Aviar-X,Putt/Approach,2,3,0,2
+Innova,Birdie,Putt/Approach,1,2,0,0
+Innova,Classic Aviar,Putt/Approach,2,3,0,0
+Innova,Classic Roc,Putt/Approach,3,3,0,2
+Innova,Colt,Putt/Approach,3,4,-1,1
+Innova,Dart,Putt/Approach,3,4,0,0
+Innova,Hydra,Putt/Approach,3,3,0,2
+Innova,Nova,Putt/Approach,2,3,0,0
+Innova,Pig,Putt/Approach,3,1,0,3
+Innova,Polecat,Putt/Approach,1,3,0,0
+Innova,Rhyno,Putt/Approach,2,1,0,3
+Innova,Sonic,Putt/Approach,1,2,-4,0
+Innova,Wedge,Putt/Approach,3,3,-3,1
+Innova,Whale,Putt/Approach,2,3,0,1
+Innova,XD,Putt/Approach,3,4,-1,1
+Innova,Zephyr,Putt/Approach,2,3,0,0
+Kastaplast,Grym,Distance Driver,13,5,-2,2
+Kastaplast,Grym X,Distance Driver,12,5,0,3
+Kastaplast,Rask,Distance Driver,14,3,0,4
+Kastaplast,Kaxe,Fairway Driver,6,4,0,3
+Kastaplast,Kaxe Z,Fairway Driver,6,5,0,2
+Kastaplast,Berg,Putt/Approach,1,1,0,2
+Kastaplast,Reko,Putt/Approach,3,3,0,1
+Latitude 64,Ballista,Distance Driver,14,4,-1,4
+Latitude 64,Blitz,Distance Driver,11,3,0,4
+Latitude 64,Bolt,Distance Driver,13,6,-2,3
+Latitude 64,Cutlass,Distance Driver,13,5,0,3
+Latitude 64,Flow,Distance Driver,11,6,-1,2
+Latitude 64,Gladiator,Distance Driver,13,5,0,3
+Latitude 64,Halo,Distance Driver,13,5,0,3
+Latitude 64,Havoc,Distance Driver,13,5,-1,3
+Latitude 64,Knight,Distance Driver,14,4,-1,4
+Latitude 64,Missilen,Distance Driver,15,3,0,4
+Latitude 64,Raketen,Distance Driver,15,3,-1,3
+Latitude 64,Riot,Distance Driver,11,4,-1,2
+Latitude 64,Scythe,Distance Driver,12,3,0,4
+Latitude 64,Stiletto,Distance Driver,13,2,1,6
+Latitude 64,Villain,Distance Driver,12,4,0,4
+Latitude 64,Diamond,Fairway Driver,8,6,-3,1
+Latitude 64,Culverin,Fairway Driver,9,5,0,3
+Latitude 64,Falchion,Fairway Driver,9,6,-1,2
+Latitude 64,Fury,Fairway Driver,9,6,-2,2
+Latitude 64,Jade,Fairway Driver,9,6,-2,1
+Latitude 64,Maul,Fairway Driver,7,7,-2,1
+Latitude 64,River,Fairway Driver,7,7,-1,1
+Latitude 64,Saint,Fairway Driver,9,7,-1,2
+Latitude 64,Saint Pro,Fairway Driver,8,6,0,4
+Latitude 64,Spark,Fairway Driver,7,4,0,3
+Latitude 64,Striker,Fairway Driver,9,5,-1,2
+Latitude 64,Trident,Fairway Driver,5,2,0,5
+Latitude 64,Vision,Fairway Driver,8,6,-1,2
+Latitude 64,XXX,Fairway Driver,7,2,0,5
+Latitude 64,Anchor,Mid-range,5,4,0,3
+Latitude 64,Claymore,Mid-range,5,5,-1,1
+Latitude 64,Compass,Mid-range,5,5,0,1
+Latitude 64,Core,Mid-range,5,5,-1,2
+Latitude 64,Fuse,Mid-range,5,6,-2,1
+Latitude 64,Mace,Mid-range,5,5,0,2
+Latitude 64,Pain,Mid-range,4,4,0,3
+Latitude 64,Pearl,Mid-range,4,6,-4,1
+Latitude 64,Caltrop,Putt/Approach,2,2,0,2
+Latitude 64,Dagger,Putt/Approach,2,4,0,2
+Latitude 64,Gauntlet,Putt/Approach,2,5,0,1
+Latitude 64,Macana,Putt/Approach,2,5,0,1
+Latitude 64,Mercy,Putt/Approach,2,4,0,1
+Latitude 64,Pure,Putt/Approach,3,3,0,1
+Latitude 64,Ruby,Putt/Approach,3,5,-3,1
+Latitude 64,Sinus,Putt/Approach,2,1,0,3
+Latitude 64,Spike,Putt/Approach,4,2,-1,2
+Legacy,Cannon,Distance Driver,14,5,-3,3
+Legacy,Nemesis,Distance Driver,10,6,-4,2
+Legacy,Outlaw,Distance Driver,12,5,-1,3
+Legacy,Rampage,Distance Driver,14,5,-1,4
+Legacy,Bandit,Fairway Driver,9,5,-2,1
+Legacy,Enemy,Fairway Driver,9,3,0,4
+Legacy,Mongoose,Fairway Driver,9,5,-3,1
+Legacy,Patriot,Fairway Driver,7,5,-2,1
+Legacy,Phenom,Fairway Driver,8,5,-1,2
+Legacy,Rival,Fairway Driver,7,5,0,2
+Legacy,Gauge,Mid-range,5,5,0,1
+Legacy,Ghost,Mid-range,4,5,0,3
+Legacy,Clozer,Putt/Approach,2,3,0,2
+Legacy,Clutch,Putt/Approach,2,3,0,1
+Legacy,Hunter,Putt/Approach,2,4,0,0
+Legacy,Prowler,Putt/Approach,2,2,0,3
+Millennium,Aquarius,Distance Driver,10,5,-4,2
+Millennium,Aries,Distance Driver,11,6,-3,1
+Millennium,Astra,Distance Driver,11,5,-2,2
+Millennium,Astra-X,Distance Driver,11,5,-2,3
+Millennium,Quasar,Distance Driver,13,5,-1,4
+Millennium,Scorpius,Distance Driver,13,4,-1,3
+Millennium,JLS,Fairway Driver,8,5,-2,2
+Millennium,Orion LF,Fairway Driver,9,5,-1,3
+Millennium,Orion LS,Fairway Driver,9,5,-2,2
+Millennium,Polaris LS,Fairway Driver,8,5,-2,1
+Millennium,Aurora MS,Mid-range,4,5,-1,1
+Millennium,Sentinel MF,Mid-range,5,4,0,4
+Millennium,Omega,Putt/Approach,2,3,-1,1
+Millennium,Omega AP,Putt/Approach,2,3,0,0
+Millennium,Omega Big Bead,Putt/Approach,2,3,-1,1
+MVP,Impulse,Distance Driver,11,5,-3,1
+MVP,Inertia,Distance Driver,11,5,-2,2
+MVP,Motion,Distance Driver,11,4,0,4
+MVP,Orbital,Distance Driver,12,5,-4,1
+MVP,Phase,Distance Driver,12,3,0,4
+MVP,Photon,Distance Driver,12,5,-1,3
+MVP,Tesla,Distance Driver,11,5,-1,2
+MVP,Wave,Distance Driver,12,5,-1,2
+MVP,Amp,Fairway Driver,8,6,-3,1
+MVP,Relay,Fairway Driver,6,5,-3,1
+MVP,Resistor,Fairway Driver,6,4,0,3
+MVP,Servo,Fairway Driver,6,5,-1,2
+MVP,Shock,Fairway Driver,8,5,0,3
+MVP,Switch,Fairway Driver,6,5,-1,1
+MVP,Volt,Fairway Driver,8,5,-1,2
+MVP,Axis,Mid-range,5,5,-1,1
+MVP,Tangent,Mid-range,5,4,-1,2
+MVP,Tensor,Mid-range,5,5,0,3
+MVP,Vector,Mid-range,5,4,0,3
+MVP,Nano,Mini,,,,
+MVP,Anode,Putt/Approach,3,3,0,0
+MVP,Atom,Putt/Approach,2,3,-1,1
+MVP,Ion,Putt/Approach,3,4,0,1
+Prodigy,D1,Distance Driver,13,5,0,3
+Prodigy,D2,Distance Driver,13,6,-1,3
+Prodigy,D3,Distance Driver,13,6,-2,2
+Prodigy,D4,Distance Driver,13,6,-3,2
+Prodigy,D5,Distance Driver,13,6,-4,2
+Prodigy,X1,Distance Driver,13,3,0,5
+Prodigy,F1,Fairway Driver,7,4,0,3
+Prodigy,F2,Fairway Driver,7,5,-1,3
+Prodigy,F3,Fairway Driver,7,5,-1,2
+Prodigy,F5,Fairway Driver,7,5,-2,1
+Prodigy,F7,Fairway Driver,7,5,-3,1
+Prodigy,H1,Fairway Driver,10,3,0,4
+Prodigy,H2,Fairway Driver,9,5,0,2
+Prodigy,H3,Fairway Driver,9,4,-1,2
+Prodigy,H4,Fairway Driver,9,5,-2,2
+Prodigy,M1,Mid-range,5,4,0,3
+Prodigy,M2,Mid-range,5,4,0,2
+Prodigy,M3,Mid-range,5,5,-1,2
+Prodigy,M4,Mid-range,5,5,-1,1
+Prodigy,M5,Mid-range,5,5,-3,1
+Prodigy,PA1,Putt/Approach,3,3,0,2
+Prodigy,PA2,Putt/Approach,3,3,0,1
+Prodigy,PA3,Putt/Approach,3,4,0,1
+Prodigy,PA4,Putt/Approach,3,3,-1,1
+Vibram,Four20,Distance Driver,13,4,0,4
+Vibram,Lace,Distance Driver,14,6,-1,1
+Vibram,O-Lace,Distance Driver,13,5,-1,3
+Vibram,Solace,Distance Driver,13,4,0,4
+Vibram,unLace,Distance Driver,14,6,-5,1
+Vibram,Arch,Fairway Driver,8,5,0,2
+Vibram,Ascent,Fairway Driver,8,4,0,3
+Vibram,Notch,Fairway Driver,7,3,0,4
+Vibram,Trak,Fairway Driver,7,4,-1,2
+Vibram,Valley,Fairway Driver,7,5,-1,1
+Vibram,Vamp,Fairway Driver,7,5,-2,1
+Vibram,Ibex,Mid-range,5,4,-1,1
+Vibram,Obex,Mid-range,5,4,0,3
+Vibram,Ridge,Putt/Approach,2,3,0,1
+Vibram,Sole,Putt/Approach,2,3,0,2
+Vibram,Summit,Putt/Approach,2,3,-1,0
+Vibram,VP,Putt/Approach,2,3,0,3
+Westside,Boatman,Distance Driver,11,5,0,2
+Westside,Giant,Distance Driver,13,5,1,4
+Westside,King,Distance Driver,14,5,-1,4
+Westside,Northman,Distance Driver,10,5,-1,2
+Westside,Sampo,Distance Driver,10,5,0,2
+Westside,Sorcerer,Distance Driver,13,6,0,2
+Westside,Sword,Distance Driver,12,5,0,2
+Westside,World,Distance Driver,14,4,1,4
+Westside,Hatchet,Fairway Driver,9,6,-2,2
+Westside,Seer,Fairway Driver,7,5,-2,1
+Westside,Stag,Fairway Driver,8,6,0,3
+Westside,Underworld,Fairway Driver,7,6,-3,1
+Westside,Bard,Mid-range,5,4,0,3
+Westside,Tursas,Mid-range,5,5,-3,1
+Westside,Warship,Mid-range,6,5,0,1
+Westside,Coin,Mini,,,,
+Westside,Harp,Putt/Approach,4,3,0,3
+Westside,Shield,Putt/Approach,3,3,0,1
+Westside,Swan 1 Reborn,Putt/Approach,3,3,-1,0
+Westside,Swan 2,Putt/Approach,3,3,-1,0
