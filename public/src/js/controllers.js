@@ -5203,6 +5203,8 @@ angular.module('disczump.controllers', ['disczump.services'])
 			var curPath = $location.path();
 			return $location.path('/login').search('redirect', curPath);
 		}
+			
+		var materialCache = [];
 		
 		$location.search({}); // clear search params
         $scope.templates = [];
@@ -5219,13 +5221,10 @@ angular.module('disczump.controllers', ['disczump.services'])
                 var procGroups = [];
                 
                 if (success) {
-                    var templateGroups = _.groupBy(templates, 'textSearch');
-                    for (var key in templateGroups) {
-                        procGroups.push({fullName: key, name: templateGroups[key][0].name, brand: templateGroups[key][0].brand, templates: templateGroups[key]});
-                    }
+					procGroups = templates;
                 }
                 
-                $scope.templates = _.sortBy(procGroups, 'fullName');
+                $scope.templates = _.sortBy(procGroups, 'name');
                 $scope.loading = false;
             });
         });
@@ -5241,6 +5240,28 @@ angular.module('disczump.controllers', ['disczump.services'])
             	angular.element(resList).css('width', Math.floor(resCont.clientWidth / 208) * 208 + 'px');
             });
         }
+				
+				$scope.toggleTemplate = function(template) {
+						template.isOpen = !template.isOpen;
+						template.loading = true;
+					
+						var materialObj = _.findWhere(materialCache, {'brand': template.brand});
+					
+						if (!materialObj) {
+								APIService.Get('/templates/' + template._id + '/materials', function(success, mat) {
+										if (success) {
+												materialCache.push(mat);
+												template.materials = mat.material;
+												template.loading = false;
+										} else {
+												template.loading = false;
+										}
+								});
+						} else {
+								template.materials = materialObj.material;
+								template.loading = false;
+						}
+				}
         
         angular.element($window).bind('resize', $scope.resizeRes);
         
@@ -5264,9 +5285,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 			return $location.path('/login').search('redirect', curPath);
 		}
         
-        var discId = $routeParams.discId;
-        var templateId = $routeParams.templateId;
-        var pageTop = document.getElementById('page-top');
+		var discId = $routeParams.discId;
+		var templateId = $routeParams.templateId;
+		var material = $routeParams.material;
+		var pageTop = document.getElementById('page-top');
 		var dropzoneTemplate = '<div class="image-item-container image-template">' +
                     '<div class="image-item">' +
                         '<div class="image-entity">' +
@@ -5313,18 +5335,18 @@ angular.module('disczump.controllers', ['disczump.services'])
 			if (!skipAlert) $scope.editAlert = {};
 		}
 		
-        $scope.currentTagDrag = {
-            accept: function (sourceItemHandleScope, destSortableScope) {
-                return sourceItemHandleScope.itemScope.sortableScope.$id === destSortableScope.$id;
-            }
-        }
-        $scope.currentImageDrag = {
-            accept: function (sourceItemHandleScope, destSortableScope) {
-                return sourceItemHandleScope.itemScope.sortableScope.$id === destSortableScope.$id;
-            }
-        }
-        $scope.disc = {_id: discId, visible: true, tagList: [], imageList: []};
-        $scope.settings = {discReady: false,dropzoneReady: false,dropzoneProcessing: false}
+		$scope.currentTagDrag = {
+				accept: function (sourceItemHandleScope, destSortableScope) {
+						return sourceItemHandleScope.itemScope.sortableScope.$id === destSortableScope.$id;
+				}
+		}
+		$scope.currentImageDrag = {
+				accept: function (sourceItemHandleScope, destSortableScope) {
+						return sourceItemHandleScope.itemScope.sortableScope.$id === destSortableScope.$id;
+				}
+		}
+		$scope.disc = {_id: discId, visible: true, tagList: [], imageList: []};
+		$scope.settings = {discReady: false,dropzoneReady: false,dropzoneProcessing: false}
 		
 		var processImg = function(file) {
 			ImageService.getDataUri(file, function(dataUri) {
@@ -5590,7 +5612,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                             brand: template.brand,
                             name: template.name,
                             type: template.type,
-                            material: template.material,
+                            material: material,
                             speed: template.speed,
                             glide: template.glide,
                             turn: template.turn,

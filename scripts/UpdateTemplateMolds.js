@@ -11,7 +11,7 @@ var logger = new (winston.Logger)({
       new (winston.transports.File)({
             json: false,
             datePattern: '.yyyy-MM-dd-HH-mm',
-            filename: path.join(__dirname, "../logs", "UpdateTemplate.log") 
+            filename: path.join(__dirname, "../logs", "UpdateTemplateMolds.log") 
       })
     ]
 });
@@ -19,59 +19,60 @@ var logger = new (winston.Logger)({
 mongoose.connect('mongodb://' + configDB.database.host + ':' + 
     configDB.database.port + '/' + configDB.database.db);
 
-logger.info('Started template update.');
+logger.info('Started mold update.');
 mongoose.connection.on('connected', function() {
    
-   DiscTemplateController.deleteTemplates(function(err) {
+   DiscTemplateController.deleteMolds(function(err) {
        if (err) {
             logger.error(err);
             mongoose.disconnect();
             return;
        }
             
-        var templateArray = [];
+        var moldArray = [];
         var count = 0;
         
-        fs.readFile(path.join(__dirname, '../docs/DiscTemplates.csv'), 'utf8', function (err, data) {
+        fs.readFile(path.join(__dirname, '../docs/DiscMolds.csv'), 'utf8', function (err, data) {
             if (err) {
                 logger.error(err);
                 mongoose.disconnect();
                 return;
             }
             
-            var templates = data.toString().split("\n");
+            var molds = data.toString().split("\n");
             
-            for(var i = 1; i < templates.length; i++) {
-                var template = templates[i].trim();
+            for(var i = 1; i < molds.length; i++) {
+                var template = molds[i].trim();
                 var properties = template.split(",");
-                if (properties.length == 8) {
-                    templateArray.push({
+                if (properties[0].length > 0 && properties[1].length > 0) {
+                    moldArray.push({
                         brand: properties[0].length ? properties[0] : undefined,
                         name: properties[1].length ? properties[1] : undefined,
                         type: properties[2].length ? properties[2] : undefined,
-                        material: properties[3].length ? properties[3] : undefined,
-                        speed: properties[4].length ? parseInt(properties[4]) : undefined,
-                        glide: properties[5].length ? parseInt(properties[5]) : undefined,
-                        turn: properties[6].length ? parseInt(properties[6]) : undefined,
-                        fade: properties[7].length ? parseInt(properties[7]) : undefined
+                        speed: properties[3].length ? parseInt(properties[3]) : undefined,
+                        glide: properties[4].length ? parseInt(properties[4]) : undefined,
+                        turn: properties[5].length ? parseInt(properties[5]) : undefined,
+                        fade: properties[6].length ? parseInt(properties[6]) : undefined
                     });
-                    count++;
+                } else {
+                    logger.error('Missing information on row ' + i);
                 }
+                count++;
             }
             
-            logger.info('Read [' + count + '] templates from file.');
+            logger.info('Read [' + count + '] molds from file.');
             
-            async.eachSeries(templateArray, function(template, cb) {
-                DiscTemplateController.createTemplate(template, function(err, template) {
+            async.eachSeries(moldArray, function(mold, cb) {
+                DiscTemplateController.createMold(mold, function(err, mold) {
                     if (err)
                         logger.error(err);
                     else
-                        logger.info('Created template: ' + JSON.stringify(template));
+                        logger.info('Created mold: ' + JSON.stringify(mold));
                     
                     cb();
                 });
             }, function(err) {
-                logger.info('Template update completed.');
+                logger.info('Mold update completed.');
                 mongoose.disconnect();
             });   
         });
