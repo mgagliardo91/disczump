@@ -32,7 +32,7 @@ var ca = fs.readFileSync('./private/ca.crt', 'utf8');
 
 require('./app/utils/mailer.js');
 
-mongoose.connect('mongodb://' + config.database.host + ':' + 
+mongoose.connect('mongodb://' + config.database.host + ':' +
     config.database.port + '/' + config.database.db);
 
 require('./app/auth/passport')(passport);
@@ -68,12 +68,12 @@ app.set('view engine', 'handlebars');
 var gridFs = new Grid(mongoose.connection.db, mongoose.mongo);
 
 // routes ======================================================================
-var adminRouter = express.Router();
-require('./app/routes/adminRoutes.js')(adminRouter, passport);
-app.use('/admin', adminRouter);
+// var adminRouter = express.Router();
+// require('./app/routes/adminRoutes.js')(adminRouter, passport);
+// app.use('/admin', adminRouter);
 
 var adminApiRouter = express.Router();
-require('./app/routes/adminApi.js')(adminApiRouter, passport);
+require('./app/routes/newAdminApi.js')(adminApiRouter, passport);
 app.use('/admin/api', adminApiRouter);
 
 var membershipRouter = express.Router();
@@ -101,7 +101,7 @@ require('./app/routes/routes.js')(mainRouter, passport, gridFs);
 app.use('/', mainRouter);
 
 app.get('*', function(req, res){
-  res.redirect('/'); 
+  res.redirect('/');
 });
 
 app.use(function(err, req, res, next) {
@@ -123,7 +123,7 @@ app.use(function(err, req, res, next) {
                     return res.status(400).json(err);
                 case Error.notImplemented:
                     return res.status(501).json(err);
-                default: 
+                default:
                     return res.status(500).json(err);
             }
         } catch (e) {
@@ -140,7 +140,7 @@ var server;
 
 if (release) {
   server = require('https').createServer({
-      key: privateKey, 
+      key: privateKey,
       cert: certificate,
       ca: ca,
       ciphers: [
@@ -171,7 +171,7 @@ if (release) {
   require('http').createServer(function (req, res) {
       res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
       res.end();
-      
+
   }).listen(httpPort);
 } else {
   server = require('http').createServer(app);
