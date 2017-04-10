@@ -68,12 +68,9 @@ app.set('view engine', 'handlebars');
 var gridFs = new Grid(mongoose.connection.db, mongoose.mongo);
 
 // routes ======================================================================
-// var adminRouter = express.Router();
-// require('./app/routes/adminRoutes.js')(adminRouter, passport);
-// app.use('/admin', adminRouter);
 
 var adminApiRouter = express.Router();
-require('./app/routes/newAdminApi.js')(adminApiRouter, passport);
+require('./app/routes/adminApi.js')(adminApiRouter, passport);
 app.use('/admin/api', adminApiRouter);
 
 var membershipRouter = express.Router();
