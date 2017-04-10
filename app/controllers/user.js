@@ -14,6 +14,7 @@ var CryptoConfig = require('../../config/auth.js').crypto;
 var MemberConfig = require('../../config/config.js').membership;
 var FileUtil = require('../utils/file.js');
 var Socket = require('../utils/socket.js');
+var SocketCache = require('../objects/socketCache.js');
 var logger = require('../utils/logger.js');
 var MembershipTypes = require('../utils/membershipTypes.js');
 var Geo = require('../utils/geo.js');
@@ -55,11 +56,14 @@ module.exports = {
 	linkFacebook: linkFacebook,
 	unlinkFacebook: unlinkFacebook,
 	addUserEvent: addUserEvent,
-	
+
 	FBConnect: FBConnect,
-    
+
     /* Admin Functions */
-    getAllUsers: getAllUsers
+	getTopUsers: getTopUsers,
+	getOnlineUsers: getOnlineUsers,
+	getRecentlyJoined: getRecentlyJoined,
+	getRecentlyActive: getRecentlyActive
 }
 
 function isDef(x) {
@@ -82,15 +86,15 @@ function checkName(val) {
 function query(field, q, callback) {
 	var query = q.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	User.find().where(field, new RegExp('^' + query + '$', 'i')).exec(function(err, users) {
-		if (err) 
+		if (err)
 			return callback(Error.createError(err, Error.internalError));
-			
+
 		return callback(null, users);
 	})
 }
 
 function addUserEvent(userId, type, message) {
-	
+
 	UserInternal.findOne({userId: userId}, function(err, intUser) {
 		if (err) return cb(err);
 
@@ -100,7 +104,7 @@ function addUserEvent(userId, type, message) {
 			var user = new UserInternal({
 				userId: userId,
 			});
-			
+
 			user.save(function(err) {
 				if (!err) {
 					user.addEvent(type, message);
@@ -114,12 +118,12 @@ function createActiveUser(info, callback) {
 	createUser(info, function(err, user) {
 		if (err)
 			return callback(err);
-		
+
 		user.local.active = true;
 		user.save(function(err) {
 			if (err)
 				return callback(Error.createError(err, Error.internalError));
-			
+
 			return callback(null, user);
 		});
 	});
@@ -128,32 +132,32 @@ function createActiveUser(info, callback) {
 function createUser(info, callback) {
 	if (!isDef(info.email))
 		return callback(Error.createError('A valid email is required to create an account.', Error.invalidDataError));
-	
+
 	if (!isDef(info.username) || !checkUsername(info.username))
 		return callback(Error.createError('A valid username is required to create an account.', Error.invalidDataError));
-		
+
 	if (!isDef(info.password) || !checkPassword(info.password))
 		return callback(Error.createError('A valid password is required to create an account.', Error.invalidDataError));
-		
+
 	if (!isDef(info.firstName) || !checkName(info.firstName))
 		return callback(Error.createError('A valid first name is required to create an account.', Error.invalidDataError));
-	
+
 	if (!isDef(info.lastName) || !checkName(info.lastName))
 		return callback(Error.createError('A valid last name is required to create an account.', Error.invalidDataError));
-		
+
 	if (!isDef(info.geoLat) || !isDef(info.geoLng))
 		return callback(Error.createError('Geocoordinates (lat/lng) are required to create an account.', Error.invalidDataError));
-	
+
 	async.series([
 		function(cb) {
 			getUserByEmail(info.email, function(err, user) {
 				if (err)
 					return cb(Error.createError(err, Error.internalError));
-				
+
 				if (user) {
 					return cb(Error.createError('A user with that email already exists.', Error.invalidDataError));
 				}
-				
+
 				cb();
 			});
 		},
@@ -161,11 +165,11 @@ function createUser(info, callback) {
 			getUserByUsername(info.username, function(err, user) {
 				if (err)
 					return cb(Error.createError(err, Error.internalError));
-				
+
 				if (user) {
 					return cb(Error.createError('A user with that username already exists.', Error.invalidDataError));
 				}
-				
+
 				cb();
 			});
 		},
@@ -173,19 +177,19 @@ function createUser(info, callback) {
 			Geo.getReverse(info.geoLat, info.geoLng, function(err, loc) {
 				if (err)
 					return cb(err);
-				
+
 				if (!loc)
 					return cb(Error.createError('Unknown location.', Error.internalError));
-				
+
 				info.location = loc;
-				
+
 				return cb();
 			}, ['postal_code']);
 		}
 	], function(err, results) {
 		if (err)
 			return callback(err);
-			
+
 		var user = new User({
 			local: {
 				email: info.email.toLowerCase(),
@@ -197,18 +201,18 @@ function createUser(info, callback) {
 				location: info.location
 			}
 		});
-		
+
 		user.local.password = user.generateHash(info.password);
-		
+
 		user.save(function(err) {
 			if (err)
 				return callback(Error.createError(err, Error.internalError));
-			
+
 			if (info.facebook && info.facebook.userID && info.facebook.accessToken) {
 				linkFacebook(info.facebook.userID, info.facebook.accessToken, user, function(err, user) {
 					if (err)
 						return callback(err);
-					
+
 					return callback(null, user);
 				});
 			} else {
@@ -220,49 +224,49 @@ function createUser(info, callback) {
 
 function getUserInternal(userId, callback) {
 	User.findOne({_id: userId}, function(err, user) {
-       if (err) 
+       if (err)
 			return callback(Error.createError(err, Error.internalError));
-		
-		return callback(null, user);	
+
+		return callback(null, user);
 	});
 }
 
 function getUser(userId, callback) {
 	User.findOne({_id: userId}, function(err, user) {
-       if (err) 
+       if (err)
 			return callback(Error.createError(err, Error.internalError));
-			
+
 		if (!user) return callback(Error.createError('Unknown user identifier.', Error.objectNotFoundError));
-		
-		return callback(null, user);	
+
+		return callback(null, user);
 	});
 }
 
 function getUserByUsername(username, callback) {
 	User.findOne({'local.username': username}, function(err, user) {
-       if (err) 
+       if (err)
 			return callback(Error.createError(err, Error.internalError));
-		
-		return callback(null, user);	
+
+		return callback(null, user);
 	});
 }
 
 function getUserByEmail(email, callback) {
 	User.findOne({'local.email': email}, function(err, user) {
-       if (err) 
+       if (err)
 			return callback(Error.createError(err, Error.internalError));
-		
-		return callback(null, user);	
+
+		return callback(null, user);
 	});
 }
 
 function getUserByFacebook(facebookId, callback) {
 	User.findOne({'facebook.id': facebookId}, function(err, user) {
-       if (err) 
+       if (err)
 			return callback(Error.createError(err, Error.internalError));
-		
-		
-		return callback(null, user);	
+
+
+		return callback(null, user);
 	});
 }
 
@@ -270,19 +274,19 @@ function getActiveUser(userId, callback) {
 	getUser(userId, function(err, user) {
 		if (err)
 			return callback(err);
-		
+
 		if (!user.local.active)
 			return callback(Error.createError('Unknown user identifier.', Error.invalidDataError));
-		
+
 		return callback(null, user);
 	});
 }
 
 function getAccount(userId, callback) {
 	getActiveUser(userId, function(err, user) {
-       if (err) 
+       if (err)
 			return callback(err);
-		
+			
 		user.updateActivity();
 
 		return callback(null, user);
@@ -291,41 +295,41 @@ function getAccount(userId, callback) {
 
 function getMarketCap(userId, callback) {
 	getActiveUser(userId, function(err, user) {
-       if (err) 
+       if (err)
 			return callback(err);
-		
+
 		return callback(null, user.account.marketCap);
     });
 }
 
 function updateAccount(userId, account, callback) {
 	getActiveUser(userId, function(err, user) {
-       if (err) 
+       if (err)
 			return callback(err);
-		
+
 		if (isDef(account.firstName) && checkName(account.firstName)) {
 			user.local.firstName = account.firstName;
 		}
-		
+
 		if (isDef(account.lastName) && checkName(account.lastName)) {
 			user.local.lastName = account.lastName;
 		}
-		
+
 		if (isDef(account.bio)) {
 			var bio = account.bio.trim();
 			user.local.bio = bio.substring(0, Math.min(bio.length, 600));
 		}
-		
+
 		async.series([
 			function(cb) {
 				if (isDef(account.username)) {
 					if (account.username == user.local.username) {
 						return cb();
 					}
-					
+
 					if (!checkUsername(account.username))
 						return cb(Error.createError('The username does not meet the required criteria.', Error.invalidDataError));
-					
+
 					getUserByUsername(account.username, function(err, users) {
 			            if (err || users.length > 0) {
 			                cb(Error.createError('The username already exists.', Error.invalidDataError));
@@ -348,7 +352,7 @@ function updateAccount(userId, account, callback) {
 
 						if (!loc)
 							return cb(Error.createError('Unknown location.', Error.internalError));
-						
+
 						logger.info('Using location', loc);
 
 						user.local.location = loc;
@@ -356,20 +360,20 @@ function updateAccount(userId, account, callback) {
 						return cb();
 					}, ['postal_code']);
 				} else return cb();
-			
+
 			}],
 			function(err) {
 				if (err) {
 		    		return callback(err);
 				}
-				
+
 				user.save(function(err) {
 				    if (err) {
 		    			return callback(Error.createError(err, Error.internalError));
 				    } else {
 		    			return callback(null, user);
 				    }
-				});	
+				});
 			});
     });
 }
@@ -378,25 +382,25 @@ function mergeProfile(profile, updates) {
 	if (!profile) {
 		profile = {};
 	}
-	
+
 	for (var key in updates) {
 		profile[key] = updates[key];
 	}
-	
+
 	profile.lastModified = new Date();
 }
 
 function setAccountProfileImmed(userId, profile, callback) {
 	getUser(userId, function(err, user) {
 		var promos = user.account.profile.promoCodes.length ? user.account.profile.promoCodes.slice(0) : undefined;
-		
+
 		user.account.profile = profile;
 		user.account.profile.promoCodes = promos;
 		user.account.type = profile.type;
 		user.save(function(err) {
 			if (err)
 				return callback(err);
-			
+
 			addUserEvent(user._id, EventController.Types.AccountReset, 'The user account profile was reset by the system.');
 			return callback(null, user);
 		});
@@ -409,17 +413,17 @@ function setAccountProfile(userId, changeRequest, profile, callback) {
 			logger.error('Error occurred in locating user with id [' + userId + ']', err);
 			return callback(err);
 		}
-		
+
 		var newType;
 		var lastId = user.account.profile.profileId;
-		
+
 		if (changeRequest.toAccount.type) {
 			newType = changeRequest.toAccount.type;
 		} else {
 			newType = user.account.type;
 			changeRequest.toAccount = changeRequest.fromAccount;
 		}
-		
+
 		switch (user.account.type) {
 			case MemberConfig.TypeBasic: {
 				switch (newType) {
@@ -488,20 +492,20 @@ function setAccountProfile(userId, changeRequest, profile, callback) {
 				break;
 			}
 		}
-		
+
 		if (typeof(user.account.profile.profileId) !== 'undefined' && lastId !== user.account.profile.profileId) {
 			user.account.assocProfiles.push(user.account.profile.profileId);
 		}
-		
+
 		user.save(function(err) {
 			if (err) {
 				logger.error('Error occurred in saving user with id [' + userId + ']', err);
 				return callback(Error.createError(err, Error.internalError));
 			}
-			
-			var eventProf = user.account.profile.profileId ? 'with ID [' + user.account.profile.profileId + '] ' : ''; 
+
+			var eventProf = user.account.profile.profileId ? 'with ID [' + user.account.profile.profileId + '] ' : '';
 			addUserEvent(user._id, EventController.Types.AccountTypeChange, 'The user account profile ' + eventProf + 'was altered by the user. From: [' + changeRequest.fromAccount.type + '] To: [' + changeRequest.toAccount.type + ']');
-			
+
             var email = generateAccountChangedEmail(user, changeRequest.toObject());
 			logger.info('Sending email to notify account change to %s', user.local.email);
 			Mailer.sendMail(user.local.email, Mailer.TypeAccountChange, email);
@@ -514,7 +518,7 @@ function getAccountNotifications(userId, callback) {
 	getUser(userId, function(err, user) {
 		if (err)
 			return callback(err);
-		
+
 		return callback(null, user.account.notifications);
 	});
 }
@@ -523,17 +527,17 @@ function setAccountNotifications(userId, notifications, callback) {
 	getUser(userId, function(err, user) {
 		if (err)
 			return callback(err);
-		
+
 		for (var notName in notifications) {
 			if (user.account.notifications.hasOwnProperty(notName) && _.isBoolean(notifications[notName])) {
 				user.account.notifications[notName] = notifications[notName];
 			}
 		}
-		
+
 		user.save(function(err) {
 			if (err)
 				return callback(Error.createError(err, Error.internalError));
-			
+
 			return callback(null, user.account.notifications);
 		});
 	});
@@ -543,15 +547,15 @@ function setAccountVerifications(userId, verifications, callback) {
 	getUser(userId, function(err, user) {
 		if (err)
 			return callback(err);
-		
+
 		if (verifications.hasOwnProperty('facebook') && _.isBoolean(verifications.facebook)) {
 			user.account.verifications.facebook = user.facebook.id !== 'undefined' && verifications.facebook;
 		}
-		
+
 		user.save(function(err) {
 			if (err)
 				return callback(Error.createError(err, Error.internalError));
-			
+
 			return callback(null, user);
 		});
 	});
@@ -559,13 +563,13 @@ function setAccountVerifications(userId, verifications, callback) {
 
 function setPDGA(userId, pdgaNumber, callback) {
 	getActiveUser(userId, function(err, user) {
-		 if (err) 
+		 if (err)
 			return callback(err);
-		
+
 		User.findOne({'local.pdgaNumber': pdgaNumber}, function(err, foundUser) {
-		   if (err) 
+		   if (err)
 				return callback(Error.createError(err, Error.internalError));
-			
+
 			if (foundUser && foundUser._id != userId)
 				return callback(Error.createError('The PDGA Number associated with the account (#' + pdgaNumber + ') is already in use.', Error.invalidDataError));
 
@@ -576,7 +580,7 @@ function setPDGA(userId, pdgaNumber, callback) {
 					return callback(err);
 
 				addUserEvent(user._id, EventController.Types.AccountPDGAClaim, 'The account has successfully claimed the PDGA number [' + pdgaNumber + '].');
-				
+
 				callback(null, user);
 			});
 		});
@@ -585,15 +589,15 @@ function setPDGA(userId, pdgaNumber, callback) {
 
 function resetPDGA(userId, callback) {
 	getActiveUser(userId, function(err, user) {
-		 if (err) 
+		 if (err)
 			return callback(err);
-		
+
 		user.local.pdgaNumber = undefined;
 		user.account.verifications.pdga = false;
 		user.save(function(err) {
 			if (err)
                 return callback(err);
-            
+
 			addUserEvent(user._id, EventController.Types.AccountPDGAReset, 'The account has successfully reset the PDGA verification.');
             callback(null, user);
 		});
@@ -602,18 +606,18 @@ function resetPDGA(userId, callback) {
 
 function resetPassword(userId, password, callback) {
 	getActiveUser(userId, function(err, user) {
-       if (err) 
+       if (err)
 			return callback(err);
-		
+
 	   	 if (!isDef(password) || !checkPassword(password)) {
 			return callback(Error.createError('Password must be 6 or more characters.', Error.invalidDataError));
 	    }
-	    
+
 	    user.local.password = user.generateHash(password);
         user.save(function(err){
             if (err)
                 return callback(err);
-            
+
             callback(null, user);
         });
     });
@@ -621,15 +625,15 @@ function resetPassword(userId, password, callback) {
 
 function tryResetPassword(userId, currentPw, newPw, callback) {
 	getActiveUser(userId, function(err, user) {
-       if (err) 
+       if (err)
 			return callback(err);
-		
+
 	   	if (!user.validPassword(currentPw))
         	return callback(Error.createError('The current password is incorrect.', Error.invalidDataError));
-        	
+
         if (user.validPassword(newPw))
         	return callback(Error.createError('The new password must differ from your previous one.', Error.invalidDataError));
-        	
+
         return resetPassword(userId, newPw, callback);
     });
 }
@@ -638,11 +642,11 @@ function deleteUser(userId, gfs, callback) {
 	deleteUserImage(userId, gfs, function(err, user) {
 		if (err)
 			return callback(err);
-		
+
 		getUser(userId, function(err, user) {
 			if (err)
 				return callback(Error.createError(err, Error.internalError));
-				
+
 			ArchiveController.archiveUser(user);
 			User.remove({_id: userId}, callback);
 		});
@@ -651,16 +655,16 @@ function deleteUser(userId, gfs, callback) {
 
 function deleteUserImage(userId, gfs, callback) {
 	getUser(userId, function(err, user) {
-       if (err) 
+       if (err)
 			return callback(err);
-		
+
 	   	if (isDef(user.local.image)) {
 	   		FileUtil.deleteImage(user.local.image, gfs, function() {
 	   			user.local.image = undefined;
 	   			user.save(function(err) {
 					if (err)
 						return callback(Error.createError(err, Error.internalError));
-					
+
 					callback(null, user);
 	   			});
 	   		});
@@ -672,9 +676,9 @@ function deleteUserImage(userId, gfs, callback) {
 
 function postUserImage(userId, imageId, gfs, callback) {
 	getActiveUser(userId, function(err, user) {
-       if (err) 
+       if (err)
 			return callback(err);
-		
+
 		var newImage;
 	   	async.series([
 			function(cb) {
@@ -682,7 +686,7 @@ function postUserImage(userId, imageId, gfs, callback) {
 					if (err) {
 						return cb(err);
 					}
-					
+
 					if (!imageObj) {
 						return cb(Error.createError('Invalid image file identifier.', Error.objectNotFoundError));
 					}
@@ -699,12 +703,12 @@ function postUserImage(userId, imageId, gfs, callback) {
 	   	], function(err, results) {
 			if (err)
 				return callback(err);
-			
+
 	   		user.local.image = newImage.fileId;
 		   	user.save(function(err) {
 				if (err)
 					return callback(Error.createError(err, Error.internalError));
-					
+
 				return callback(null, user);
 		   	});
 	   	});
@@ -715,12 +719,12 @@ function getUserFromHash(hashId, callback) {
 	var decipher = crypto.createDecipher(CryptoConfig.algorithm, CryptoConfig.password);
 	var dec = decipher.update(hashId,'hex','utf8');
 	dec += decipher.final('utf8');
-	
+
 	getUser(dec, function(err, user) {
 		if (err) {
 			return callback(err);
 		}
-		
+
 		return callback(null, user);
 	});
 }
@@ -729,17 +733,17 @@ function unsubscribe(hashId, notification, callback) {
 	getUserFromHash(hashId, function(err, user) {
 		if (err)
 			return callback(err);
-		
+
 		if (user.account.hasOwnProperty(notification)) {
 			user.account[notification] = false;
-			
+
 			user.save(function(err) {
 				if (err)
 					return callback(err);
-				
+
 				callback(null, user);
 			});
-			
+
 		} else {
 			return callback(null, user);
 		}
@@ -750,13 +754,13 @@ function FBConnect(user, token, callback, fbID) {
 	fbGraph.get('me?fields=email,first_name,last_name&access_token=' + token, function(err, data) {
 		if (err)
 			return callback(Error.createError('Unable to access facebook with the provided access_token.', Error.unauthorizedError));
-		
+
 		if (!user.facebook.fbID) {
 			user.facebook = {
 				id: fbID
 			};
 		}
-		
+
 		user.facebook.image = '//graph.facebook.com/' + fbID + '/picture?type=large';
 		user.facebook.name = data.first_name + ' ' + data.last_name;
 		user.facebook.email = data.email;
@@ -773,18 +777,18 @@ function FBConnect(user, token, callback, fbID) {
 function linkFacebook(fbID, token, user, callback) {
 	if (!fbID)
 		return callback(Error.createError('A valid facebook user ID is required to access this route.', Error.unauthorizedError));
-         
+
 	getUserByFacebook(fbID, function(err, qUser) {
 		if (err)
 			return callback(err);
 
-		if (qUser && qUser._id != user._id) 
+		if (qUser && qUser._id != user._id)
 			return callback(Error.createError('The Facebook account is already linked by another user.', Error.unauthorizedError));
-		
+
 		FBConnect(user, token, function(err, user) {
 			if (err)
 				return callback(err);
-			
+
 			addUserEvent(user._id, EventController.Types.AccountLink, 'The account has been successfully linked to Facebook.');
 			callback(null, user);
 		}, fbID);
@@ -812,15 +816,15 @@ function generateAccountChangedEmail(user, changeRequest) {
 		type: MembershipTypes.getTypeName(changeRequest.fromAccount.type),
 		amount: parseFloat(changeRequest.fromAccount.amount).toFixed(2)
 	}
-	
+
 	changeRequest.toAccount = {
 		type: MembershipTypes.getTypeName(changeRequest.toAccount ? changeRequest.toAccount.type : changeRequest.fromAccount.type),
 		amount: changeRequest.toAccount ? parseFloat(changeRequest.toAccount.amount).toFixed(2) : parseFloat(changeRequest.fromAccount.amount).toFixed(2)
 	}
-	
+
 	changeRequest.immediateCharge = changeRequest.immediateCharge.toFixed(2);
 	var activeAccount = MembershipTypes.getTypeName(user.account.type);
-	
+
 	var html = fs.readFileSync('./private/html/accountChanged.handlebars', 'utf8');
 	var template = handleConfig.getMainHandle().compile(html);
 	return template({user: user, request: changeRequest, activeAccount: activeAccount,serverURL: LocalConfig.serverURL});
@@ -832,52 +836,81 @@ function getUsers(callback) {
 	User.find({}, function(err, users) {
 		if (err)
             return callback(Error.createError(err, Error.internalError));
-           
+
         return callback(null, users);
 	});
 }
 
-function getAllUsers(params, callback) {
-    var filters = [];
-    
-    if (!params.sort.length) {
-        params.sort.push(['username', 1])
-    }
-    
-    _.each(_.keys(params.filter), function(key) {
-        var filter = {};
-        filter[key] = new RegExp(params.filter[key], 'i');
-        filters.push(filter);
-    });
-    
-    User.count(filters.length ? {$and: filters} : {}, function(err, count) {
+function getTopUsers(params, callback) {
+    params.limit = params.limit ? parseInt(params.limit) : 10;
+
+    User
+    .aggregate([
+		{$lookup: {from : 'discs', localField: '_id', foreignField: 'userId', as: 'discItems'}},
+		{$project: {username: '$local.username', firstName: '$local.firstName', lastName: '$local.lastName', count: {$size: '$discItems'}}},
+        {$sort: {count: -1}},
+        {$limit: params.limit || 10}
+    ], function(err, users) {
         if (err)
             return callback(Error.createError(err, Error.internalError));
-            
-        if (params.size > count) {
-            params.size = count;
-        }
-        
-        if (params.size * (params.page - 1) > count) {
-            params.page = Math.floor(count / params.size) + 1;
-        }
-        
-        User
-        .find(filters.length ? {$and: filters} : {})
-        .sort(params.sort)
-        .skip(params.size * (params.page - 1))
-        .limit(params.size)
-        .exec(function(err, users) {
-            if (err)
-                return callback(Error.createError(err, Error.internalError));
-                
-            return callback(null, {
-                users: users,
-                total: count,
-                page: params.page,
-                size: params.size
-            });
-        });
-    });
 
+        return callback(null, users);
+    });
+}
+
+function getOnlineUsers(params, callback) {
+    params.limit = params.limit ? parseInt(params.limit) : 40;
+	var onlineUserIds = SocketCache.getActiveUserIds();
+	var onlineUsers = [];
+
+	async.eachSeries(onlineUserIds, function(userId, cb) {
+		if (onlineUsers.length == params.limit) {
+			return cb();
+		}
+
+		getUser(userId, function(err, user) {
+			if (err) {
+				return cb(err);
+			}
+
+			onlineUsers.push(user.accountToString());
+			return cb();
+		})
+	}, function(err) {
+		if (err) {
+			return callback(err);
+		}
+
+		return callback(null, {data: onlineUsers, skipping: Math.max(0, onlineUserIds.length - params.limit)});
+	});
+}
+
+function getRecentlyJoined(params, callback) {
+    params.limit = params.limit ? parseInt(params.limit) : 10;
+
+    User
+    .find({})
+    .sort({dateJoined: -1})
+    .limit(params.limit)
+    .exec(function(err, users) {
+        if (err)
+            return callback(Error.createError(err, Error.internalError));
+
+        return callback(null, users);
+    });
+}
+
+function getRecentlyActive(params, callback) {
+    params.limit = params.limit ? parseInt(params.limit) : 10;
+
+    User
+    .find({})
+    .sort({lastActive: -1})
+    .limit(params.limit)
+    .exec(function(err, users) {
+        if (err)
+            return callback(Error.createError(err, Error.internalError));
+
+        return callback(null, users);
+    });
 }

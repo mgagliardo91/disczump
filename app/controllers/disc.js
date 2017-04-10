@@ -29,9 +29,10 @@ module.exports = {
     deleteUserDiscs: deleteUserDiscs,
 	bumpDisc: bumpDisc,
 	removeUsersDiscsFromMarketplace: removeUsersDiscsFromMarketplace,
-    
+
     /* Admin Functions */
-    getAllDiscs: getAllDiscs
+    getTopDiscs: getTopDiscs,
+    getLastCreated: getLastCreated
 }
 
 function isDef(x) {
@@ -46,7 +47,7 @@ function marketAvailable(userId, callback) {
 		UserController.getMarketCap(userId, function(err, cap) {
 			if (err)
 				return callback(Error.createError(err, Error.internalError));
-			
+
 			return callback(null, cap == -1 || cap > count);
 		});
 	});
@@ -69,36 +70,36 @@ function getDiscCountByUser(userId, callback, all) {
 	var query = {
 		userId: userId
 	};
-	
+
 	if (!all) {
 		query.visible = true;
 	}
-	
+
     Disc.count(query, function(err, count) {
         if (err)
             return callback(Error.createError(err, Error.internalError));
-            
+
 	     return callback(null, count);
 	});
 }
- 
+
 function getDiscsByUser(reqUserId, userId, callback) {
     UserController.getActiveUser(userId, function(err, user) {
 		if (err)
 			return callback(err);
-			
+
 		if (typeof(reqUserId) !== 'undefined' && reqUserId == userId) {
             Disc.find({userId: userId}).sort({createDate: -1}).exec(function (err, discs){
                 if (err)
                     return callback(Error.createError(err, Error.internalError));
-                
+
                 return callback(null, discs);
             });
         } else {
             Disc.find({userId: userId, visible: true}).sort({createDate: -1}).exec(function (err, discs){
                 if (err)
                     return callback(Error.createError(err, Error.internalError));
-                
+
                 return callback(null, discs);
             });
         }
@@ -109,7 +110,7 @@ function getDisc(userId, discId, callback) {
     getDiscInternal(discId, function(err, disc) {
         if (err)
             return callback(err);
-        
+
         if (disc.visible || (userId && userId == disc.userId)) {
             return callback(null, disc);
         } else {
@@ -122,14 +123,14 @@ function getDiscInternal(discId, callback) {
     Disc.findOne({_id: discId}, function(err, disc) {
         if (err)
             return callback(Error.createError(err, Error.internalError));
-        
+
         if (!disc)
             return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
-            
+
         UserController.getActiveUser(disc.userId, function(err, user) {
     		if (err)
     			return callback(err);
-    			
+
             return callback(null, disc);
         });
     });
@@ -146,7 +147,7 @@ function getMarketplaceDiscCount(userId, callback) {
 		  }).exec(function(err, count) {
 			if (err)
             	return callback(Error.createError(err, Error.internalError));
-			
+
 			return callback(null, count);
 	});
 }
@@ -154,94 +155,94 @@ function getMarketplaceDiscCount(userId, callback) {
 function createDisc(userId, data, callback) {
     var disc = new Disc();
     disc.userId = userId;
-    
+
     if (!isDef(data.brand) || !data.brand.trim().length) {
         return callback(Error.createError('Creating a disc requires a brand.', Error.invalidDataError));
     }
-    
+
     if (!isDef(data.name) || !data.name.trim().length) {
         return callback(Error.createError('Creating a disc requires a name.', Error.invalidDataError));
     }
-	
+
 	var markSale, markTrade;
-    
+
     disc.brand = data.brand.trim().replace(/"/g,'');
     disc.name = data.name.trim().replace(/"/g,'');
-    
+
     if (isDef(data.material)) {
         disc.material = data.material.trim().replace(/"/g,'');
     }
-    
+
     if (isDef(data.type)) {
         disc.type = data.type.trim().replace(/"/g,'');
     }
-    
+
     if (isDef(data.color)) {
         disc.color = data.color.trim().replace(/"/g,'');
     }
-    
+
     if (isDef(data.notes)) {
         disc.notes = data.notes.trim().replace(/"/g,'');
     }
-    
+
 	if (isDef(data.visible) && _.isBoolean(data.visible)) {
 		disc.visible = data.visible;
 	}
-    
+
 	if (data.hasOwnProperty('weight')) {
         if (data.weight != null) {
 			var weight = parseInt(data.weight);
 			if (!isNaN(weight) && weight < 1000 && weight >= 0) disc.weight = weight;
         }
     }
-	
+
 	if (data.hasOwnProperty('speed')) {
         if (data.speed != null) {
 			var speed = parseFloat(data.speed);
 			if (!isNaN(speed) && speed < 100 && speed >= 0) disc.speed = parseFloat((speed).toFixed(1));
         }
     }
-	
+
 	if (data.hasOwnProperty('glide')) {
         if (data.glide != null) {
 			var glide = parseFloat(data.glide);
 			if (!isNaN(glide) && glide < 100 && glide >= 0) disc.glide = parseFloat((glide).toFixed(1));
         }
     }
-	
+
 	if (data.hasOwnProperty('turn')) {
         if (data.turn != null) {
 			var turn = parseFloat(data.turn);
 			if (!isNaN(turn) && turn < 100 && turn > -100) disc.turn = parseFloat((turn).toFixed(1));
         }
     }
-	
+
 	if (data.hasOwnProperty('fade')) {
         if (data.fade != null) {
 			var fade = parseFloat(data.fade);
 			if (!isNaN(fade) && fade < 100 && fade > -100) disc.fade = parseFloat((fade).toFixed(1));
         }
     }
-	
+
 	if (data.hasOwnProperty('condition')) {
         if (data.condition != null) {
 			var condition = parseInt(data.condition);
 			if (!isNaN(condition) && condition <= 10 && condition >= 0) disc.condition = condition;
         }
     }
-	
+
 	if (data.hasOwnProperty('value')) {
 		if (data.value != null) {
 			var value = parseFloat(data.value);
 			if (!isNaN(value) && value >= 0) disc.value = parseFloat((value).toFixed(2));
 		}
 	}
-    
+
     if (isDef(data.marketplace)) {
 		markSale = isDef(data.marketplace.forSale) && data.marketplace.forSale;
 		markTrade = isDef(data.marketplace.forTrade) && data.marketplace.forTrade;
     }
-    
+
     disc.tagList = [];
     if (isDef(data.tagList) && _.isArray(data.tagList)) {
         _.each(data.tagList, function(tag) {
@@ -250,21 +251,21 @@ function createDisc(userId, data, callback) {
             }
         });
     }
-	
+
 	if (isDef(data.imageList) && data.imageList.length > 5) {
 		return callback(Error.createError('Image list maximum size exceeded.', Error.invalidDataError));
 	}
-    
+
     async.series([
 		function(cb) {
 			if ((markSale && data.marketplace.forSale) || (markTrade && data.marketplace.forTrade)) {
 				if (!disc.visible)
 					return cb(Error.createError('Cannot mark disc for marketplace if it is set to private.', Error.invalidDataError));
-				
+
 				marketAvailable(userId, function(err, available) {
 					if (err)
 						return cb(err);
-					
+
 					if (available) {
 						disc.marketplace.forSale = markSale ? markSale : undefined;
 						disc.marketplace.forTrade = markTrade ? markTrade : undefined;
@@ -288,7 +289,7 @@ function createDisc(userId, data, callback) {
                                 disc.primaryImage = imageObj._id;
                             }
                         }
-                        
+
                         imgCb();
                     });
                 }, function(err) {
@@ -304,7 +305,7 @@ function createDisc(userId, data, callback) {
                 if (imageObj) {
                     disc.primaryImage = imageObj._id;
                 }
-                
+
                 cb();
             } else {
                 if (disc.imageList.length) {
@@ -316,11 +317,11 @@ function createDisc(userId, data, callback) {
     ], function(err, results){
 		if (err)
 			return callback(err);
-		
+
         disc.save(function(err){
             if (err)
                 return callback(Error.createError(err, Error.internalError));
-            
+
             return callback(null, disc);
         });
     });
@@ -330,20 +331,20 @@ function bumpDisc(userId, discId, callback) {
 	getDiscInternal(discId, function(err, disc){
         if (err)
             return callback(Error.createError(err, Error.internalError));
-            
+
         if (!disc)
             return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
-            
+
         if (disc.userId != userId)
             return callback(Error.createError('Unauthorized to modify disc.', Error.unauthorizedError));
-		
+
 		if (disc.marketplace.forSale || disc.marketplace.forTrade) {
 			updateMarket(disc);
-			
+
 			disc.save(function(err) {
 				if (err)
 					return callback(Error.createError(err, Error.internalError));
-				
+
 				return callback(null, disc);
 			})
 		} else return callback(null, disc);
@@ -354,44 +355,44 @@ function updateDisc(userId, discId, data, gfs, callback) {
     getDiscInternal(discId, function(err, disc){
         if (err)
             return callback(Error.createError(err, Error.internalError));
-            
+
         if (!disc)
             return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
-            
+
         if (disc.userId != userId)
             return callback(Error.createError('Unauthorized to modify disc.', Error.unauthorizedError));
-		
+
 		var markSale, markTrade;
 		var priorActive = disc.marketplaceActive();
-        
+
         if (isDef(data.brand) && data.brand.trim().length) {
             disc.brand = data.brand.trim().replace(/"/g,'');
         }
-        
+
         if (isDef(data.name) && data.name.trim().length) {
             disc.name = data.name.trim().replace(/"/g,'');
         }
-        
+
         if (isDef(data.material)) {
             disc.material = data.material.trim().replace(/"/g,'');
         }
-        
+
         if (isDef(data.type)) {
             disc.type = data.type.trim().replace(/"/g,'');
         }
-        
+
         if (isDef(data.color)) {
             disc.color = data.color.trim().replace(/"/g,'');
         }
-        
+
         if (isDef(data.notes)) {
             disc.notes = data.notes.trim().replace(/"/g,'');
         }
-        
+
         if (isDef(data.visible) && _.isBoolean(data.visible)) {
             disc.visible = data.visible;
         }
-        
+
         if (data.hasOwnProperty('weight')) {
 			if (data.weight === null) {
 				disc.weight = undefined;
@@ -445,7 +446,7 @@ function updateDisc(userId, discId, data, gfs, callback) {
 				if (!isNaN(condition) && condition <= 10 && condition >= 0) disc.condition = condition;
 			}
 		}
-        
+
         if (isDef(data.tagList) && _.isArray(data.tagList)) {
             disc.tagList = [];
             _.each(data.tagList, function(tag) {
@@ -454,11 +455,11 @@ function updateDisc(userId, discId, data, gfs, callback) {
                 }
             });
         }
-		
+
 		if (isDef(data.imageList) && data.imageList.length > 5) {
 			return callback(Error.createError('Image list maximum size exceeded.', Error.invalidDataError));
 		}
-		
+
 		if (isDef(data.value)) {
 			if (data.value === null) {
 					disc.value = undefined;
@@ -467,12 +468,12 @@ function updateDisc(userId, discId, data, gfs, callback) {
 				if (!isNaN(value) && value >= 0) disc.value = parseFloat((Math.min(value, 9999.99)).toFixed(2));
 			}
 		}
-        
+
         if (isDef(data.marketplace)) {
 			markSale = typeof data.marketplace.forSale !== 'undefined';
 			markTrade = typeof data.marketplace.forTrade !== 'undefined';
         }
-        
+
         var curImageArray = [];
         async.series([
 			function(cb) {
@@ -480,21 +481,21 @@ function updateDisc(userId, discId, data, gfs, callback) {
 					if (markSale) {
 						disc.marketplace.forSale = data.marketplace.forSale;
 					}
-					
+
 					if (markTrade) {
 						disc.marketplace.forTrade = data.marketplace.forTrade;
 					}
-					
+
 					if (!disc.visible) {
 						disc.marketplace.forSale = false;
 						disc.marketplace.forTrade = false;
 					}
-					
+
 					return cb();
 				} else if ((markSale && data.marketplace.forSale) || (markTrade && data.marketplace.forTrade)) { // Moving to market
 					if (!disc.visible)
 						return cb(Error.createError('Cannot mark disc for marketplace if it is set to private.', Error.invalidDataError));
-					
+
 					marketAvailable(userId, function(err, available) {
 						if (err)
 							return cb(err);
@@ -522,22 +523,22 @@ function updateDisc(userId, discId, data, gfs, callback) {
                  if (isDef(data.imageList) && _.isArray(data.imageList)) {
                     curImageArray = disc.imageList;
                     var imageArray = [];
-                     
+
                     async.eachSeries(data.imageList, function(imageItem, imgCb){
                         if (!isDef(imageItem._id)) return imgCb();
-                        
+
                         var index = _.findIndex(curImageArray, {_id: imageItem._id});
-                        
+
                         if (index > -1) {
                             imageArray.push(curImageArray.splice(index, 1)[0]);
                             return imgCb();
                         }
-                        
+
                         ImageController.getImageCache(imageItem._id, function(err, imageObj) {
                             if (!err && imageObj) {
                                 imageArray.push(imageObj);
                             }
-                            
+
                             return imgCb();
                         });
                     }, function(err) {
@@ -554,10 +555,10 @@ function updateDisc(userId, discId, data, gfs, callback) {
                         if (disc.primaryImage == imageObj._id) {
                             disc.primaryImage = disc.imageList.length ? disc.imageList[0]._id : undefined;
                         }
-                        
+
                         deleteDiscImageObj(imageObj, gfs, function(err, imageObj) {});
                     });
-                    
+
                     cb();
                 } else {
                     cb();
@@ -566,27 +567,27 @@ function updateDisc(userId, discId, data, gfs, callback) {
         ], function(err, results) {
 			if (err)
 				return callback(err);
-			
+
             if (isDef(data.primaryImage)) {
                 var discImage = _.findWhere(disc.imageList, {_id: data.primaryImage});
                 if (discImage) {
                     disc.primaryImage = discImage._id;
                 }
             }
-            
+
             if (!isDef(disc.primaryImage) && disc.imageList.length) {
                 disc.primaryImage = disc.imageList[0]._id;
             }
-			
+
 			if ((disc.marketplace.forSale || disc.marketplace.forTrade) && !priorActive) {
 				updateMarket(disc);
 			}
-            
+
 			disc.modifiedDate = new Date();
             disc.save(function(err, disc){
                 if (err)
                     return callback(Error.createError(err, Error.internalError));
-				
+
                return callback(null, disc);
             });
         });
@@ -597,18 +598,18 @@ function deleteDisc(userId, discId, gfs, callback) {
     getDiscInternal(discId, function(err, disc){
         if (err)
             return callback(err);
-            
+
         if (!disc)
             return callback(Error.createError('Unknown disc identifier.', Error.objectNotFoundError));
-            
+
         if (disc.userId != userId)
             return callback(Error.createError('Unauthorized to delete disc.', Error.unauthorizedError));
-        
+
         deleteDiscImages(userId, discId, gfs, function(err, discImages) {
             disc.remove(function (err, disc) {
                 if (err)
                     return callback(Error.createError(err, Error.internalError));
-                
+
                 ArchiveController.archiveDisc(disc);
                 return callback(null, disc);
             });
@@ -618,9 +619,9 @@ function deleteDisc(userId, discId, gfs, callback) {
 
 function getDiscImages(userId, discId, callback) {
 	getDisc(userId, discId, function(err, disc) {
-		if (err) 
+		if (err)
 			return callback(err);
-		
+
 		return callback(null, disc.imageList);
 	});
 }
@@ -629,12 +630,12 @@ function getDiscImage(userId, discId, imageId, callback) {
 	getDisc(userId, discId, function(err, disc) {
 		if (err)
 			return callback(err);
-		
+
 		var discImage = _.findWhere(disc.imageList, {_id: imageId});
-		
+
 		if (!discImage)
 			return callback(Error.createError('Unknown disc image identifier.', Error.invalidDataError));
-		
+
 		return callback(null, discImage);
 	});
 }
@@ -643,20 +644,20 @@ function getPrimaryImage(userId, discId, callback) {
     getDisc(userId, discId, function(err, disc) {
         if (err)
             return callback(err);
-        
+
         if (!disc.primaryImage)
             return callback(null, {});
-            
+
 		var discImage = _.findWhere(disc.imageList, {_id: disc.primaryImage});
-        
+
         return callback(null, discImage);
     });
 }
- 
+
 function deleteDiscImageObj(discImage, gfs, callback) {
 	var fileId = discImage.fileId;
 	var thumbnailId = discImage.thumbnailId;
-	
+
 	async.parallel([
 		function(cb) {
 			FileUtil.deleteImage(fileId, gfs, cb);
@@ -673,19 +674,19 @@ function deleteDiscImages(userId, discId, gfs, callback) {
 	getDiscImages(userId, discId, function(err, discImages){
 		if (err)
 			return callback(Error.createError(err, Error.internalError));
-			
+
 		if (!discImages.length)
 			return callback(null, discImages);
-		
+
 		async.each(discImages, function(discImage, asyncCB){
 			deleteDiscImageObj(discImage, gfs, asyncCB);
 		}, function(err){
 			if (err)
 				return callback(Error.createError(err, Error.internalError));
-			
+
 			return callback(null, discImages);
 		});
-		
+
 	});
 }
 
@@ -693,7 +694,7 @@ function deleteUserDiscs(userId, gfs, callback) {
     getDiscsByUser(userId, userId, function(err, discs) {
         if (err)
             return callback(err);
-        
+
         async.each(discs, function(disc, cb) {
             deleteDiscImages(userId, disc._id, gfs, function(err, discImages) {
 				disc.remove(function (err, disc) {
@@ -714,7 +715,7 @@ function removeUsersDiscsFromMarketplace(userId, callback) {
 	getDiscsByUser(userId, userId, function(err, discs) {
         if (err)
             return callback(err);
-        
+
         async.each(discs, function(disc, cb) {
 			disc.marketplace.forSale = false;
 			disc.marketplace.forTrade = false;
@@ -728,47 +729,42 @@ function removeUsersDiscsFromMarketplace(userId, callback) {
 }
 
 /* Admin Functions */
-function getAllDiscs(params, callback) {
-    var filters = [];
-    
-    if (!params.sort.length) {
-        params.sort.push(['brand', 1])
+function getTopDiscs(params, callback) {
+    // requies property && field
+
+    if (!params.property) {
+        params.property = 'brand';
     }
-    
-    _.each(_.keys(params.filter), function(key) {
-        var filter = {};
-        filter[key] = new RegExp(params.filter[key], 'i');
-        filters.push(filter);
-    });
-    
-    Disc.count(filters.length ? {$and: filters} : {}, function(err, count) {
+
+    params.limit = params.limit ? parseInt(params.limit) : 10;
+
+    Disc
+    .aggregate([
+        {$group: {_id: null, totalCount: {$sum: 1}, data: {$push: '$$ROOT'}}},
+        {$unwind: '$data'},
+        {$group: {_id: '$data.' + params.property, count: {$sum: 1}, total: {$first: '$totalCount'}}},
+        {$project: {count: '$count', percent: {$divide: [{$subtract: [{$multiply: [{$divide: ['$count', '$total']}, 10000]},{$mod: [{$multiply: [{$divide: ['$count', '$total']}, 10000]}, 1]}]}, 100]} }},
+        {$sort: {count: -1}},
+        {$limit: params.limit || 10}
+    ], function(err, discs) {
         if (err)
             return callback(Error.createError(err, Error.internalError));
-            
-        if (params.size > count) {
-            params.size = count;
-        }
-        
-        if (params.size * (params.page - 1) > count) {
-            params.page = Math.floor(count / params.size) + 1;
-        }
-        
-        Disc
-        .find(filters.length ? {$and: filters} : {})
-        .sort(params.sort)
-        .skip(params.size * (params.page - 1))
-        .limit(params.size)
-        .exec(function(err, discs) {
-            if (err)
-                return callback(Error.createError(err, Error.internalError));
-                
-            return callback(null, {
-                discs: discs,
-                total: count,
-                page: params.page,
-                size: params.size
-            });
-        });
-    });
 
+        return callback(null, discs);
+    });
+}
+
+function getLastCreated(params, callback) {
+    params.limit = params.limit ? parseInt(params.limit) : 10;
+
+    Disc
+    .find({})
+    .sort({createDate: -1})
+    .limit(params.limit)
+    .exec(function(err, discs) {
+        if (err)
+            return callback(Error.createError(err, Error.internalError));
+
+        return callback(null, discs);
+    });
 }
