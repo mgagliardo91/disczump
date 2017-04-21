@@ -8,3 +8,5 @@ testlogs/
 logs/
 private/site-certificate.crt
 private/disczump-key.pem
+public/src/js-dist/
+public/src/css-dist/
