@@ -12,6 +12,7 @@ var bodyParser   = require('body-parser');
 var device       = require('express-device');
 var session      = require('express-session'); // May need to delete
 var Grid = require('gridfs-stream');
+var cors = require('cors');
 
 var config = require('./config/config.js');
 var oauth2 = require('./app/auth/oauth2.js');
@@ -41,6 +42,7 @@ require('./app/auth/passport')(passport);
 // if (!release) {
   app.use(morgan('dev'));
 // }
+app.use(cors());
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
@@ -54,8 +56,6 @@ app.use(passport.session());
 app.use(flash());
 
 app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   req.device.isMobile = req.device.type == 'phone';
   req.devMode = req.query.devMode === 'true'
   next();
