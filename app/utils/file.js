@@ -1,4 +1,5 @@
 var Error = require('./error.js');
+var logger = require('./logger.js');
 
 module.exports = {
     saveImage: saveImage,
@@ -37,6 +38,7 @@ function saveImage(gm, gfs, readStream, fileParams, callback) {
               stdout.pipe(ws);
             });
         } catch (e) {
+			logger.error(e);
             callback(Error.createError('Error saving thumbnail.', Error.internalError));
         }
         

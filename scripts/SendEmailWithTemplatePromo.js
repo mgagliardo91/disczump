@@ -1,6 +1,7 @@
 var DZ_HOME = process.env.DZ_HOME;
 var mongoose = require('mongoose');
 var UserController = require(DZ_HOME + '/app/controllers/user.js');
+var PromoCodeController = require(DZ_HOME + '/app/controllers/promoCode.js');
 var HandleConfig = require(DZ_HOME + '/app/utils/handleConfig.js');
 var Handlebars = require('handlebars');
 var Mailer = require(DZ_HOME + '/app/utils/mailer.js');
@@ -28,18 +29,26 @@ mongoose.connection.on('connected', function() {
         }
         
         var promoCode = process.argv[5];
-        var html = fs.readFileSync(DZ_HOME + '/private/html/' + templateName + '.handlebars', 'utf8');
-        var template = Handlebars.compile(html);
-        var message = template({user: user, serverURL: localConfig.serverURL, promoCode: promoCode});
-        
-        Mailer.sendMail(user.local.email, subject, message, function(err, result) {
-           if (err) {
-                mongoose.disconnect();
-                return console.log(err);
+        PromoCodeController.getPromoCode(promoCode, function(err, code) {
+            if (err) {
+              console.log(err);
+              mongoose.disconnect();
+              return;
             }
-                
-            console.log('Email sent to [' + user.local.email + '] successfully.');
-            mongoose.disconnect();
+          
+            var html = fs.readFileSync(DZ_HOME + '/private/html/' + templateName + '.handlebars', 'utf8');
+            var template = Handlebars.compile(html);
+            var message = template({user: user, serverURL: localConfig.serverURL, promoCode: code});
+
+            Mailer.sendMail(user.local.email, subject, message, function(err, result) {
+               if (err) {
+                    mongoose.disconnect();
+                    return console.log(err);
+                }
+
+                console.log('Email sent to [' + user.local.email + '] successfully.');
+                mongoose.disconnect();
+            });
         });
     });
 });

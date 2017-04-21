@@ -12,19 +12,19 @@ mongoose.connection.on('connected', function() {
     var end = start.clone().addMonths(2);
     
      PromoCodeController.createPromoCode({
-        code: 'FREEMONTHPRO',
-        description: 'Get a free month if you have an pro level account.',
+        code: 'SQNECQWU',
+        description: 'Enjoy two free months of membership!',
         config: {
-            promoMonthsBefore: 1
+            promoMonthsBefore: 2
 //             promoMonthsAfter: 1
 //             alternateCost: 1
         },
          preReq: {
-            newUser: false,
-            accountType: 'Pro',
+            newUser: true,
+           // accountType: 'Pro',
             singleUse: true
         },
-        isUnique: false,
+        isUnique: true,
         startDate: start.toDate(),
         endDate: end.toDate()
     }, function(err, promo) {
