@@ -17,7 +17,7 @@
     "busboy": "~0.2.9",
     "connect-flash": "~0.1.1",
     "cookie-parser": "~1.0.0",
-    "cors": "~2.7.1",
+    "cors": "^2.7.2",
     "cron": "~1.0.9",
     "express": "~4.0.0",
     "express-device": "~0.3.11",
