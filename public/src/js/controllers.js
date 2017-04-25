@@ -5251,11 +5251,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 								APIService.Get('/templates/' + template._id + '/materials', function(success, mat) {
 										if (success) {
 												materialCache.push(mat);
-												template.materials = mat.material;
-												template.loading = false;
-										} else {
-												template.loading = false;
+												template.materials = mat.material;		
 										}
+										template.loading = false;
 								});
 						} else {
 								template.materials = materialObj.material;
