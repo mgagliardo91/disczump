@@ -286,7 +286,7 @@ function getAccount(userId, callback) {
 	getActiveUser(userId, function(err, user) {
        if (err)
 			return callback(err);
-			
+
 		user.updateActivity();
 
 		return callback(null, user);
@@ -890,7 +890,7 @@ function getRecentlyJoined(params, callback) {
 
     User
     .find({})
-    .sort({dateJoined: -1})
+    .sort({'local.dateJoined': -1})
     .limit(params.limit)
     .exec(function(err, users) {
         if (err)
@@ -905,7 +905,7 @@ function getRecentlyActive(params, callback) {
 
     User
     .find({})
-    .sort({lastActive: -1})
+    .sort({'local.lastAccess': -1})
     .limit(params.limit)
     .exec(function(err, users) {
         if (err)
