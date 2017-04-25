@@ -1,6 +1,9 @@
 # DB host (secondary preferred as to avoid impacting primary performance)
 HOST=localhost
 
+# DB port
+PORT=29017
+
 # DB name
 DBNAME=discdb
 
@@ -25,10 +28,10 @@ TAR=$DEST/../dz_backup.tar
 /bin/mkdir -p $DEST
 
 # Log
-echo "Backing up $HOST/$DBNAME to s3://$BUCKET/ on $TIME";
+echo "Backing up $HOST:$PORT/$DBNAME to s3://$BUCKET/ on $TIME";
 
 # Dump from mongodb host into backup directory
-/usr/bin/mongodump -h $HOST -d $DBNAME -o $DEST
+/usr/bin/mongodump -h $HOST --port $PORT -d $DBNAME -o $DEST
 
 # Create tar of backup directory
 /bin/tar cvf $TAR -C $DEST .

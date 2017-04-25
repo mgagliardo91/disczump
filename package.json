@@ -6,7 +6,7 @@
     "build": "node ./scripts/build.js",
     "start": "npm run build; ./node_modules/forever/bin/forever start server.js",
     "restart": "npm run build; ./node_modules/forever/bin/forever restart server.js",
-    "stop": "./node_modules/forever/bin/forever stop server.js",
+    "stop": "./node_modules/forever/bin/forever stopall",
     "start-dev": "npm run build; node server.js"
   },
   "dependencies": {
@@ -35,7 +35,7 @@
     "mocha": "~2.3.3",
     "moment": "~2.10.6",
     "mongodb": "~2.2.24",
-    "mongoose": "~4.2.5",
+    "mongoose": "~4.9.6",
     "morgan": "~1.0.0",
     "node-fs": "~0.1.7",
     "node-geocoder": "~3.4.1",
