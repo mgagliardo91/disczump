@@ -24,8 +24,8 @@ var Error = require('./app/utils/error.js');
 
 // configuration ===============================================================
 var release = true; // replace release with release
-var httpsPort = localServer.httpsPort || 443;
-var httpPort = localServer.httpPort || 80;
+var httpsPort = (release ? 443 : process.env.PORT || 80);
+var httpPort = process.env.PORT || 80;
 
 var privateKey = fs.readFileSync('./private/disczump-key.pem', 'utf8');
 var certificate = fs.readFileSync('./private/site-certificate.crt', 'utf8');
