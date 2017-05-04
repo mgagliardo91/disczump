@@ -5,9 +5,14 @@
 		<div class="page-content full-width">
 			<div class="title-row">
 				<div class="title-btn-container float-right">
-					<div class="fixed-wrapper title-btn-size">
+					<div class="fixed-wrapper title-btn-size" ng-if="!isEdit">
 						<div>
 							<a href="/d/create/templates" class="dz-blue-hover"><i class="fa fa-table hover-pointer" title="Disc Templates"></i></a>
+						</div>
+					</div>
+					<div class="fixed-wrapper title-btn-size" ng-if="isEdit">
+						<div>
+							<i class="fa fa-clone hover-icon-color hover-pointer" title="Create a Copy" ng-click="copyDisc()"></i>
 						</div>
 					</div>
 					<div class="fixed-wrapper title-btn-size">
@@ -17,7 +22,7 @@
 					</div>
 					<div class="clearfix"></div>
 				</div>
-				<div class="page-title handle-overflow"><span ng-show="!$def(disc._id)">Create</span><span ng-show="$def(disc._id)">Edit</span> | <span class="dz-blue">Disc</span></div>
+				<div class="page-title handle-overflow"><span>{{ isEdit ? 'Edit' : 'Create'}}</span> | <span class="dz-blue">Disc</span></div>
 				<hr>
 			</div>
 			<dz-alert alert-data="editAlert"></dz-alert>
@@ -187,7 +192,7 @@
 								</div>
 							</div>
 						</div>
-					</div>  
+					</div>
 				</div>
 				<div ng-show="marketLoading" style="text-align:center;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>
 				<div ng-show="!marketLoading">
