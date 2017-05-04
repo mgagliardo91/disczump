@@ -58,7 +58,7 @@ var getTrunkHeaders = function(user, url) {
             {prop:'fb:app_id', content: localConfig.facebookAuth.clientID},
             {prop:'og:url', content: localConfig.serverURL + url},
             {prop:'og:type', content:'website'},
-            {prop:'og:description', content:'Check out ' + user.local.username + '\'s disc golf collection on disc|zump.com.'},
+            {prop:'og:description', content:'Check out ' + user.local.username + '\'s disc golf collection on disczump.com.'},
             {prop:'og:title', content: user.local.username + '\'s trunk is popped'}
         ];
         
@@ -67,7 +67,7 @@ var getTrunkHeaders = function(user, url) {
             headers.push({prop:'og:image:width', content:'200'});
             headers.push({prop:'og:image:height', content:'200'});
         } else if (typeof(user.facebook.image !== 'undefined')) {
-            headers.push({prop:'og:image', content:localConfig.serverURL + '/files/' + user.facebook.image});
+            headers.push({prop:'og:image', content:user.facebook.image});
         }
         return headers;
     } else {

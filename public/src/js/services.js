@@ -124,6 +124,52 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	}
 }])
 
+.factory('FacebookPixelUtils', function() {
+	
+	var callFbPixel = function(request) {
+		try {
+			if (typeof(fbq) === 'undefined')
+				throw new Exception('FacebookPixel was not initialized.')
+			request();
+		} catch (e) {
+			console.log('Cannot connect to facebook pixel.', e);
+		}
+	}
+	
+	var trackDiscSearch = function(searchString, contentCategory) {
+		if (!searchString.length) return;
+		var request = function() {
+			fbq('track', 'Search', {
+				search_string: searchString,
+				content_category: 'disc'
+			});
+		}
+		return callFbPixel(request);
+	}
+	
+	var trackDiscView = function(data) {
+		var request = function() {
+			var requestObj = {
+				content_name: data.brand + ' ' + data.name,
+				content_category: 'disc',
+			};
+			
+			if (data.value) {
+				requestObj.value = data.value;
+				requestObj.currency = 'USD';
+			}
+			
+			fbq('track', 'ViewContent', requestObj);
+		}
+		return callFbPixel(request);
+	}
+	
+	return {
+		trackDiscSearch: trackDiscSearch,
+		trackDiscView: trackDiscView
+	}
+})
+
 .factory('FacebookUtils', ['$http', '$window', '$q', '$ocLazyLoad', 'AccountService', function($http, $window, $q, $ocLazyLoad, AccountService) {
 	var fbStatus;
 	var appId = window.fbId;

@@ -3739,7 +3739,7 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Description:  Controller for user trunks functionality.
 *******************************************************************************/
 
-.controller('TrunksController', ['$scope', '$location', '$routeParams', '$window', '_', '$timeout', 'smoothScroll', 'QueryUserService', 'CacheService', 'AccountService', 'LocationService', 'PageUtils', 'PageCache', 'PropService',
+.controller('TrunksController', ['$scope', '$location', '$routeParams', '$window', '_', '$timeout', 'smoothScroll', 'QueryUserService', 'CacheService', 'AccountService', 'LocationService', 'PageUtils', 'PageCache', 'PropService', 
 	function($scope, $location, $routeParams, $window, _, $timeout, smoothScroll, QueryUserService, CacheService, AccountService, LocationService, PageUtils, PageCache, PropService) {
 		var init = true;
         var reqSize = PropService.get('TrunkReqSize');
@@ -4198,9 +4198,10 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         ExploreController
 * Description:  Controller for explore functionality.
 *******************************************************************************/
-.controller('ExploreController', ['$scope', '$location', '$routeParams', '$window', '$q', '_', '$timeout', 'QueryService',
-								  'CacheService', 'AccountService', 'DiscService', 'RedirectService', 'APIService', 'MembershipService', 'PageCache', 'PageUtils', 'PropService',
-    function($scope, $location, $routeParams, $window, $q, _, $timeout, QueryService, CacheService, AccountService, DiscService, RedirectService, APIService, MembershipService, PageCache, PageUtils, PropService) {
+.controller('ExploreController', ['$scope', '$location', '$routeParams', '$window', '$q', '_', '$timeout', 'QueryService', 
+								  'CacheService', 'AccountService', 'DiscService', 'RedirectService', 'APIService', 'MembershipService', 'PageCache', 'PageUtils', 'PropService', 'FacebookPixelUtils',
+    function($scope, $location, $routeParams, $window, $q, _, $timeout, QueryService, CacheService, AccountService, DiscService, RedirectService, 
+			  APIService, MembershipService, PageCache, PageUtils, PropService, FacebookPixelUtils) {
         var init = true;
         var sortSet = false;
         var reqSize = PropService.get('ExploreReqSize');
@@ -4688,6 +4689,7 @@ angular.module('disczump.controllers', ['disczump.services'])
                     $scope.loading = false;
                     $scope.loadingMore = false;
 					loadMoreActive = false;
+					FacebookPixelUtils.trackDiscSearch($scope.searchParam, 'Explore');
                 });
         }
 
@@ -4958,9 +4960,9 @@ angular.module('disczump.controllers', ['disczump.services'])
 * Name:         DiscController
 * Description:  Controller for disc page functionality.
 *******************************************************************************/
-.controller('DiscController', ['$scope', '$location', '$routeParams', '$timeout', '$window', '_',
-							   'RedirectService', 'CacheService', 'AccountService', 'DiscService', 'MessageService',
-    function($scope, $location, $routeParams, $timeout, $window, _, RedirectService, CacheService, AccountService, DiscService, MessageService) {
+.controller('DiscController', ['$scope', '$location', '$routeParams', '$timeout', '$window', '_', 
+							   'RedirectService', 'CacheService', 'AccountService', 'DiscService', 'MessageService', 'FacebookPixelUtils', 
+    function($scope, $location, $routeParams, $timeout, $window, _, RedirectService, CacheService, AccountService, DiscService, MessageService, FacebookPixelUtils) {
     var discId = $routeParams.discId;
 
 		$location.search({}); // clear search params
@@ -5167,25 +5169,26 @@ angular.module('disczump.controllers', ['disczump.services'])
             if (!success) {
                 return RedirectService.setRedirect('explore');
             } else {
-							$scope.disc = disc;
-							$scope.imageBlock = _.findWhere(disc.imageList, {_id: disc.primaryImage});
-							$scope.discInit = true;
+				$scope.disc = disc;
+				$scope.imageBlock = _.findWhere(disc.imageList, {_id: disc.primaryImage});
+				$scope.discInit = true;
+				FacebookPixelUtils.trackDiscView(disc);
 
-							if ($scope.givePermission()) {
-								$scope.user = AccountService.getAccount();
-								$scope.isOwner = true;
-								updateTempMarket(disc);
-								initUser();
-							} else {
-								CacheService.getUser(disc.userId, function(success, user) {
-									if (!success) {
-										return $scope.nav();
-									}
-									$scope.user = user;
-									$scope.publicMode = true;
-									initUser();
-								});
-							}
+				if ($scope.givePermission()) {
+					$scope.user = AccountService.getAccount();
+					$scope.isOwner = true;
+					updateTempMarket(disc);
+					initUser();
+				} else {
+					CacheService.getUser(disc.userId, function(success, user) {
+						if (!success) {
+							return $scope.nav();
+						}
+						$scope.user = user;
+						$scope.publicMode = true;
+						initUser();
+					});
+				}
             }
             $scope.loading.disc = false;
         });
