@@ -21,6 +21,11 @@
                     </div>
                     <div class="fixed-wrapper title-btn-size" directive-on="userInit" directive-set="{'ng-if':'isOwner'}">
                         <div>
+                            <a ng-href="/d/create?copy={{disc._id}}"><i class="fa fa-clone hover-edit-color hover-pointer" title="Copy Disc"></i></a>
+                        </div>
+                    </div>
+                    <div class="fixed-wrapper title-btn-size" directive-on="userInit" directive-set="{'ng-if':'isOwner'}">
+                        <div>
                             <i class="fa fa-spinner fa-spin" ng-show="loading.privacy"></i>
                             <i class="fa fa-eye-slash dz-blue-hover hover-pointer" ng-show="!loading.privacy && !disc.visible" ng-click="togglePrivacy()" title="Make Public"></i>
                             <i class="fa fa-eye dz-blue-hover hover-pointer" ng-show="!loading.privacy && disc.visible" ng-click="warnPrivacy()" title="Make Private"></i>
@@ -137,7 +142,7 @@
                                         <div directive-on="userInit" directive-set="{'img-src':'{{user.image}\}'}" class="default-bg-image" img-load="/static/img/dz_profile_nobg.png" ng-class="{'bg-white': !user.image}" bg-image="true"></div>
                                     </div>
                                     <div class="dv-profile-preview-btn-container">
-                                        <div class="hover-pointer dv-profile-preview-btn info" directive-on="userInit" directive-set="{'modal-trigger':'dz-profile-modal'}" data="{'userId':'user._id'}" modal-opts="globalModalOpts" title="More Info"> 
+                                        <div class="hover-pointer dv-profile-preview-btn info" directive-on="userInit" directive-set="{'modal-trigger':'dz-profile-modal'}" data="{'userId':'user._id'}" modal-opts="globalModalOpts" title="More Info">
                                             <span class="fa-stack">
                                               <i class="fa fa-circle fa-stack-2x"></i>
                                               <i class="fa fa-info fa-stack-1x fa-inverse"></i>
