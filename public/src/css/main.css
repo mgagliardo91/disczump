@@ -3486,7 +3486,7 @@ input.search-bar {
     margin-bottom: 2px;
 }
 
-.grid-img-container .grid-quick-info .qi-item > div:first-child {
+.grid-img-container .grid-quick-info .qi-item > div:first-child:not(.tag-item) {
     font-weight: bold;
     width: 60px;
     text-align: right;

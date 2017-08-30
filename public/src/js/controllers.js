@@ -5583,7 +5583,7 @@ angular.module('disczump.controllers', ['disczump.services'])
         if (typeof Dropzone === 'undefined' || typeof EXIF === 'undefined' ||
             typeof Cropper === 'undefined') {
             $ocLazyLoad.load(
-                ['https://cdn.rawgit.com/exif-js/exif-js/master/exif.js',
+                ['/static/src/js-dist/exif.min.js',
                 '/static/src/js-dist/dropzone.min.js'
                 ]).then(function() {
                     $ocLazyLoad.load([
