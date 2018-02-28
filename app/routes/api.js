@@ -205,9 +205,9 @@ module.exports = function(app, gridFs) {
 					return next(err);
 
 				return res.json({
-					marketCap: req.user.account.marketCap,
+					marketCap: -1,
 					marketUsed: count,
-					marketAvailable: req.user.account.marketCap - count
+					marketAvailable: -1
 				});
 			});
 		});

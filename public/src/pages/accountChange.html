@@ -6,20 +6,27 @@
         <div class="portal-title cont-sm" style="margin: 20px auto">
             <img src="/static/logo/logo_portal.png" />
         </div>
-        <div class="page-info med attention">
+        <div class="page-info med attention error">
             <div class="page-info-title">
-                Why should I upgrade?
+              WE HAVE DISABLED TIERED ACCOUNTS
             </div>
             <div class="page-info-body">
-                The most significant reason to upgrade your account is to increase the number of discs that you can place on the marketplace simultaneously. Discs that are marked for the marketplace (For Sale / For Trade) will 
-                receive the most visibility on disc|zump, making it easier for your discs to be found. By upgrading your account, you will be able to increase your market cap and bring more publicity to your marketable discs.
+              As of February 2018, disc|zump no longer has tiered accounts and, instead, full functionality is available
+              to all users for free.
             </div>
             <div class="page-info-sep"></div>
             <div class="page-info-title">
-                What if I change my paid membership?
+              Why did we do this?
             </div>
             <div class="page-info-body">
-                You can change your account type at any time. If you are upgrading, additional charges will be prorated and your account change will take effect immediately. If you are downgrading, your account change will take place at the end of your current billing cycle.
+              Because, why not? Have fun and enjoy the site.
+          </div>
+          <div class="page-info-title">
+            How does this affect me?
+        </div>
+        <div class="page-info-body">
+            There is no limitation on how many discs can be placed on the marketplace. Simply mark your disc as "For Sale" or
+            "For Trade" and it will show up on the explore page for all to see.
             </div>
         </div>
         <div class="about-section" style="padding: 20px 0px;">
@@ -32,7 +39,7 @@
                 </div>
             </div>
             <div class="membership-container">
-                <div class="membership-tile" ng-class="{'disabled':account.profile.type == 'Basic'}">
+                <div class="membership-tile disabled">
                     <div class="membership-tile-area">
                         <div class="membership-tile-title">
                             The<br /><span class="dz-blue">{{'basic' | memType}}</span>
@@ -65,10 +72,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="notify-button membership-tile-btn"><a class="btn" ng-disabled="account.profile.type == 'Basic'" ng-click="selUpgrade('basic')">Become a {{'basic' | memType}}</a></div>
+                        <div class="notify-button membership-tile-btn"><a class="btn" ng-disabled="true" ng-click="selUpgrade('basic')">Become a {{'basic' | memType}}</a></div>
                     </div>
                 </div>
-                <div class="membership-tile" ng-class="{'disabled':account.profile.type == 'Entry'}">
+                <div class="membership-tile disabled">
                     <div class="membership-tile-area">
                         <div class="membership-tile-title">
                             The<br /><span class="dz-blue">{{'entry' | memType}}</span>
@@ -107,10 +114,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="notify-button membership-tile-btn"><a class="btn" ng-disabled="account.profile.type == 'Entry'" ng-click="selUpgrade('entry')">Become a {{'entry' | memType}}</a></div>
+                        <div class="notify-button membership-tile-btn"><a class="btn" ng-disabled="true" ng-click="selUpgrade('entry')">Become a {{'entry' | memType}}</a></div>
                     </div>
                 </div>
-                <div class="membership-tile" ng-class="{'disabled':account.profile.type == 'Pro'}">
+                <div class="membership-tile disabled">
                     <div class="membership-tile-area">
                         <div class="membership-tile-title">
                             The<br /><span class="dz-blue">{{'pro' | memType}}</span>
@@ -149,7 +156,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="notify-button membership-tile-btn"><a class="btn" ng-disabled="account.profile.type == 'Pro'" ng-click="selUpgrade('pro')">Become a {{'pro' | memType}}</a></div>
+                        <div class="notify-button membership-tile-btn"><a class="btn" ng-disabled="true" ng-click="selUpgrade('pro')">Become a {{'pro' | memType}}</a></div>
                     </div>
                 </div>
                 <div class="clearfix">

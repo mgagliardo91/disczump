@@ -40,6 +40,8 @@ function isDef(x) {
 }
 
 function marketAvailable(userId, callback) {
+  return callback(null, true); // NO_ACCOUNTS
+
 	getMarketplaceDiscCount(userId, function(err, count) {
 		if (err)
 			return callback(Error.createError(err, Error.internalError));
