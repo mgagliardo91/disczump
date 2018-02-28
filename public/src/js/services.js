@@ -1446,6 +1446,8 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 	};
 	
 	var hasPermission = function(msFn, accountType) {
+    return true; // NO MOOR ACCOUNTS
+
 		if (!msFn || !accountType) return false;
 		
 		switch (accountPermissions[msFn]) {
