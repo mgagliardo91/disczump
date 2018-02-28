@@ -264,7 +264,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 		var url = encodeURIComponent(window.serverURL + path)
 		$http({
 			method:'POST',
-			url: 'https://graph.facebook.com/?id=' + url + '&scrape=true',
+			url: 'https://graph.facebook.com/?id=' + url + '&scrape=true&access_token=1433417853616595|8f4bdccf243ed064d9446ef2f43f7054',
 			timeout: 5000
 		}).then(function(response) {
 			var error = !response.data || !response.data.id;
