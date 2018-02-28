@@ -27,10 +27,6 @@ var release = true; // replace release with release
 var httpsPort = (release ? localServer.httpsPort : 443);
 var httpPort = localServer.httpPort || 80;
 
-var privateKey = fs.readFileSync('./private/disczump-key.pem', 'utf8');
-var certificate = fs.readFileSync('./private/site-certificate.crt', 'utf8');
-var ca = fs.readFileSync('./private/ca.crt', 'utf8');
-
 require('./app/utils/mailer.js');
 
 mongoose.connect('mongodb://' + config.database.host + ':' +
@@ -134,42 +130,30 @@ app.use(function(err, req, res, next) {
 
 // launch ======================================================================
 var server;
+//
 
 if (release) {
-  server = require('https').createServer({
-      key: privateKey,
-      cert: certificate,
-      ca: ca,
-      ciphers: [
- 		'ECDHE-RSA-AES128-GCM-SHA256',
- 		'ECDHE-ECDSA-AES128-GCM-SHA256',
- 		'ECDHE-RSA-AES256-GCM-SHA384',
- 		'ECDHE-ECDSA-AES256-GCM-SHA384',
- 		'DHE-RSA-AES128-GCM-SHA256',
- 		'ECDHE-RSA-AES128-SHA256',
- 		'DHE-RSA-AES128-SHA256',
- 		'ECDHE-RSA-AES256-SHA384',
- 		'DHE-RSA-AES256-SHA384',
- 		'ECDHE-RSA-AES256-SHA256',
- 		'DHE-RSA-AES256-SHA256',
- 		'HIGH',
- 		'!aNULL',
- 		'!eNULL',
- 		'!EXPORT',
- 		'!DES',
- 		'!RC4',
- 		'!MD5',
- 		'!PSK',
- 		'!SRP',
- 		'!CAMELLIA'
-	].join(':'),
-	honorCipherOrder: true
-  }, app);
-  require('http').createServer(function (req, res) {
-      res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
-      res.end();
+  // lets-encrypt config
+  const lex = require('greenlock-express').create({
+    server: 'https://acme-v01.api.letsencrypt.org/directory',
+    approveDomains: (opts, certs, cb) => {
+      if (certs) {
+        opts.domains = ['disczump.com', 'www.disczump.com']
+      } else {
+        opts.email = 'support@disczump.com';
+        opts.agreeTos = true;
+      }
+      cb(null, { options: opts, certs: certs });
+    }
+  });
+  const middlewareWrapper = lex.middleware;
 
-  }).listen(httpPort);
+  server = require('https').createServer(
+    lex.httpsOptions,
+    middlewareWrapper(app)
+  );
+  const redirectHttps = require('redirect-https');
+  require('http').createServer(lex.middleware(redirectHttps())).listen(httpPort);
 } else {
   server = require('http').createServer(app);
 }
