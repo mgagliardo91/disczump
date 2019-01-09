@@ -766,7 +766,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 			 headers: {
 			    'Content-type': 'application/json'
 			 },
-			url: geocodeUrl + '?latlng=' + encodeURI(lat + ',' + lng),
+			url: geocodeUrl + 'latlng=' + encodeURI(lat + ',' + lng),
 			timeout: 5000
 		}).then(function(response) {
 			var ret = parseResponse(response, ['postal_code']);
