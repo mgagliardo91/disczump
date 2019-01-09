@@ -18,6 +18,7 @@ module.exports = function(app, passport, gridFs) {
                layout: 'desktop',
                isRelease: localConfig.release && !req.devMode,
                serverURL : localConfig.serverURL,
+               googleId: localConfig.googleId,
 			   fbId: localConfig.facebookAuth.clientID,
                reqScroll: req.device.isMobile,
                headers: FacebookHeaders.getDiscHeaders(disc, req.url)
@@ -31,6 +32,7 @@ module.exports = function(app, passport, gridFs) {
                layout: 'desktop',
                isRelease: localConfig.release && !req.devMode,
                serverURL : localConfig.serverURL,
+               googleId: localConfig.googleId,
 			   fbId: localConfig.facebookAuth.clientID,
                reqScroll: req.device.isMobile,
                headers: FacebookHeaders.getTrunkHeaders(user, req.url)
@@ -47,6 +49,7 @@ module.exports = function(app, passport, gridFs) {
            layout: 'desktop',
            isRelease: localConfig.release && !req.devMode,
            serverURL : localConfig.serverURL,
+           googleId: localConfig.googleId,
 		   fbId: localConfig.facebookAuth.clientID,
            reqScroll: req.device.isMobile,
 		   headers: FacebookHeaders.getStandardHeaders(req.url)
@@ -58,6 +61,7 @@ module.exports = function(app, passport, gridFs) {
            layout: 'desktop',
            isRelease: localConfig.release && !req.devMode,
            serverURL : localConfig.serverURL,
+           googleId: localConfig.googleId,
 		   fbId: localConfig.facebookAuth.clientID,
            reqScroll: req.device.isMobile,
 		   headers: FacebookHeaders.getStandardHeaders(req.url)
