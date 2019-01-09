@@ -717,7 +717,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 ])
 
 .factory('LocationService', ['$http', function($http) {
-	var geocodeUrl = 'https://maps.googleapis.com/maps/api/geocode/json?key=' + window.googleId;
+	var geocodeUrl = 'https://maps.googleapis.com/maps/api/geocode/json?key=' + window.googleId + '&';
 	var geoAvailable = 'geolocation' in navigator;
 	var curLocation;
 	var geoCache = {};
