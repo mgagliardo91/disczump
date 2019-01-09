@@ -717,7 +717,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 ])
 
 .factory('LocationService', ['$http', function($http) {
-	var geocodeUrl = 'https://maps.googleapis.com/maps/api/geocode/json';
+	var geocodeUrl = 'https://maps.googleapis.com/maps/api/geocode/json?key=' + window.googleId + '&';
 	var geoAvailable = 'geolocation' in navigator;
 	var curLocation;
 	var geoCache = {};
@@ -766,7 +766,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 			 headers: {
 			    'Content-type': 'application/json'
 			 },
-			url: geocodeUrl + '?latlng=' + encodeURI(lat + ',' + lng),
+			url: geocodeUrl + 'latlng=' + encodeURI(lat + ',' + lng),
 			timeout: 5000
 		}).then(function(response) {
 			var ret = parseResponse(response, ['postal_code']);
@@ -790,7 +790,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 			 headers: {
 			    'Content-type': 'application/json'
 			 },
-			url: geocodeUrl + '?key=AIzaSyB7kWqjg0Yei5bPUhwmKmvLVk6Zugh_-Fw&result_type=locality&address=' + encodeURI(address),
+			url: geocodeUrl + 'result_type=locality&address=' + encodeURI(address),
 			timeout: 5000
 		}).then(function(response) {
 			var ret = parseResponse(response, restrict);
