@@ -790,7 +790,7 @@ angular.module('disczump.services', ['underscore', 'CryptoJS'])
 			 headers: {
 			    'Content-type': 'application/json'
 			 },
-			url: geocodeUrl + '?key=AIzaSyB7kWqjg0Yei5bPUhwmKmvLVk6Zugh_-Fw&result_type=locality&address=' + encodeURI(address),
+			url: geocodeUrl + 'result_type=locality&address=' + encodeURI(address),
 			timeout: 5000
 		}).then(function(response) {
 			var ret = parseResponse(response, restrict);
